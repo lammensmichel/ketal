@@ -14,7 +14,7 @@
     </div>
     <div class="mt-1">
       <button type="submit" class="btn btn-primary col-2">Ajouter</button>
-      <button type="submit" class="btn btn-secondary col-2 ms-2" (click)="beginGame()">Commencer la partie</button>
+      <button type="submit" *ngIf="hasPlayers()" class="btn btn-secondary col-2 ms-2" (click)="beginGame()">Commencer la partie</button>
     </div>
   </form>
 </div>
