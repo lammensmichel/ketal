@@ -8,9 +8,16 @@ import { PlayersListComponent } from 'src/players/players-list/players-list.comp
 import { PlayerHelperService } from 'src/helpers/player.helper';
 import { CardDeckHelperService } from 'src/helpers/card-deck.helper';
 import { GameComponent } from '../game/game.component';
+import { secondPhaseComponent } from '../second-phase/second-phase.component';
 
 @NgModule({
-  declarations: [AppComponent, PlayersListComponent, GameComponent],
+  declarations: [
+    AppComponent,
+    PlayersListComponent,
+    GameComponent,
+    secondPhaseComponent,
+    secondPhaseComponent,
+  ],
   imports: [BrowserModule, AppRoutingModule, ReactiveFormsModule],
   providers: [PlayerHelperService, CardDeckHelperService],
   bootstrap: [AppComponent],
