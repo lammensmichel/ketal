@@ -10,7 +10,9 @@ export class PlayersListComponent {
   public players: string[] = [];
   public playersForm: FormGroup; // Créez un formulaire réactif
   public allPlayersCreated: boolean = false;
-  @Output() public onBeginGame: EventEmitter<Array<string>> = new EventEmitter<Array<string>>();
+  @Output() public onBeginGame: EventEmitter<Array<string>> = new EventEmitter<
+    Array<string>
+  >();
 
   constructor(private fb: FormBuilder) {
     this.playersForm = this.fb.group({
@@ -20,7 +22,8 @@ export class PlayersListComponent {
 
   public addPlayer() {
     if (this.playersForm.valid) {
-      this.players.push(this.playersForm.value.nouveauJoueur);
+      this.players.push(this.playersForm.value.newPlayer);
+      console.log(this.playersForm.value.newPlayer);
       this.playersForm.reset(); // Réinitialisez le formulaire après l'ajout
     }
   }
