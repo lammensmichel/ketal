@@ -3,5 +3,5 @@
 
 <!--  -->
 
-<app-game *ngIf="!displayPlayerChoice"></app-game>
-<app-second-phase></app-second-phase>
+<app-game *ngIf="!displayPlayerChoice" (goToPhaseTwo)="beginSecondPhase()"></app-game>
+<app-second-phase *ngIf="displaySecondPhase"></app-second-phase>

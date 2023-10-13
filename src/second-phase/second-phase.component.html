@@ -4,8 +4,11 @@
       <h4>You Drink</h4>
       <div class="card" *ngFor="let card of youdrink">
         <div class="card-body">
-          <h5 class="card-title">{{ card.number }} of {{ card.suit }}</h5>
-          <p class="card-text">You Drink {{ numSips }} sip</p>
+          <p class="card-text">
+            {{ card.value }}
+            <span class="card-width" [ngClass]="{'text-danger': card.suit === 'hearts' || card.suit ==='diamond'}" [innerHTML]="card.icon"></span>
+          </p>
+          <p class="card-text">tu bois {{ card.Sips }} gorgées</p>
         </div>
       </div>
     </div>
@@ -13,11 +16,16 @@
       <h4>You Take a Drink</h4>
       <div class="card" *ngFor="let card of takedrink">
         <div class="card-body">
-          <h5 class="card-title">{{ card.number }} of {{ card.suit }}</h5>
-          <p class="card-text">You Drink {{ numSips }} sip</p>
+          <p class="card-text">
+            {{ card.value }}
+            <span class="card-width" [ngClass]="{'text-danger': card.suit === 'hearts' || card.suit ==='diamond'}" [innerHTML]="card.icon"></span>
+          </p>
+          <p class="card-text">donne {{ card.Sips }} gorgées</p>
         </div>
       </div>
     </div>
   </div>
-  <button class="btn btn-primary" (click)="onNextClick()">Suivant</button>
+  <div class="mt-1">
+    <button class="btn btn-primary" (click)="onNextClick()">Suivant</button>
+  </div>
 </div>
