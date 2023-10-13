@@ -8,26 +8,22 @@
   <div class="row">
     <div class="col-md-6">
       <h4>tu bois</h4>
-      <div class="card" *ngFor="let card of youdrink">
-        <div class="card-body">
-          <p class="card-text">
+      <div class=""*ngFor="let card of youdrink">
+        <p class="card-text">
             {{ card.value }}
             <span class="card-width" [ngClass]="{'text-danger': card.suit === 'hearts' || card.suit ==='diamond'}" [innerHTML]="card.icon"></span>
+            &nbsp;<span class="card-text">tu bois {{ card.Sips }} gorgées</span>
           </p>
-          <p class="card-text">tu bois {{ card.Sips }} gorgées</p>
-        </div>
       </div>
     </div>
     <div class="col-md-6">
       <h4>tu donnes</h4>
-      <div class="card" *ngFor="let card of takedrink">
-        <div class="card-body">
-          <p class="card-text">
+      <div class=""*ngFor="let card of takedrink">
+        <p class="card-text">
             {{ card.value }}
             <span class="card-width" [ngClass]="{'text-danger': card.suit === 'hearts' || card.suit ==='diamond'}" [innerHTML]="card.icon"></span>
+            &nbsp;<span class="card-text">donne {{ card.Sips }} gorgées</span>
           </p>
-          <p class="card-text">donne {{ card.Sips }} gorgées</p>
-        </div>
       </div>
     </div>
   </div>
