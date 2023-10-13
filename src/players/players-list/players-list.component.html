@@ -1,9 +1,16 @@
 <div class="container">
   <h1>Liste des joueurs</h1>
-  <ul class="list-group">
-    <li *ngFor="let player of getPlayers()" class="list-group-item">{{ player.name }}</li>
-  </ul>
+    <ul class="list-group" *ngFor="let player of getPlayers()">
+      <div class="col-8">
 
+        <li class="list-group-item">
+
+          {{ player.name }}</li>
+      </div>
+      <div class="cl-4">
+        <button class="btn btn-small btn-danger fa fa-close" type="submit" (click)="deletePlayer(player)"></button>
+      </div>
+    </ul>
   <h2>Ajouter un joueur</h2>
   <form [formGroup]="playersForm" (ngSubmit)="addPlayer()" *ngIf="!allPlayersCreated">
     <div class="form-group col-4">
