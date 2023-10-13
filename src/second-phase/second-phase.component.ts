@@ -15,9 +15,7 @@ export class secondPhaseComponent {
 
   public takedrink: CardType[] = [];
 
-  constructor(public cardDeckHelperService: CardDeckHelperService) {
-    cardDeckHelperService.construcDesck();
-  }
+  constructor(public cardDeckHelperService: CardDeckHelperService) {}
 
   onNextClick() {
     let card = this.cardDeckHelperService.getRandomCard();
@@ -29,5 +27,9 @@ export class secondPhaseComponent {
       this.youdrink.push(card);
     }
     this.numSips++;
+  }
+
+  restartGame() {
+    location.reload();
   }
 }
