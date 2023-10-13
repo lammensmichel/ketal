@@ -9,6 +9,7 @@ import { CardType } from 'src/models/card-type.model';
 })
 export class secondPhaseComponent {
   public numSips: number = 1;
+  public cptNumSips: number = 1;
 
   public youdrink: CardType[] = [];
 
@@ -19,10 +20,13 @@ export class secondPhaseComponent {
   }
 
   onNextClick() {
+    let card = this.cardDeckHelperService.getRandomCard();
+    card.Sips = this.cptNumSips;
     if (this.numSips % 2 == 0) {
-      this.takedrink.push(this.cardDeckHelperService.getRandomCard());
+      this.takedrink.push(card);
+      this.cptNumSips++;
     } else {
-      this.youdrink.push(this.cardDeckHelperService.getRandomCard());
+      this.youdrink.push(card);
     }
     this.numSips++;
   }
