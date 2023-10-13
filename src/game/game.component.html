@@ -1,4 +1,7 @@
 <div class="container">
+  <div class="mt-2 mb-2">
+    <button class="btn btn-primary" *ngIf="!goToSecondPhase" (click)="onNextClick()">{{getMessage()}} {{getPlayerName()}}</button>
+  </div>
   <div class="row">
     <div class="col-md-2" *ngFor="let player of players">
       <div class="card">
@@ -13,8 +16,5 @@
         </div>
       </div>
     </div>
-  </div>
-  <div class="mt-2">
-    <button class="btn btn-primary" *ngIf="!goToSecondPhase" (click)="onNextClick()">{{getMessage()}} {{getPlayerName()}}</button>
   </div>
 </div>
