@@ -12,7 +12,6 @@ export class AppComponent {
   public displaySecondPhase: boolean = false;
 
   constructor(public cardDeckHelperService: CardDeckHelperService) {
-    cardDeckHelperService.construcDesck();
   }
 
   public beginGame(): void {
