@@ -5,14 +5,14 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { ReactiveFormsModule } from '@angular/forms';
 import { PlayersListComponent } from 'src/players/players-list/players-list.component';
-import { Routes } from '@angular/router';
-import { GameComponent } from '../game/game.component';
+import { PlayerHelperService } from 'src/helpers/player.helper';
 import { CardDeckHelperService } from 'src/helpers/card-deck.helper';
+import { GameComponent } from '../game/game.component';
 
 @NgModule({
   declarations: [AppComponent, PlayersListComponent, GameComponent],
   imports: [BrowserModule, AppRoutingModule, ReactiveFormsModule],
-  providers: [CardDeckHelperService],
+  providers: [PlayerHelperService, CardDeckHelperService],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
