@@ -33,4 +33,8 @@ export class PlayersListComponent {
   public beginGame(): void {
     this.onBeginGame.emit();
   }
+
+  public hasPlayers(): boolean {
+    return this.playerHelper?.players?.length > 0;
+  }
 }
