@@ -1,7 +1,7 @@
 import { CardType } from "src/models/card-type.model";
 
 export class CardDeckHelperService {
-  public possibleSuits: string[] = ["spades", "diamonds", "clubs", "hearts"];
+  public possibleSuits: string[] = ["spades", "diamond", "clubs", "hearts"];
   public possiblevalues: string[] = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
   public createdCardDeck: Array<CardType> = [];
 
@@ -12,7 +12,7 @@ export class CardDeckHelperService {
     {
       for(let x = 0; x < this.possiblevalues.length; x++)
       {
-        let card: CardType = {value: this.possiblevalues[x], suit: this.possibleSuits[i]};
+        let card: CardType = {value: this.possiblevalues[x], suit: this.possibleSuits[i], icon: `&${this.possibleSuits[i]};`};
         deck.push(card);
         this.createdCardDeck.push(card);
       }
