@@ -4,7 +4,7 @@
       <h4>You Drink</h4>
       <div class="card" *ngFor="let card of youdrink">
         <div class="card-body">
-          <h5 class="card-title">{{ card.number }} of {{ card.suit }}</h5>
+          <h5 class="card-title">{{ card.value }} of {{ card.suit }}</h5>
           <p class="card-text">You Drink {{ numSips }} sip</p>
         </div>
       </div>
@@ -13,7 +13,7 @@
       <h4>You Take a Drink</h4>
       <div class="card" *ngFor="let card of takedrink">
         <div class="card-body">
-          <h5 class="card-title">{{ card.number }} of {{ card.suit }}</h5>
+          <h5 class="card-title">{{ card.value }} of {{ card.suit }}</h5>
           <p class="card-text">You Drink {{ numSips }} sip</p>
         </div>
       </div>
