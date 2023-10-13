@@ -1,5 +1,7 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { PlayerHelperService } from 'src/helpers/player.helper';
+import { PlayerModel } from 'src/models/player.model';
 
 @Component({
   selector: 'app-players-list',
@@ -7,28 +9,28 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
   styleUrls: ['./players-list.component.scss'],
 })
 export class PlayersListComponent {
-  public players: string[] = [];
   public playersForm: FormGroup; // Créez un formulaire réactif
   public allPlayersCreated: boolean = false;
-  @Output() public onBeginGame: EventEmitter<Array<string>> = new EventEmitter<
-    Array<string>
-  >();
+  @Output() public onBeginGame: EventEmitter<void> = new EventEmitter<void>();
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder, public playerHelper: PlayerHelperService) {
     this.playersForm = this.fb.group({
-      newPlayer: ['', Validators.required], // Créez un champ "nouveauJoueur" avec validation requise
+      newPlayer: ['', Validators.required], // Créez un champ "newPlayer" avec validation requise
     });
   }
 
   public addPlayer() {
     if (this.playersForm.valid) {
-      this.players.push(this.playersForm.value.newPlayer);
-      console.log(this.playersForm.value.newPlayer);
+      this.playerHelper.addPlayer(this.playersForm.value.newPlayer);
       this.playersForm.reset(); // Réinitialisez le formulaire après l'ajout
     }
   }
 
+  public getPlayers(): PlayerModel[] {
+    return this.playerHelper.players;
+  }
+
   public beginGame(): void {
-    this.onBeginGame.emit(this.players);
+    this.onBeginGame.emit();
   }
 }
