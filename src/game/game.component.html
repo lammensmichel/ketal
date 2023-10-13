@@ -1,0 +1,18 @@
+<div class="container">
+  <div class="row">
+    <div class="col-md-4" *ngFor="let player of players">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">{{ player.name }}</h5>
+          <div *ngFor="let card of player.cards">
+            <p class="card-text">
+              {{ card.number }} of {{card.color}}
+              <i class="fa fa-{{card.color}}"></i>
+              <i class="fa fa-club"></i>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
