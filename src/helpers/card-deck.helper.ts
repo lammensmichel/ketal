@@ -29,6 +29,7 @@ export class CardDeckHelperService {
           suit: this.possibleSuits[i],
           icon: `&${this.possibleSuits[i]};`,
           Sips: 0,
+          SipsSelected: false,
         };
         deck.push(card);
         this.createdCardDeck.push(card);

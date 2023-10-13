@@ -3,4 +3,5 @@ export interface CardType {
   suit: string;
   icon: string;
   Sips: number;
+  SipsSelected: boolean;
 }
