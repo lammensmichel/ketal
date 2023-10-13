@@ -54,8 +54,6 @@ export class GameComponent implements OnInit {
   public getMessage(): string {
     let message = '';
 
-    console.log(this.turnCount);
-
     if(this.turnCount < this.playerCount){
       message = 'Rouge ou noir: ';
     }

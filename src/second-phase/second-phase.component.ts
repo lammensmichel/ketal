@@ -16,7 +16,6 @@ export class secondPhaseComponent {
   public takedrink: CardType[] = [];
 
   constructor(public cardDeckHelperService: CardDeckHelperService) {
-    cardDeckHelperService.construcDesck();
   }
 
   onNextClick() {
