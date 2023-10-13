@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { CardDeckHelperService } from 'src/helpers/card-deck.helper';
 
 @Component({
   selector: 'app-root',
@@ -9,7 +10,13 @@ export class AppComponent {
   title = 'ketal';
   public displayPlayerChoice: boolean = true;
 
+  constructor(public cardDeckHelperService: CardDeckHelperService) {
+    cardDeckHelperService.construcDesck();
+  }
+
   public beginGame(): void{
+    this.cardDeckHelperService.construcDesck();
+
     this.displayPlayerChoice = !this.displayPlayerChoice;
   }
 }

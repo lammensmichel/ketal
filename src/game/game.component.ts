@@ -1,37 +1,53 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { CardDeckHelperService } from 'src/helpers/card-deck.helper';
+import { PlayerHelperService } from 'src/helpers/player.helper';
+import { CardType } from 'src/models/card-type.model';
+import { PlayerModel } from 'src/models/player.model';
 
 @Component({
   selector: 'app-game',
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
 })
-export class GameComponent {
-  actuallyPlayer = 0;
+export class GameComponent implements OnInit {
+  @Output() public goToPhaseTwo: EventEmitter<void> = new EventEmitter<void>();
+  public playerCount: number = 0;
+  public maxTurnCount: number = 0;
+  public playerTurn: number = 0;
+  public turnCount: number = 0;
+  public goToSecondPhase: boolean = false;
+  public currentCard: CardType | undefined;
 
-  players: any[] = [
-    {
-      name: 'Joueur 1',
-      cards: [
-        { number: 'A', color: 'heart' },
-        { number: '2', color: 'diamond' },
-        { number: '3', color: 'club' },
-        { number: '4', color: 'spade' },
-      ],
-    },
-    {
-      name: 'Joueur 2',
-      cards: [
-        { number: '4', color: 'spade' },
-        { number: '5', color: 'heart' },
-        { number: '6', color: 'spade' },
-      ],
-    },
-  ];
+  players: PlayerModel[] = [ ];
 
-  constructor(cardDeckHelperService: CardDeckHelperService) {
-    cardDeckHelperService.construcDesck();
+  constructor(playerHelperService: PlayerHelperService, public cardDeckHelperService: CardDeckHelperService) {
+    this.players = playerHelperService.players;
   }
 
-  onNextClick() {}
+  public ngOnInit(): void {
+      this.playerCount = this.players.length;
+      this.maxTurnCount = this.playerCount * 4;
+  }
+
+  public getPlayerName(): string {
+    return this.players[this.playerTurn].name;
+  }
+
+  onNextClick() {
+    this.currentCard = this.cardDeckHelperService.getRandomCard();
+
+
+    this.players[this.playerTurn].cards.push(this.currentCard);
+    this.playerTurn++;
+    this.turnCount++;
+
+    if(this.playerTurn === this.playerCount){
+      this.playerTurn = 0;
+    }
+
+    if(this.turnCount === this.maxTurnCount){
+      this.goToSecondPhase = true;
+      this.goToPhaseTwo.emit();
+    }
+  }
 }
