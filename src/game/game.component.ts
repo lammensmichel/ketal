@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { CardDeckHelperService } from 'src/helpers/card-deck.helper';
 
 @Component({
   selector: 'app-game',
@@ -6,6 +7,8 @@ import { Component } from '@angular/core';
   styleUrls: ['./game.component.scss'],
 })
 export class GameComponent {
+  actuallyPlayer = 0;
+
   players: any[] = [
     {
       name: 'Joueur 1',
@@ -24,6 +27,11 @@ export class GameComponent {
         { number: '6', color: 'spade' },
       ],
     },
-    // Ajoutez d'autres joueurs avec leurs cartes ici
   ];
+
+  constructor(cardDeckHelperService: CardDeckHelperService) {
+    cardDeckHelperService.construcDesck();
+  }
+
+  onNextClick() {}
 }
