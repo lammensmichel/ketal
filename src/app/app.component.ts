@@ -9,7 +9,7 @@ export class AppComponent {
   title = 'ketal';
   public displayPlayerChoice: boolean = true;
 
-  public beginGame(players: string[]): void{
+  public beginGame(): void{
     this.displayPlayerChoice = !this.displayPlayerChoice;
   }
 }

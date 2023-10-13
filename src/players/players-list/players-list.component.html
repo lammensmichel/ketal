@@ -1,18 +1,20 @@
 <div class="container">
   <h1>Liste des joueurs</h1>
   <ul class="list-group">
-    <li *ngFor="let player of players" class="list-group-item">{{ player }}</li>
+    <li *ngFor="let player of getPlayers()" class="list-group-item">{{ player.name }}</li>
   </ul>
 
   <h2>Ajouter un joueur</h2>
   <form [formGroup]="playersForm" (ngSubmit)="addPlayer()" *ngIf="!allPlayersCreated">
-    <div class="form-group">
+    <div class="form-group col-4">
       <input type="text" class="form-control" formControlName="newPlayer" placeholder="Nom du joueur">
     </div>
     <div *ngIf="playersForm.get('nouveauJoueur')?.hasError('required')" class="text-danger">
       Le nom du joueur est requis.
     </div>
-    <button type="submit" class="btn btn-primary">Ajouter</button>
-    <button type="submit" class="btn btn-secondary" (click)="beginGame()">Commencer la partie</button>
+    <div class="mt-1">
+      <button type="submit" class="btn btn-primary col-2">Ajouter</button>
+      <button type="submit" class="btn btn-secondary col-2 ms-2" (click)="beginGame()">Commencer la partie</button>
+    </div>
   </form>
 </div>
