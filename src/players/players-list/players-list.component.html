@@ -2,12 +2,9 @@
   <h1>Liste des joueurs</h1>
     <ul class="list-group" *ngFor="let player of getPlayers()">
       <div class="col-8">
-
-        <li class="list-group-item">
-
-          {{ player.name }}</li>
+        <li class="list-group-item">{{ player.name }}</li>
       </div>
-      <div class="cl-4">
+      <div class="col-4">
         <button class="btn btn-small btn-danger fa fa-close" type="submit" (click)="deletePlayer(player)"></button>
       </div>
     </ul>
