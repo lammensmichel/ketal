@@ -9,6 +9,7 @@ import { PlayerHelperService } from 'src/helpers/player.helper';
 import { CardDeckHelperService } from 'src/helpers/card-deck.helper';
 import { GameComponent } from '../game/game.component';
 import { secondPhaseComponent } from '../second-phase/second-phase.component';
+import { LocalService } from 'src/local/local.service';
 
 @NgModule({
   declarations: [
@@ -19,7 +20,7 @@ import { secondPhaseComponent } from '../second-phase/second-phase.component';
     secondPhaseComponent,
   ],
   imports: [BrowserModule, AppRoutingModule, ReactiveFormsModule],
-  providers: [PlayerHelperService, CardDeckHelperService],
+  providers: [PlayerHelperService, CardDeckHelperService, LocalService],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
