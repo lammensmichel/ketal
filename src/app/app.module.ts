@@ -7,19 +7,19 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { PlayersListComponent } from 'src/players/players-list/players-list.component';
 import { PlayerHelperService } from 'src/helpers/player.helper';
 import { GameComponent } from '../game/game.component';
+import { secondPhaseComponent } from '../second-phase/second-phase.component';
 import { CardDeckHelperService } from 'src/helpers/card-deck.helper';
 
-
 @NgModule({
-  declarations: [AppComponent, PlayersListComponent, GameComponent],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    ReactiveFormsModule,
+  declarations: [
+    AppComponent,
+    PlayersListComponent,
+    GameComponent,
+    secondPhaseComponent,
+    secondPhaseComponent,
   ],
-  providers: [
-    PlayerHelperService,
-    CardDeckHelperService],
+  imports: [BrowserModule, AppRoutingModule, ReactiveFormsModule],
+  providers: [PlayerHelperService, CardDeckHelperService],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
