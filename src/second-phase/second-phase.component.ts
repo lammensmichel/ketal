@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { CardDeckHelperService } from 'src/helpers/card-deck.helper';
+import { CardType } from 'src/models/card-type.model';
 
 @Component({
   selector: 'app-second-phase',
@@ -9,9 +10,9 @@ import { CardDeckHelperService } from 'src/helpers/card-deck.helper';
 export class secondPhaseComponent {
   public numSips: number = 1;
 
-  public youdrink: any[] = [];
+  public youdrink: CardType[] = [];
 
-  public takedrink: any[] = [];
+  public takedrink: CardType[] = [];
 
   constructor(public cardDeckHelperService: CardDeckHelperService) {
     cardDeckHelperService.construcDesck();
