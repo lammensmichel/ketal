@@ -3,15 +3,17 @@ import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { PlayersModule } from 'src/players/players.module';
 import { ReactiveFormsModule } from '@angular/forms';
+import { PlayersListComponent } from 'src/players/players-list/players-list.component';
+import { Routes } from '@angular/router';
+
+
 
 @NgModule({
-  declarations: [AppComponent],
+  declarations: [AppComponent, PlayersListComponent],
   imports: [
     BrowserModule,
     AppRoutingModule,
-    PlayersModule,
     ReactiveFormsModule,
   ],
   providers: [],

@@ -1,17 +1,13 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { PlayersListComponent } from 'src/players/players-list/players-list.component';
 
-const routes: Routes = [
-  // Autres routes existantes, le cas échéant
-  {
-    path: 'players',
-    loadChildren: () =>
-      import('../players/players.module').then((m) => m.PlayersModule),
-  },
+const appRoutes: Routes = [
+  { path: 'players', component: PlayersListComponent },
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
+  imports: [RouterModule.forRoot(appRoutes)],
   exports: [RouterModule],
 })
 export class AppRoutingModule {}
