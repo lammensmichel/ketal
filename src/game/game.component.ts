@@ -50,4 +50,29 @@ export class GameComponent implements OnInit {
       this.goToPhaseTwo.emit();
     }
   }
+
+  public getMessage(): string {
+    let message = '';
+
+    if(this.turnCount < this.playerCount){
+      message = 'Rouge ou noir: ';
+    }
+
+    if(this.turnCount >= this.playerCount && this.turnCount < this.playerCount *2) {
+
+      message = 'Plus grand ou plus petit: ';
+    }
+
+    if(this.turnCount >= this.playerCount*2 && this.turnCount < this.playerCount *3) {
+
+      message = 'Entre ou extérieur: ';
+    }
+
+    if(this.turnCount >= this.playerCount*3) {
+
+      message = 'Carreau Coeur rèfle ou Pique: ';
+    }
+
+    return message;
+  }
 }
