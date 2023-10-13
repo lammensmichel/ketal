@@ -4,16 +4,17 @@
       <div class="card">
         <div class="card-body">
           <h5 class="card-title">{{ player.name }}</h5>
-          <div *ngFor="let card of player.cards">
+          <div *ngFor="let card of player.cards" class="border-bottom">
             <p class="card-text">
-              {{ card.number }} of {{card.color}}
-              <i class="fa fa-{{card.color}}"></i>
-              <i class="fa fa-club"></i>
+              {{ card.value }}
+              <span class="card-width" [ngClass]="{'text-danger': card.suit === 'hearts' || card.suit ==='diamond'}" [innerHTML]="card.icon"></span>
             </p>
           </div>
         </div>
       </div>
     </div>
   </div>
-  <button class="btn btn-primary" (click)="onNextClick()">Suivant</button>
+  <div class="mt-2">
+    <button class="btn btn-primary" *ngIf="!goToSecondPhase" (click)="onNextClick()">Piocher une carte pour : {{getPlayerName()}}</button>
+  </div>
 </div>
