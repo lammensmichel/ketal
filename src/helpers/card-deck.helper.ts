@@ -1,7 +1,7 @@
 import { CardType } from 'src/models/card-type.model';
 
 export class CardDeckHelperService {
-  public possibleSuits: string[] = ['spades', 'diamond', 'clubs', 'hearts'];
+  public possibleSuits: string[] = ['spades', 'diams', 'clubs', 'hearts'];
   public possiblevalues: string[] = [
     'A',
     '2',
