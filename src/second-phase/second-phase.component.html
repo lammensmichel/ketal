@@ -11,7 +11,7 @@
       <div class=""*ngFor="let card of youdrink">
         <p class="card-text">
             {{ card.value }}
-            <span class="card-width" [ngClass]="{'text-danger': card.suit === 'hearts' || card.suit ==='diamond'}" [innerHTML]="card.icon"></span>
+            <span class="card-width" [ngClass]="{'text-danger': card.suit === 'hearts' || card.suit ==='diams'}" [innerHTML]="card.icon"></span>
             &nbsp;<span class="card-text">tu bois {{ card.Sips }} gorgées</span>
           </p>
       </div>
@@ -21,7 +21,7 @@
       <div class=""*ngFor="let card of takedrink">
         <p class="card-text">
             {{ card.value }}
-            <span class="card-width" [ngClass]="{'text-danger': card.suit === 'hearts' || card.suit ==='diamond'}" [innerHTML]="card.icon"></span>
+            <span class="card-width" [ngClass]="{'text-danger': card.suit === 'hearts' || card.suit ==='diams'}" [innerHTML]="card.icon"></span>
             &nbsp;<span class="card-text">donne {{ card.Sips }} gorgées</span>
           </p>
       </div>

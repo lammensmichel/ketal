@@ -10,7 +10,7 @@
           <div *ngFor="let card of player.cards" class="border-bottom">
             <p class="card-text" [ngClass]="{'alert alert-success' : card.SipsSelected}">
               {{ card.value }}
-              <span class="card-width" [ngClass]="{'text-danger': card.suit === 'hearts' || card.suit ==='diamond'}" [innerHTML]="card.icon"></span>
+              <span class="card-width" [ngClass]="{'text-danger': card.suit === 'hearts' || card.suit ==='diams'}" [innerHTML]="card.icon"></span>
             </p>
           </div>
         </div>
