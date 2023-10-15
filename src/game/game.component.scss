@@ -1,18 +1,112 @@
 // .playing-card {
-//   width:150px;
-//   height:40px;
-//   background: black;
+//
+//
 //   border: 1px solid #0000;
-//   border-radius: 10px;
+//
 //   display: flex;
 //   flex-direction: column;
-//   justify-content: space-between;
+//
 //   padding: 10px;
-//   text-align: center;
+//
 // }
 
-.card-width{
+.card-width {
   font-size: 35px;
-  color:black;
+  color: black;
+}
+
+.player{
+  max-width:300px;
+  width:  60%;
+
+  @media (max-width: 768px) {
+    width:  50%;
+    //max-width:150px;
+
+  }
+  }
+
+
+.card-container-red{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 100px;
+  height: 120px;
+  border: 1px solid red;
+  border-radius: 10px;
+  background: white;
+  padding: 10px;
+  text-align: center;
+
+  @media (max-width: 768px) { // Adjust the breakpoint as needed
+    width: 60px; // Smaller width for mobile
+    height: 80px; // Smaller height for mobile
+    border-radius: 5px; // Smaller border-radius for mobile
+    padding: 5px; // Smaller padding for mobile
+  }
+}
+
+.card-container-red-selected{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 100px;
+  height: 120px;
+  border: 1px solid red;
+  border-radius: 10px;
+  background: aquamarine;
+  padding: 10px;
+  text-align: center;
+
+  @media (max-width: 768px) { // Adjust the breakpoint as needed
+    width: 60px; // Smaller width for mobile
+    height: 80px; // Smaller height for mobile
+    border-radius: 5px; // Smaller border-radius for mobile
+    padding: 5px; // Smaller padding for mobile
+  }
+}
+
+
+.card-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 100px;
+  height: 120px;
+  border: 1px solid black;
+  border-radius: 10px;
+  background: white;
+  padding: 10px;
+  text-align: center;
+
+  @media (max-width: 768px) { // Adjust the breakpoint as needed
+    width: 60px; // Smaller width for mobile
+    height: 80px; // Smaller height for mobile
+    border-radius: 5px; // Smaller border-radius for mobile
+    padding: 5px; // Smaller padding for mobile
+  }
+
+}
+
+
+.card-container-selected {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 100px;
+  height: 120px;
+  border: 1px solid black;
+  border-radius: 10px;
+  background: aquamarine;
+  padding: 10px;
+  text-align: center;
+
+  @media (max-width: 768px) { // Adjust the breakpoint as needed
+    width: 60px; // Smaller width for mobile
+    height: 80px; // Smaller height for mobile
+    border-radius: 5px; // Smaller border-radius for mobile
+    padding: 5px; // Smaller padding for mobile
+  }
 }
 

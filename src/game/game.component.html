@@ -1,17 +1,30 @@
 <div class="container">
   <div class="mt-2 mb-2">
-    <button class="btn btn-primary" *ngIf="!goToSecondPhase" (click)="onNextClick()">{{getMessage()}} {{getPlayerName()}}</button>
+    <button class="btn btn-primary" *ngIf="!goToSecondPhase"
+            (click)="onNextClick()">{{getMessage()}} {{getPlayerName()}}</button>
   </div>
   <div class="row">
-    <div class="col-md-2" *ngFor="let player of players">
+    <div class="col-md-5 player" *ngFor="let player of players" >
       <div class="card">
         <div class="card-body">
           <h5 class="card-title">{{ player.name }}</h5>
-          <div *ngFor="let card of player.cards" class="border-bottom">
-            <p class="card-text" [ngClass]="{'alert alert-success' : card.SipsSelected}">
-              {{ card.value }}
-              <span class="card-width" [ngClass]="{'text-danger': card.suit === 'hearts' || card.suit ==='diams'}" [innerHTML]="card.icon"></span>
-            </p>
+          <div style="display: flex; flex-direction: row; gap: 1em">
+            <div style="display: flex; flex-wrap: wrap;">
+              <div *ngFor="let card of player.cards; let i = index" style="flex: 0 0 50%;">
+                <div [ngClass]="{'card-container-red' :  (card.suit === 'hearts' || card.suit === 'diams') && !card.SipsSelected,
+                                 'card-container-red-selected' :  (card.suit === 'hearts' || card.suit === 'diams') && card.SipsSelected,
+                                 'card-container': card.suit !== 'hearts' && card.suit !== 'diams' && !card.SipsSelected,
+                                 'card-container-selected': card.suit !== 'hearts' && card.suit !== 'diams'  && card.SipsSelected,
+                                                    }">
+                  <div style="display: flex; flex-direction: column;">
+                    {{ card.value }}
+                    <span class="card-width"
+                          [ngClass]="{'text-danger': card.suit === 'hearts' || card.suit === 'diams'}"
+                          [innerHTML]="card.icon"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
