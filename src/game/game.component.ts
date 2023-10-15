@@ -80,7 +80,7 @@ export class GameComponent implements OnInit {
 
     if (this.turnCount >= this.playerCount * 3) {
 
-      message = 'Coeur, Carreau, Pique ou trèfle ';
+      message = 'Coeur, Carreau, Pique ou Trèfle ';
     }
 
     return message;

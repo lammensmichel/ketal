@@ -1,7 +1,13 @@
-<!-- Display the player choices -->
-<app-players-list *ngIf="displayPlayerChoice" (onBeginGame)="beginGame()"></app-players-list>
+<div class="container text-center my-4">
+  <!-- 🍺🥃☠ -->
+  <h1 class="display-4 font-monospace" style="font-variant: small-caps;">Ketal</h1>
+  <p class="lead">Grosse Guinze Generator</p>
+  <!-- Display the player choices -->
+  <app-players-list *ngIf="displayPlayerChoice" (onBeginGame)="beginGame()"></app-players-list>
+  <!-- Guinze -->
+  <app-game *ngIf="!displayPlayerChoice" (goToPhaseTwo)="beginSecondPhase()"></app-game>
+  <app-second-phase *ngIf="displaySecondPhase"></app-second-phase>
+</div>
 
-<!--  -->
 
-<app-game *ngIf="!displayPlayerChoice" (goToPhaseTwo)="beginSecondPhase()"></app-game>
-<app-second-phase *ngIf="displaySecondPhase"></app-second-phase>
+
