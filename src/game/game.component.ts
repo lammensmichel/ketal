@@ -28,6 +28,8 @@ export class GameComponent implements OnInit {
 
   players: PlayerModel[] = [];
 
+
+
   constructor(playerHelperService: PlayerHelperService, public cardDeckHelperService: CardDeckHelperService) {
     this.players = playerHelperService.players;
   }
