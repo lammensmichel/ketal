@@ -1,24 +1,37 @@
 <div class="container">
-  <h1>Liste des joueurs</h1>
-    <ul class="list-group" *ngFor="let player of getPlayers()">
-      <div class="col-8">
-        <li class="list-group-item">{{ player.name }}</li>
+  <div>
+    <h1>Liste des joueurs</h1>
+    <ul class="list-group player-list" *ngFor="let player of getPlayers()">
+      <div class="player-container">
+        <div class="col-6 player-name">
+          <li class="list-group-item">{{ player.name }}</li>
+        </div>
+        <div class="col-2">
+          <button class="btn btn-small btn-danger fa fa-close" type="submit" (click)="deletePlayer(player)"></button>
+        </div>
       </div>
-      <div class="col-4">
-        <button class="btn btn-small btn-danger fa fa-close" type="submit" (click)="deletePlayer(player)"></button>
-      </div>
+
     </ul>
-  <h2>Ajouter un joueur</h2>
-  <form [formGroup]="playersForm" (ngSubmit)="addPlayer()" *ngIf="!allPlayersCreated">
-    <div class="form-group col-4">
-      <input type="text" class="form-control" formControlName="newPlayer" placeholder="Nom du joueur">
+  </div>
+  <div>
+    <h2>Ajouter un joueur</h2>
+    <div class="player-container">
+    <form [formGroup]="playersForm" (ngSubmit)="addPlayer()" *ngIf="!allPlayersCreated">
+      <div class="form-group col-4 player-name">
+        <input type="text" class="form-control" formControlName="newPlayer" placeholder="Nom du joueur">
+      </div>
+      <div *ngIf="playersForm.get('nouveauJoueur')?.hasError('required')" class="text-danger">
+        Le nom du joueur est requis.
+      </div>
+      <div class="mt-1" style="display: flex; flex-direction: row">
+        <button style="flex: 1" type="submit" class="btn btn-primary col-2">Ajouter</button>
+        <button style="flex: 1" type="submit" *ngIf="hasPlayers()" class="btn btn-secondary col-2 ms-2" (click)="beginGame()">Commencer
+          la
+          partie
+        </button>
+      </div>
+    </form>
     </div>
-    <div *ngIf="playersForm.get('nouveauJoueur')?.hasError('required')" class="text-danger">
-      Le nom du joueur est requis.
-    </div>
-    <div class="mt-1">
-      <button type="submit" class="btn btn-primary col-2">Ajouter</button>
-      <button type="submit" *ngIf="hasPlayers()" class="btn btn-secondary col-2 ms-2" (click)="beginGame()">Commencer la partie</button>
-    </div>
-  </form>
+  </div>
+
 </div>
