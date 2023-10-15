@@ -63,4 +63,8 @@ export class PlayersListComponent {
       JSON.stringify(this.playerHelper.players)
     );
   }
+
+  get newPlayer() {
+    return this.playersForm.get('newPlayer');
+  }
 }
