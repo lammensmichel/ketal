@@ -9,8 +9,8 @@
         <div class="card-body">
           <h5 class="card-title">{{ player.name }}</h5>
           <div style="display: flex; flex-direction: row; gap: 1em">
-            <div style="display: flex; flex-wrap: wrap;">
-              <div *ngFor="let card of player.cards; let i = index" style="flex: 0 0 50%;">
+            <div  class="card-group" style="display: flex; flex-wrap: wrap;">
+              <div *ngFor="let card of player.cards; let i = index" >
                 <div [ngClass]="{'card-container-red' :  (card.suit === 'hearts' || card.suit === 'diams') && !card.SipsSelected,
                                  'card-container-red-selected' :  (card.suit === 'hearts' || card.suit === 'diams') && card.SipsSelected,
                                  'card-container': card.suit !== 'hearts' && card.suit !== 'diams' && !card.SipsSelected,
