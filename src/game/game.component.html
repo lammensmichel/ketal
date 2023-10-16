@@ -1,31 +1,33 @@
 <div class="container">
-  <div class="mt-2 mb-2">
-    <button class="btn btn-primary" *ngIf="!goToSecondPhase"
-            (click)="onNextClick()">{{getMessage()}} {{getPlayerName()}}</button>
-  </div>
   <div class="row">
-    <div class="col-md-5 player" *ngFor="let player of players" >
+    <div class="col-md-5 player" *ngFor="let player of this.gameSrv.game.players">
       <div class="card">
         <div class="card-body">
-          <h5 class="card-title">{{ player.name }}</h5>
-          <div style="display: flex; flex-direction: row; gap: 1em">
-            <div  class="card-group" style="display: flex; flex-wrap: wrap;">
-              <div *ngFor="let card of player.cards; let i = index" >
-                <div [ngClass]="{'card-container-red' :  (card.suit === 'hearts' || card.suit === 'diams') && !card.SipsSelected,
-                                 'card-container-red-selected' :  (card.suit === 'hearts' || card.suit === 'diams') && card.SipsSelected,
-                                 'card-container': card.suit !== 'hearts' && card.suit !== 'diams' && !card.SipsSelected,
-                                 'card-container-selected': card.suit !== 'hearts' && card.suit !== 'diams'  && card.SipsSelected,
-                                                    }">
-                  <div style="display: flex; flex-direction: column;">
-                    {{ card.value }}
-                    <span class="card-width"
-                          [ngClass]="{'text-danger': card.suit === 'hearts' || card.suit === 'diams'}"
-                          [innerHTML]="card.icon"></span>
-                  </div>
-                </div>
+          <div class=" d-flex flex-column gap-1">
+            <div class="text-center d-flex align-items-center justify-content-center gap-1">
+              <img class="img-thumbnail" width="32" height="32" src="{{ player.avatarSrc }}">
+              <span style="font-size: 20px">{{player.name}}</span>
+
+              <span *ngIf="displaySwallow(player)" style="font-size: 20px">{{getSwallowCnt(player)}}  <i class="fa-solid fa-whiskey-glass"></i></span>
+            </div>
+
+            <div class="card-group d-flex ">
+              <div *ngFor="let card of player.cards"
+                   class="">
+                <app-playing-card [card]="card"></app-playing-card>
               </div>
+              <app-playing-card
+                *ngIf="this.gameSrv.game.turn <= 1 && (player.cards.length || 0 ) < 1 "></app-playing-card>
+              <app-playing-card
+                *ngIf="this.gameSrv.game.turn <= 2 && (player.cards.length || 0 ) < 2 "></app-playing-card>
+              <app-playing-card
+                *ngIf="this.gameSrv.game.turn <= 3 && (player.cards.length || 0 ) < 3 "></app-playing-card>
+              <app-playing-card
+                *ngIf="this.gameSrv.game.turn <= 4 && (player.cards.length || 0 ) < 4 "></app-playing-card>
+
             </div>
           </div>
+
         </div>
       </div>
     </div>

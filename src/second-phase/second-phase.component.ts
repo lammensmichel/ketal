@@ -3,6 +3,7 @@ import {CardDeckHelperService} from 'src/helpers/card-deck.helper';
 import {PlayerHelperService} from 'src/helpers/player.helper';
 import {CardType} from 'src/models/card-type.model';
 import {PlayerModel} from 'src/models/player.model';
+import {GameService} from "../app/services/game/game.service";
 
 @Component({
   selector: 'app-second-phase',
@@ -35,18 +36,19 @@ export class secondPhaseComponent {
 
   constructor(
     public cardDeckHelperService: CardDeckHelperService,
-    playerHelperService: PlayerHelperService
+    playerHelperService: PlayerHelperService,
+    public gameSrv: GameService
   ) {
     this.players = playerHelperService.players;
   }
 
   onDisplayCard() {
     let card = this.cardDeckHelperService.getRandomCard();
-    card.Sips = this.cptNumSips;
+    card.swallow = this.cptNumSips;
 
     this.players.forEach((players) => {
       return players.cards.forEach((cards) => {
-        cards.SipsSelected = cards.value === card.value;
+        cards.selected = cards.value === card.value;
         return cards;
       });
     });
@@ -61,6 +63,7 @@ export class secondPhaseComponent {
   }
 
   restartGame() {
+    this.gameSrv.gameFinished();
     location.reload();
   }
 }
