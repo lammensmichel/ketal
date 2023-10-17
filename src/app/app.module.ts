@@ -20,7 +20,6 @@ import { HeaderComponent } from './header/header.component';
     PlayersListComponent,
     GameComponent,
     secondPhaseComponent,
-    secondPhaseComponent,
     PlayingCardComponent,
     FooterComponent,
     HeaderComponent,

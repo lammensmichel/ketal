@@ -41,18 +41,18 @@ export class CardDeckHelperService {
     for (let i = 0; i < this.possibleSuits.length; i++) {
       for (let x = 0; x < this.possiblevalues.length; x++) {
         let card: CardType = {
-          value: this.possiblevalues[x],
           suit: this.possibleSuits[i],
           icon: `&${this.possibleSuits[i]};`,
           swallow: 0,
           selected: false,
+          value: ''
         };
+        card.value = this.possiblevalues[x];
         deck.push(card);
-        this.createdCardDeck.push(card);
       }
     }
 
-    this.localSrv.saveData('cardDeck', JSON.stringify(this.createdCardDeck));
+    this.localSrv.saveData('cardDeck', JSON.stringify(deck));
 
     return deck;
   }

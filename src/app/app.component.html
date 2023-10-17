@@ -2,12 +2,9 @@
 
 <div class=" main container text-center my-4">
     <!-- Display the player choices -->
-    <!--    <app-players-list *ngIf="displayPlayerChoice" (onBeginGame)="beginGame()"></app-players-list>-->
     <app-players-list *ngIf="!this.gameSrv.game"></app-players-list>
     <!-- Guinze -->
-    <app-game *ngIf="this.gameSrv.game"
-              (goToPhaseTwo)="beginSecondPhase()"></app-game>
-<!--    <app-second-phase *ngIf="this.gameSrv.game && this.gameSrv.game.phase === 2 "></app-second-phase>-->
+    <app-game *ngIf="this.gameSrv.game"></app-game>
 </div>
 
 <app-footer></app-footer>

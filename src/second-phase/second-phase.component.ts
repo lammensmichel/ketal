@@ -63,7 +63,6 @@ export class secondPhaseComponent {
   }
 
   restartGame() {
-    this.gameSrv.gameFinished();
     location.reload();
   }
 }
