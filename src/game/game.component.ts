@@ -38,7 +38,14 @@ export class GameComponent implements OnInit {
         }
       }
     } else {
-      // return this.gameSrv.game.drinkingCards.length < 0
+      const drinkingCardsLength = this.gameSrv.game.drinkingCards.length,
+        givingCardsLength = this.gameSrv.game.givingCards.length;
+
+      if(drinkingCardsLength === 0 && givingCardsLength === 0 ) {
+        return player === this.gameSrv.game.players[this.gameSrv.game.players.length-1];
+      }
+
+        // return this.gameSrv.game.drinkingCards.length < 0
       return true;
     }
     return false;
@@ -56,6 +63,11 @@ export class GameComponent implements OnInit {
         givingCardsLength = this.gameSrv.game.givingCards.length;
 
       let cntNbSwallow = 0;
+
+      if(drinkingCardsLength === 0 && givingCardsLength === 0 ){
+       return     player.cards[3].swallow;
+      }
+
 
       if (drinkingCardsLength > givingCardsLength) {
         player.cards.forEach((card: CardType) => {
