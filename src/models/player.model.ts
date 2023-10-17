@@ -5,11 +5,9 @@ type UUIDv4 = string;
 
 
 export interface PlayerChoice {
-    color: string | undefined,
-    plus_or_minus: string | undefined,
-    in_out: string | undefined,
-    suit: string | undefined
+  [key: string]: string | undefined;
 }
+
 
 
 export class PlayerModel {

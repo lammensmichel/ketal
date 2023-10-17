@@ -6,7 +6,7 @@
   <div style="display: flex; flex-direction: column;">
     {{ card.value }}
     <span class="card-width"
-          [ngClass]="{'text-danger': card.suit === 'hearts' || card.suit === 'diams'}"
+          [ngClass]="{'text-danger':  ['hearts', 'diams'].includes(suit)}"
           [innerHTML]="card.icon"></span>
   </div>
 </div>

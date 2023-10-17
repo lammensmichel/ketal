@@ -6,15 +6,19 @@ import {CardType} from "../../models/card-type.model";
   templateUrl: './playing-card.component.html',
   styleUrls: ['./playing-card.component.scss']
 })
-export class PlayingCardComponent implements OnInit{
+export class PlayingCardComponent implements OnInit {
   @Input() card: CardType | undefined;
 
+  public suit: string = '';
 
   constructor() {
 
   }
 
   ngOnInit(): void {
+    if (this.card) {
+      this.suit = this.card.suit || '';
+    }
   }
 
 

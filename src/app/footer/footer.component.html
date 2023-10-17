@@ -1,7 +1,6 @@
 <div class="fixed-bottom mt-2">
 
-  <div *ngIf="game && (activeTurn === 1 || activeTurn === 2 || activeTurn === 3 || activeTurn === 4 ) "
-       class="mt-2 mb-2 ">
+  <div *ngIf="game && [1,2,3,4].includes(activeTurn)"   class="mt-2 mb-2 ">
     <hr class="mb-2"/>
     <div class="d-flex flex-column gap-1">
       <div *ngIf="game.activePlayer" class="text-center d-flex align-items-center justify-content-center gap-1">

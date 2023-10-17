@@ -5,7 +5,6 @@ export interface Game {
     players: PlayerModel[] ;
     turn: number;
     maxTurnCount: number;
-    inProgress: boolean;
     phase: number;
     drinkingCards: CardType[];
     givingCards: CardType[];

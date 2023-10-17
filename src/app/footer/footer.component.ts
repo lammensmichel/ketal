@@ -1,4 +1,4 @@
-import {Component, EventEmitter, HostListener, OnDestroy, OnInit, Output} from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import {Game} from "../../models/game.model";
 import {LocalService} from "../services/local/local.service";
 import {Subscription} from "rxjs";
@@ -18,13 +18,11 @@ export class FooterComponent implements OnInit, OnDestroy {
   game: Game | undefined;
 
   gameSubs: Subscription | undefined;
-  public currentCard: CardType | undefined ;
+  public currentCard: CardType | undefined;
 
   public drinkingCards: Array<CardType> = [];
   public givingCards: Array<CardType> = [];
-  public activeTurn: number | undefined;
-
-  // @Output() public goToPhaseTwo: EventEmitter<void> = new EventEmitter<void>();
+  public activeTurn: number = 0;
 
 
   constructor(public localSrv: LocalService,
@@ -35,87 +33,6 @@ export class FooterComponent implements OnInit, OnDestroy {
 
   }
 
-
-  // getActionName() {
-  //     if (this.game?.phase === 1) {
-  //         console.log(this.activePlayer)
-  //         switch (this.game.turn) {
-  //             case 0:
-  //                 this.question = 'Rouge ou noir';
-  //                 break;
-  //             case 1:
-  //                 this.question = ' + ou -';
-  //                 break;
-  //             case 2 :
-  //                 this.question = ' In  - out';
-  //
-  //                 break;
-  //             case 3:
-  //                 this.question = ' coeur carreau pic trefle';
-  //                 break
-  //         }
-  //     } else {
-  //         if (this.gameSrv.game) {
-  //             switch (true) {
-  //                 case this.gameSrv.game.turn % 2 === 1 :
-  //                     this.question = ' Tu bois' + (this.gameSrv.game.turn - (4 * this.gameSrv.game.players.length));
-  //                     break;
-  //                 case this.gameSrv.game.turn % 2 !== 1 :
-  //                     this.question = ' Tu donnes' + (this.gameSrv.game.turn - (4 * this.gameSrv.game.players.length));
-  //                     break;
-  //             }
-  //         }
-  //     }
-  //     return this.question;
-  // }
-
-  // getAction() {
-  //     switch (this.game?.phase) {
-  //         case 1:
-  //         // this.currentCard = this.cardDeckHelperService.getRandomCard();
-  //         //
-  //         //
-  //         // // const playerTurn = this.gameSrv.game.
-  //         //
-  //         //
-  //         // this.gameSrv.addCardToPlayer(this.currentCard, this.gameSrv.game.players[this.playerTurn])
-  //         //
-  //         //
-  //         // // this.playerTurn++;
-  //         //
-  //         // this.gameSrv.addTurn();
-  //         //
-  //         // if (this.playerTurn === this.gameSrv.game.players.length) {
-  //         //     this.playerTurn = 0;
-  //         // }
-  //         // if (this.gameSrv.game.turn === this.gameSrv.game.maxTurnCount) {
-  //         //     this.game.phase = 2
-  //         //     this.gameSrv.game = this.game;
-  //         // }
-  //         //
-  //         // this.gameSrv.game = this.game;
-  //         // break;
-  //         case 2:
-  //             let card = this.cardDeckHelperService.getRandomCard();
-  //             card.Sips = this.cptNumSips;
-  //
-  //             this.gameSrv.game.players.forEach((players) => {
-  //                 return players.cards.forEach((cards) => {
-  //                     cards.SipsSelected = cards.value === card.value;
-  //                     return cards;
-  //                 });
-  //             });
-  //
-  //             if (this.numSips % 2 == 0) {
-  //                 this.takedrink.push(card);
-  //                 this.cptNumSips++;
-  //             } else {
-  //                 this.youdrink.push(card);
-  //             }
-  //             this.numSips++;
-  //             break;
-  //     }
-  // }
 
   getLowerCardVal(firstVal: number, secondVal: number): number {
     return firstVal > secondVal ? secondVal : firstVal;
@@ -136,8 +53,8 @@ export class FooterComponent implements OnInit, OnDestroy {
     if (currentPlayer) {
       switch (this.gameSrv.game.turn) {
         case 1 :
-          if ((currentPlayer?.choice.color === 'red' && currentCard.suit !== "diams" && currentCard.suit !== "hearths") ||
-            (currentPlayer?.choice.color === 'black' && currentCard.suit !== "spades" && currentCard.suit !== "clubs")) {
+          if ((currentPlayer?.choice['color'] === 'red' && currentCard.suit !== "diams" && currentCard.suit !== "hearths") ||
+            (currentPlayer?.choice['color'] === 'black' && currentCard.suit !== "spades" && currentCard.suit !== "clubs")) {
             currentCard.swallow = 1;
           } else {
             currentCard.swallow = 0;
@@ -149,42 +66,51 @@ export class FooterComponent implements OnInit, OnDestroy {
           previousCardValue = this.cardSrv.getCardValue(previousCard);
           newValue = this.cardSrv.getCardValue(currentCard);
 
-          switch (true) {
-            case previousCardValue === newValue:
-              currentCard.swallow = 4;
-              break;
-            case (currentPlayer?.choice.plus_or_minus === 'plus' && previousCardValue > newValue) || (currentPlayer?.choice.plus_or_minus === 'minus' && previousCardValue < newValue) :
-              currentCard.swallow = 2;
-              break;
-            default:
-              currentCard.swallow = 0;
+          if (previousCardValue === newValue) {
+            currentCard.swallow = 4;
+          } else if ((currentPlayer?.choice['plus_or_minus'] === 'plus' && previousCardValue > newValue) ||
+            (currentPlayer?.choice['plus_or_minus'] === 'minus' && previousCardValue < newValue)) {
+            currentCard.swallow = 2;
+          } else {
+            currentCard.swallow = 0;
           }
+
+
           break;
         case 3 :
           firstCard = currentPlayer.cards[0];
           secondCard = currentPlayer.cards[1];
-          previousCardValue = this.cardSrv.getCardValue(secondCard);
-          let firstCardValue = this.cardSrv.getCardValue(firstCard);
-          let secondCardValue = this.cardSrv.getCardValue(secondCard);
+
+          let firstCardValue = this.cardSrv.getCardValue(firstCard),
+            secondCardValue = this.cardSrv.getCardValue(secondCard),
+            lowestValue = this.getLowerCardVal(firstCardValue, secondCardValue),
+            highestValue = this.getUpperCardVal(firstCardValue, secondCardValue);
+
+
           newValue = this.cardSrv.getCardValue(currentCard);
-          switch (true) {
-            case newValue === previousCardValue:
-              currentCard.swallow = 6;
-              break;
-            case currentPlayer?.choice.in_out === 'in' && (newValue < this.getLowerCardVal(firstCardValue, secondCardValue) || newValue > this.getUpperCardVal(firstCardValue, secondCardValue)):
-              currentCard.swallow = 3;
-              break;
-            case currentPlayer?.choice.in_out === 'out' && (newValue > this.getLowerCardVal(firstCardValue, secondCardValue) || newValue < this.getUpperCardVal(firstCardValue, secondCardValue)):
-              currentCard.swallow = 3;
-              break;
-            default:
+
+          let currentPlayerChoice = currentPlayer?.choice['in_out'];
+
+          if (newValue === lowestValue || newValue === highestValue) {
+            currentCard.swallow = 6;
+          } else if (currentPlayerChoice === 'in') {
+            if (newValue > lowestValue && newValue < highestValue) {
               currentCard.swallow = 0;
+            } else {
+              currentCard.swallow = 3;
+            }
+          } else if (currentPlayerChoice === 'out') {
+            if (newValue < lowestValue || newValue > highestValue) {
+              currentCard.swallow = 0;
+            } else {
+              currentCard.swallow = 3;
+            }
           }
 
           break;
         case 4 :
           switch (true) {
-            case currentPlayer?.choice.suit !== currentCard.suit :
+            case currentPlayer?.choice['suit'] !== currentCard.suit :
               currentCard.swallow = 4;
               break;
             default:
@@ -216,29 +142,26 @@ export class FooterComponent implements OnInit, OnDestroy {
 
       this.gameSrv.refreshSession();
 
-      // this.gameSrv.game = this.game;
-
-
       let existsUndefinedValue: boolean = false;
       this.gameSrv.game.players.forEach((player) => {
         switch (this.gameSrv.game.turn) {
           case 1:
-            if (player.choice.color === undefined) {
+            if (player.choice['color'] === undefined) {
               existsUndefinedValue = true;
             }
             break;
           case 2:
-            if (player.choice.plus_or_minus === undefined) {
+            if (player.choice['plus_or_minus'] === undefined) {
               existsUndefinedValue = true;
             }
             break;
           case 3:
-            if (player.choice.in_out === undefined) {
+            if (player.choice['in_out'] === undefined) {
               existsUndefinedValue = true;
             }
             break;
           case 4:
-            if (player.choice.suit === undefined) {
+            if (player.choice['suit'] === undefined) {
               existsUndefinedValue = true;
             }
             break;
@@ -251,7 +174,6 @@ export class FooterComponent implements OnInit, OnDestroy {
           this.gameSrv.game.phase = 2;
         }
 
-        // this.gameSrv.game = this.game;
         this.gameSrv.refreshSession();
 
       }
@@ -290,7 +212,6 @@ export class FooterComponent implements OnInit, OnDestroy {
   }
 
   restartGame() {
-    this.gameSrv.gameFinished();
     this.gameSrv.resetGame();
     location.reload();
   }
@@ -309,29 +230,25 @@ export class FooterComponent implements OnInit, OnDestroy {
       });
 
 
-      if(this.currentCard) {
+      if (this.currentCard) {
         switch (true) {
           case this.gameSrv.game.drinkingCards.length === 0 && this.gameSrv.game.givingCards.length === 0:
-            // this.drinkingCards.push(this.currentCard);
             this.currentCard.swallow = 1;
             this.gameSrv.addDrinkingCard(<CardType>this.currentCard)
             break;
 
           case this.gameSrv.game.drinkingCards.length > 0 && this.gameSrv.game.givingCards.length === 0:
-            // this.givingCards.push(this.currentCard);
             this.currentCard.swallow = 1;
             this.gameSrv.addGivingCard(<CardType>this.currentCard);
             break;
           case this.gameSrv.game.drinkingCards.length !== 0 && this.gameSrv.game.givingCards.length !== 0
           && this.gameSrv.game.drinkingCards.length === this.gameSrv.game.givingCards.length :
-            // this.drinkingCards.push(this.currentCard);
-              this.currentCard.swallow = this.gameSrv.game.drinkingCards.length + 1;
+            this.currentCard.swallow = this.gameSrv.game.drinkingCards.length + 1;
             this.gameSrv.addDrinkingCard(<CardType>this.currentCard)
             break;
           case this.gameSrv.game.drinkingCards.length !== 0 && this.gameSrv.game.givingCards.length !== 0
           && this.gameSrv.game.drinkingCards.length > this.gameSrv.game.givingCards.length :
-            // this.givingCards.push(this.currentCard);
-            this.currentCard.swallow =  this.gameSrv.game.givingCards.length + 1
+            this.currentCard.swallow = this.gameSrv.game.givingCards.length + 1
             this.gameSrv.addGivingCard(<CardType>this.currentCard);
         }
       }
@@ -365,8 +282,7 @@ export class FooterComponent implements OnInit, OnDestroy {
       const players: Array<PlayerModel> = JSON.parse(this.localSrv.getData('players') as string)
       this.gameSrv.game = {
         players: players,
-        maxTurnCount: players.length * 4 ,
-        inProgress: false,
+        maxTurnCount: players.length * 4,
         turn: 1,
         phase: 1,
         drinkingCards: [],
