@@ -6,7 +6,7 @@
     <div class="d-flex flex-column gap-1">
       <div *ngIf="game.activePlayer" class="text-center d-flex align-items-center justify-content-center gap-1">
         <img class="img-thumbnail" width="32" height="32" src="{{ game.activePlayer.avatarSrc }}">
-        <span style="font-size: 20px">{{game.activePlayer.name}}</span>
+        <span class="fs-2">{{game.activePlayer.name}}</span>
       </div>
 
       <div *ngIf="activeTurn === 1 " class="d-flex flex-row gap-2 justify-content-center ">
