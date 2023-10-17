@@ -59,7 +59,7 @@ export class CardDeckHelperService {
 
   public getRandomCard(): CardType {
     const deck = JSON.parse(this.localSrv.getData('cardDeck') as string)
-    const card = deck[Math.floor(Math.random() * this.createdCardDeck.length)];
+    const card = deck[Math.floor(Math.random() * deck.length)];
 
     const toDelete = deck.indexOf(card, 0);
 
