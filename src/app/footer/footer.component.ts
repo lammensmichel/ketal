@@ -297,8 +297,8 @@ export class FooterComponent implements OnInit, OnDestroy {
 
 
   onDisplayCard() {
-    if (this.game) {
-      if (this.game.givingCards.length === 6) return;
+    if (this.gameSrv.game) {
+      if (this.gameSrv.game.givingCards.length === 6) return;
       this.currentCard = this.cardDeckHelperService.getRandomCard();
 
       this.gameSrv.game.players.forEach((players) => {
@@ -325,20 +325,17 @@ export class FooterComponent implements OnInit, OnDestroy {
           case this.gameSrv.game.drinkingCards.length !== 0 && this.gameSrv.game.givingCards.length !== 0
           && this.gameSrv.game.drinkingCards.length === this.gameSrv.game.givingCards.length :
             // this.drinkingCards.push(this.currentCard);
-
-            if ("swallow" in this.currentCard) {
               this.currentCard.swallow = this.gameSrv.game.drinkingCards.length + 1;
-            }
             this.gameSrv.addDrinkingCard(<CardType>this.currentCard)
             break;
           case this.gameSrv.game.drinkingCards.length !== 0 && this.gameSrv.game.givingCards.length !== 0
           && this.gameSrv.game.drinkingCards.length > this.gameSrv.game.givingCards.length :
             // this.givingCards.push(this.currentCard);
-            this.gameSrv.game.givingCards.length + 1
+            this.currentCard.swallow =  this.gameSrv.game.givingCards.length + 1
             this.gameSrv.addGivingCard(<CardType>this.currentCard);
         }
       }
-      this.gameSrv.game = this.game;
+      this.gameSrv.resetGame();
     }
   }
 
