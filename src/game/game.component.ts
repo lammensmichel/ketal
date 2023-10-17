@@ -53,16 +53,26 @@ export class GameComponent implements OnInit {
       }
     } else {
       const drinkingCardsLength = this.gameSrv.game.drinkingCards.length,
-        givinCardsLength = this.gameSrv.game.givingCards.length;
+        givingCardsLength = this.gameSrv.game.givingCards.length;
+
       let cntNbSwallow = 0;
 
-      if (drinkingCardsLength > givinCardsLength) {
+      if (drinkingCardsLength > givingCardsLength) {
         player.cards.forEach((card: CardType) => {
-          if (this.cardSrv.getCardValue(card) === this.cardSrv.getCardValue(this.gameSrv.game.givingCards[drinkingCardsLength - 2])) {
+          if (this.cardSrv.getCardValue(card) === this.cardSrv.getCardValue(this.gameSrv.game.drinkingCards[drinkingCardsLength - 1])) {
             cntNbSwallow += drinkingCardsLength;
           }
         })
       }
+
+      if (drinkingCardsLength == givingCardsLength) {
+        player.cards.forEach((card: CardType) => {
+          if (this.cardSrv.getCardValue(card) === this.cardSrv.getCardValue(this.gameSrv.game.givingCards[drinkingCardsLength - 1])) {
+            cntNbSwallow -= givingCardsLength;
+          }
+        })
+      }
+      console.log(cntNbSwallow);
       return cntNbSwallow;
     }
   }
