@@ -1,8 +1,9 @@
-import {Component, EventEmitter, HostListener, OnInit, Output} from '@angular/core';
-import {CardDeckHelperService} from 'src/helpers/card-deck.helper';
-import {PlayerHelperService} from 'src/helpers/player.helper';
-import {CardType} from 'src/models/card-type.model';
-import {PlayerModel} from 'src/models/player.model';
+import {Component, OnInit} from '@angular/core';
+import {GameService} from "../app/services/game/game.service";
+import {Game} from "../models/game.model";
+import {PlayerModel} from "../models/player.model";
+import {CardType} from "../models/card-type.model";
+import {CardService} from "../app/services/card/card.service";
 
 @Component({
   selector: 'app-game',
@@ -10,79 +11,82 @@ import {PlayerModel} from 'src/models/player.model';
   styleUrls: ['./game.component.scss'],
 })
 export class GameComponent implements OnInit {
-  @HostListener('document:keydown', ['$event'])
-  handleKeydown(event: KeyboardEvent): void {
-    if (event.key === 'B' || event.key === 'b' || event.key === 'D' || event.key === 'd') {
-      // Handle 'B' or 'b' key press here
-      this.onNextClick();
-    }
-  }
 
-  @Output() public goToPhaseTwo: EventEmitter<void> = new EventEmitter<void>();
   public playerCount: number = 0;
-  public maxTurnCount: number = 0;
-  public playerTurn: number = 0;
-  public turnCount: number = 0;
-  public goToSecondPhase: boolean = false;
-  public currentCard: CardType | undefined;
-
-  players: PlayerModel[] = [];
+  public game: Game | undefined;
 
 
-
-  constructor(playerHelperService: PlayerHelperService, public cardDeckHelperService: CardDeckHelperService) {
-    this.players = playerHelperService.players;
+  constructor(
+    public gameSrv: GameService,
+    public cardSrv: CardService) {
   }
 
   public ngOnInit(): void {
-    this.playerCount = this.players.length;
-    this.maxTurnCount = this.playerCount * 4;
+    this.playerCount = this.gameSrv.game.players.length;
+    this.gameSrv.game.maxTurnCount = this.playerCount * 4;
+    this.game = this.gameSrv.game;
   }
 
-  public getPlayerName(): string {
-    return this.players[this.playerTurn].name;
+  displaySwallow(player: PlayerModel) {
+    const currentIndex = this.gameSrv.game.players.findIndex(player => player.id === this.game?.activePlayer?.id);
+    const previousPlayer = currentIndex === 0 ? this.gameSrv.game.players[this.gameSrv.game.players.length - 1] : this.gameSrv.game.players[currentIndex - 1];
+
+    if (this.gameSrv.game.phase === 1) {
+      if (this.gameSrv.game.players[currentIndex].cards.length < this.gameSrv.game.turn) {
+        if (previousPlayer && player.id === previousPlayer.id) {
+          return true
+        }
+      }
+    } else {
+      const drinkingCardsLength = this.gameSrv.game.drinkingCards.length,
+        givingCardsLength = this.gameSrv.game.givingCards.length;
+
+      if(drinkingCardsLength === 0 && givingCardsLength === 0 ) {
+        return player === this.gameSrv.game.players[this.gameSrv.game.players.length-1];
+      }
+
+        // return this.gameSrv.game.drinkingCards.length < 0
+      return true;
+    }
+    return false;
   }
 
-  onNextClick() {
-    if (this.turnCount === this.maxTurnCount) return;
-    this.currentCard = this.cardDeckHelperService.getRandomCard();
+  getSwallowCnt(player: PlayerModel) {
+    if (this.gameSrv.game.phase === 1) {
+      if (player.cards.length > 0) {
+        return player.cards[player.cards.length - 1].swallow;
+      } else {
+        return 0;
+      }
+    } else {
+      const drinkingCardsLength = this.gameSrv.game.drinkingCards.length,
+        givingCardsLength = this.gameSrv.game.givingCards.length;
 
-    this.players[this.playerTurn].cards.push(this.currentCard);
-    this.playerTurn++;
-    this.turnCount++;
+      let cntNbSwallow = 0;
 
-    if (this.playerTurn === this.playerCount) {
-      this.playerTurn = 0;
-    }
+      if(drinkingCardsLength === 0 && givingCardsLength === 0 ){
+       return     player.cards[3].swallow;
+      }
 
-    if (this.turnCount === this.maxTurnCount) {
-      this.goToSecondPhase = true;
-      this.goToPhaseTwo.emit();
+
+      if (drinkingCardsLength > givingCardsLength) {
+        player.cards.forEach((card: CardType) => {
+          if (this.cardSrv.getCardValue(card) === this.cardSrv.getCardValue(this.gameSrv.game.drinkingCards[drinkingCardsLength - 1])) {
+            cntNbSwallow += drinkingCardsLength;
+          }
+        })
+      }
+
+      if (drinkingCardsLength == givingCardsLength) {
+        player.cards.forEach((card: CardType) => {
+          if (this.cardSrv.getCardValue(card) === this.cardSrv.getCardValue(this.gameSrv.game.givingCards[drinkingCardsLength - 1])) {
+            cntNbSwallow -= givingCardsLength;
+          }
+        })
+      }
+      console.log(cntNbSwallow);
+      return cntNbSwallow;
     }
   }
 
-  public getMessage(): string {
-    let message = '';
-
-    if (this.turnCount < this.playerCount) {
-      message = 'Rouge ou noir: ';
-    }
-
-    if (this.turnCount >= this.playerCount && this.turnCount < this.playerCount * 2) {
-
-      message = 'Plus grand ou plus petit: ';
-    }
-
-    if (this.turnCount >= this.playerCount * 2 && this.turnCount < this.playerCount * 3) {
-
-      message = 'Entre ou extérieur: ';
-    }
-
-    if (this.turnCount >= this.playerCount * 3) {
-
-      message = 'Coeur, Carreau, Pique ou Trèfle ';
-    }
-
-    return message;
-  }
 }

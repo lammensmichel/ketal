@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { CardDeckHelperService } from 'src/helpers/card-deck.helper';
+import {Component} from '@angular/core';
+import {GameService} from "./services/game/game.service";
 
 @Component({
   selector: 'app-root',
@@ -8,19 +8,10 @@ import { CardDeckHelperService } from 'src/helpers/card-deck.helper';
 })
 export class AppComponent {
   title = 'ketal';
-  public displayPlayerChoice: boolean = true;
-  public displaySecondPhase: boolean = false;
 
-  constructor(public cardDeckHelperService: CardDeckHelperService) {
+
+  constructor(public gameSrv: GameService) {
   }
 
-  public beginGame(): void {
-    this.cardDeckHelperService.construcDesck();
 
-    this.displayPlayerChoice = !this.displayPlayerChoice;
-  }
-
-  beginSecondPhase() {
-    this.displaySecondPhase = !this.displaySecondPhase;
-  }
 }

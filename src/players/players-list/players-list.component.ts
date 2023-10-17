@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { PlayerHelperService } from 'src/helpers/player.helper';
-import { LocalService } from 'src/local/local.service';
+import { LocalService } from 'src/app/services/local/local.service';
 import { PlayerModel } from 'src/models/player.model';
 
 @Component({

@@ -11,7 +11,7 @@
       </div>
     </div>
   </form>
-  <ul class="list-group text-start w-100">
+  <ul class="list-group text-start">
     <li class="list-group-item d-flex" *ngFor="let player of getPlayers()">
       <div class="flex-grow-1">
           <img class="img-thumbnail" width="32" height="32" src="{{ player.avatarSrc }}">
@@ -20,10 +20,3 @@
       <button type="button" class="btn-close" aria-label="Close" (click)="deletePlayer(player)"></button>
     </li>
   </ul>
-  <!-- Bouton pour démarrer, en position fixe en bas de l'écran -->
-  <div *ngIf="hasPlayers()" class="fixed-bottom text-center mb-2">
-    <hr class="mb-2"/>
-    <button type="button" class="btn btn-secondary ms-2" (click)="beginGame()">
-      Débuter la Grosse Guinze
-    </button>
-  </div>

@@ -1,0 +1,14 @@
+<div *ngIf="card" [ngClass]="{'card-container-red' :  (card.suit === 'hearts' || card.suit === 'diams') && !card.selected,
+                                 'card-container-red-selected' :  (card.suit === 'hearts' || card.suit === 'diams') && card.selected,
+                                 'card-container': card.suit !== 'hearts' && card.suit !== 'diams' && !card.selected,
+                                 'card-container-selected': card.suit !== 'hearts' && card.suit !== 'diams'  && card.selected,
+                                                    }">
+  <div style="display: flex; flex-direction: column;">
+    {{ card.value }}
+    <span class="card-width"
+          [ngClass]="{'text-danger':  ['hearts', 'diams'].includes(suit)}"
+          [innerHTML]="card.icon"></span>
+  </div>
+</div>
+<div  *ngIf="card === undefined" class="card-container-empty">
+</div>
