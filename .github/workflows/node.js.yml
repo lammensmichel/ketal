@@ -1,4 +1,4 @@
-name: Build and Deploy Angular App
+name: Build Angular App
 
 on:
   push:
@@ -17,13 +17,22 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: 18.13.0 # Utilisez la version de Node.js souhaitée
+          node-version: 18.13.0
 
-      - name: Install dependencies
+      - name: Install Angular CLI
+        run: npm install -g @angular/cli
+
+      - name: Install project dependencies
         run: npm install
 
       - name: Build Angular app
-        run: npm run build
+        run: ng build --configuration=production
+
+      - name: Archive artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: dist
+          path: dist
 
   deploy:
     name: Deploy
@@ -34,8 +43,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: dist
+
       - name: Deploy to Hosting Service
         run: |
           # Ajoutez ici vos commandes de déploiement spécifiques à votre service d'hébergement
-
-# Ajoutez d'autres étapes personnalisées au besoin, comme la configuration des variables d'environnement, etc.
