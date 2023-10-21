@@ -4,4 +4,5 @@ export interface CardType {
   icon: string | null;
   swallow: number | null;
   selected: boolean | null;
+  img: string | null;
 }

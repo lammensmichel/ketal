@@ -6,9 +6,6 @@ import {CardType} from "../../../models/card-type.model";
 })
 export class CardService {
 
-  constructor() {
-  }
-
   /**
    *
    * @param card
@@ -36,7 +33,7 @@ export class CardService {
         }
       }
     }
-    return value;
 
+    return value;
   }
 }

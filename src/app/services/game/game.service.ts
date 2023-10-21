@@ -9,10 +9,9 @@ import {CardType} from "../../../models/card-type.model";
   providedIn: 'root'
 })
 export class GameService {
+  public gameSubject: BehaviorSubject<Game> | undefined;
 
-
-  gameSubject: BehaviorSubject<Game> | undefined;
-
+  private _game: Game | undefined;
 
   constructor(public localSrv: LocalService) {
     if (!this.gameSubject) {
@@ -50,7 +49,6 @@ export class GameService {
 
   }
 
-
   refreshSession() {
     this.localSrv.saveData('game', JSON.stringify(this._game))
     this.gameSubject?.next(this.game);
@@ -73,13 +71,9 @@ export class GameService {
   addTurn() {
     this.game.turn++;
     this.game = this.game;
-
   }
 
   resetGame() {
     this.game = undefined;
   }
-
-  private _game: Game | undefined;
-
 }

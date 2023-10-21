@@ -11,10 +11,8 @@ import {CardService} from "../app/services/card/card.service";
   styleUrls: ['./game.component.scss'],
 })
 export class GameComponent implements OnInit {
-
   public playerCount: number = 0;
   public game: Game | undefined;
-
 
   constructor(
     public gameSrv: GameService,
@@ -31,12 +29,10 @@ export class GameComponent implements OnInit {
     const currentIndex = this.gameSrv.game.players.findIndex(player => player.id === this.game?.activePlayer?.id);
     const previousPlayer = currentIndex === 0 ? this.gameSrv.game.players[this.gameSrv.game.players.length - 1] : this.gameSrv.game.players[currentIndex - 1];
 
-    if (this.gameSrv.game.phase === 1) {
-      if (this.gameSrv.game.players[currentIndex].cards.length < this.gameSrv.game.turn) {
-        if (previousPlayer && player.id === previousPlayer.id) {
+    if (this.gameSrv.game.phase === 1
+        && this.gameSrv.game.players[currentIndex].cards.length < this.gameSrv.game.turn
+        && previousPlayer && player.id === previousPlayer.id) {
           return true
-        }
-      }
     } else {
       const drinkingCardsLength = this.gameSrv.game.drinkingCards.length,
         givingCardsLength = this.gameSrv.game.givingCards.length;
@@ -45,10 +41,8 @@ export class GameComponent implements OnInit {
         return player === this.gameSrv.game.players[this.gameSrv.game.players.length-1];
       }
 
-        // return this.gameSrv.game.drinkingCards.length < 0
       return true;
     }
-    return false;
   }
 
   getSwallowCnt(player: PlayerModel) {
@@ -65,9 +59,8 @@ export class GameComponent implements OnInit {
       let cntNbSwallow = 0;
 
       if(drinkingCardsLength === 0 && givingCardsLength === 0 ){
-       return     player.cards[3].swallow;
+        return player.cards[3].swallow;
       }
-
 
       if (drinkingCardsLength > givingCardsLength) {
         player.cards.forEach((card: CardType) => {
@@ -84,9 +77,8 @@ export class GameComponent implements OnInit {
           }
         })
       }
-      console.log(cntNbSwallow);
+
       return cntNbSwallow;
     }
   }
-
 }
