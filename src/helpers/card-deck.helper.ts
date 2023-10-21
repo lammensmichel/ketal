@@ -45,7 +45,8 @@ export class CardDeckHelperService {
           icon: `&${this.possibleSuits[i]};`,
           swallow: 0,
           selected: false,
-          value: ''
+          value: '',
+          img:`assets/images/cards/svg/${this.possiblevalues[x]}_${this.possibleSuits[i]}.svg`,
         };
         card.value = this.possiblevalues[x];
         deck.push(card);

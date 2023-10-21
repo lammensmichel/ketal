@@ -10,7 +10,7 @@ import { PlayerModel } from 'src/models/player.model';
   styleUrls: ['./players-list.component.scss'],
 })
 export class PlayersListComponent {
-  public playersForm: FormGroup; // Créez un formulaire réactif
+  public playersForm: FormGroup;
   public allPlayersCreated: boolean = false;
   @Output() public onBeginGame: EventEmitter<void> = new EventEmitter<void>();
 
@@ -26,7 +26,7 @@ export class PlayersListComponent {
       this.playerHelper.players = localPlayer;
     }
     this.playersForm = this.fb.group({
-      newPlayer: ['', Validators.required], // Créez un champ "newPlayer" avec validation requise
+      newPlayer: ['', Validators.required],
     });
   }
 
@@ -37,7 +37,7 @@ export class PlayersListComponent {
         'players',
         JSON.stringify(this.playerHelper.players)
       );
-      this.playersForm.reset(); // Réinitialisez le formulaire après l'ajout
+      this.playersForm.reset();
     }
   }
 

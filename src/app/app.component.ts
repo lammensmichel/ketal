@@ -9,9 +9,6 @@ import {GameService} from "./services/game/game.service";
 export class AppComponent {
   title = 'ketal';
 
-
   constructor(public gameSrv: GameService) {
   }
-
-
 }

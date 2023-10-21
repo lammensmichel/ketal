@@ -13,13 +13,8 @@ import {GameService} from "../app/services/game/game.service";
 export class secondPhaseComponent {
   @HostListener('document:keydown', ['$event'])
   handleKeydown(event: KeyboardEvent): void {
-    if (event.key === 'B' || event.key === 'b') {
+    if (event.key === 'B' || event.key === 'b' || event.key === 'D' || event.key === 'd') {
       // Handle 'B' or 'b' key press here
-      if (this.numSips < 13) {
-        this.onDisplayCard();
-      }
-    } else if (event.key === 'D' || event.key === 'd') {
-      // Handle 'D' or 'd' key press here
       if (this.numSips < 13) {
         this.onDisplayCard();
       }
@@ -28,11 +23,9 @@ export class secondPhaseComponent {
 
   public numSips: number = 1;
   public cptNumSips: number = 1;
-
   public youdrink: CardType[] = [];
-
   public takedrink: CardType[] = [];
-  players: PlayerModel[] = [];
+  public players: PlayerModel[] = [];
 
   constructor(
     public cardDeckHelperService: CardDeckHelperService,
@@ -43,7 +36,7 @@ export class secondPhaseComponent {
   }
 
   onDisplayCard() {
-    let card = this.cardDeckHelperService.getRandomCard();
+    let card: CardType = this.cardDeckHelperService.getRandomCard();
     card.swallow = this.cptNumSips;
 
     this.players.forEach((players) => {

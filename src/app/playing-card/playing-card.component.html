@@ -3,12 +3,7 @@
                                  'card-container': card.suit !== 'hearts' && card.suit !== 'diams' && !card.selected,
                                  'card-container-selected': card.suit !== 'hearts' && card.suit !== 'diams'  && card.selected,
                                                     }">
-  <div style="display: flex; flex-direction: column;">
-    {{ card.value }}
-    <span class="card-width"
-          [ngClass]="{'text-danger':  ['hearts', 'diams'].includes(suit)}"
-          [innerHTML]="card.icon"></span>
-  </div>
+    <img [src]="card.img" [alt]="card.value + ' ' + card.suit">
 </div>
-<div  *ngIf="card === undefined" class="card-container-empty">
+<div  *ngIf="!card" class="card-container-empty">
 </div>

@@ -8,6 +8,8 @@ import {CardType} from "../../models/card-type.model";
 import {PlayerModel} from "../../models/player.model";
 import {PlayerHelperService} from "../../helpers/player.helper";
 import {CardService} from "../services/card/card.service";
+import { InAndOutEnum } from 'src/models/enums/in_and_out.enum';
+import { DrinkChoiceEnum } from 'src/models/enums/drinnk_choice.enum';
 
 @Component({
   selector: 'app-footer',
@@ -44,11 +46,16 @@ export class FooterComponent implements OnInit, OnDestroy {
 
   gotSwallowNumber(currentCard: CardType, playerId: string) {
     const currentPlayer = this.gameSrv.game.players.find((player: PlayerModel) => player.id === playerId);
-    let previousCard: CardType | undefined,
-      previousCardValue = 0,
-      newValue = 0,
-      firstCard: CardType | undefined,
-      secondCard: CardType | undefined;
+    let previousCard: CardType | undefined;
+    let previousCardValue: number = 0;
+    let newValue: number = 0;
+    let firstCard: CardType | undefined;
+    let secondCard: CardType | undefined;
+    let firstCardValue: number = 0;
+    let secondCardValue: number = 0;
+    let lowestValue: number = 0;
+    let highestValue: number = 0;
+    let currentPlayerChoice: string | undefined;
 
     if (currentPlayer) {
       switch (this.gameSrv.game.turn) {
@@ -61,7 +68,6 @@ export class FooterComponent implements OnInit, OnDestroy {
           }
           break;
         case 2 :
-
           previousCard = currentPlayer.cards[currentPlayer?.cards.length - 1];
           previousCardValue = this.cardSrv.getCardValue(previousCard);
           newValue = this.cardSrv.getCardValue(currentCard);
@@ -74,32 +80,27 @@ export class FooterComponent implements OnInit, OnDestroy {
           } else {
             currentCard.swallow = 0;
           }
-
-
           break;
         case 3 :
           firstCard = currentPlayer.cards[0];
           secondCard = currentPlayer.cards[1];
 
-          let firstCardValue = this.cardSrv.getCardValue(firstCard),
-            secondCardValue = this.cardSrv.getCardValue(secondCard),
-            lowestValue = this.getLowerCardVal(firstCardValue, secondCardValue),
-            highestValue = this.getUpperCardVal(firstCardValue, secondCardValue);
-
-
+          firstCardValue = this.cardSrv.getCardValue(firstCard);
+          secondCardValue = this.cardSrv.getCardValue(secondCard);
+          lowestValue = this.getLowerCardVal(firstCardValue, secondCardValue);
+          highestValue = this.getUpperCardVal(firstCardValue, secondCardValue);
           newValue = this.cardSrv.getCardValue(currentCard);
-
-          let currentPlayerChoice = currentPlayer?.choice['in_out'];
+          currentPlayerChoice = currentPlayer?.choice[DrinkChoiceEnum.InAndOut];
 
           if (newValue === lowestValue || newValue === highestValue) {
             currentCard.swallow = 6;
-          } else if (currentPlayerChoice === 'in') {
+          } else if (currentPlayerChoice === InAndOutEnum.In) {
             if (newValue > lowestValue && newValue < highestValue) {
               currentCard.swallow = 0;
             } else {
               currentCard.swallow = 3;
             }
-          } else if (currentPlayerChoice === 'out') {
+          } else if (currentPlayerChoice === InAndOutEnum.Out) {
             if (newValue < lowestValue || newValue > highestValue) {
               currentCard.swallow = 0;
             } else {
@@ -110,7 +111,7 @@ export class FooterComponent implements OnInit, OnDestroy {
           break;
         case 4 :
           switch (true) {
-            case currentPlayer?.choice['suit'] !== currentCard.suit :
+            case currentPlayer?.choice[DrinkChoiceEnum.Suit] !== currentCard.suit :
               currentCard.swallow = 4;
               break;
             default:
@@ -146,22 +147,22 @@ export class FooterComponent implements OnInit, OnDestroy {
       this.gameSrv.game.players.forEach((player) => {
         switch (this.gameSrv.game.turn) {
           case 1:
-            if (player.choice['color'] === undefined) {
+            if (player.choice[DrinkChoiceEnum.Color] === undefined) {
               existsUndefinedValue = true;
             }
             break;
           case 2:
-            if (player.choice['plus_or_minus'] === undefined) {
+            if (player.choice[DrinkChoiceEnum.PlusOrMinus] === undefined) {
               existsUndefinedValue = true;
             }
             break;
           case 3:
-            if (player.choice['in_out'] === undefined) {
+            if (player.choice[DrinkChoiceEnum.InAndOut] === undefined) {
               existsUndefinedValue = true;
             }
             break;
           case 4:
-            if (player.choice['suit'] === undefined) {
+            if (player.choice[DrinkChoiceEnum.Suit] === undefined) {
               existsUndefinedValue = true;
             }
             break;
@@ -182,9 +183,8 @@ export class FooterComponent implements OnInit, OnDestroy {
 
 
   chooseColor(color: string) {
-
     if (this.gameSrv.game && this.gameSrv.game.activePlayer) {
-      this.gameSrv.setCardChoice('color', color, this.gameSrv.game.activePlayer.id)
+      this.gameSrv.setCardChoice(DrinkChoiceEnum.Color, color, this.gameSrv.game.activePlayer.id)
       this.pickCard();
     }
   }
@@ -192,21 +192,21 @@ export class FooterComponent implements OnInit, OnDestroy {
 
   plusOrMinus(selection: string) {
     if (this.gameSrv.game && this.gameSrv.game.activePlayer && this.game) {
-      this.gameSrv.setCardChoice('plus_or_minus', selection, this.gameSrv.game.activePlayer.id)
+      this.gameSrv.setCardChoice(DrinkChoiceEnum.PlusOrMinus, selection, this.gameSrv.game.activePlayer.id)
       this.pickCard();
     }
   }
 
   inOut(selection: string) {
     if (this.gameSrv.game && this.gameSrv.game.activePlayer && this.game) {
-      this.gameSrv.setCardChoice('in_out', selection, this.gameSrv.game.activePlayer.id)
+      this.gameSrv.setCardChoice(DrinkChoiceEnum.InAndOut, selection, this.gameSrv.game.activePlayer.id)
       this.pickCard();
     }
   }
 
   chooseSuit(selection: string) {
     if (this.gameSrv.game && this.gameSrv.game.activePlayer && this.game) {
-      this.gameSrv.setCardChoice('suit', selection, this.gameSrv.game.activePlayer.id)
+      this.gameSrv.setCardChoice(DrinkChoiceEnum.Suit, selection, this.gameSrv.game.activePlayer.id)
       this.pickCard();
     }
   }
@@ -228,7 +228,6 @@ export class FooterComponent implements OnInit, OnDestroy {
           return cards;
         });
       });
-
 
       if (this.currentCard) {
         switch (true) {
@@ -263,13 +262,13 @@ export class FooterComponent implements OnInit, OnDestroy {
         if (!this.game.activePlayer) {
           this.game.activePlayer = this.game.players[0];
         }
+
         this.activeTurn = this.game.turn;
         this.drinkingCards = this.game.drinkingCards;
         this.givingCards = this.game.givingCards;
       }
     })
   }
-
 
   public hasPlayers(): boolean {
     return this.playerHelper?.players?.length > 0;
