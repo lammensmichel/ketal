@@ -13,8 +13,8 @@ export class CardService {
    */
   getCardValue(card: CardType) {
     let value = 0;
-    if (card) {
-      if (card.value) {
+
+      if (card?.value) {
         switch (card.value) {
           case 'A' :
             value = 14;
@@ -31,7 +31,6 @@ export class CardService {
           default:
             value = parseInt(card.value);
         }
-      }
     }
 
     return value;

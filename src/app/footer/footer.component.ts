@@ -25,6 +25,7 @@ export class FooterComponent implements OnInit, OnDestroy {
   public drinkingCards: Array<CardType> = [];
   public givingCards: Array<CardType> = [];
   public activeTurn: number = 0;
+  public maxTurn: number = 6;
 
 
   constructor(public localSrv: LocalService,
