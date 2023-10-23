@@ -7,10 +7,10 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:3000', // serveur Node.js
   'http://localhost:4200', // app angular
-  'http://paquet.fun',
-  'https://paquet.fun',
-  'http://www.paquet.fun',
-  'https://www.paquet.fun',
+  'http://ketal.paquet.fun',
+  'https://ketal.paquet.fun',
+  'http://www.ketal.paquet.fun',
+  'https://www.ketal.paquet.fun',
   'http://79.137.35.181',
   'https://79.137.35.181'
 ];
