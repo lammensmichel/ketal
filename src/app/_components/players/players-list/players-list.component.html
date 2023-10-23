@@ -3,7 +3,7 @@
     <div class="input-group mb-1">
       <span class="input-group-text">🥃</span>
       <input type="text" class="form-control" formControlName="newPlayer" placeholder="Nom du buveur" required>
-      <button type="submit" class="btn btn-primary">Ajouter</button>
+      <button type="submit" class="btn btn-primary" [disabled]="!newPlayer?.dirty">Ajouter</button>
     </div>
     <div *ngIf="newPlayer?.invalid && (newPlayer?.dirty || newPlayer?.touched)" class="alert alert-danger">
       <div *ngIf="newPlayer?.errors?.['required']">
