@@ -9,7 +9,7 @@
               <span style="font-size: 20px">{{player.name}}</span>
               <span *ngIf="displaySwallow(player)" style="font-size: 20px">{{getSwallowCnt(player)}}  <i class="fa-solid fa-whiskey-glass"></i></span>
             </div>
-            <div class="card-group d-flex">
+            <div class="card-group d-flex justify-content-center">
               <div *ngFor="let card of player.cards">
                 <app-playing-card [card]="card"></app-playing-card>
               </div>
