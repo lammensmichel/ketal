@@ -7,9 +7,12 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:3000', // serveur Node.js
   'http://localhost:4200', // app angular
-  'http://example.com',
-  'https://example.com',
-  'http://192.168.0.100'
+  'http://paquet.fun',
+  'https://paquet.fun',
+  'http://www.paquet.fun',
+  'https://www.paquet.fun',
+  'http://79.137.35.181',
+  'https://79.137.35.181'
 ];
 app.use(cors({
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
