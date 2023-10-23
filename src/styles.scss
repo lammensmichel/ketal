@@ -13,3 +13,14 @@ app-root {
 .main {
   flex: 1;
 }
+
+.border-dashed{
+  border-style: dashed !important;
+}
+
+// Custom color because bg-aquamarine does not exist
+// you can use bg-(primary, secondary, success, danger, warning, info, light, dark, white) as default values
+.bg-aquamarine{
+  --bs-bg-opacity: 1;
+  background-color: aquamarine !important;
+}
