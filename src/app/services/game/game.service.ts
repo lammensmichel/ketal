@@ -1,9 +1,9 @@
-import {Injectable} from '@angular/core';
-import {PlayerModel} from "../../../models/player.model";
-import {Game} from "../../../models/game.model";
-import {LocalService} from "../local/local.service";
-import {BehaviorSubject} from "rxjs";
-import {CardType} from "../../../models/card-type.model";
+import { Injectable } from '@angular/core';
+import { BehaviorSubject } from "rxjs";
+import { CardType } from 'src/app/_shared/_models/card-type.model';
+import { Game } from 'src/app/_shared/_models/game.model';
+import { PlayerModel } from 'src/app/_shared/_models/player.model';
+import { LocalService } from "../local/local.service";
 
 @Injectable({
   providedIn: 'root'

@@ -1,0 +1,106 @@
+.card-container-red {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 100px;
+  height: 120px;
+  background: white;
+  padding: 10px;
+  text-align: center;
+
+  @media (max-width: 768px) { // Adjust the breakpoint as needed
+    width: 30px; // Smaller width for mobile
+    height: 60px; // Smaller height for mobile
+    border-radius: 5px; // Smaller border-radius for mobile
+    padding: 5px; // Smaller padding for mobile
+
+    justify-content: start;
+  }
+}
+
+
+.card-container-red-selected {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 100px;
+  height: 120px;
+  background: aquamarine;
+  padding: 10px;
+  text-align: center;
+
+  @media (max-width: 768px) { // Adjust the breakpoint as needed
+    width: 30px; // Smaller width for mobile
+    height: 60px; // Smaller height for mobile
+    border-radius: 5px; // Smaller border-radius for mobile
+    padding: 5px; // Smaller padding for mobile
+    justify-content: start;
+  }
+}
+
+.card-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 100px;
+  height: 120px;
+  background: white;
+  padding: 10px;
+  text-align: center;
+
+  @media (max-width: 768px) { // Adjust the breakpoint as needed
+    width: 30px; // Smaller width for mobile
+    height: 60px; // Smaller height for mobile
+    border-radius: 5px; // Smaller border-radius for mobile
+    padding: 5px; // Smaller padding for mobile
+    justify-content: start;
+  }
+}
+
+.card-container-selected {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 100px;
+  height: 120px;
+  background: aquamarine;
+  padding: 10px;
+  text-align: center;
+
+  @media (max-width: 768px) { // Adjust the breakpoint as needed
+    width: 30px; // Smaller width for mobile
+    height: 60px; // Smaller height for mobile
+    border-radius: 5px; // Smaller border-radius for mobile
+    padding: 5px; // Smaller padding for mobile
+    justify-content: start;
+  }
+}
+
+::ng-deep .custom-gap {
+  gap: 1rem;
+  @media (max-width: 768px) {
+    gap: 0.1rem;
+  }
+
+}
+
+.card-container-empty{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 100px;
+  height: 120px;
+  border: 1px dashed black;
+  border-radius: 10px;
+  background: white;
+  padding: 10px;
+  text-align: center;
+
+  @media (max-width: 768px) { // Adjust the breakpoint as needed
+    width: 30px; // Smaller width for mobile
+    height: 60px; // Smaller height for mobile
+    border-radius: 5px; // Smaller border-radius for mobile
+    padding: 5px; // Smaller padding for mobile
+    justify-content: start;
+  }
+}

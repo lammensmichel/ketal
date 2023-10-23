@@ -1,0 +1,22 @@
+<div class="container">
+  <form [formGroup]="playersForm" (ngSubmit)="addPlayer()" *ngIf="!allPlayersCreated" class="mb-1">
+    <div class="input-group mb-1">
+      <span class="input-group-text">🥃</span>
+      <input type="text" class="form-control" formControlName="newPlayer" placeholder="Nom du buveur" required>
+      <button type="submit" class="btn btn-primary">Ajouter</button>
+    </div>
+    <div *ngIf="newPlayer?.invalid && (newPlayer?.dirty || newPlayer?.touched)" class="alert alert-danger">
+      <div *ngIf="newPlayer?.errors?.['required']">
+        Le nom du joueur est requis.
+      </div>
+    </div>
+  </form>
+  <ul class="list-group text-start">
+    <li class="list-group-item d-flex" *ngFor="let player of getPlayers()">
+      <div class="flex-grow-1">
+          <img title="avatarImg" class="img-thumbnail" width="32" height="32" src="{{ player.avatarSrc }}">
+          {{ player.name }}
+      </div>
+      <button type="button" class="btn-close" aria-label="Close" (click)="deletePlayer(player)"></button>
+    </li>
+  </ul>
