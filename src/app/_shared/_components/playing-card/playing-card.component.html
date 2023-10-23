@@ -6,9 +6,8 @@
     }"
 >
     <img
-        *ngIf="card"
-        [src]="card.img"
-        alt="{{card.value}} {{card.suit}}"
+        [src]="card?.img ?? 'assets/images/cards/svg/blue_back.svg'"
+        alt="{{card?.value}} {{card?.suit}}"
         class="h-100"
     />
 </div>
