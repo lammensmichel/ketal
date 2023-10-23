@@ -5,7 +5,7 @@ COPY package*.json ./
 COPY ./nodejs/package*.json ./nodejs/
 RUN npm install
 COPY . .
-RUN npm run build
+RUN npm run build --configuration="production"
 
 # Étape 2 : Utilisation de NGINX pour servir l'application construite
 FROM nginx:alpine

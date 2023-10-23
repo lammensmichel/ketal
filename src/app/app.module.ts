@@ -16,8 +16,9 @@ import { HeaderComponent } from './_shared/_components/header/header.component';
 import { PlayingCardComponent } from './_shared/_components/playing-card/playing-card.component';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+import { environment } from 'src/environments/environment';
 
-const config: SocketIoConfig = { url: 'http://localhost:3000', options: {} };
+const config: SocketIoConfig = { url: environment.socketIoUrl, options: {} };
 
 @NgModule({
   declarations: [

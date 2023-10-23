@@ -7,6 +7,7 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:3000', // serveur Node.js
   'http://localhost:4200', // app angular
+  'http://localhost:4211', // docker
   'http://ketal.paquet.fun',
   'https://ketal.paquet.fun',
   'http://www.ketal.paquet.fun',
