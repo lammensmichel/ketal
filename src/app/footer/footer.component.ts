@@ -251,7 +251,7 @@ export class FooterComponent implements OnInit, OnDestroy {
             this.gameSrv.addGivingCard(<CardType>this.currentCard);
         }
       }
-      this.gameSrv.resetGame();
+      this.gameSrv.refreshSession();
     }
   }
 
