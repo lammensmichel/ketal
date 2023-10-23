@@ -1,9 +1,14 @@
-<div *ngIf="card" [ngClass]="{'card-container-red' :  (card.suit === 'hearts' || card.suit === 'diams') && !card.selected,
-                                 'card-container-red-selected' :  (card.suit === 'hearts' || card.suit === 'diams') && card.selected,
-                                 'card-container': card.suit !== 'hearts' && card.suit !== 'diams' && !card.selected,
-                                 'card-container-selected': card.suit !== 'hearts' && card.suit !== 'diams'  && card.selected,
-                                                    }">
-    <img [src]="card.img" [alt]="card.value + ' ' + card.suit">
-</div>
-<div  *ngIf="!card" class="card-container-empty">
+<div
+    class="card-container d-flex flex-column justify-content-around p-1"
+    [ngClass]="{
+        'selected' : card?.selected,
+        'empty border border-1 rounded': !card
+    }"
+>
+    <img
+        *ngIf="card"
+        [src]="card.img"
+        alt="{{card.value}} {{card.suit}}"
+        class="h-100"
+    />
 </div>
