@@ -8,6 +8,7 @@ import { CardType } from '../../_models/card-type.model';
 })
 export class PlayingCardComponent implements OnInit {
   @Input() card: CardType | undefined;
+  @Input() leftOverlap: boolean = false;
 
   public suit: string = '';
 

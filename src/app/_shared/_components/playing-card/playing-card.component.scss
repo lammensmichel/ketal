@@ -1,13 +1,13 @@
 .card-container {
-  width: 100px !important;
-  height: 120px !important;
-  padding: 10px !important;
-  margin-right: 5px !important;
+  max-width: 70px !important;
+  &.left-overlap {
+    margin-left: -35px;
+  }
 
-  @media (max-width: 768px) { // Adjust the breakpoint as needed
-    width: 30px !important; // Smaller width for mobile
-    height: 60px !important; // Smaller height for mobile
-    padding: 5px !important; // Smaller padding for mobile
-    margin-right: 3px !important;
+  @media (max-width: 768px) { // for mobile
+    max-width: 40px !important;
+    &.left-overlap {
+      margin-left: -20px;
+    }
   }
 }

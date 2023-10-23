@@ -1,9 +1,4 @@
 .player {
-  max-width: 300px;
-  width: 60%;
-
-  @media (max-width: 768px) {
-    width: 50%;
-  }
+  max-width: calc(50% - 0.125rem) !important; // 0.125rem = 0.5 * gap-1
 }
 
