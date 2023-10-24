@@ -1,5 +1,5 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { CardType } from '../../_models/card-type.model';
+import {Component, Input, OnInit} from '@angular/core';
+import {CardType} from '../../_models/card-type.model';
 
 @Component({
   selector: 'app-playing-card',
