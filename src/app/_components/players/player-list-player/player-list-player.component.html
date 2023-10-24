@@ -1,7 +1,7 @@
-<div class=" d-flex flex-row " #contentContainer>
+<div class=" d-flex flex-row align-items-center" #contentContainer>
   <img title="avatarImg" alt="{{player?.name}}" class="img-thumbnail" width="32" height="32"
        src="{{ player?.avatarSrc }}">
-  <div #nameContainer  class="col-6 text-truncate order-2 ml-auto">{{ player?.name }}</div>
+  <div #nameContainer  class="col-8 text-truncate order-2 ml-auto">{{ player?.name }}</div>
   <button *ngIf="player" type="button" class="btn-close order-3" aria-label="Close" (click)="deletePlayer(player)"
           #buttonContainer></button>
 </div>
