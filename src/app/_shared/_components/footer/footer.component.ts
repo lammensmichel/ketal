@@ -25,6 +25,7 @@ export class FooterComponent implements OnInit, OnDestroy {
 
   gameSubs: Subscription | undefined;
   public currentCard: CardType | undefined;
+  private previousCard: CardType | undefined;
 
   public drinkingCards: Array<CardType> = [];
   public givingCards: Array<CardType> = [];
@@ -38,7 +39,6 @@ export class FooterComponent implements OnInit, OnDestroy {
               public cardSrv: CardService) {
 
   }
-
 
   getLowerCardVal(firstVal: number, secondVal: number): number {
     return firstVal > secondVal ? secondVal : firstVal;
@@ -224,7 +224,12 @@ export class FooterComponent implements OnInit, OnDestroy {
   onDisplayCard() {
     if (this.gameSrv.game) {
       if (this.gameSrv.game.givingCards.length === 6) return;
+      if (this.previousCard) {
+        this.previousCard.selected = false;
+      }
       this.currentCard = this.cardDeckHelperService.getRandomCard();
+      this.currentCard.selected = true;
+      this.previousCard = this.currentCard;
 
       this.gameSrv.game.players.forEach((players) => {
         return players.cards.forEach((cards) => {

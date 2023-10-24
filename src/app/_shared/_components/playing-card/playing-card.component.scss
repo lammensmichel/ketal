@@ -1,4 +1,5 @@
 .card-container {
+  position: relative;
   max-width: 70px !important;
   &.left-overlap {
     margin-left: -35px;
@@ -9,5 +10,10 @@
     &.left-overlap {
       margin-left: -20px;
     }
+  }
+
+  &.emphasis {
+    box-shadow: 0 0 0.5rem 0.25rem rgba(127, 255, 212, 0.5);
+    z-index: 1;
   }
 }
