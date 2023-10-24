@@ -5,22 +5,20 @@
         <div class="card-body">
           <div class=" d-flex flex-column gap-1">
             <div class="text-center d-flex align-items-center justify-content-center gap-1">
-              <img class="img-thumbnail" width="32" height="32" src="{{ player.avatarSrc }}">
-              <span style="font-size: 20px">{{player.name}}</span>
-              <span *ngIf="displaySwallow(player)" style="font-size: 20px">{{getSwallowCnt(player)}}  <i class="fa-solid fa-whiskey-glass"></i></span>
+              <label for="avatar" class="h5">
+                <img alt="avatar" class="img-thumbnail" src="{{ player.avatarSrc }}">
+                <span class="me-1">{{player.name}}</span>
+                <span *ngIf="displaySwallow(player)">{{getSwallowCnt(player)}}  <i class="fa-solid fa-whiskey-glass"></i></span>
+              </label>
             </div>
             <div class="card-group d-flex">
               <div *ngFor="let card of player.cards">
                 <app-playing-card [card]="card"></app-playing-card>
               </div>
-              <app-playing-card
-                *ngIf="this.gameSrv.game.turn <= 1 && (player.cards.length || 0 ) < 1 "></app-playing-card>
-              <app-playing-card
-                *ngIf="this.gameSrv.game.turn <= 2 && (player.cards.length || 0 ) < 2 "></app-playing-card>
-              <app-playing-card
-                *ngIf="this.gameSrv.game.turn <= 3 && (player.cards.length || 0 ) < 3 "></app-playing-card>
-              <app-playing-card
-                *ngIf="this.gameSrv.game.turn <= 4 && (player.cards.length || 0 ) < 4 "></app-playing-card>
+              <div *ngFor="let count of [].constructor(5); let i = index">
+                <app-playing-card
+                  *ngIf="this.gameSrv.game.turn <= i && (player.cards.length || 0 ) < i "></app-playing-card>
+              </div>
             </div>
           </div>
         </div>
