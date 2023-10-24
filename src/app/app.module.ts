@@ -17,6 +17,7 @@ import {PlayingCardComponent} from './_shared/_components/playing-card/playing-c
 import {AppRoutingModule} from './app-routing.module';
 import {AppComponent} from './app.component';
 import {environment} from 'src/environments/environment';
+import { PlayerListPlayerComponent } from './_components/players/player-list-player/player-list-player.component';
 
 const config: SocketIoConfig = {url: environment.socketIoUrl, options: {}};
 
@@ -30,6 +31,7 @@ const config: SocketIoConfig = {url: environment.socketIoUrl, options: {}};
     FooterComponent,
     HeaderComponent,
     GameRoomComponent,
+    PlayerListPlayerComponent,
   ],
   imports: [
     BrowserModule,

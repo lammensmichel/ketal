@@ -1,8 +1,8 @@
-import { Component, EventEmitter, Output } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { PlayerHelperService } from 'src/app/_shared/_helpers/player.helper';
-import { PlayerModel } from 'src/app/_shared/_models/player.model';
-import { LocalService } from 'src/app/services/local/local.service';
+import { Component, EventEmitter, Output} from '@angular/core';
+import {FormBuilder, FormGroup, Validators} from '@angular/forms';
+import {PlayerHelperService} from 'src/app/_shared/_helpers/player.helper';
+import {PlayerModel} from 'src/app/_shared/_models/player.model';
+import {LocalService} from 'src/app/services/local/local.service';
 
 @Component({
   selector: 'app-players-list',
@@ -10,6 +10,7 @@ import { LocalService } from 'src/app/services/local/local.service';
   styleUrls: ['./players-list.component.scss'],
 })
 export class PlayersListComponent {
+
   public playersForm: FormGroup;
   public allPlayersCreated: boolean = false;
   @Output() public onBeginGame: EventEmitter<void> = new EventEmitter<void>();
@@ -17,7 +18,7 @@ export class PlayersListComponent {
   constructor(
     private fb: FormBuilder,
     public playerHelper: PlayerHelperService,
-    public localService: LocalService
+    public localService: LocalService,
   ) {
     const localPlayer = JSON.parse(
       this.localService.getData('players') as string
@@ -31,6 +32,7 @@ export class PlayersListComponent {
   }
 
   public addPlayer() {
+    if(this.playerHelper.players.length === 23 ) return;
     if (this.playersForm.valid) {
       this.playerHelper.addPlayer(this.playersForm.value.newPlayer);
       this.localService.saveData(
@@ -53,18 +55,9 @@ export class PlayersListComponent {
     return this.playerHelper?.players?.length > 0;
   }
 
-  public deletePlayer(player: PlayerModel) {
-    this.playerHelper.players = this.playerHelper.players.filter(
-      (playerSelected) => playerSelected.name !== player.name
-    );
-
-    this.localService.saveData(
-      'players',
-      JSON.stringify(this.playerHelper.players)
-    );
-  }
-
   get newPlayer() {
     return this.playersForm.get('newPlayer');
   }
+
+
 }

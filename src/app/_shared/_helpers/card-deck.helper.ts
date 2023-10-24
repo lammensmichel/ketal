@@ -4,6 +4,7 @@ import { LocalService } from "../../services/local/local.service";
 import { CardType } from "../_models/card-type.model";
 import { CardValueEnum } from "../_models/enums/card_value.enum";
 import { SuitsEnum } from "../_models/enums/suits.enum";
+import {PlayerHelperService} from "./player.helper";
 
 @Injectable({
   providedIn: 'root',
@@ -18,16 +19,15 @@ export class CardDeckHelperService {
 
 
   constructor(
-    public localSrv: LocalService
+    public localSrv: LocalService,
+    public  playerSrv: PlayerHelperService
   ) {
     const sessionCardDeck = JSON.parse(this.localSrv.getData('cardDeck') as string);
     this.createdCardDeck = sessionCardDeck ? sessionCardDeck : [];
   }
 
-  public constructDeck(): Array<CardType> {
-    this.resetCards();
-    let deck = new Array<CardType>();
 
+  public constructOneDeck(deck: Array<CardType>){
     for (let i = 0; i < this.possibleSuits.length; i++) {
       for (let x = 0; x < this.possibleValues.length; x++) {
         let card: CardType = {
@@ -42,6 +42,14 @@ export class CardDeckHelperService {
         deck.push(card);
       }
     }
+  }
+
+  public constructDeck(): Array<CardType> {
+    this.resetCards();
+    let deck = new Array<CardType>();
+
+    this.constructOneDeck(deck);
+    if(this.playerSrv.players.length > 10 )  this.constructOneDeck(deck);
 
     this.localSrv.saveData('cardDeck', JSON.stringify(deck));
 
