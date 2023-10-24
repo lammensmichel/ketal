@@ -25,7 +25,6 @@ export class FooterComponent implements OnInit, OnDestroy {
 
   gameSubs: Subscription | undefined;
   public currentCard: CardType | undefined;
-  private previousCard: CardType | undefined;
 
   public drinkingCards: Array<CardType> = [];
   public givingCards: Array<CardType> = [];
@@ -224,12 +223,10 @@ export class FooterComponent implements OnInit, OnDestroy {
   onDisplayCard() {
     if (this.gameSrv.game) {
       if (this.gameSrv.game.givingCards.length === 6) return;
-      if (this.previousCard) {
-        this.previousCard.selected = false;
-      }
+      this.gameSrv.game.givingCards.forEach((card) => (card.selected = false));
+      this.gameSrv.game.drinkingCards.forEach((card) => (card.selected = false));
       this.currentCard = this.cardDeckHelperService.getRandomCard();
       this.currentCard.selected = true;
-      this.previousCard = this.currentCard;
 
       this.gameSrv.game.players.forEach((players) => {
         return players.cards.forEach((cards) => {
@@ -242,22 +239,22 @@ export class FooterComponent implements OnInit, OnDestroy {
         switch (true) {
           case this.gameSrv.game.drinkingCards.length === 0 && this.gameSrv.game.givingCards.length === 0:
             this.currentCard.swallow = 1;
-            this.gameSrv.addDrinkingCard(<CardType>this.currentCard)
+            this.gameSrv.addDrinkingCard(this.currentCard)
             break;
 
           case this.gameSrv.game.drinkingCards.length > 0 && this.gameSrv.game.givingCards.length === 0:
             this.currentCard.swallow = 1;
-            this.gameSrv.addGivingCard(<CardType>this.currentCard);
+            this.gameSrv.addGivingCard(this.currentCard);
             break;
           case this.gameSrv.game.drinkingCards.length !== 0 && this.gameSrv.game.givingCards.length !== 0
           && this.gameSrv.game.drinkingCards.length === this.gameSrv.game.givingCards.length :
             this.currentCard.swallow = this.gameSrv.game.drinkingCards.length + 1;
-            this.gameSrv.addDrinkingCard(<CardType>this.currentCard)
+            this.gameSrv.addDrinkingCard(this.currentCard)
             break;
           case this.gameSrv.game.drinkingCards.length !== 0 && this.gameSrv.game.givingCards.length !== 0
           && this.gameSrv.game.drinkingCards.length > this.gameSrv.game.givingCards.length :
             this.currentCard.swallow = this.gameSrv.game.givingCards.length + 1
-            this.gameSrv.addGivingCard(<CardType>this.currentCard);
+            this.gameSrv.addGivingCard(this.currentCard);
         }
       }
       this.gameSrv.refreshSession();

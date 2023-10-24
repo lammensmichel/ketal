@@ -2,13 +2,19 @@
   <div class="row gap-1 justify-content-evenly">
     <div class="col-md-5 player p-0" *ngFor="let player of this.gameSrv.game.players">
       <div class="card">
-        <div class="card-body p-2">
-          <div class="d-flex flex-column gap-1">
-            <label for="avatar" class="align-self-center">
+        <div class="card-body p-2 container">
+          <div class="row mb-1">
+            <label for="avatar" class="d-flex flex-nowrap justify-content-around flex-fill align-items-center">
               <img alt="avatar" class="img-thumbnail" src="{{ player.avatarSrc }}">
-              <span class="ms-1 fs-5">{{player.name}}</span>
-              <span *ngIf="displaySwallow(player)">{{getSwallowCnt(player)}}  <i class="fa-solid fa-whiskey-glass"></i></span>
+              <span class="ms-1 fs-5 flex-fill">{{player.name}}</span>
+              <span class="badge" [ngClass]="{
+                'bg-success': getSwallowCnt(player) > 0,
+                'bg-danger': getSwallowCnt(player) < 0,
+                'bg-secondary': getSwallowCnt(player) == 0,
+              }">{{getSwallowCnt(player, true)}}  <i class="fa fa-glass"></i></span>
             </label>
+          </div>
+          <div class="row">
             <div class="card-group d-flex flex-nowrap justify-content-center gap-1">
               <div *ngFor="let loop of [].constructor(4); let i = index">
                 <app-playing-card [card]="player.cards[i]"></app-playing-card>
