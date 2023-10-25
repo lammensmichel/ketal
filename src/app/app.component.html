@@ -1,10 +1,9 @@
 <app-header></app-header>
-
 <div class="container d-flex gap-1 justify-content-center">
-    <!-- Display the player choices -->
-    <app-players-list *ngIf="!this.gameSrv.game"></app-players-list>
-    <!-- Guinze -->
-    <app-game *ngIf="this.gameSrv.game"></app-game>
+  <!-- Display the player choices -->
+  <app-players-list *ngIf="!this.gameSrv.game"></app-players-list>
+  <!-- Guinze -->
+  <app-game *ngIf="this.gameSrv.game"></app-game>
 </div>
 
 <app-footer></app-footer>

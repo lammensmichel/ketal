@@ -1,0 +1,22 @@
+{
+  "Label_App_¨Title": "Ketal",
+  "Label_App_Subtitle": "Grosse Guinze Generator",
+
+  "Label_YouDrink":"You drink",
+  "Label_YouGive":"You give",
+  "Label_PlaceHolder_PlayerName": "Name of drinker",
+  "Label_ListOfChannels": "List of channels",
+  "Label_Join": "Join",
+  "Label_CreateNewChannels": "Create a new channel",
+  "Label_ChannelsName": "Channel name",
+  "Label_ChannelsDescription": "Channel description",
+
+  "Label_Error_NameRequired": "The name of the drinker is required.",
+
+  "Button_Add": "Add",
+  "Button_BeginGame": "Starting the Grosse Guize",
+  "Button_Create": "Create",
+  "Button_Delete": "Delete",
+  "Button_NextCard": "Next",
+  "Button_Restart": "Restart"
+}
