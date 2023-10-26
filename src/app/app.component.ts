@@ -15,7 +15,7 @@ export class AppComponent {
     public gameSrv: GameService,
     private translate: TranslateService
   ) {
-    const defaultLang = environment.defaultLanguage;
+    const defaultLang = translate.getBrowserLang() ?? environment.defaultLanguage;
     translate.setDefaultLang(defaultLang);
     translate.use(defaultLang);
   }
