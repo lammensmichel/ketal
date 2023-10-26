@@ -32,7 +32,7 @@ export class PlayersListComponent {
   }
 
   public addPlayer() {
-    if(this.playerHelper.players.length === 23 ) return;
+    if(!this.playerHelper.isMaxPlayerNumberNotReached() ) return;
     if (this.playersForm.valid) {
       this.playerHelper.addPlayer(this.playersForm.value.newPlayer);
       this.localService.saveData(
