@@ -1,0 +1,20 @@
+.card-container {
+  position: relative;
+  max-width: 70px !important;
+
+  &.left-overlap {
+    margin-left: -35px;
+  }
+
+  @media (max-width: 768px) { // for mobile
+    max-width: 40px !important;
+    &.left-overlap {
+      margin-left: -20px;
+    }
+  }
+
+  &.emphasis {
+    box-shadow: 0 0 0.5rem 0.25rem rgba(127, 255, 212, 0.7);
+    z-index: 1;
+  }
+}

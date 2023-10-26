@@ -1,18 +1,17 @@
-import {Injectable} from '@angular/core';
-import {PlayerModel} from "../../../models/player.model";
-import {Game} from "../../../models/game.model";
-import {LocalService} from "../local/local.service";
-import {BehaviorSubject} from "rxjs";
-import {CardType} from "../../../models/card-type.model";
+import { Injectable } from '@angular/core';
+import { BehaviorSubject } from "rxjs";
+import { CardType } from 'src/app/_shared/_models/card-type.model';
+import { Game } from 'src/app/_shared/_models/game.model';
+import { PlayerModel } from 'src/app/_shared/_models/player.model';
+import { LocalService } from "../local/local.service";
 
 @Injectable({
   providedIn: 'root'
 })
 export class GameService {
+  public gameSubject: BehaviorSubject<Game> | undefined;
 
-
-  gameSubject: BehaviorSubject<Game> | undefined;
-
+  private _game: Game | undefined;
 
   constructor(public localSrv: LocalService) {
     if (!this.gameSubject) {
@@ -50,7 +49,6 @@ export class GameService {
 
   }
 
-
   refreshSession() {
     this.localSrv.saveData('game', JSON.stringify(this._game))
     this.gameSubject?.next(this.game);
@@ -73,13 +71,9 @@ export class GameService {
   addTurn() {
     this.game.turn++;
     this.game = this.game;
-
   }
 
   resetGame() {
     this.game = undefined;
   }
-
-  private _game: Game | undefined;
-
 }

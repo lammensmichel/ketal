@@ -1,13 +1,12 @@
-import {Injectable} from '@angular/core';
-import {CardType} from "../../../models/card-type.model";
+import { Injectable } from '@angular/core';
+import { CardType } from 'src/app/_shared/_models/card-type.model';
+import { CardValueEnum } from 'src/app/_shared/_models/enums/card_value.enum';
+
 
 @Injectable({
   providedIn: 'root'
 })
 export class CardService {
-
-  constructor() {
-  }
 
   /**
    *
@@ -16,27 +15,26 @@ export class CardService {
    */
   getCardValue(card: CardType) {
     let value = 0;
-    if (card) {
-      if (card.value) {
+
+      if (card?.value) {
         switch (card.value) {
-          case 'A' :
+          case CardValueEnum.Ace:
             value = 14;
             break;
-          case 'J' :
+          case CardValueEnum.Jack:
             value = 11;
             break;
-          case  'Q' :
+          case CardValueEnum.Queen:
             value = 12;
             break;
-          case  'K' :
+          case CardValueEnum.King:
             value = 13;
             break;
           default:
             value = parseInt(card.value);
         }
-      }
     }
-    return value;
 
+    return value;
   }
 }

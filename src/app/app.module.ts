@@ -1,18 +1,25 @@
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
+import {NgModule} from '@angular/core';
+import {BrowserModule} from '@angular/platform-browser';
 
-import { AppRoutingModule } from './app-routing.module';
-import { AppComponent } from './app.component';
-import { ReactiveFormsModule } from '@angular/forms';
-import { PlayersListComponent } from 'src/players/players-list/players-list.component';
-import { PlayerHelperService } from 'src/helpers/player.helper';
-import { CardDeckHelperService } from 'src/helpers/card-deck.helper';
-import { GameComponent } from '../game/game.component';
-import { secondPhaseComponent } from '../second-phase/second-phase.component';
-import { LocalService } from 'src/app/services/local/local.service';
-import { PlayingCardComponent } from './playing-card/playing-card.component';
-import { FooterComponent } from './footer/footer.component';
-import { HeaderComponent } from './header/header.component';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {SocketIoConfig, SocketIoModule} from 'ngx-socket-io';
+import {GameRoomComponent} from 'src/app/_components/game-room/game-room.component';
+import {PlayersListComponent} from 'src/app/_components/players/players-list/players-list.component';
+import {CardDeckHelperService} from 'src/app/_shared/_helpers/card-deck.helper';
+import {PlayerHelperService} from 'src/app/_shared/_helpers/player.helper';
+import {LocalService} from 'src/app/services/local/local.service';
+import {WebsocketService} from 'src/app/services/websocket/websocket.service';
+import {GameComponent} from './_components/game/game.component';
+import {secondPhaseComponent} from './_components/second-phase/second-phase.component';
+import {FooterComponent} from './_shared/_components/footer/footer.component';
+import {HeaderComponent} from './_shared/_components/header/header.component';
+import {PlayingCardComponent} from './_shared/_components/playing-card/playing-card.component';
+import {AppRoutingModule} from './app-routing.module';
+import {AppComponent} from './app.component';
+import {environment} from 'src/environments/environment';
+import { PlayerListPlayerComponent } from './_components/players/player-list-player/player-list-player.component';
+
+const config: SocketIoConfig = {url: environment.socketIoUrl, options: {}};
 
 @NgModule({
   declarations: [
@@ -23,9 +30,22 @@ import { HeaderComponent } from './header/header.component';
     PlayingCardComponent,
     FooterComponent,
     HeaderComponent,
+    GameRoomComponent,
+    PlayerListPlayerComponent,
   ],
-  imports: [BrowserModule, AppRoutingModule, ReactiveFormsModule],
-  providers: [PlayerHelperService, CardDeckHelperService, LocalService],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    ReactiveFormsModule,
+    FormsModule,
+    SocketIoModule.forRoot(config)],
+  providers: [
+    PlayerHelperService,
+    CardDeckHelperService,
+    LocalService,
+    WebsocketService,
+  ],
   bootstrap: [AppComponent],
 })
-export class AppModule {}
+export class AppModule {
+}
