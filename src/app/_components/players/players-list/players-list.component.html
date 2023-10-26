@@ -20,7 +20,7 @@
     <div class="d-flex flex-grow-1" [ngClass]="{  'w-50': getPlayers().length > 12 }">
       <ul class="list-group text-start flex-grow-1">
         <li class="list-group-item d-flex flex-grow-1" *ngFor="let player of getPlayers().slice(0,12)">
-          <app-player-list-player  class="w-100 col-10" [player]="player"></app-player-list-player>
+          <app-player-list-player  class="w-100" [player]="player"></app-player-list-player>
         </li>
       </ul>
     </div>
