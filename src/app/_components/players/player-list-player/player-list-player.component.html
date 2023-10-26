@@ -1,7 +1,6 @@
-<div class=" d-flex flex-row align-items-center" #contentContainer>
+<div class=" d-flex flex-row align-items-center w-100 " >
   <img title="avatarImg" alt="{{player?.name}}" class="img-thumbnail" width="32" height="32"
        src="{{ player?.avatarSrc }}">
-  <div #nameContainer  class="col-8 text-truncate order-2 ml-auto">{{ player?.name }}</div>
-  <button *ngIf="player" type="button" class="btn-close order-3" aria-label="Close" (click)="deletePlayer(player)"
-          #buttonContainer></button>
+  <div class="flex-grow-1 text-truncate order-2  ">{{ player?.name }}</div>
+  <button *ngIf="player" type="button" class="btn-close order-3 align-self-end" aria-label="Close" (click)="deletePlayer(player)"></button>
 </div>
