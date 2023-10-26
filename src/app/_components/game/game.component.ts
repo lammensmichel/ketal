@@ -34,7 +34,7 @@ export class GameComponent implements OnInit {
       if (player.id !== previousPlayer.id) {
         return 0;
       }
-      return maybeAbs(-player.cards.slice(-1)[0]?.swallow ?? 0);
+      return maybeAbs(-(player.cards.at(-1)?.swallow ?? 0));
     }
 
     let cntNbSwallow = 0;
