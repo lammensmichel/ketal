@@ -11,7 +11,7 @@
       <span [translate]="'Label_Error_NameRequired'"></span>
     </div>
     <div *ngIf="this.playerHelper.getPlayerNumber() === 23" class="alert alert-secondary">
-      Le nombre maximum de joueurs est atteint.
+    <span [translate]="'Label_Error_TooMuchPlayer'"></span>
     </div>
   </form>
   <div class="d-flex flex-row col-12">

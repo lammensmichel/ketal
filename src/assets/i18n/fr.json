@@ -12,6 +12,7 @@
   "Label_ChannelsDescription": "Description du Salon",
 
   "Label_Error_NameRequired": "Le nom du buveur est requis.",
+  "Label_Error_TooMuchPlayer": "Le nombre maximum de joueurs est atteint.",
 
   "Button_Add": "Ajouter",
   "Button_BeginGame": "Débuter la Grosse Guize",
