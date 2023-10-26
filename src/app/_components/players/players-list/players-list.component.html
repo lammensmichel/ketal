@@ -3,20 +3,34 @@
     <div class="input-group mb-1">
       <span class="input-group-text">🥃</span>
       <input type="text" class="form-control" formControlName="newPlayer" placeholder="Nom du buveur" required>
-      <button type="submit" class="btn btn-primary" [disabled]="!newPlayer?.dirty">Ajouter</button>
+      <button *ngIf="this.playerHelper.isMaxPlayerNumberNotReached()" type="submit" class="btn btn-primary"
+              [disabled]="!newPlayer?.dirty  && this.playerHelper.getPlayerNumber() === 23 ">Ajouter
+      </button>
     </div>
     <div *ngIf="newPlayer?.invalid && (newPlayer?.dirty || newPlayer?.touched)" class="alert alert-danger">
       <div *ngIf="newPlayer?.errors?.['required']">
         Le nom du joueur est requis.
       </div>
     </div>
+    <div *ngIf="this.playerHelper.getPlayerNumber() === 23"  class="alert alert-secondary">
+      Le nombre maximum de joueurs est atteint.
+    </div>
   </form>
-  <ul class="list-group text-start">
-    <li class="list-group-item d-flex" *ngFor="let player of getPlayers()">
-      <div class="flex-grow-1">
-          <img title="avatarImg" class="img-thumbnail" width="32" height="32" src="{{ player.avatarSrc }}">
-          {{ player.name }}
-      </div>
-      <button type="button" class="btn-close" aria-label="Close" (click)="deletePlayer(player)"></button>
-    </li>
-  </ul>
+  <div class="d-flex flex-row w-60">
+    <div class="w-50">
+      <ul class="list-group text-start">
+        <li class="list-group-item d-flex" *ngFor="let player of getPlayers().slice(0,12)">
+          <app-player-list-player [player]="player"></app-player-list-player>
+        </li>
+      </ul>
+    </div>
+    <div class="w-50">
+      <ul class="list-group text-start" *ngIf="getPlayers().length > 12">
+        <li class="list-group-item d-flex custom-height-px" *ngFor="let player of getPlayers().slice(12)">
+          <app-player-list-player [player]="player"></app-player-list-player>
+        </li>
+      </ul>
+    </div>
+
+  </div>
+</div>
