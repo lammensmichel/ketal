@@ -8,5 +8,6 @@ export interface Game {
     phase: number;
     drinkingCards: CardType[];
     givingCards: CardType[];
-    activePlayer: PlayerModel | undefined
+    activePlayer: PlayerModel | undefined;
+    status: number;
 }

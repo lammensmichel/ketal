@@ -41,19 +41,60 @@ export class PlayerHelperService {
       (playerSelected) => playerSelected.id !== player.id
     );
 
+    this.savePlayerToStorage(this.players);
+  }
+
+  public savePlayerToStorage(players: Array<PlayerModel>) {
     this.localService.saveData(
       'players',
-      JSON.stringify(this.players)
+      JSON.stringify(players)
     );
   }
 
-
   public getPlayerNumber(): number {
-    return this.players.length;
+    return this.getPlayers().length;
   }
 
   public isMaxPlayerNumberNotReached(): boolean {
     return this.getPlayerNumber() < 23;
   }
 
+  public resetPlayerSwallowCnt() {
+    this.players.forEach((player) => {
+      player.swallows = {
+        drunk: 0,
+        given: 0
+      };
+    });
+
+    this.savePlayerToStorage(this.players);
+  }
+
+  public getPlayers(): Array<PlayerModel> {
+    let playerList: Array<PlayerModel>;
+    if (this.players.length === 0) {
+      playerList = JSON.parse(
+        this.localService.getData('players') as string
+      );
+    } else {
+      playerList = this.players;
+    }
+    return playerList;
+  }
+
+  public addPlayerSwallow(player: PlayerModel, swallowNbr: number, drink:boolean = true) {
+    const currentPlayer: PlayerModel | undefined = this.getPlayers().find((plyr) => {
+      return plyr.id === player.id;
+    });
+
+    if (currentPlayer) {
+      if(drink){
+        currentPlayer.swallows['drunk'] += swallowNbr
+      }  else{
+        currentPlayer.swallows['given'] += swallowNbr
+      }
+    }
+    this.savePlayerToStorage(this.players);
+
+  }
 }

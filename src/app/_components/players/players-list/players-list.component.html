@@ -1,5 +1,5 @@
 <div class="container">
-  <form [formGroup]="playersForm" (ngSubmit)="addPlayer()" *ngIf="!allPlayersCreated" class="mb-1">
+  <form [formGroup]="playersForm" (ngSubmit)="addPlayer()" *ngIf="!allPlayersCreated && !this.gameSrv.isGameFinished() " class="mb-1">
     <div class="input-group mb-1">
       <span class="input-group-text">🥃</span>
       <input type="text" class="form-control" formControlName="newPlayer" placeholder="Nom du buveur" required>

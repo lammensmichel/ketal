@@ -57,6 +57,7 @@
       </div>
       <div *ngIf="givingCards.length === 6" class=" text-center ">
         <button type="button" class="btn btn-secondary ms-2" (click)="restartGame()"> Recommencer</button>
+        <button *ngIf="!this.gameSrv.isGameFinished()" type="button" class="btn btn-secondary ms-2" (click)="displaySummary()"> Afficher le résumé</button>
       </div>
     </div>
   </div>

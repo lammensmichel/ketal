@@ -1,29 +1,27 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { Subscription } from "rxjs";
-import { String } from 'typescript-string-operations';
-import { CardService } from "../../../services/card/card.service";
-import { GameService } from "../../../services/game/game.service";
-import { LocalService } from "../../../services/local/local.service";
-import { CardDeckHelperService } from "../../_helpers/card-deck.helper";
-import { PlayerHelperService } from "../../_helpers/player.helper";
-import { CardType } from '../../_models/card-type.model';
-import { ColorsEnum } from '../../_models/enums/color.enum';
-import { DrinkChoiceEnum } from '../../_models/enums/drink_choice.enum';
-import { InAndOutEnum } from '../../_models/enums/in_out.enum';
-import { PlusOrMinusEnum } from '../../_models/enums/plus_minus.enum';
-import { SuitsEnum } from '../../_models/enums/suits.enum';
-import { Game } from '../../_models/game.model';
-import { PlayerModel } from '../../_models/player.model';
+import {Component,  OnInit} from '@angular/core';
+import {String} from 'typescript-string-operations';
+import {CardService} from "../../../services/card/card.service";
+import {GameService} from "../../../services/game/game.service";
+import {LocalService} from "../../../services/local/local.service";
+import {CardDeckHelperService} from "../../_helpers/card-deck.helper";
+import {PlayerHelperService} from "../../_helpers/player.helper";
+import {CardType} from '../../_models/card-type.model';
+import {ColorsEnum} from '../../_models/enums/color.enum';
+import {DrinkChoiceEnum} from '../../_models/enums/drink_choice.enum';
+import {InAndOutEnum} from '../../_models/enums/in_out.enum';
+import {PlusOrMinusEnum} from '../../_models/enums/plus_minus.enum';
+import {SuitsEnum} from '../../_models/enums/suits.enum';
+import {Game} from '../../_models/game.model';
+import {PlayerModel} from '../../_models/player.model';
 
 @Component({
   selector: 'app-footer',
   templateUrl: './footer.component.html',
   styleUrls: ['./footer.component.scss']
 })
-export class FooterComponent implements OnInit, OnDestroy {
+export class FooterComponent implements OnInit {
   game: Game | undefined;
 
-  gameSubs: Subscription | undefined;
   public currentCard: CardType | undefined;
 
   public drinkingCards: Array<CardType> = [];
@@ -38,6 +36,22 @@ export class FooterComponent implements OnInit, OnDestroy {
               public cardSrv: CardService) {
 
   }
+
+  ngOnInit() {
+    this.gameSrv.gameSubject?.subscribe((game) => {
+      this.game = game;
+      if (this.game) {
+        if (!this.game.activePlayer) {
+          this.game.activePlayer = this.game.players[0];
+        }
+
+        this.activeTurn = this.game.turn;
+        this.drinkingCards = this.game.drinkingCards;
+        this.givingCards = this.game.givingCards;
+      }
+    });
+  }
+
 
   getLowerCardVal(firstVal: number, secondVal: number): number {
     return firstVal > secondVal ? secondVal : firstVal;
@@ -123,6 +137,7 @@ export class FooterComponent implements OnInit, OnDestroy {
 
           break;
       }
+      this.playerHelper.addPlayerSwallow(currentPlayer, currentCard.swallow);
     }
   }
 
@@ -170,7 +185,7 @@ export class FooterComponent implements OnInit, OnDestroy {
             }
             break;
         }
-      })
+      });
       if (!existsUndefinedValue) {
         this.gameSrv.addTurn();
 
@@ -187,7 +202,7 @@ export class FooterComponent implements OnInit, OnDestroy {
 
   chooseColor(color: string) {
     if (this.gameSrv.game && this.gameSrv.game.activePlayer) {
-      this.gameSrv.setCardChoice(DrinkChoiceEnum.Color, color, this.gameSrv.game.activePlayer.id)
+      this.gameSrv.setCardChoice(DrinkChoiceEnum.Color, color, this.gameSrv.game.activePlayer.id);
       this.pickCard();
     }
   }
@@ -195,28 +210,34 @@ export class FooterComponent implements OnInit, OnDestroy {
 
   plusOrMinus(selection: string) {
     if (this.gameSrv.game && this.gameSrv.game.activePlayer && this.game) {
-      this.gameSrv.setCardChoice(DrinkChoiceEnum.PlusOrMinus, selection, this.gameSrv.game.activePlayer.id)
+      this.gameSrv.setCardChoice(DrinkChoiceEnum.PlusOrMinus, selection, this.gameSrv.game.activePlayer.id);
       this.pickCard();
     }
   }
 
   inOut(selection: string) {
     if (this.gameSrv.game && this.gameSrv.game.activePlayer && this.game) {
-      this.gameSrv.setCardChoice(DrinkChoiceEnum.InAndOut, selection, this.gameSrv.game.activePlayer.id)
+      this.gameSrv.setCardChoice(DrinkChoiceEnum.InAndOut, selection, this.gameSrv.game.activePlayer.id);
       this.pickCard();
     }
   }
 
   chooseSuit(selection: string) {
     if (this.gameSrv.game && this.gameSrv.game.activePlayer && this.game) {
-      this.gameSrv.setCardChoice(DrinkChoiceEnum.Suit, selection, this.gameSrv.game.activePlayer.id)
+      this.gameSrv.setCardChoice(DrinkChoiceEnum.Suit, selection, this.gameSrv.game.activePlayer.id);
       this.pickCard();
     }
   }
 
   restartGame() {
     this.gameSrv.resetGame();
+    this.playerHelper.resetPlayerSwallowCnt();
     location.reload();
+  }
+
+  displaySummary(): void {
+    this.gameSrv.game.status = 2;
+    this.gameSrv.refreshSession();
   }
 
 
@@ -235,25 +256,31 @@ export class FooterComponent implements OnInit, OnDestroy {
         });
       });
 
+      let swallowNb: number = 0;
       if (this.currentCard) {
         switch (true) {
           case this.gameSrv.game.drinkingCards.length === 0 && this.gameSrv.game.givingCards.length === 0:
-            this.currentCard.swallow = 1;
-            this.gameSrv.addDrinkingCard(this.currentCard)
+            swallowNb = 1;
+            this.currentCard.swallow = swallowNb;
+            this.gameSrv.addDrinkingCard(this.currentCard);
+            if (this.gameSrv.game.activePlayer) this.playerHelper.addPlayerSwallow(this.gameSrv.game.activePlayer, swallowNb);
             break;
-
           case this.gameSrv.game.drinkingCards.length > 0 && this.gameSrv.game.givingCards.length === 0:
-            this.currentCard.swallow = 1;
+            swallowNb = 1;
+            this.currentCard.swallow = swallowNb;
             this.gameSrv.addGivingCard(this.currentCard);
             break;
           case this.gameSrv.game.drinkingCards.length !== 0 && this.gameSrv.game.givingCards.length !== 0
           && this.gameSrv.game.drinkingCards.length === this.gameSrv.game.givingCards.length :
-            this.currentCard.swallow = this.gameSrv.game.drinkingCards.length + 1;
-            this.gameSrv.addDrinkingCard(this.currentCard)
+            swallowNb = this.gameSrv.game.drinkingCards.length + 1;
+            this.currentCard.swallow = swallowNb;
+            this.gameSrv.addDrinkingCard(this.currentCard);
+            if (this.gameSrv.game.activePlayer) this.playerHelper.addPlayerSwallow(this.gameSrv.game.activePlayer, 1);
             break;
           case this.gameSrv.game.drinkingCards.length !== 0 && this.gameSrv.game.givingCards.length !== 0
           && this.gameSrv.game.drinkingCards.length > this.gameSrv.game.givingCards.length :
-            this.currentCard.swallow = this.gameSrv.game.givingCards.length + 1
+            swallowNb = this.gameSrv.game.givingCards.length + 1;
+            this.currentCard.swallow = swallowNb;
             this.gameSrv.addGivingCard(this.currentCard);
         }
       }
@@ -261,20 +288,6 @@ export class FooterComponent implements OnInit, OnDestroy {
     }
   }
 
-  ngOnInit() {
-    this.gameSrv.gameSubject?.subscribe((game) => {
-      this.game = game;
-      if (this.game) {
-        if (!this.game.activePlayer) {
-          this.game.activePlayer = this.game.players[0];
-        }
-
-        this.activeTurn = this.game.turn;
-        this.drinkingCards = this.game.drinkingCards;
-        this.givingCards = this.game.givingCards;
-      }
-    })
-  }
 
   public hasPlayers(): boolean {
     return this.playerHelper?.players?.length > 0;
@@ -284,7 +297,7 @@ export class FooterComponent implements OnInit, OnDestroy {
     this.cardDeckHelperService.constructDeck();
 
     if (!this.gameSrv.game) {
-      const players: Array<PlayerModel> = JSON.parse(this.localSrv.getData('players') as string)
+      const players: Array<PlayerModel> = JSON.parse(this.localSrv.getData('players') as string);
       this.gameSrv.game = {
         players: players,
         maxTurnCount: players.length * 4,
@@ -292,13 +305,11 @@ export class FooterComponent implements OnInit, OnDestroy {
         phase: 1,
         drinkingCards: [],
         givingCards: [],
-        activePlayer: players[0]
+        activePlayer: players[0],
+        status: 1
       } as Game;
     }
   }
 
-  ngOnDestroy() {
-    this.gameSubs?.unsubscribe()
-  }
 
 }

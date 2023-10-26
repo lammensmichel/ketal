@@ -3,6 +3,7 @@ import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {PlayerHelperService} from 'src/app/_shared/_helpers/player.helper';
 import {PlayerModel} from 'src/app/_shared/_models/player.model';
 import {LocalService} from 'src/app/services/local/local.service';
+import {GameService} from "../../../services/game/game.service";
 
 @Component({
   selector: 'app-players-list',
@@ -19,6 +20,7 @@ export class PlayersListComponent {
     private fb: FormBuilder,
     public playerHelper: PlayerHelperService,
     public localService: LocalService,
+    public gameSrv: GameService
   ) {
     const localPlayer = JSON.parse(
       this.localService.getData('players') as string
@@ -44,7 +46,7 @@ export class PlayersListComponent {
   }
 
   public getPlayers(): PlayerModel[] {
-    return this.playerHelper.players;
+    return this.playerHelper.getPlayers();
   }
 
   public beginGame(): void {

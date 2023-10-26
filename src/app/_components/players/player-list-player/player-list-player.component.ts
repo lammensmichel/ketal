@@ -1,6 +1,7 @@
 import {Component, Input} from '@angular/core';
 import {PlayerModel} from "../../../_shared/_models/player.model";
 import {PlayerHelperService} from "../../../_shared/_helpers/player.helper";
+import {GameService} from "../../../services/game/game.service";
 
 @Component({
   selector: 'app-player-list-player',
@@ -10,7 +11,8 @@ import {PlayerHelperService} from "../../../_shared/_helpers/player.helper";
 export class PlayerListPlayerComponent {
   @Input() player: PlayerModel | undefined;
 
-  constructor(public playerHelper: PlayerHelperService) {
+  constructor(public playerHelper: PlayerHelperService,
+              public gameSrv: GameService) {
   }
 
 

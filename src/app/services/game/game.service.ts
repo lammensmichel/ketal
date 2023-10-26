@@ -1,9 +1,9 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject } from "rxjs";
-import { CardType } from 'src/app/_shared/_models/card-type.model';
-import { Game } from 'src/app/_shared/_models/game.model';
-import { PlayerModel } from 'src/app/_shared/_models/player.model';
-import { LocalService } from "../local/local.service";
+import {Injectable} from '@angular/core';
+import {BehaviorSubject} from "rxjs";
+import {CardType} from 'src/app/_shared/_models/card-type.model';
+import {Game} from 'src/app/_shared/_models/game.model';
+import {PlayerModel} from 'src/app/_shared/_models/player.model';
+import {LocalService} from "../local/local.service";
 
 @Injectable({
   providedIn: 'root'
@@ -30,17 +30,17 @@ export class GameService {
   set game(game: Game | undefined) {
     if (game) {
       this._game = game;
-      this.localSrv.saveData('game', JSON.stringify(this._game))
+      this.localSrv.saveData('game', JSON.stringify(this._game));
       this.gameSubject?.next(game);
     } else {
-      this.localSrv.removeData('game')
+      this.localSrv.removeData('game');
       this.gameSubject?.complete();
 
     }
   }
 
   setCardChoice(choice: string, value: string, activePlayerId: string) {
-    const currentPlayer = this.game.players.find((player: PlayerModel) => player.id === activePlayerId)
+    const currentPlayer = this.game.players.find((player: PlayerModel) => player.id === activePlayerId);
 
     if (currentPlayer) {
       currentPlayer.choice[choice] = value;
@@ -50,7 +50,7 @@ export class GameService {
   }
 
   refreshSession() {
-    this.localSrv.saveData('game', JSON.stringify(this._game))
+    this.localSrv.saveData('game', JSON.stringify(this._game));
     this.gameSubject?.next(this.game);
   }
 
@@ -63,9 +63,13 @@ export class GameService {
   }
 
   addCardToPlayer(card: CardType, playerId: string) {
-    const currentPlayer = this.game.players.find((player: PlayerModel) => player.id === playerId)
+    const currentPlayer = this.game.players.find((player: PlayerModel) => player.id === playerId);
     if (currentPlayer) currentPlayer.cards.push(card);
     if (this.game && this.game.activePlayer) this.game.activePlayer = currentPlayer;
+  }
+
+  isGameFinished(): boolean {
+    return this.getStatus() === 2;
   }
 
   addTurn() {
@@ -75,5 +79,13 @@ export class GameService {
 
   resetGame() {
     this.game = undefined;
+  }
+
+  getStatus(): number {
+    if (!this.game) {
+      return 0;
+    } else {
+      return this.game.status;
+    }
   }
 }
