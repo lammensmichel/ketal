@@ -2,18 +2,16 @@
   <form [formGroup]="playersForm" (ngSubmit)="addPlayer()" *ngIf="!allPlayersCreated" class="mb-1">
     <div class="input-group mb-1">
       <span class="input-group-text">🥃</span>
-      <input type="text" class="form-control" formControlName="newPlayer" placeholder="Nom du buveur" required>
+      <input type="text" class="form-control" formControlName="newPlayer" [placeholder]="getNewPlayerInputPlaceholder()" required>
       <button *ngIf="this.playerHelper.isMaxPlayerNumberNotReached()" type="submit" class="btn btn-primary"
-              [disabled]="!newPlayer?.dirty  && this.playerHelper.getPlayerNumber() === 23 ">Ajouter
+              [disabled]="!newPlayer?.dirty  && this.playerHelper.getPlayerNumber() === 23 " [translate]="'Button_Add'">
       </button>
     </div>
-    <div *ngIf="newPlayer?.invalid && (newPlayer?.dirty || newPlayer?.touched)" class="alert alert-danger">
-      <div *ngIf="newPlayer?.errors?.['required']">
-        Le nom du joueur est requis.
-      </div>
+    <div *ngIf="(newPlayer?.invalid && (newPlayer?.dirty || newPlayer?.touched)) && newPlayer?.errors?.['required']" class="alert alert-danger">
+      <span [translate]="'Label_Error_NameRequired'"></span>
     </div>
     <div *ngIf="this.playerHelper.getPlayerNumber() === 23" class="alert alert-secondary">
-      Le nombre maximum de joueurs est atteint.
+    <span [translate]="'Label_Error_TooMuchPlayer'"></span>
     </div>
   </form>
   <div class="d-flex flex-row col-12">
