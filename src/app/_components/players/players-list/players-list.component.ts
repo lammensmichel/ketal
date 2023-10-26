@@ -1,8 +1,9 @@
-import { Component, EventEmitter, Output} from '@angular/core';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
-import {PlayerHelperService} from 'src/app/_shared/_helpers/player.helper';
-import {PlayerModel} from 'src/app/_shared/_models/player.model';
-import {LocalService} from 'src/app/services/local/local.service';
+import { Component, EventEmitter, Output } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { TranslateService } from '@ngx-translate/core';
+import { PlayerHelperService } from 'src/app/_shared/_helpers/player.helper';
+import { PlayerModel } from 'src/app/_shared/_models/player.model';
+import { LocalService } from 'src/app/services/local/local.service';
 
 @Component({
   selector: 'app-players-list',
@@ -19,6 +20,7 @@ export class PlayersListComponent {
     private fb: FormBuilder,
     public playerHelper: PlayerHelperService,
     public localService: LocalService,
+    public translate: TranslateService,
   ) {
     const localPlayer = JSON.parse(
       this.localService.getData('players') as string
@@ -55,9 +57,11 @@ export class PlayersListComponent {
     return this.playerHelper?.players?.length > 0;
   }
 
+  public getNewPlayerInputPlaceholder(): string {
+    return this.translate.instant('Label_PlaceHolder_PlayerName');
+  }
+
   get newPlayer() {
     return this.playersForm.get('newPlayer');
   }
-
-
 }
