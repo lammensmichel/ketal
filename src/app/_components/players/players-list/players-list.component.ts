@@ -4,6 +4,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { PlayerHelperService } from 'src/app/_shared/_helpers/player.helper';
 import { PlayerModel } from 'src/app/_shared/_models/player.model';
 import { LocalService } from 'src/app/services/local/local.service';
+import { String } from 'typescript-string-operations';
 
 @Component({
   selector: 'app-players-list',
@@ -34,8 +35,11 @@ export class PlayersListComponent {
   }
 
   public addPlayer() {
-    if(!this.playerHelper.isMaxPlayerNumberNotReached() ) return;
-    if (this.playersForm.valid) {
+    if(!this.playerHelper.isMaxPlayerNumberNotReached() ) {
+      return;
+    }
+
+    if (this.playersForm.valid && !String.isNullOrWhiteSpace(this.playersForm.controls['newPlayer'].value)) {
       this.playerHelper.addPlayer(this.playersForm.value.newPlayer);
       this.localService.saveData(
         'players',
