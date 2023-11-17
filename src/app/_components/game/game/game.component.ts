@@ -35,6 +35,10 @@ export class GameComponent implements OnInit {
         return 0;
       }
       return maybeAbs(-(player.cards.at(-1)?.swallow ?? 0));
+    } else {
+      if ( player.id === previousPlayer.id && drinkingCards.length === 0  &&  givingCards.length === 0) {
+        return maybeAbs(-(player.cards.at(-1)?.swallow ?? 0));
+      }
     }
 
     let cntNbSwallow = 0;
