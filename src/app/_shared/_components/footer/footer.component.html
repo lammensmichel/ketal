@@ -20,10 +20,14 @@
         <button title="chooseOut" class="card-container small-font" [innerHTML]="'OUT'" (click)="inOut('out')"></button>
       </div>
       <div *ngIf="activeTurn === 4 " class="d-flex flex-row gap-2 justify-content-center ">
-        <button title="chooseHearts" class="card-container red-color" [innerHTML]="'&hearts;'" (click)="chooseSuit('hearts')"></button>
-        <button title="chooseDiams" class="card-container" [innerHTML]="'&diams;'" (click)="chooseSuit('diams')"></button>
-        <button title="chooseSpades" class="card-container" [innerHTML]="'&spades;'" (click)="chooseSuit('spades')"></button>
-        <button title="chooseClubs" class="card-container" [innerHTML]="'&clubs;'" (click)="chooseSuit('clubs')"></button>
+        <button title="chooseHearts" class="card-container red-color" [innerHTML]="'&hearts;'"
+                (click)="chooseSuit('hearts')"></button>
+        <button title="chooseDiams" class="card-container" [innerHTML]="'&diams;'"
+                (click)="chooseSuit('diams')"></button>
+        <button title="chooseSpades" class="card-container" [innerHTML]="'&spades;'"
+                (click)="chooseSuit('spades')"></button>
+        <button title="chooseClubs" class="card-container" [innerHTML]="'&clubs;'"
+                (click)="chooseSuit('clubs')"></button>
       </div>
     </div>
   </div>
@@ -49,10 +53,13 @@
         </div>
       </div>
       <div *ngIf="givingCards.length < 6" class=" text-center ">
-        <button type="button" class="btn btn-secondary ms-2" (click)="onDisplayCard()" [translate]="'Label_YouDrink'"></button>
+        <button  type="button" class="btn btn-secondary ms-2"
+                (click)="onDisplayCard()"
+                [translate]=" drinkingCards.length <= givingCards.length  ? 'Label_YouDrink'  :  'Label_YouGive' "></button>
       </div>
       <div *ngIf="givingCards.length === 6" class=" text-center ">
-        <button type="button" class="btn btn-secondary ms-2" (click)="restartGame()" [translate]="'Button_Restart'"></button>
+        <button type="button" class="btn btn-secondary ms-2" (click)="restartGame()"
+                [translate]="'Button_Restart'"></button>
       </div>
     </div>
   </div>

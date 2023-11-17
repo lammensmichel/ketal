@@ -1,19 +1,19 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { Subscription } from "rxjs";
-import { String } from 'typescript-string-operations';
-import { CardService } from "../../../services/card/card.service";
-import { GameService } from "../../../services/game/game.service";
-import { LocalService } from "../../../services/local/local.service";
-import { CardDeckHelperService } from "../../_helpers/card-deck.helper";
-import { PlayerHelperService } from "../../_helpers/player.helper";
-import { CardType } from '../../_models/card-type.model';
-import { ColorsEnum } from '../../_models/enums/color.enum';
-import { DrinkChoiceEnum } from '../../_models/enums/drink_choice.enum';
-import { InAndOutEnum } from '../../_models/enums/in_out.enum';
-import { PlusOrMinusEnum } from '../../_models/enums/plus_minus.enum';
-import { SuitsEnum } from '../../_models/enums/suits.enum';
-import { Game } from '../../_models/game.model';
-import { PlayerModel } from '../../_models/player.model';
+import {ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit} from '@angular/core';
+import {Subscription} from "rxjs";
+import {String} from 'typescript-string-operations';
+import {CardService} from "../../../services/card/card.service";
+import {GameService} from "../../../services/game/game.service";
+import {LocalService} from "../../../services/local/local.service";
+import {CardDeckHelperService} from "../../_helpers/card-deck.helper";
+import {PlayerHelperService} from "../../_helpers/player.helper";
+import {CardType} from '../../_models/card-type.model';
+import {ColorsEnum} from '../../_models/enums/color.enum';
+import {DrinkChoiceEnum} from '../../_models/enums/drink_choice.enum';
+import {InAndOutEnum} from '../../_models/enums/in_out.enum';
+import {PlusOrMinusEnum} from '../../_models/enums/plus_minus.enum';
+import {SuitsEnum} from '../../_models/enums/suits.enum';
+import {Game} from '../../_models/game.model';
+import {PlayerModel} from '../../_models/player.model';
 
 @Component({
   selector: 'app-footer',
@@ -35,7 +35,10 @@ export class FooterComponent implements OnInit, OnDestroy {
               public gameSrv: GameService,
               public cardDeckHelperService: CardDeckHelperService,
               public playerHelper: PlayerHelperService,
-              public cardSrv: CardService) {
+              public cardSrv: CardService,
+              private cdr: ChangeDetectorRef,
+              private ngZone: NgZone
+  ) {
 
   }
 
@@ -257,6 +260,9 @@ export class FooterComponent implements OnInit, OnDestroy {
             this.gameSrv.addGivingCard(this.currentCard);
         }
       }
+      this.ngZone.run(() => {
+        this.cdr.detectChanges();
+      });
       this.gameSrv.refreshSession();
     }
   }
