@@ -94,11 +94,10 @@ export class PlayerHelperService {
   }
 
   public getPlayers(): Array<PlayerModel> {
-    let playerList: Array<PlayerModel>;
-    if (this.players?.length === 0) {
-      playerList = JSON.parse(
-        this.localService.getData('players') as string
-      );
+    let playerList: Array<PlayerModel> = [];
+    if (this.players.length === 0) {
+      let playersFromSession = this.localService.getData('players');
+      playerList = playersFromSession ? JSON.parse(this.localService.getData('players') as string) : [];
     } else {
       playerList = this.players;
     }
