@@ -22,8 +22,8 @@ export class PlayersListComponent {
     private fb: FormBuilder,
     public playerHelper: PlayerHelperService,
     public localService: LocalService,
-    public gameSrv: GameService
-    public translate: TranslateService,
+    public gameSrv: GameService,
+    public translate: TranslateService
   ) {
     const localPlayer = JSON.parse(
       this.localService.getData('players') as string
