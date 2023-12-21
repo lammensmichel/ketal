@@ -1,13 +1,11 @@
 <div class="fixed-bottom mt-2">
-
-  <div *ngIf="game && [1,2,3,4].includes(activeTurn)"   class="mt-2 mb-2 ">
+  <div *ngIf="game && [1,2,3,4].includes(activeTurn)" class="mt-2 mb-2 ">
     <hr class="mb-2"/>
     <div class="d-flex flex-column gap-1">
       <div *ngIf="game.activePlayer" class="text-center d-flex align-items-center justify-content-center gap-1">
         <img title="avatarSrc" class="img-thumbnail" width="32" height="32" src="{{ game.activePlayer.avatarSrc }}">
         <span class="fs-2">{{game.activePlayer.name}}</span>
       </div>
-
       <div *ngIf="activeTurn === 1 " class="d-flex flex-row gap-2 justify-content-center ">
         <button title="chooseRed" class=" red-choice card-container " (click)="chooseColor('red')"></button>
         <button title="chooseBlack" class="card-container black-choice" (click)="chooseColor('black')">
@@ -22,21 +20,23 @@
         <button title="chooseOut" class="card-container small-font" [innerHTML]="'OUT'" (click)="inOut('out')"></button>
       </div>
       <div *ngIf="activeTurn === 4 " class="d-flex flex-row gap-2 justify-content-center ">
-        <button title="chooseHearts" class="card-container red-color" [innerHTML]="'&hearts;'" (click)="chooseSuit('hearts')"></button>
-        <button title="chooseDiams" class="card-container" [innerHTML]="'&diams;'" (click)="chooseSuit('diams')"></button>
-        <button title="chooseSpades" class="card-container" [innerHTML]="'&spades;'" (click)="chooseSuit('spades')"></button>
-        <button title="chooseClubs" class="card-container" [innerHTML]="'&clubs;'" (click)="chooseSuit('clubs')"></button>
+        <button title="chooseHearts" class="card-container red-color" [innerHTML]="'&hearts;'"
+                (click)="chooseSuit('hearts')"></button>
+        <button title="chooseDiams" class="card-container" [innerHTML]="'&diams;'"
+                (click)="chooseSuit('diams')"></button>
+        <button title="chooseSpades" class="card-container" [innerHTML]="'&spades;'"
+                (click)="chooseSuit('spades')"></button>
+        <button title="chooseClubs" class="card-container" [innerHTML]="'&clubs;'"
+                (click)="chooseSuit('clubs')"></button>
       </div>
     </div>
-
   </div>
-
   <div *ngIf="game && game.phase === 2 " class="mt-2 mb-2">
     <hr class="mb-2"/>
     <div class="d-flex flex-column gap-1">
       <div class="d-flex flex-row justify-content-center gap-1">
         <div>
-          <span> Tu bois </span>
+          <span [translate]="'Label_YouDrink'"></span>
           <div class="d-flex flex-row gap-0">
             <div *ngFor="let loop of [].constructor(6); let i = index">
               <app-playing-card [card]="drinkingCards[i]" [leftOverlap]="i !== 0"></app-playing-card>
@@ -44,7 +44,7 @@
           </div>
         </div>
         <div>
-          <span> Tu donnes </span>
+          <span [translate]="'Label_YouGive'"></span>
           <div class="d-flex flex-row gap-0">
             <div *ngFor="let loop of [].constructor(6); let i = index">
               <app-playing-card [card]="givingCards[i]" [leftOverlap]="i !== 0"></app-playing-card>
@@ -53,11 +53,14 @@
         </div>
       </div>
       <div *ngIf="givingCards.length < 6" class=" text-center ">
-        <button type="button" class="btn btn-secondary ms-2" (click)="onDisplayCard()"> Suivant</button>
+        <button  type="button" class="btn btn-secondary ms-2"
+                (click)="onDisplayCard()"
+                [translate]=" drinkingCards.length <= givingCards.length  ? 'Label_YouDrink'  :  'Label_YouGive' "></button>
       </div>
       <div *ngIf="givingCards.length === 6" class=" text-center ">
-        <button type="button" class="btn btn-secondary ms-2" (click)="restartGame()"> Recommencer</button>
-        <button *ngIf="!this.gameSrv.isGameFinished()" type="button" class="btn btn-secondary ms-2" (click)="displaySummary()"> Afficher le résumé</button>
+        <button type="button" class="btn btn-secondary ms-2" (click)="restartGame()" [translate]="'Button_RestartGame'"></button>
+        <button *ngIf="!this.gameSrv.isGameFinished()" type="button" class="btn btn-secondary ms-2" (click)="displaySummary()" [translate]="'Button_RestartGame'"></button>
+
       </div>
     </div>
   </div>
@@ -66,7 +69,5 @@
 <!-- Bouton pour démarrer, en position fixe en bas de l'écran -->
 <div *ngIf="hasPlayers() && !game" class="fixed-bottom text-center mb-2">
   <hr class="mb-2"/>
-  <button type="button" class="btn btn-secondary ms-2" (click)="beginGame()">
-    Débuter la Grosse Guinze
-  </button>
+  <button type="button" class="btn btn-secondary ms-2" (click)="beginGame()" [translate]="'Button_BeginGame'"></button>
 </div>

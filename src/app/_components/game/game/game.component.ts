@@ -1,4 +1,4 @@
-import {Component, OnInit, ViewChild} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import { Game } from 'src/app/_shared/_models/game.model';
 import { PlayerModel } from 'src/app/_shared/_models/player.model';
 import { CardService } from "../../../services/card/card.service";
@@ -15,7 +15,6 @@ import {
 export class GameComponent implements OnInit {
   public playerCount: number = 0;
   public game: Game | undefined;
-
 
   constructor(
     public gameSrv: GameService,
@@ -39,6 +38,10 @@ export class GameComponent implements OnInit {
         return 0;
       }
       return maybeAbs(-(player.cards.at(-1)?.swallow ?? 0));
+    } else {
+      if ( player.id === previousPlayer.id && drinkingCards.length === 0  &&  givingCards.length === 0) {
+        return maybeAbs(-(player.cards.at(-1)?.swallow ?? 0));
+      }
     }
 
     let cntNbSwallow = 0;
@@ -52,9 +55,6 @@ export class GameComponent implements OnInit {
     }
 
     return maybeAbs(cntNbSwallow);
-  }
-  open(): void {
-    // this.modalService.open(this.playerSwallowContent);
   }
 
 }

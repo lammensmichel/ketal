@@ -15,7 +15,7 @@
             </label>
           </div>
           <div class="row">
-            <div class="card-group d-flex flex-nowrap justify-content-center gap-1">
+            <div class="card-group d-flex flex-wrap flex-sm-wrap flex-md-nowrap flex-lg-nowrap flex-xl-nowrap  justify-content-center gap-1">
               <div *ngFor="let loop of [].constructor(4); let i = index">
                 <app-playing-card [card]="player.cards[i]"></app-playing-card>
               </div>

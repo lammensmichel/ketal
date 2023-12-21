@@ -1,4 +1,5 @@
-import {Component, OnInit} from '@angular/core';
+import {ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit} from '@angular/core';
+import {Subscription} from "rxjs";
 import {String} from 'typescript-string-operations';
 import {CardService} from "../../../services/card/card.service";
 import {GameService} from "../../../services/game/game.service";
@@ -19,9 +20,10 @@ import {PlayerModel} from '../../_models/player.model';
   templateUrl: './footer.component.html',
   styleUrls: ['./footer.component.scss']
 })
-export class FooterComponent implements OnInit {
+export class FooterComponent implements OnInit, OnDestroy {
   game: Game | undefined;
 
+  gameSubs: Subscription | undefined;
   public currentCard: CardType | undefined;
 
   public drinkingCards: Array<CardType> = [];
@@ -33,12 +35,15 @@ export class FooterComponent implements OnInit {
               public gameSrv: GameService,
               public cardDeckHelperService: CardDeckHelperService,
               public playerHelper: PlayerHelperService,
-              public cardSrv: CardService) {
+              public cardSrv: CardService,
+              private cdr: ChangeDetectorRef,
+              private ngZone: NgZone
+  ) {
 
   }
 
   ngOnInit() {
-    this.gameSrv.gameSubject?.subscribe((game) => {
+    this.gameSubs = this.gameSrv.gameSubject?.subscribe((game) => {
       this.game = game;
       if (this.game) {
         if (!this.game.activePlayer) {
@@ -330,5 +335,8 @@ export class FooterComponent implements OnInit {
     }
   }
 
+  ngOnDestroy() {
+    this.gameSubs?.unsubscribe()
+  }
 
 }
