@@ -45,6 +45,7 @@ export class GameService {
     if (currentPlayer) {
       currentPlayer.choice[choice] = value;
       this.game.activePlayer = currentPlayer;
+      this.refreshSession();
     }
 
   }

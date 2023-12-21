@@ -1,8 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnInit, ViewChild} from '@angular/core';
 import { Game } from 'src/app/_shared/_models/game.model';
 import { PlayerModel } from 'src/app/_shared/_models/player.model';
-import { CardService } from "../../services/card/card.service";
-import { GameService } from "../../services/game/game.service";
+import { CardService } from "../../../services/card/card.service";
+import { GameService } from "../../../services/game/game.service";
+import {
+  PlayerSwallowSelectionComponent
+} from "../../players/player-swallow-selection/player-swallow-selection.component";
 
 @Component({
   selector: 'app-game',
@@ -12,6 +15,7 @@ import { GameService } from "../../services/game/game.service";
 export class GameComponent implements OnInit {
   public playerCount: number = 0;
   public game: Game | undefined;
+
 
   constructor(
     public gameSrv: GameService,
@@ -49,4 +53,8 @@ export class GameComponent implements OnInit {
 
     return maybeAbs(cntNbSwallow);
   }
+  open(): void {
+    // this.modalService.open(this.playerSwallowContent);
+  }
+
 }

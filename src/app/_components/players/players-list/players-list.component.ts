@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output} from '@angular/core';
+import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {PlayerHelperService} from 'src/app/_shared/_helpers/player.helper';
 import {PlayerModel} from 'src/app/_shared/_models/player.model';
@@ -11,7 +11,6 @@ import {GameService} from "../../../services/game/game.service";
   styleUrls: ['./players-list.component.scss'],
 })
 export class PlayersListComponent {
-
   public playersForm: FormGroup;
   public allPlayersCreated: boolean = false;
   @Output() public onBeginGame: EventEmitter<void> = new EventEmitter<void>();
@@ -34,19 +33,15 @@ export class PlayersListComponent {
   }
 
   public addPlayer() {
-    if(!this.playerHelper.isMaxPlayerNumberNotReached() ) return;
+    if (!this.playerHelper.isMaxPlayerNumberNotReached()) return;
     if (this.playersForm.valid) {
       this.playerHelper.addPlayer(this.playersForm.value.newPlayer);
-      this.localService.saveData(
-        'players',
-        JSON.stringify(this.playerHelper.players)
-      );
       this.playersForm.reset();
     }
   }
 
   public getPlayers(): PlayerModel[] {
-    return this.playerHelper.getPlayers();
+    return this.playerHelper.getPlayers() || [];
   }
 
   public beginGame(): void {
@@ -60,6 +55,4 @@ export class PlayersListComponent {
   get newPlayer() {
     return this.playersForm.get('newPlayer');
   }
-
-
 }

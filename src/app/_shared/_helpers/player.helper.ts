@@ -33,6 +33,7 @@ export class PlayerHelperService {
     const avatarId = Math.floor(Math.random() * 45) + 1;
     playerModel.avatarSrc = `https://placeskull.com/32/32/${rgbColor}/${avatarId}`;
     this.players.push(playerModel);
+    this.savePlayerToStorage(this.players);
   }
 
 
@@ -52,7 +53,11 @@ export class PlayerHelperService {
   }
 
   public getPlayerNumber(): number {
-    return this.getPlayers().length;
+    if (this.getPlayers()) {
+      return this.getPlayers().length;
+    } else {
+      return 0;
+    }
   }
 
   public isMaxPlayerNumberNotReached(): boolean {
@@ -70,9 +75,27 @@ export class PlayerHelperService {
     this.savePlayerToStorage(this.players);
   }
 
+  public resetPlayers() {
+    this.players.forEach((player: PlayerModel) => {
+      player.swallows = {
+        drunk: 0,
+        given: 0
+      };
+      player.cards = [];
+      player.choice = {
+        color: '',
+        plus_or_minus: '',
+        in_out: '',
+        suit: ''
+      };
+    });
+
+    this.savePlayerToStorage(this.players);
+  }
+
   public getPlayers(): Array<PlayerModel> {
     let playerList: Array<PlayerModel>;
-    if (this.players.length === 0) {
+    if (this.players?.length === 0) {
       playerList = JSON.parse(
         this.localService.getData('players') as string
       );
@@ -82,17 +105,32 @@ export class PlayerHelperService {
     return playerList;
   }
 
-  public addPlayerSwallow(player: PlayerModel, swallowNbr: number, drink:boolean = true) {
-    const currentPlayer: PlayerModel | undefined = this.getPlayers().find((plyr) => {
-      return plyr.id === player.id;
+  public addPlayerSwallow(player: PlayerModel, swallowNbr: number, drink: boolean = true) {
+    // check if player has less than 4 cards
+    if (!player?.cards || player?.cards.length < 4) {
+      if (player) {
+        if (drink) {
+          player.swallows['drunk'] += swallowNbr
+        } else {
+          player.swallows['given'] += swallowNbr
+        }
+      }
+    } else {
+      if (player) {
+        if (drink) {
+          player.swallows['drunk'] += swallowNbr
+        } else {
+          player.swallows['given'] += swallowNbr
+        }
+      }
+    }
+
+    const playerIndex = this.players.findIndex((plyr) => {
+      return plyr.id === player?.id;
     });
 
-    if (currentPlayer) {
-      if(drink){
-        currentPlayer.swallows['drunk'] += swallowNbr
-      }  else{
-        currentPlayer.swallows['given'] += swallowNbr
-      }
+    if (playerIndex !== -1) {
+      this.players.splice(playerIndex, 1, player);
     }
     this.savePlayerToStorage(this.players);
 

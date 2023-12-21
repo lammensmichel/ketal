@@ -1,4 +1,4 @@
-import {Component,  OnInit} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {String} from 'typescript-string-operations';
 import {CardService} from "../../../services/card/card.service";
 import {GameService} from "../../../services/game/game.service";
@@ -145,7 +145,6 @@ export class FooterComponent implements OnInit {
     if (this.game && this.game.activePlayer) {
       this.currentCard = this.cardDeckHelperService.getRandomCard();
       this.gotSwallowNumber(this.currentCard, this.game.activePlayer.id);
-
       this.gameSrv.addCardToPlayer(this.currentCard, this.game.activePlayer.id);
 
       this.gameSrv.refreshSession();
@@ -231,7 +230,7 @@ export class FooterComponent implements OnInit {
 
   restartGame() {
     this.gameSrv.resetGame();
-    this.playerHelper.resetPlayerSwallowCnt();
+    this.playerHelper.resetPlayers();
     location.reload();
   }
 
@@ -240,6 +239,19 @@ export class FooterComponent implements OnInit {
     this.gameSrv.refreshSession();
   }
 
+
+  addSwallows(swallowNb: number, drunk: boolean = true) {
+    this.playerHelper.getPlayers().forEach((player: PlayerModel) => {
+      let swallowTurnNb = 0;
+      player.cards.forEach((card) => {
+        if (card.value === this.currentCard?.value) {
+          swallowTurnNb += swallowNb;
+        }
+      });
+      if (this.currentCard) this.playerHelper.addPlayerSwallow(player, swallowTurnNb,drunk);
+    });
+
+  }
 
   onDisplayCard() {
     if (this.gameSrv.game) {
@@ -263,26 +275,33 @@ export class FooterComponent implements OnInit {
             swallowNb = 1;
             this.currentCard.swallow = swallowNb;
             this.gameSrv.addDrinkingCard(this.currentCard);
-            if (this.gameSrv.game.activePlayer) this.playerHelper.addPlayerSwallow(this.gameSrv.game.activePlayer, swallowNb);
+            this.addSwallows(swallowNb);
             break;
           case this.gameSrv.game.drinkingCards.length > 0 && this.gameSrv.game.givingCards.length === 0:
             swallowNb = 1;
             this.currentCard.swallow = swallowNb;
             this.gameSrv.addGivingCard(this.currentCard);
+            // if (this.gameSrv.game.activePlayer) this.playerHelper.addPlayerSwallow(this.gameSrv.game.activePlayer, this.currentCard, swallowNb, false);
+            this.addSwallows(swallowNb, false);
+
             break;
           case this.gameSrv.game.drinkingCards.length !== 0 && this.gameSrv.game.givingCards.length !== 0
           && this.gameSrv.game.drinkingCards.length === this.gameSrv.game.givingCards.length :
             swallowNb = this.gameSrv.game.drinkingCards.length + 1;
             this.currentCard.swallow = swallowNb;
             this.gameSrv.addDrinkingCard(this.currentCard);
-            if (this.gameSrv.game.activePlayer) this.playerHelper.addPlayerSwallow(this.gameSrv.game.activePlayer, 1);
+            // if (this.gameSrv.game.activePlayer) this.playerHelper.addPlayerSwallow(this.gameSrv.game.activePlayer, this.currentCard, 1);
+            this.addSwallows(swallowNb);
             break;
           case this.gameSrv.game.drinkingCards.length !== 0 && this.gameSrv.game.givingCards.length !== 0
           && this.gameSrv.game.drinkingCards.length > this.gameSrv.game.givingCards.length :
             swallowNb = this.gameSrv.game.givingCards.length + 1;
             this.currentCard.swallow = swallowNb;
             this.gameSrv.addGivingCard(this.currentCard);
+            // if (this.gameSrv.game.activePlayer) this.playerHelper.addPlayerSwallow(this.gameSrv.game.activePlayer, this.currentCard, swallowNb, false);
+            this.addSwallows(swallowNb, false);
         }
+
       }
       this.gameSrv.refreshSession();
     }

@@ -18,11 +18,15 @@
             <div class="card-group d-flex flex-nowrap justify-content-center gap-1">
               <div *ngFor="let loop of [].constructor(4); let i = index">
                 <app-playing-card [card]="player.cards[i]"></app-playing-card>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                  Launch modal
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
+
     </div>
   </div>
 </div>
