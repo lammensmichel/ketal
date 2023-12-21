@@ -58,8 +58,8 @@
                 [translate]=" drinkingCards.length <= givingCards.length  ? 'Label_YouDrink'  :  'Label_YouGive' "></button>
       </div>
       <div *ngIf="givingCards.length === 6" class=" text-center ">
-        <button type="button" class="btn btn-secondary ms-2" (click)="restartGame()" [translate]="'Button_RestartGame'"></button>
-        <button *ngIf="!this.gameSrv.isGameFinished()" type="button" class="btn btn-secondary ms-2" (click)="displaySummary()" [translate]="'Button_RestartGame'"></button>
+        <button type="button" class="btn btn-secondary ms-2" (click)="restartGame()" [translate]="'Button_Restart'"></button>
+        <button *ngIf="!this.gameSrv.isGameFinished()" type="button" class="btn btn-secondary ms-2" (click)="displaySummary()" [translate]="'Button_Display_Summary'"></button>
 
       </div>
     </div>

@@ -19,5 +19,6 @@
   "Button_Create": "Créer",
   "Button_Delete": "Supprimer",
   "Button_NextCard": "Suivante",
-  "Button_Restart": "Recommencer"
+  "Button_Restart": "Recommencer",
+  "Button_Display_Summary": "Afficher le résumé"
 }

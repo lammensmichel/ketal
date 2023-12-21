@@ -19,5 +19,6 @@
   "Button_Create": "Create",
   "Button_Delete": "Delete",
   "Button_NextCard": "Next",
-  "Button_Restart": "Restart"
+  "Button_Restart": "Restart",
+  "Button_Display_Summary": "Display summary"
 }
