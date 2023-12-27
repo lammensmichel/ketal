@@ -60,7 +60,7 @@ export class PlayerGivenSipsSelectionComponent implements OnInit {
     // Implement your save logic here
     this.players.forEach(player => {
       if (this.tempSips[player.id] > 0) {
-        this.playerHelper.addPlayerSip(player, this.tempSips[player.id]);
+        this.gameSrv.addPlayerSip(player, this.tempSips[player.id]);
       }
     });
 
@@ -90,7 +90,7 @@ export class PlayerGivenSipsSelectionComponent implements OnInit {
 
   openModal(player: PlayerModel) {
     this.givenPlayer = player;
-    this.sipsToGive = this.playerHelper.getSipCnt(player);
+    this.sipsToGive = this.playerHelper.getSipCnt(this.gameSrv.game, player);
     const modal = this.elementRef.nativeElement.querySelector('#playerSipsSelectionModal');
     modal.style.display = "flex";
   }

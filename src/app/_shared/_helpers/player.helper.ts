@@ -4,7 +4,7 @@ import {PlayerChoice, PlayerModel} from '../_models/player.model';
 import {LocalService} from "../../services/local/local.service";
 import {Injectable} from "@angular/core";
 import {CardService} from "../../services/card/card.service";
-import {GameService} from "../../services/game/game.service";
+import {Game} from "../_models/game.model";
 
 function getRandomRgbColor() {
   const num = Math.round(0xffffff * Math.random());
@@ -16,8 +16,7 @@ export class PlayerHelperService {
   public players: PlayerModel[] = [];
 
   constructor(public localService: LocalService,
-              public cardSrv: CardService,
-              public gameSrv: GameService) {
+              public cardSrv: CardService) {
   }
 
   public addPlayer(player: string): void {
@@ -69,25 +68,6 @@ export class PlayerHelperService {
   }
 
 
-  public resetPlayers() {
-    const players: PlayerModel[] = this.gameSrv.game.players;
-    players.forEach((player: PlayerModel) => {
-      player.sips = {
-        drunk: 0,
-        given: 0
-      };
-      player.cards = [];
-      player.choice = {
-        color: '',
-        plus_or_minus: '',
-        in_out: '',
-        suit: ''
-      };
-    });
-
-    this.savePlayerToStorage(players);
-  }
-
   public getPlayers(): Array<PlayerModel> {
     let playerList: Array<PlayerModel> = [];
     if (this.players.length === 0) {
@@ -99,26 +79,9 @@ export class PlayerHelperService {
     return playerList;
   }
 
-  public addPlayerSip(player: PlayerModel, sipNbr: number, drink: boolean = true) {
-    // check if player has less than 4 cards
-    const currPlayer: PlayerModel | undefined = this.gameSrv.game.players.find((playerSelected: PlayerModel) => playerSelected.id === player.id);
 
-
-    if (!currPlayer?.cards || currPlayer?.cards?.length < 4) {
-      if (currPlayer && sipNbr) {
-        currPlayer.sips['drunk'] += sipNbr;
-      }
-    } else {
-      currPlayer.sips[drink ? 'drunk' : 'given'] += sipNbr;
-    }
-
-    this.gameSrv.refreshSession();
-
-  }
-
-
-  getSipCnt(player: PlayerModel, absolute: boolean = false) {
-    const {activePlayer, drinkingCards, givingCards, phase, players} = this.gameSrv.game;
+  getSipCnt(game: Game, player: PlayerModel, absolute: boolean = false) {
+    const {activePlayer, drinkingCards, givingCards, phase, players} = game;
     const currentIndex = players.findIndex(player => player.id === activePlayer?.id);
     const previousPlayer = currentIndex === 0 ? players[players.length - 1] : players[currentIndex - 1];
     const maybeAbs = absolute ? Math.abs : (v: number) => v;
@@ -156,5 +119,10 @@ export class PlayerHelperService {
       }
     });
     return totalGivenSips;
+  }
+
+
+  getPlayerChoice(player: PlayerModel, choice: string): string {
+    return player.choice[choice];
   }
 }

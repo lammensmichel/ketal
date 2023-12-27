@@ -27,7 +27,7 @@ export class PlayerCardComponent implements OnInit {
 
   getSipCnt(player: PlayerModel, absolute: boolean = false) {
     if(player) {
-      return this.playerSrv.getSipCnt(player, absolute);
+      return this.playerSrv.getSipCnt( this.gameSrv.game,player, absolute);
     } else {
       return 0;
     }
