@@ -1,5 +1,5 @@
 <div class="mt-2">
-  <div class="container white-background">
+  <div class=" white-background">
     <div *ngIf="gameSrv.isGameStarted() && [1,2,3,4].includes(activeTurn)"
          class="mt-2 mb-2 space-below  white-background">
       <hr class=""/>
@@ -23,20 +23,22 @@
           <div *ngIf="activeTurn === 3 " class="d-flex gap-2">
             <button title="chooseIn" class="card-container small-font w-auto vertical-text-button"
                     [translate]="'Button_In'" (click)="inOut('in')">
-                <div *ngFor="let card of this.gameSrv.game.activePlayer?.cards; let i = index" class="d-flex flex-column">
-                  <div class="d-flex flex-row  card-custom-mr">
-                    <app-playing-card  [ngClass]="{  'card-custom-mr' : i === 0 }" [card]="card"></app-playing-card>
-                    <span *ngIf="i === 0 " class="fs-2">......</span>
+              <div *ngFor="let card of this.gameSrv.game.activePlayer?.cards; let i = index" class="d-flex flex-column">
+                <div class="d-flex flex-row  card-custom-mr">
+                  <app-playing-card [ngClass]="{  'card-custom-mr' : i === 0 }" [card]="card"></app-playing-card>
+                  <div *ngIf="i === 0 " class="d-flex flex-row fs-2 align-items-center">
+                    <span  class="fs-2">.....</span>
                   </div>
                 </div>
+              </div>
             </button>
             <button title="chooseOut" class="card-container small-font w-auto  vertical-text-button"
                     [translate]="'Button_Out'"
                     (click)="inOut('out')">
               <div *ngFor="let card of this.gameSrv.game.activePlayer?.cards; let i = index" class="d-flex flex-column">
-                <div class="d-flex flex-row  card-custom-mr">
+                <div class="d-flex flex-row  card-custom-mr align-items-center">
                   <span *ngIf="i === 0 " class="fs-2">...</span>
-                  <app-playing-card  [ngClass]="{  'card-custom-mr' : i === 0 }" [card]="card"></app-playing-card>
+                  <app-playing-card [ngClass]="{  'card-custom-mr' : i === 0 }" [card]="card"></app-playing-card>
                   <span *ngIf="i === 1 " class="fs-2">...</span>
                 </div>
               </div>
