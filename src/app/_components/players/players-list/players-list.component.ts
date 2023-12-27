@@ -1,18 +1,20 @@
-import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
-import { TranslateService } from '@ngx-translate/core';
+import {TranslateService} from '@ngx-translate/core';
 import {PlayerHelperService} from 'src/app/_shared/_helpers/player.helper';
 import {PlayerModel} from 'src/app/_shared/_models/player.model';
 import {LocalService} from 'src/app/services/local/local.service';
 import {GameService} from "../../../services/game/game.service";
-import { String } from 'typescript-string-operations';
+import {String} from 'typescript-string-operations';
+import {MatDialog} from '@angular/material/dialog';
+
 
 @Component({
   selector: 'app-players-list',
   templateUrl: './players-list.component.html',
   styleUrls: ['./players-list.component.scss'],
 })
-export class PlayersListComponent {
+export class PlayersListComponent implements OnInit {
 
   public playersForm: FormGroup;
   public allPlayersCreated: boolean = false;
@@ -23,7 +25,8 @@ export class PlayersListComponent {
     public playerHelper: PlayerHelperService,
     public localService: LocalService,
     public gameSrv: GameService,
-    public translate: TranslateService
+    public translate: TranslateService,
+    public dialog: MatDialog
   ) {
     const localPlayer = JSON.parse(
       this.localService.getData('players') as string
@@ -36,8 +39,11 @@ export class PlayersListComponent {
     });
   }
 
+  ngOnInit(): void {
+  }
+
   public addPlayer() {
-    if(!this.playerHelper.isMaxPlayerNumberNotReached() ) {
+    if (!this.playerHelper.isMaxPlayerNumberNotReached()) {
       return;
     }
 
@@ -48,16 +54,9 @@ export class PlayersListComponent {
   }
 
   public getPlayers(): PlayerModel[] {
-    return this.playerHelper.players;
+    return this.gameSrv.isNewGame() ?  this.playerHelper.getPlayers() : this.gameSrv.game.players;
   }
 
-  public beginGame(): void {
-    this.onBeginGame.emit();
-  }
-
-  public hasPlayers(): boolean {
-    return this.playerHelper?.players?.length > 0;
-  }
 
   public getNewPlayerInputPlaceholder(): string {
     return this.translate.instant('Label_PlaceHolder_PlayerName');
@@ -66,4 +65,5 @@ export class PlayersListComponent {
   get newPlayer() {
     return this.playersForm.get('newPlayer');
   }
+
 }

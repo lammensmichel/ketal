@@ -20,7 +20,12 @@ import {PlayingCardComponent} from './_shared/_components/playing-card/playing-c
 import {AppRoutingModule} from './app-routing.module';
 import {AppComponent} from './app.component';
 import { GameSummaryComponent } from './_components/game/game-summary/game-summary.component';
-import { PlayerSwallowSelectionComponent } from './_components/players/player-swallow-selection/player-swallow-selection.component';
+import { PlayerGivenSipsSelectionComponent } from './_components/players/player-given-sips-selection/player-given-sips-selection.component';
+import { MatDialogModule } from '@angular/material/dialog';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { PlayerCardComponent } from './_components/players/player-card/player-card.component';
+import { MainGameComponent } from './_components/game/main-game/main-game.component';
+import { ToastComponent } from './_shared/_components/toast/toast.component';
 
 const config: SocketIoConfig = {url: environment.socketIoUrl, options: {}};
 
@@ -39,13 +44,18 @@ export function HttpLoaderFactory(http: HttpClient) {
     GameRoomComponent,
     PlayerListPlayerComponent,
     GameSummaryComponent,
-    PlayerSwallowSelectionComponent
+    PlayerGivenSipsSelectionComponent,
+    PlayerCardComponent,
+    MainGameComponent,
+    ToastComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     ReactiveFormsModule,
     FormsModule,
+    MatDialogModule,
+    BrowserAnimationsModule,
     HttpClientModule,
     SocketIoModule.forRoot(config),
     TranslateModule.forRoot({

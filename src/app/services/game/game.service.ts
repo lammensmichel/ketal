@@ -9,9 +9,20 @@ import {LocalService} from "../local/local.service";
   providedIn: 'root'
 })
 export class GameService {
+
   public gameSubject: BehaviorSubject<Game> | undefined;
 
   private _game: Game | undefined;
+  private _withSummaryMode = new BehaviorSubject<boolean>(false);
+
+
+  get withSummaryMode() {
+    return this._withSummaryMode.asObservable();
+  }
+
+  setWithSummaryMode(value: boolean) {
+    this._withSummaryMode.next(value);
+  }
 
   constructor(public localSrv: LocalService) {
     if (!this.gameSubject) {
@@ -73,13 +84,35 @@ export class GameService {
     return this.getStatus() === 2;
   }
 
+  isGameStarted(): boolean {
+    return this.getStatus() === 1;
+  }
+
+  isNewGame(): boolean {
+    return this.getStatus() === 0;
+  }
+
+  isSummaryMode(): boolean {
+    return this.isSummaryActivated() && this.getStatus() === 3;
+  }
+
+  isSummaryActivated() {
+    return this.game?.summary;
+  }
+
   addTurn() {
     this.game.turn++;
     this.game = this.game;
   }
 
   resetGame() {
-    this.game = undefined;
+    this.setStatus(0);
+    this.game.givingCards = [];
+    this.game.drinkingCards = [];
+    this.game.phase = 0;
+    this.game.turn = 0;
+    this.game.activePlayer = undefined;
+    this.setStatus(0);
   }
 
   getStatus(): number {
@@ -87,6 +120,13 @@ export class GameService {
       return 0;
     } else {
       return this.game.status;
+    }
+  }
+
+  setStatus(status: number) {
+    if (this.game) {
+      this.game.status = status;
+      this.refreshSession();
     }
   }
 }

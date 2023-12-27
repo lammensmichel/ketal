@@ -10,4 +10,5 @@ export interface Game {
     givingCards: CardType[];
     activePlayer: PlayerModel | undefined;
     status: number;
+    summary: boolean;
 }

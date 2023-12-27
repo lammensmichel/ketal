@@ -1,0 +1,9 @@
+<div  #toastRef  role="alert" aria-live="assertive" aria-atomic="true" class="toast  center-toast" data-autohide="false">
+  <div class="toast-header d-flex gap-2">
+    <Strong>⚠ </Strong>
+    <strong class="mr-auto" [translate]="titleMessage">Attention</strong>
+  </div>
+  <div class="toast-body">
+    <span  [innerHTML]="bodyMessage | translate"></span>
+  </div>
+</div>

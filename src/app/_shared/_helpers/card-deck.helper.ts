@@ -33,10 +33,11 @@ export class CardDeckHelperService {
         let card: CardType = {
           suit: this.possibleSuits[i],
           icon: `&${this.possibleSuits[i]};`,
-          swallow: 0,
+          sips: 0,
           selected: false,
           value: '',
           img:`assets/images/cards/svg/${this.possibleValues[x]}_${this.possibleSuits[i]}.svg`,
+          givenSips: undefined
         };
         card.value = this.possibleValues[x];
         deck.push(card);

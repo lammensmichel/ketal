@@ -1,14 +1,16 @@
-<div class="container text-center my-4">
-<form [formGroup]="languageForm">
-  <div class="row position-absolute top-0 end-12">
-    <div class="col-12">
-      <select id="language-select form-select-sm" class="form-select" formControlName="selectedLanguage"
-        (change)="onLanguageChange()">
-        <option *ngFor="let lang of getPossibleLanguages()" [value]="lang.shortName"> {{lang.name}}</option>
-      </select>
-    </div>
-  </div>
-</form>
+<header>
+  <div class=" container text-center my-4 ">
+    <form [formGroup]="languageForm">
+      <div class="row position-absolute top-0 end-12">
+        <div class="col-12">
+          <select id="language-select form-select-sm" class="form-select" formControlName="selectedLanguage"
+                  (change)="onLanguageChange()">
+            <option *ngFor="let lang of getPossibleLanguages()" [value]="lang.shortName"> {{lang.name}}</option>
+          </select>
+        </div>
+      </div>
+    </form>
     <h1 class="display-4 font-monospace" style="font-variant: small-caps;" [translate]="'Label_App_¨Title'"></h1>
     <p class="lead" [translate]="'Label_App_Subtitle'"></p>
-</div>
+  </div>
+</header>

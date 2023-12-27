@@ -1,4 +1,13 @@
-import {ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit} from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  Input,
+  NgZone,
+  OnDestroy,
+  OnInit,
+  ViewChild
+} from '@angular/core';
 import {Subscription} from "rxjs";
 import {String} from 'typescript-string-operations';
 import {CardService} from "../../../services/card/card.service";
@@ -14,6 +23,8 @@ import {PlusOrMinusEnum} from '../../_models/enums/plus_minus.enum';
 import {SuitsEnum} from '../../_models/enums/suits.enum';
 import {Game} from '../../_models/game.model';
 import {PlayerModel} from '../../_models/player.model';
+import {ToastComponent} from "../toast/toast.component";
+
 
 @Component({
   selector: 'app-footer',
@@ -21,6 +32,9 @@ import {PlayerModel} from '../../_models/player.model';
   styleUrls: ['./footer.component.scss']
 })
 export class FooterComponent implements OnInit, OnDestroy {
+  @Input() public withSummaryMode: boolean = false;
+  @ViewChild('notAllSipsGiven') toastComponent: ToastComponent | undefined;
+
   game: Game | undefined;
 
   gameSubs: Subscription | undefined;
@@ -66,7 +80,7 @@ export class FooterComponent implements OnInit, OnDestroy {
     return firstVal > secondVal ? firstVal : secondVal;
   }
 
-  gotSwallowNumber(currentCard: CardType, playerId: string) {
+  gotSipsNumber(currentCard: CardType, playerId: string) {
     const currentPlayer = this.gameSrv.game.players.find((player: PlayerModel) => player.id === playerId);
     let previousCard: CardType | undefined;
     let previousCardValue: number = 0;
@@ -84,9 +98,9 @@ export class FooterComponent implements OnInit, OnDestroy {
         case 1 :
           if ((currentPlayer?.choice[DrinkChoiceEnum.Color] === ColorsEnum.Red && currentCard.suit !== SuitsEnum.Diams && currentCard.suit !== SuitsEnum.Hearts) ||
             (currentPlayer?.choice[DrinkChoiceEnum.Color] === ColorsEnum.Black && currentCard.suit !== SuitsEnum.Spades && currentCard.suit !== SuitsEnum.Clubs)) {
-            currentCard.swallow = 1;
+            currentCard.sips = 1;
           } else {
-            currentCard.swallow = 0;
+            currentCard.sips = 0;
           }
           break;
         case 2 :
@@ -95,12 +109,12 @@ export class FooterComponent implements OnInit, OnDestroy {
           newValue = this.cardSrv.getCardValue(currentCard);
 
           if (previousCardValue === newValue) {
-            currentCard.swallow = 4;
+            currentCard.sips = 4;
           } else if ((currentPlayer?.choice[DrinkChoiceEnum.PlusOrMinus] === PlusOrMinusEnum.Plus && previousCardValue > newValue) ||
             (currentPlayer?.choice[DrinkChoiceEnum.PlusOrMinus] === PlusOrMinusEnum.Minus && previousCardValue < newValue)) {
-            currentCard.swallow = 2;
+            currentCard.sips = 2;
           } else {
-            currentCard.swallow = 0;
+            currentCard.sips = 0;
           }
           break;
         case 3 :
@@ -115,18 +129,18 @@ export class FooterComponent implements OnInit, OnDestroy {
           currentPlayerChoice = currentPlayer?.choice[DrinkChoiceEnum.InAndOut];
 
           if (newValue === lowestValue || newValue === highestValue) {
-            currentCard.swallow = 6;
+            currentCard.sips = 6;
           } else if (currentPlayerChoice === InAndOutEnum.In) {
             if (newValue > lowestValue && newValue < highestValue) {
-              currentCard.swallow = 0;
+              currentCard.sips = 0;
             } else {
-              currentCard.swallow = 3;
+              currentCard.sips = 3;
             }
           } else if (currentPlayerChoice === InAndOutEnum.Out) {
             if (newValue < lowestValue || newValue > highestValue) {
-              currentCard.swallow = 0;
+              currentCard.sips = 0;
             } else {
-              currentCard.swallow = 3;
+              currentCard.sips = 3;
             }
           }
 
@@ -134,22 +148,22 @@ export class FooterComponent implements OnInit, OnDestroy {
         case 4 :
           switch (true) {
             case currentPlayer?.choice[DrinkChoiceEnum.Suit] !== currentCard.suit :
-              currentCard.swallow = 4;
+              currentCard.sips = 4;
               break;
             default:
-              currentCard.swallow = 0;
+              currentCard.sips = 0;
           }
 
           break;
       }
-      this.playerHelper.addPlayerSwallow(currentPlayer, currentCard.swallow);
+      this.playerHelper.addPlayerSip(currentPlayer, currentCard.sips);
     }
   }
 
   pickCard() {
     if (this.game && this.game.activePlayer) {
       this.currentCard = this.cardDeckHelperService.getRandomCard();
-      this.gotSwallowNumber(this.currentCard, this.game.activePlayer.id);
+      this.gotSipsNumber(this.currentCard, this.game.activePlayer.id);
       this.gameSrv.addCardToPlayer(this.currentCard, this.game.activePlayer.id);
 
       this.gameSrv.refreshSession();
@@ -233,29 +247,115 @@ export class FooterComponent implements OnInit, OnDestroy {
     }
   }
 
+
   restartGame() {
+
+    // Check if all given sips are given if summary mode is activated
+    // If not, display a toast and return
+    if (this.isNotAllSipsGiven()) {
+      return;
+    }
+
     this.gameSrv.resetGame();
     this.playerHelper.resetPlayers();
-    location.reload();
+    this.gameSrv.game.status = 0;
   }
 
   displaySummary(): void {
-    this.gameSrv.game.status = 2;
-    this.gameSrv.refreshSession();
+    // Check if all given sips are given if summary mode is activated
+    // If not, display a toast and return
+    if (this.isNotAllSipsGiven()) {
+      return;
+    }
+
+    this.gameSrv.setStatus(3);
   }
 
 
-  addSwallows(swallowNb: number, drunk: boolean = true) {
-    this.playerHelper.getPlayers().forEach((player: PlayerModel) => {
-      let swallowTurnNb = 0;
+  addSips(sipNb: number) {
+    this.gameSrv.game.players.forEach((player: PlayerModel) => {
+      let sipTurnNb = 0;
       player.cards.forEach((card) => {
         if (card.value === this.currentCard?.value) {
-          swallowTurnNb += swallowNb;
+          sipTurnNb += sipNb;
         }
       });
-      if (this.currentCard) this.playerHelper.addPlayerSwallow(player, swallowTurnNb,drunk);
+      if (this.currentCard) this.playerHelper.addPlayerSip(player, sipTurnNb, !this.isGivingCard());
     });
 
+  }
+
+  saveCardAndSips(sipNb: number) {
+    if (this.currentCard) {
+      this.addSips(sipNb);
+      this.gameSrv[this.isGivingCard() ? 'addGivingCard' : 'addDrinkingCard'](this.currentCard);
+    }
+  }
+
+  isGivingCard(): boolean {
+    return !!this.currentCard && this.gameSrv.game.drinkingCards.length > this.gameSrv.game.givingCards.length;
+  }
+
+  getSipsNumber(): number {
+    let sipNb: number = 0;
+
+    if (this.currentCard) {
+      switch (true) {
+        case this.gameSrv.game.drinkingCards.length === 0 && this.gameSrv.game.givingCards.length === 0:
+          sipNb = 1;
+          break;
+        case this.gameSrv.game.drinkingCards.length > 0 && this.gameSrv.game.givingCards.length === 0:
+          sipNb = 1;
+          break;
+        case this.gameSrv.game.drinkingCards.length !== 0 && this.gameSrv.game.givingCards.length !== 0
+        && this.gameSrv.game.drinkingCards.length === this.gameSrv.game.givingCards.length :
+          sipNb = this.gameSrv.game.drinkingCards.length + 1;
+          break;
+        case this.gameSrv.game.drinkingCards.length !== 0 && this.gameSrv.game.givingCards.length !== 0
+        && this.gameSrv.game.drinkingCards.length > this.gameSrv.game.givingCards.length :
+          sipNb = this.gameSrv.game.givingCards.length + 1;
+      }
+    }
+    return sipNb;
+  }
+
+
+  isNotAllSipsGiven(): boolean {
+    let returnVal: boolean = false;
+    if (this.gameSrv.isSummaryActivated() && this.gameSrv.game.drinkingCards.length > 0) {
+      let remainingSipsToGive: number = 0;
+      this.gameSrv.game.players.forEach((players) => {
+        players.cards.forEach((cards) => {
+          if (cards.givenSips) {
+            remainingSipsToGive += cards.givenSips;
+          }
+        });
+      });
+
+      if (remainingSipsToGive > 0) {
+        returnVal = true;
+        if (this.toastComponent) {
+          this.toastComponent.show();
+        }
+      }
+    }
+    return returnVal;
+
+  }
+
+  selectCardOnPlayer(sipNb: number) {
+    this.gameSrv.game.players.forEach((players) => {
+      players.cards.forEach((cards) => {
+        cards.selected = cards.value === this.currentCard?.value;
+        if (cards.selected && this.gameSrv.isSummaryActivated() && this.isGivingCard() && sipNb > 0) {
+
+          // this.cardSrv.addGivenSips(player, cards, sipNb);
+
+          cards.givenSips = sipNb;
+        }
+
+      });
+    });
   }
 
   onDisplayCard() {
@@ -263,55 +363,36 @@ export class FooterComponent implements OnInit, OnDestroy {
       if (this.gameSrv.game.givingCards.length === 6) return;
       this.gameSrv.game.givingCards.forEach((card) => (card.selected = false));
       this.gameSrv.game.drinkingCards.forEach((card) => (card.selected = false));
+      let sipNb: number = 0;
+
+      // Check if all given sips are given if summary mode is activated
+      // If not, display a toast and return
+      if (this.isNotAllSipsGiven() && this.gameSrv.game.drinkingCards.length > 0) {
+        return;
+      }
+
+      // Get new card
       this.currentCard = this.cardDeckHelperService.getRandomCard();
       this.currentCard.selected = true;
 
-      this.gameSrv.game.players.forEach((players) => {
-        return players.cards.forEach((cards) => {
-          cards.selected = cards.value === this.currentCard?.value;
-          return cards;
-        });
-      });
+      // get sips number
+      sipNb = this.getSipsNumber();
 
-      let swallowNb: number = 0;
-      if (this.currentCard) {
-        switch (true) {
-          case this.gameSrv.game.drinkingCards.length === 0 && this.gameSrv.game.givingCards.length === 0:
-            swallowNb = 1;
-            this.currentCard.swallow = swallowNb;
-            this.gameSrv.addDrinkingCard(this.currentCard);
-            this.addSwallows(swallowNb);
-            break;
-          case this.gameSrv.game.drinkingCards.length > 0 && this.gameSrv.game.givingCards.length === 0:
-            swallowNb = 1;
-            this.currentCard.swallow = swallowNb;
-            this.gameSrv.addGivingCard(this.currentCard);
-            // if (this.gameSrv.game.activePlayer) this.playerHelper.addPlayerSwallow(this.gameSrv.game.activePlayer, this.currentCard, swallowNb, false);
-            this.addSwallows(swallowNb, false);
 
-            break;
-          case this.gameSrv.game.drinkingCards.length !== 0 && this.gameSrv.game.givingCards.length !== 0
-          && this.gameSrv.game.drinkingCards.length === this.gameSrv.game.givingCards.length :
-            swallowNb = this.gameSrv.game.drinkingCards.length + 1;
-            this.currentCard.swallow = swallowNb;
-            this.gameSrv.addDrinkingCard(this.currentCard);
-            // if (this.gameSrv.game.activePlayer) this.playerHelper.addPlayerSwallow(this.gameSrv.game.activePlayer, this.currentCard, 1);
-            this.addSwallows(swallowNb);
-            break;
-          case this.gameSrv.game.drinkingCards.length !== 0 && this.gameSrv.game.givingCards.length !== 0
-          && this.gameSrv.game.drinkingCards.length > this.gameSrv.game.givingCards.length :
-            swallowNb = this.gameSrv.game.givingCards.length + 1;
-            this.currentCard.swallow = swallowNb;
-            this.gameSrv.addGivingCard(this.currentCard);
-            // if (this.gameSrv.game.activePlayer) this.playerHelper.addPlayerSwallow(this.gameSrv.game.activePlayer, this.currentCard, swallowNb, false);
-            this.addSwallows(swallowNb, false);
-        }
+      // Select Card on each player
+      this.selectCardOnPlayer(sipNb);
 
+      this.currentCard.sips = sipNb;
+      this.saveCardAndSips(sipNb);
+
+      // Finish game if 6 cards are given
+      if (this.gameSrv.game.givingCards.length === 6) {
+        this.gameSrv.setStatus(2);
       }
+
       this.gameSrv.refreshSession();
     }
   }
-
 
   public hasPlayers(): boolean {
     return this.playerHelper?.players?.length > 0;
@@ -320,23 +401,23 @@ export class FooterComponent implements OnInit, OnDestroy {
   public beginGame(): void {
     this.cardDeckHelperService.constructDeck();
 
-    if (!this.gameSrv.game) {
-      const players: Array<PlayerModel> = JSON.parse(this.localSrv.getData('players') as string);
-      this.gameSrv.game = {
-        players: players,
-        maxTurnCount: players.length * 4,
-        turn: 1,
-        phase: 1,
-        drinkingCards: [],
-        givingCards: [],
-        activePlayer: players[0],
-        status: 1
-      } as Game;
-    }
+    const players: Array<PlayerModel> = JSON.parse(this.localSrv.getData('players') as string);
+    this.gameSrv.game = {
+      players: players,
+      maxTurnCount: players.length * 4,
+      turn: 1,
+      phase: 1,
+      drinkingCards: [],
+      givingCards: [],
+      activePlayer: players[0],
+      status: 1,
+      summary: this.withSummaryMode
+    } as Game;
+
   }
 
   ngOnDestroy() {
-    this.gameSubs?.unsubscribe()
+    this.gameSubs?.unsubscribe();
   }
 
 }

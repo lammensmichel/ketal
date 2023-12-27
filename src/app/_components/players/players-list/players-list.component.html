@@ -1,5 +1,5 @@
 <div class="container">
-  <form [formGroup]="playersForm" (ngSubmit)="addPlayer()" *ngIf="!allPlayersCreated && !this.gameSrv.isGameFinished() " class="mb-1">
+  <form [formGroup]="playersForm" (ngSubmit)="addPlayer()" *ngIf="!allPlayersCreated && this.gameSrv.isNewGame() " class="mb-1">
     <div class="input-group mb-1">
       <span class="input-group-text">🥃</span>
       <input type="text" class="form-control" formControlName="newPlayer" [placeholder]="getNewPlayerInputPlaceholder()" required>
@@ -18,7 +18,7 @@
     <div class="d-flex flex-grow-1" [ngClass]="{  'w-50': getPlayers().length > 12 }">
       <ul class="list-group text-start flex-grow-1">
         <li class="list-group-item d-flex flex-grow-1" *ngFor="let player of getPlayers().slice(0,12)">
-          <app-player-list-player class="w-100" [player]="player"></app-player-list-player>
+          <app-player-list-player class="w-100"  [player]="player"></app-player-list-player>
         </li>
       </ul>
     </div>
@@ -32,3 +32,4 @@
 
   </div>
 </div>
+

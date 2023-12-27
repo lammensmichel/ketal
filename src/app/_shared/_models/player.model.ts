@@ -9,7 +9,7 @@ export interface PlayerChoice {
 }
 
 
-export interface PlayerSwallows {
+export interface PlayerSips {
   [key: string]: number;
 }
 
@@ -25,7 +25,7 @@ export class PlayerModel {
     in_out: '',
     suit: ''
   };
-  public swallows: PlayerSwallows = {
+  public sips: PlayerSips = {
     drunk: 0,
     given: 0
   };

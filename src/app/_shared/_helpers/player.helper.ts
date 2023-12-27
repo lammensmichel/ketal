@@ -3,6 +3,8 @@ import {CardType} from '../_models/card-type.model';
 import {PlayerChoice, PlayerModel} from '../_models/player.model';
 import {LocalService} from "../../services/local/local.service";
 import {Injectable} from "@angular/core";
+import {CardService} from "../../services/card/card.service";
+import {GameService} from "../../services/game/game.service";
 
 function getRandomRgbColor() {
   const num = Math.round(0xffffff * Math.random());
@@ -13,7 +15,9 @@ function getRandomRgbColor() {
 export class PlayerHelperService {
   public players: PlayerModel[] = [];
 
-  constructor(public localService: LocalService) {
+  constructor(public localService: LocalService,
+              public cardSrv: CardService,
+              public gameSrv: GameService) {
   }
 
   public addPlayer(player: string): void {
@@ -64,20 +68,11 @@ export class PlayerHelperService {
     return this.getPlayerNumber() < 23;
   }
 
-  public resetPlayerSwallowCnt() {
-    this.players.forEach((player) => {
-      player.swallows = {
-        drunk: 0,
-        given: 0
-      };
-    });
-
-    this.savePlayerToStorage(this.players);
-  }
 
   public resetPlayers() {
-    this.players.forEach((player: PlayerModel) => {
-      player.swallows = {
+    const players: PlayerModel[] = this.gameSrv.game.players;
+    players.forEach((player: PlayerModel) => {
+      player.sips = {
         drunk: 0,
         given: 0
       };
@@ -90,7 +85,7 @@ export class PlayerHelperService {
       };
     });
 
-    this.savePlayerToStorage(this.players);
+    this.savePlayerToStorage(players);
   }
 
   public getPlayers(): Array<PlayerModel> {
@@ -104,34 +99,62 @@ export class PlayerHelperService {
     return playerList;
   }
 
-  public addPlayerSwallow(player: PlayerModel, swallowNbr: number, drink: boolean = true) {
+  public addPlayerSip(player: PlayerModel, sipNbr: number, drink: boolean = true) {
     // check if player has less than 4 cards
-    if (!player?.cards || player?.cards.length < 4) {
-      if (player) {
-        if (drink) {
-          player.swallows['drunk'] += swallowNbr
-        } else {
-          player.swallows['given'] += swallowNbr
-        }
+    const currPlayer: PlayerModel | undefined = this.gameSrv.game.players.find((playerSelected: PlayerModel) => playerSelected.id === player.id);
+
+
+    if (!currPlayer?.cards || currPlayer?.cards?.length < 4) {
+      if (currPlayer && sipNbr) {
+        currPlayer.sips['drunk'] += sipNbr;
       }
     } else {
-      if (player) {
-        if (drink) {
-          player.swallows['drunk'] += swallowNbr
-        } else {
-          player.swallows['given'] += swallowNbr
-        }
+      currPlayer.sips[drink ? 'drunk' : 'given'] += sipNbr;
+    }
+
+    this.gameSrv.refreshSession();
+
+  }
+
+
+  getSipCnt(player: PlayerModel, absolute: boolean = false) {
+    const {activePlayer, drinkingCards, givingCards, phase, players} = this.gameSrv.game;
+    const currentIndex = players.findIndex(player => player.id === activePlayer?.id);
+    const previousPlayer = currentIndex === 0 ? players[players.length - 1] : players[currentIndex - 1];
+    const maybeAbs = absolute ? Math.abs : (v: number) => v;
+    if (phase === 1) {
+      // Should be 0 for player who is not the previous player
+      if (player.id !== previousPlayer.id) {
+        return 0;
+      }
+      return maybeAbs(-(player.cards.at(-1)?.sips ?? 0));
+    } else {
+      if (player.id === previousPlayer.id && drinkingCards.length === 0 && givingCards.length === 0) {
+        return maybeAbs(-(player.cards.at(-1)?.sips ?? 0));
       }
     }
 
-    const playerIndex = this.players.findIndex((plyr) => {
-      return plyr.id === player?.id;
-    });
-
-    if (playerIndex !== -1) {
-      this.players.splice(playerIndex, 1, player);
+    let cntNbSips = 0;
+    const isOdd = (drinkingCards.length + givingCards.length) % 2 === 1;
+    for (const card of player.cards) {
+      const playerCardValue = this.cardSrv.getCardValue(card);
+      const lastCardValue = isOdd ? this.cardSrv.getCardValue(drinkingCards.at(-1)!) : this.cardSrv.getCardValue(givingCards.at(-1)!);
+      if (playerCardValue === lastCardValue) {
+        cntNbSips += drinkingCards.length * (isOdd ? -1 : 1);
+      }
     }
-    this.savePlayerToStorage(this.players);
 
+    return maybeAbs(cntNbSips);
+  }
+
+  getTotalGivenSips(player: PlayerModel): number {
+    let totalGivenSips = 0;
+
+    player.cards.filter((card: CardType) => card.givenSips !== 0).forEach((card: CardType) => {
+      if (card.givenSips && card.givenSips > 0) {
+        totalGivenSips += card.givenSips;
+      }
+    });
+    return totalGivenSips;
   }
 }

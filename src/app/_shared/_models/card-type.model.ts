@@ -2,7 +2,8 @@ export interface CardType {
   value: string | null;
   suit: string | null;
   icon: string | null;
-  swallow: number;
+  sips: number;
   selected: boolean | null;
   img: string | null;
+  givenSips: number | undefined;
 }

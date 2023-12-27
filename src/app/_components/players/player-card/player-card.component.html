@@ -1,0 +1,24 @@
+<div class="card">
+  <div class="card-body p-2 container">
+    <div class="row mb-1">
+      <label for="avatar" class="d-flex flex-nowrap justify-content-around flex-fill align-items-center">
+        <img alt="avatar" class="img-thumbnail" src="{{ player.avatarSrc }}">
+        <span class="ms-1 fs-5 flex-fill">{{player.name}}</span>
+        <span (click)="onpenPlayerGivenSipsSelectionModal(player)" class="badge" [ngClass]="{
+                'bg-success': getSipCnt(player) > 0,
+                'bg-danger': getSipCnt(player) < 0,
+                'bg-secondary': getSipCnt(player) == 0,
+              }">{{getSipCnt(player, true)}}  <i class="fa fa-glass"></i></span>
+      </label>
+    </div>
+    <div class="row">
+      <div class="card-group d-flex flex-wrap flex-sm-wrap flex-md-nowrap flex-lg-nowrap flex-xl-nowrap  justify-content-center gap-1">
+        <div *ngFor="let loop of [].constructor(4); let i = index">
+          <app-playing-card [card]="player.cards[i]"></app-playing-card>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-player-given-sips-selection></app-player-given-sips-selection>

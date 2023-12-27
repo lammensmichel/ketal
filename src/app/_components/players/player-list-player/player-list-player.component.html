@@ -2,8 +2,8 @@
   <img title="avatarImg" alt="{{player?.name}}" class="img-thumbnail" width="32" height="32"
        src="{{ player?.avatarSrc }}">
   <div class="flex-grow-1 text-truncate order-2  ">{{ player?.name }}</div>
-  <span *ngIf="this.gameSrv.isGameFinished() && player && player.swallows" class="badge bg-danger order-3">{{player.swallows['drunk']}}  <i class="fa fa-glass"></i></span>
-  <span *ngIf="this.gameSrv.isGameFinished() && player && player.swallows" class="badge bg-success order-3">{{player.swallows['given']}}  <i class="fa fa-glass"></i></span>
-  <button *ngIf="player && !this.gameSrv.isGameFinished() " type="button" class="btn-close order-4 align-self-end"
+  <span *ngIf="this.gameSrv.isSummaryMode() && player && player.sips" class="badge bg-danger order-3">{{player.sips['drunk']}}  <i class="fa fa-glass"></i></span>
+  <span *ngIf="this.gameSrv.isSummaryMode()  && player && player.sips" class="badge bg-success order-3">{{player.sips['given']}}  <i class="fa fa-glass"></i></span>
+  <button *ngIf="player && this.gameSrv.isNewGame() " type="button" class="btn-close order-4 align-self-end"
           aria-label="Close" (click)="deletePlayer(player)"></button>
 </div>

@@ -14,11 +14,21 @@
   "Label_Error_NameRequired": "The name of the drinker is required.",
   "Label_Error_TooMuchPlayer": "The maximum number of players has been reached.",
 
+  "Button_In": "In",
+  "Button_Out": "Out",
   "Button_Add": "Add",
   "Button_BeginGame": "Starting the Grosse Guinze",
   "Button_Create": "Create",
   "Button_Delete": "Delete",
   "Button_NextCard": "Next",
   "Button_Restart": "Restart",
-  "Button_Display_Summary": "Display summary"
+  "Button_Display_Summary": "Display summary",
+
+  "Remaining_Sips": "Sips",
+
+  "Warning": "Warning",
+  "Assign_All_Sips": "Each user that owned the drawed card have to use the icon <i class=\"fa fa-glass\"></i> to give sips",
+  "Assign_All_Given_Sips": " Please assign all sips before saving",
+  "Summary_Mode_Selection": "Activate summary at ending of the game"
+
 }
