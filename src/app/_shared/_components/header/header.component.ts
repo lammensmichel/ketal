@@ -20,7 +20,7 @@ export class HeaderComponent {
     private translate: TranslateService,
     public languageHelper: LanguageService) {
     this.languageForm = this.formBuilder.group({
-      selectedLanguage: [translate.getBrowserLang() ?? 'en']
+      selectedLanguage: [translate.currentLang]
     });
   }
 
