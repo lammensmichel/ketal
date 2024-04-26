@@ -4,6 +4,7 @@
 
   "Label_YouDrink":"You drink",
   "Label_YouGive":"You give",
+  "Label_Give": "gives",
   "Label_PlaceHolder_PlayerName": "Name of drinker",
   "Label_ListOfChannels": "List of channels",
   "Label_Join": "Join",
@@ -25,7 +26,7 @@
   "Button_Restart": "Restart",
   "Button_Display_Summary": "Display summary",
 
-  "Remaining_Sips": "Sips",
+  "Remaining_Sips": "sips",
 
   "Warning": "Warning",
   "Assign_All_Sips": "Each user that owned the drawed card have to use the icon <i class=\"fa fa-glass\"></i> to give sips",
