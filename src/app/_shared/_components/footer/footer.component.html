@@ -27,7 +27,9 @@
                 <div class="d-flex flex-row  card-custom-mr">
                   <app-playing-card [ngClass]="{  'card-custom-mr' : i === 0 }" [card]="card"></app-playing-card>
                   <div *ngIf="i === 0 " class="d-flex flex-row fs-2 align-items-center">
-                    <span  class="fs-2">.....</span>
+                    <span  class="fs-2">
+                      <i class="fa-solid fa-caret-right"></i>
+                      <i class="fa-solid fa-caret-left"></i></span>
                   </div>
                 </div>
               </div>
@@ -37,9 +39,9 @@
                     (click)="inOut('out')">
               <div *ngFor="let card of this.gameSrv.game.activePlayer?.cards; let i = index" class="d-flex flex-column">
                 <div class="d-flex flex-row  card-custom-mr align-items-center">
-                  <span *ngIf="i === 0 " class="fs-2">...</span>
+                  <span *ngIf="i === 0 " class="fs-2"><i class="fa-solid fa-caret-left"></i></span>
                   <app-playing-card [ngClass]="{  'card-custom-mr' : i === 0 }" [card]="card"></app-playing-card>
-                  <span *ngIf="i === 1 " class="fs-2">...</span>
+                  <span *ngIf="i === 1 " class="fs-2"><i class="fa-solid fa-caret-right"></i></span>
                 </div>
               </div>
             </button>
