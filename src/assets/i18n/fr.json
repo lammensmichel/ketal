@@ -13,6 +13,7 @@
   "Label_Error_TooMuchPlayer": "Le nombre maximum de joueurs est atteint.",
   "Button_Add": "Ajouter",
   "Button_BeginGame": "Débuter la Grosse Guinze",
+  "Button_ExitGame": "Arrêter la partie en cours",
   "Button_Create": "Créer",
   "Button_Delete": "Supprimer",
   "Button_NextCard": "Suivante",

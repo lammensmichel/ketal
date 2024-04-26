@@ -5,12 +5,26 @@
         <div class="col-12">
           <select id="language-select form-select-sm" class="form-select" formControlName="selectedLanguage"
                   (change)="onLanguageChange()">
-            <option *ngFor="let lang of getPossibleLanguages()" [value]="lang.shortName"> {{lang.name}}</option>
+            <option *ngFor="let lang of getPossibleLanguages()" [value]="lang.shortName"> {{ lang.name }}</option>
           </select>
         </div>
       </div>
     </form>
-    <h1 class="display-4 font-monospace" style="font-variant: small-caps;" [translate]="'Label_App_¨Title'"></h1>
-    <p class="lead" [translate]="'Label_App_Subtitle'"></p>
+    <div class="column">
+      <h1 class="display-4 font-monospace" style="font-variant: small-caps;" [translate]="'Label_App_¨Title'"></h1>
+      <div class="lead">
+        <div *ngIf="gameSrv.isNewGame()">
+          <span [translate]="'Label_App_Subtitle'"></span>
+        </div>
+        <div *ngIf="gameSrv.isGameStarted()">
+          <button type="button" class="btn btn-secondary ms-2 " (click)="restartGame()">
+            <i class="fa-regular fa-circle-xmark"></i>
+            <span class="ms-2" [translate]="'Button_ExitGame'"></span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
   </div>
 </header>
