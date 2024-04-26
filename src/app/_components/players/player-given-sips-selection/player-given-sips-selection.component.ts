@@ -35,12 +35,19 @@ export class PlayerGivenSipsSelectionComponent implements OnInit {
   }
 
 
-  increase(player: any) {
+  increase(player: any, sips  : number = 0) {
     if (this.sipsToGive <= 0) {
       return;
     }
-    this.tempSips[player.id]++;
-    this.sipsToGive--;
+
+    if (sips > 0) {
+      this.tempSips[player.id] += sips;
+      this.sipsToGive -= sips;
+      return;
+    } else{
+      this.tempSips[player.id]++;
+      this.sipsToGive--;
+    }
   }
 
   decrease(player: any) {
@@ -61,15 +68,18 @@ export class PlayerGivenSipsSelectionComponent implements OnInit {
     this.players.forEach(player => {
       if (this.tempSips[player.id] > 0) {
         this.gameSrv.addPlayerSip(player, this.tempSips[player.id]);
+        // this.gameSrv.setSipToGive(this.tempSips[player.id], player);
       }
     });
 
 
-    const cardsToDecreaseGivenSips: CardType[] = this.givenPlayer.cards.filter((card: CardType) => card.givenSips !== 0);
+
+    const cardsToDecreaseGivenSips: CardType[] =this.givenPlayer.cards.filter((card: CardType) => card.givenSips && card.givenSips !== 0);
 
     cardsToDecreaseGivenSips.forEach((card: CardType) => {
-      card.givenSips = 0;
+      this.gameSrv.updatePlayerGivenSipsFromCard( this.givenPlayer, card, 0);
     });
+    this.gameSrv.refreshSession();
 
     this.closeModal();
   }

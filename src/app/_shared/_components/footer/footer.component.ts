@@ -12,6 +12,7 @@ import {CardType} from '../../_models/card-type.model';
 import {DrinkChoiceEnum} from '../../_models/enums/drink_choice.enum';
 import {Game} from '../../_models/game.model';
 import {ToastComponent} from "../toast/toast.component";
+import {PlayerModel} from "../../_models/player.model";
 
 
 @Component({
@@ -76,12 +77,15 @@ export class FooterComponent implements OnInit, OnDestroy {
     }
   }
 
-  restartGame() {
+  async restartGame() {
 
     // Check if all given sips are given if summary mode is activated
     // If not, display a toast and return
     if (this.gameSrv.isNotAllSipsGiven()) {
       this.displayNotAllSipsGivenToast();
+      // Fleme de faire une fonction de callback sur le toastR mais il faudrait
+      await this.delay(2500);
+      this.openSipGiveModal(this.gameSrv.getLastCard());
       return;
     }
 
@@ -89,21 +93,57 @@ export class FooterComponent implements OnInit, OnDestroy {
     this.gameSrv.game.status = 0;
   }
 
-  displaySummary(): void {
+
+  async displaySummary(): Promise<void> {
     // Check if all given sips are given if summary mode is activated
     // If not, display a toast and return
     if (this.gameSrv.isNotAllSipsGiven()) {
+
       this.displayNotAllSipsGivenToast();
+      // Fleme de faire une fonction de callback sur le toastR mais il faudrait
+      await this.delay(2500);
+      this.openSipGiveModal(this.gameSrv.getLastCard());
       return;
+
     }
 
     this.gameSrv.setStatus(3);
   }
 
-  onDisplayCard() {
-    let newCardGiven: number | void = this.gameSrv.displayNewCard();
-    if (newCardGiven === -1) {
+
+  openSipGiveModal(newCardGiven: CardType) {
+    if (this.game?.summary && this.game.drinkingCards.length === this.game.givingCards.length) {
+      let playersWithNewCard: PlayerModel[] = [];
+      this.game.players.forEach(player => {
+        if (newCardGiven && newCardGiven.value && this.playerHelper.getPlayerCardListValues(player).includes(newCardGiven.value)) {
+          if (this.game) {
+            playersWithNewCard = this.game?.players.filter(player => {
+              return newCardGiven && newCardGiven.value && this.playerHelper.getPlayerCardListValues(player).includes(newCardGiven.value);
+            });
+          }
+        }
+      });
+      playersWithNewCard.forEach(player => {
+        this.gameSrv.openSipGiveModal(player);
+      });
+    }
+  }
+
+  async delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  async onDisplayCard() {
+    let newCardGiven: void | CardType = this.gameSrv.displayNewCard();
+    if (!newCardGiven) {
       this.displayNotAllSipsGivenToast();
+
+      // Fleme de faire une fonction de callback sur le toastR mais il faudrait
+      await this.delay(2500);
+      this.openSipGiveModal(this.gameSrv.getLastCard());
+    } else {
+
+      this.openSipGiveModal(newCardGiven);
     }
   }
 

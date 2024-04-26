@@ -79,6 +79,9 @@ export class PlayerHelperService {
     return playerList;
   }
 
+  public getPlayerCardListValues(player: PlayerModel): string[] {
+    return player.cards.map(card => card.value).filter(value => value !== null) as string[];
+  }
 
   getSipCnt(game: Game, player: PlayerModel, absolute: boolean = false) {
     const {activePlayer, drinkingCards, givingCards, phase, players} = game;

@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {BehaviorSubject} from "rxjs";
+import {BehaviorSubject, Subject} from "rxjs";
 import {CardType} from 'src/app/_shared/_models/card-type.model';
 import {Game} from 'src/app/_shared/_models/game.model';
 import {PlayerModel} from 'src/app/_shared/_models/player.model';
@@ -22,6 +22,11 @@ export class GameService {
 
   private _game: Game | undefined;
   private _withSummaryMode = new BehaviorSubject<boolean>(false);
+
+  private openSipGiveModalEvent = new Subject<PlayerModel>();
+
+  openSipGiveModalEvent$ = this.openSipGiveModalEvent.asObservable();
+
 
 
   get withSummaryMode() {
@@ -382,6 +387,20 @@ export class GameService {
     this.refreshSession();
   }
 
+
+  updatePlayerGivenSipsFromCard(player: PlayerModel, card: CardType, sips: number) {
+    const currPlayer: PlayerModel | undefined = this.game.players.find((playerSelected: PlayerModel) => playerSelected.id === player.id);
+
+    if (currPlayer) {
+      const cardToUpdate = currPlayer.cards.find((cardSelected: CardType) => cardSelected.suit === card.suit && cardSelected.value === card.value);
+      if (cardToUpdate) {
+        cardToUpdate.givenSips = sips;
+        this.refreshSession();
+      }
+    }
+
+  }
+
   /**
    * Checks if a choice is undefined, null, or consists only of white-space characters.
    *
@@ -497,10 +516,26 @@ export class GameService {
   }
 
   /**
+   *  Return the last card got from the deck
+   *  Can be a giving card or a drinking card
+   *  If number of giving cards is greater than number of drinking cards, return the last giving card
+   *  Otherwise, return the last drinking card
+   *  if equal, return the last giving card
+   *  @returns {CardType | undefined} - The last card got from the deck
+   */
+  getLastCard(): CardType {
+    if (this.game.givingCards.length >= this.game.drinkingCards.length) {
+      return this.game.givingCards[this.game.givingCards.length - 1];
+    } else {
+      return this.game.drinkingCards[this.game.drinkingCards.length - 1];
+    }
+  }
+
+  /**
    * Display a  new card
    * used in game phase 2
    */
-  displayNewCard(): number | void {
+  displayNewCard(): CardType | void  {
     if (!this.game) return;
 
     let newCard: CardType | undefined;
@@ -513,7 +548,7 @@ export class GameService {
     // Check if all given sips are given if summary mode is activated
     // If not, display a toast and return
     if (this.isNotAllSipsGiven() && this.game.drinkingCards.length > 0) {
-      return -1;
+      return;
     }
 
     // Get new card
@@ -536,6 +571,7 @@ export class GameService {
     }
 
     this.refreshSession();
+    return  newCard;
   }
 
   /**
@@ -605,6 +641,7 @@ export class GameService {
         }
       });
     });
+    this.refreshSession();
   }
 
   /**
@@ -663,5 +700,15 @@ export class GameService {
       status: 1,
       summary: withSummaryMode
     };
+  }
+
+
+  /**
+   * Emits an event to open the Sip Give Modal with the specified player.
+   *
+   * @param {PlayerModel} player - The player for whom the modal should be opened.
+   */
+  openSipGiveModal(player: PlayerModel) {
+    this.openSipGiveModalEvent.next(player);
   }
 }
