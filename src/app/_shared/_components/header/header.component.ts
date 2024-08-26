@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
-import { TranslateService } from '@ngx-translate/core';
-import { String } from 'typescript-string-operations';
-import { LanguageService } from '../../_helpers/language.helper';
-import { Language } from '../../_models/language.model';
+import {Component} from '@angular/core';
+import {FormBuilder, FormGroup} from '@angular/forms';
+import {TranslateService} from '@ngx-translate/core';
+import {String} from 'typescript-string-operations';
+import {LanguageService} from '../../_helpers/language.helper';
+import {GameService} from "../../../services/game/game.service";
+import {Language} from "../../_models/language.model";
 
 @Component({
   selector: 'app-header',
@@ -12,16 +13,24 @@ import { Language } from '../../_models/language.model';
 })
 export class HeaderComponent {
   public languageForm: FormGroup;
+
   /**
    *
    */
   constructor(
     private formBuilder: FormBuilder,
     private translate: TranslateService,
+    public gameSrv: GameService,
     public languageHelper: LanguageService) {
     this.languageForm = this.formBuilder.group({
-      selectedLanguage: [translate.currentLang],
+      selectedLanguage: [translate.currentLang]
     });
+  }
+
+
+  restartGame() {
+    this.gameSrv.resetGame();
+    this.gameSrv.game.status = 0;
   }
 
   public getPossibleLanguages(): Language[] {
@@ -30,8 +39,8 @@ export class HeaderComponent {
 
   public onLanguageChange() {
     const selectedLanguage: string = this.languageForm.get('selectedLanguage')?.value;
-    
-    if(!String.isNullOrWhiteSpace(selectedLanguage)){
+
+    if (!String.isNullOrWhiteSpace(selectedLanguage)) {
       this.translate.use(selectedLanguage);
     }
   }
