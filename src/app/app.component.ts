@@ -1,27 +1,26 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
-import {TranslateService} from '@ngx-translate/core';
-import {environment} from 'src/environments/environment';
-import {GameService} from './services/game/game.service';
-import {PlayerHelperService} from "./_shared/_helpers/player.helper";
-import {Subscription} from "rxjs";
+import { Component, OnInit } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
+import { takeUntil } from "rxjs";
+import { environment } from 'src/environments/environment';
+import { PlayerHelperService } from "./_shared/_helpers/player.helper";
+import { SafeUnsubscribe } from './_shared/_helpers/safe-unsubscribe.helper';
+import { GameService } from './services/game/game.service';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
 })
-export class AppComponent implements OnInit, OnDestroy {
-  title = 'ketal';
-
+export class AppComponent extends SafeUnsubscribe implements OnInit {
   withSummaryMode: boolean = false;
-  withSummaryModeSub: Subscription = new Subscription();
 
   constructor(
     public gameSrv: GameService,
     public translate: TranslateService,
     public playerSrv: PlayerHelperService
   ) {
-      const defaultLang = translate.getBrowserLang() ?? environment.defaultLanguage;
+    super();
+    const defaultLang = translate.getBrowserLang() ?? environment.defaultLanguage;
     translate.setDefaultLang(defaultLang);
     translate.use(defaultLang);
   }
@@ -32,8 +31,9 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-
-    this.withSummaryModeSub = this.gameSrv.withSummaryMode.subscribe((withSummaryMode) => {
+    this.gameSrv.withSummaryMode
+    .pipe(takeUntil(this.ngUnsubscribe))
+    .subscribe((withSummaryMode: boolean) => {
       this.withSummaryMode = withSummaryMode;
     });
 
@@ -42,10 +42,6 @@ export class AppComponent implements OnInit, OnDestroy {
     } else {
       this.withSummaryMode = false;
     }
-  }
-
-  ngOnDestroy(): void {
-    this.withSummaryModeSub.unsubscribe();
   }
 
 }

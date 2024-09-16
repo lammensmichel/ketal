@@ -5,10 +5,10 @@
         <img alt="avatar" class="img-thumbnail" src="{{ player.avatarSrc }}">
         <span class="ms-1 fs-5 flex-fill">{{player.name}}</span>
         <span (click)="onpenPlayerGivenSipsSelectionModal(player)" class="badge" [ngClass]="{
-                'bg-success': getSipCnt(player) > 0,
-                'bg-danger': getSipCnt(player) < 0,
-                'bg-secondary': getSipCnt(player) == 0,
-              }">{{getSipCnt(player, true)}}  <i class="fa fa-glass"></i></span>
+                'bg-success': getSipCount(player) > 0,
+                'bg-danger': getSipCount(player) < 0,
+                'bg-secondary': getSipCount(player) == 0,
+              }">{{getSipCount(player, true)}}  <i class="fa fa-glass"></i></span>
       </label>
     </div>
     <div class="row">

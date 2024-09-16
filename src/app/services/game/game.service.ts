@@ -1,17 +1,17 @@
-import {Injectable} from '@angular/core';
-import {BehaviorSubject, Subject} from "rxjs";
-import {CardType} from 'src/app/_shared/_models/card-type.model';
-import {Game} from 'src/app/_shared/_models/game.model';
-import {PlayerModel} from 'src/app/_shared/_models/player.model';
-import {PlayerHelperService} from "../../_shared/_helpers/player.helper";
-import {ColorsEnum} from "../../_shared/_models/enums/color.enum";
-import {DrinkChoiceEnum} from "../../_shared/_models/enums/drink_choice.enum";
-import {InAndOutEnum} from "../../_shared/_models/enums/in_out.enum";
-import {PlusOrMinusEnum} from "../../_shared/_models/enums/plus_minus.enum";
-import {CardService} from "../card/card.service";
-import {LocalService} from "../local/local.service";
-import {String} from "typescript-string-operations";
-import {CardDeckHelperService} from "../../_shared/_helpers/card-deck.helper";
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, Subject } from "rxjs";
+import { CardType } from 'src/app/_shared/_models/card-type.model';
+import { Game } from 'src/app/_shared/_models/game.model';
+import { PlayerModel } from 'src/app/_shared/_models/player.model';
+import { String } from "typescript-string-operations";
+import { CardDeckHelperService } from "../../_shared/_helpers/card-deck.helper";
+import { PlayerHelperService } from "../../_shared/_helpers/player.helper";
+import { ColorsEnum } from "../../_shared/_models/enums/color.enum";
+import { DrinkChoiceEnum } from "../../_shared/_models/enums/drink_choice.enum";
+import { InAndOutEnum } from "../../_shared/_models/enums/in_out.enum";
+import { PlusOrMinusEnum } from "../../_shared/_models/enums/plus_minus.enum";
+import { CardService } from "../card/card.service";
+import { LocalService } from "../local/local.service";
 
 @Injectable({
   providedIn: 'root'
@@ -22,12 +22,9 @@ export class GameService {
 
   private _game: Game | undefined;
   private _withSummaryMode = new BehaviorSubject<boolean>(false);
-
   private openSipGiveModalEvent = new Subject<PlayerModel>();
 
   openSipGiveModalEvent$ = this.openSipGiveModalEvent.asObservable();
-
-
 
   get withSummaryMode() {
     return this._withSummaryMode.asObservable();
@@ -81,7 +78,6 @@ export class GameService {
       this.game.activePlayer = currentPlayer;
       this.refreshSession();
     }
-
   }
 
   /**
@@ -118,8 +114,14 @@ export class GameService {
    */
   addCardToPlayer(card: CardType, playerId: string) {
     const currentPlayer = this.game.players.find((player: PlayerModel) => player.id === playerId);
-    if (currentPlayer) currentPlayer.cards.push(card);
-    if (this.game && this.game.activePlayer) this.game.activePlayer = currentPlayer;
+
+    if (currentPlayer) {
+      currentPlayer.cards.push(card);
+    }
+
+    if (this.game && this.game.activePlayer) {
+      this.game.activePlayer = currentPlayer;
+    }
   }
 
   /**
@@ -128,7 +130,7 @@ export class GameService {
    * @returns {boolean} - True if the game is finished; otherwise, false.
    */
   isGameFinished(): boolean {
-    return this.getStatus() === 2;
+    return this.getGameStatus() === 2;
   }
 
   /**
@@ -137,7 +139,7 @@ export class GameService {
    * @returns {boolean} - True if the game has started; otherwise, false.
    */
   isGameStarted(): boolean {
-    return this.getStatus() === 1;
+    return this.getGameStatus() === 1;
   }
 
   /**
@@ -146,7 +148,7 @@ export class GameService {
    * @returns {boolean} - True if a new game is being started; otherwise, false.
    */
   isNewGame(): boolean {
-    return this.getStatus() === 0;
+    return this.getGameStatus() === 0;
   }
 
   /**
@@ -155,7 +157,7 @@ export class GameService {
    * @returns {boolean} - True if the game is in summary mode; otherwise, false.
    */
   isSummaryMode(): boolean {
-    return this.isSummaryActivated() && this.getStatus() === 3;
+    return this.isSummaryActivated() && this.getGameStatus() === 3;
   }
 
   /**
@@ -212,7 +214,7 @@ export class GameService {
    * If the game is not defined, it returns 0.
    * @returns {number} - The current game status.
    */
-  getStatus(): number {
+  getGameStatus(): number {
     if (!this.game) {
       return 0;
     } else {
@@ -240,6 +242,7 @@ export class GameService {
    */
   private getSipsNumberForColorChoice(player: PlayerModel, card: CardType): number {
     const colorChoice = this.playerHelper.getPlayerChoice(player, DrinkChoiceEnum.Color);
+
     if ((colorChoice === ColorsEnum.Red && this.cardSrv.isBlackCard(card)) ||
       (colorChoice === ColorsEnum.Black && this.cardSrv.isRedCard(card))) {
       return 1;
@@ -266,8 +269,8 @@ export class GameService {
       (plusMinusChoice === PlusOrMinusEnum.Minus && previousCardValue < newValue)) {
       return 2;
     }
-    return 0;
 
+    return 0;
   }
 
   /**
@@ -291,7 +294,6 @@ export class GameService {
 
     let sipNbr: number = 0;
 
-
     switch (true) {
       case newValue === lowestValue || newValue === highestValue:
         sipNbr = 6;
@@ -311,8 +313,8 @@ export class GameService {
         }
         break;
     }
-    return sipNbr;
 
+    return sipNbr;
   }
 
   /**

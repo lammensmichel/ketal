@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { takeUntil } from 'rxjs';
+import { SafeUnsubscribe } from 'src/app/_shared/_helpers/safe-unsubscribe.helper';
 import { Room } from 'src/app/_shared/_models/room.model';
 import { WebsocketService } from 'src/app/services/websocket/websocket.service';
 import { v4 as uuidv4 } from 'uuid';
@@ -9,7 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
   templateUrl: './game-room.component.html',
   styleUrls: ['./game-room.component.scss'],
 })
-export class GameRoomComponent implements OnInit {
+export class GameRoomComponent extends SafeUnsubscribe implements OnInit {
   rooms: Room[] = [];
   roomForm: FormGroup;
 
@@ -17,6 +19,8 @@ export class GameRoomComponent implements OnInit {
     private websocketService: WebsocketService,
     private formBuilder: FormBuilder
   ) {
+    super();
+
     this.roomForm = this.formBuilder.group({
       newRoomName: ['', Validators.required],
       newRoomDescription: ['', Validators.required],
@@ -24,9 +28,12 @@ export class GameRoomComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.websocketService.getRooms().subscribe((rooms: Room[]) => {
-      this.rooms = rooms;
-    });
+    this.websocketService
+      .getRooms()
+      .pipe(takeUntil(this.ngUnsubscribe))
+      .subscribe((rooms: Room[]) => {
+        this.rooms = rooms;
+      });
   }
 
   createRoom() {
