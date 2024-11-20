@@ -5,6 +5,17 @@ on:
     branches:
       - main
 
+# Allow this job to clone the repo and create a page deployment
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Build
@@ -29,25 +40,18 @@ jobs:
         run: ng build --configuration=production
 
       - name: Archive artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: dist
           path: dist
 
   deploy:
-    name: Deploy
-    needs: build
     runs-on: ubuntu-latest
-
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: dist
-
-      - name: Deploy to Hosting Service
-        run: |
-          # Ajoutez ici vos commandes de déploiement spécifiques à votre service d'hébergement
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
