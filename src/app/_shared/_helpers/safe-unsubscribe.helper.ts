@@ -1,13 +1,12 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Directive, OnDestroy } from '@angular/core';
 import { Subject } from 'rxjs';
 
-@Injectable({
-  providedIn: 'root'
-})
-export declare abstract class SafeUnsubscribe implements OnDestroy {
-    ngUnsubscribe: Subject<void>;
-    alive: boolean;
-    ngOnDestroy(): void;
+@Directive()
+export abstract class SafeUnsubscribe implements OnDestroy {
+  protected ngUnsubscribe = new Subject<void>();
 
+  ngOnDestroy(): void {
+    this.ngUnsubscribe.next();
+    this.ngUnsubscribe.complete();
+  }
 }
-//# sourceMappingURL=safe-unsubscribe.d.ts.map
