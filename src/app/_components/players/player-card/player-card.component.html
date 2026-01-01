@@ -2,7 +2,7 @@
   <div class="card-body p-2 container">
     <div class="row mb-1">
       <label for="avatar" class="d-flex flex-nowrap justify-content-around flex-fill align-items-center">
-        <img alt="avatar" class="img-thumbnail" src="{{ player.avatarSrc }}">
+        <img alt="avatar" class="img-thumbnail" width="40" height="40" src="{{ player.avatarSrc }}">
         <span class="ms-1 fs-5 flex-fill">{{player.name}}</span>
         <span (click)="onpenPlayerGivenSipsSelectionModal(player)" class="badge" [ngClass]="{
                 'bg-success': getSipCount(player) > 0,

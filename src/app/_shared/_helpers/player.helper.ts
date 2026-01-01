@@ -6,11 +6,6 @@ import {Injectable} from "@angular/core";
 import {CardService} from "../../services/card/card.service";
 import {Game} from "../_models/game.model";
 
-function getRandomRgbColor() {
-  const num = Math.round(0xffffff * Math.random());
-  return ('000000' + num.toString(16)).slice(-6);
-}
-
 @Injectable()
 export class PlayerHelperService {
   public players: PlayerModel[] = [];
@@ -31,10 +26,7 @@ export class PlayerHelperService {
       suit: ''
     } as PlayerChoice;
 
-    const rgbColor = getRandomRgbColor();
-    // generate a random avatar id from 1 to 45
-    const avatarId = Math.floor(Math.random() * 45) + 1;
-    playerModel.avatarSrc = `https://placeskull.com/32/32/${rgbColor}/${avatarId}`;
+    playerModel.avatarSrc = `https://api.dicebear.com/7.x/avataaars/svg?seed=${playerModel.id}`;
     this.players.push(playerModel);
     this.savePlayerToStorage(this.players);
   }
