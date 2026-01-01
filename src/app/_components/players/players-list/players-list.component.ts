@@ -1,13 +1,12 @@
-import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
-import {TranslateService} from '@ngx-translate/core';
-import {PlayerHelperService} from 'src/app/_shared/_helpers/player.helper';
-import {PlayerModel} from 'src/app/_shared/_models/player.model';
-import {LocalService} from 'src/app/services/local/local.service';
-import {GameService} from "../../../services/game/game.service";
-import {String} from 'typescript-string-operations';
-import {MatDialog} from '@angular/material/dialog';
-
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
+import { TranslateService } from '@ngx-translate/core';
+import { PlayerHelperService } from 'src/app/_shared/_helpers/player.helper';
+import { PlayerModel } from 'src/app/_shared/_models/player.model';
+import { LocalService } from 'src/app/services/local/local.service';
+import { String } from 'typescript-string-operations';
+import { GameService } from '../../../services/game/game.service';
 
 @Component({
   selector: 'app-players-list',
@@ -15,7 +14,6 @@ import {MatDialog} from '@angular/material/dialog';
   styleUrls: ['./players-list.component.scss'],
 })
 export class PlayersListComponent implements OnInit {
-
   public playersForm: FormGroup;
   public allPlayersCreated: boolean = false;
   @Output() public onBeginGame: EventEmitter<void> = new EventEmitter<void>();
@@ -39,24 +37,27 @@ export class PlayersListComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {
-  }
+  ngOnInit(): void {}
 
   public addPlayer() {
     if (!this.playerHelper.isMaxPlayerNumberNotReached()) {
       return;
     }
 
-    if (this.playersForm.valid && !String.isNullOrWhiteSpace(this.playersForm.controls['newPlayer'].value)) {
+    if (
+      this.playersForm.valid &&
+      !String.isNullOrWhiteSpace(this.playersForm.controls['newPlayer'].value)
+    ) {
       this.playerHelper.addPlayer(this.playersForm.value.newPlayer);
       this.playersForm.reset();
     }
   }
 
   public getPlayers(): PlayerModel[] {
-    return this.gameSrv.isNewGame() ?  this.playerHelper.getPlayers() : this.gameSrv.game.players;
+    return this.gameSrv.isNewGame()
+      ? this.playerHelper.getPlayers()
+      : this.gameSrv.game.players;
   }
-
 
   public getNewPlayerInputPlaceholder(): string {
     return this.translate.instant('Label_PlaceHolder_PlayerName');
@@ -65,5 +66,4 @@ export class PlayersListComponent implements OnInit {
   get newPlayer() {
     return this.playersForm.get('newPlayer');
   }
-
 }

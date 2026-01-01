@@ -5,14 +5,14 @@ import {
   OnInit,
   ViewChild
 } from '@angular/core';
-import {Subscription} from "rxjs";
-import {GameService} from "../../../services/game/game.service";
-import {PlayerHelperService} from "../../_helpers/player.helper";
-import {CardType} from '../../_models/card-type.model';
-import {DrinkChoiceEnum} from '../../_models/enums/drink_choice.enum';
-import {Game} from '../../_models/game.model';
-import {ToastComponent} from "../toast/toast.component";
-import {PlayerModel} from "../../_models/player.model";
+import { Subscription } from "rxjs";
+import { GameService } from "../../../services/game/game.service";
+import { PlayerHelperService } from "../../_helpers/player.helper";
+import { CardType } from '../../_models/card-type.model';
+import { DrinkChoiceEnum } from '../../_models/enums/drink_choice.enum';
+import { Game } from '../../_models/game.model';
+import { PlayerModel } from "../../_models/player.model";
+import { ToastComponent } from "../toast/toast.component";
 
 
 @Component({
