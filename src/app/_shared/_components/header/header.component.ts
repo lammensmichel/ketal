@@ -1,10 +1,8 @@
-import {Component} from '@angular/core';
-import {FormBuilder, FormGroup} from '@angular/forms';
-import {TranslateService} from '@ngx-translate/core';
-import {String} from 'typescript-string-operations';
-import {LanguageService} from '../../_helpers/language.helper';
-import {GameService} from "../../../services/game/game.service";
-import {Language} from "../../_models/language.model";
+import { Component } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
+import { LanguageService } from '../../_helpers/language.helper';
+import { GameService } from '../../../services/game/game.service';
+import { Language } from '../../_models/language.model';
 
 @Component({
   selector: 'app-header',
@@ -12,36 +10,27 @@ import {Language} from "../../_models/language.model";
   styleUrls: ['./header.component.scss']
 })
 export class HeaderComponent {
-  public languageForm: FormGroup;
+  public selectedLanguage: string;
+  public languages: Language[];
 
-  /**
-   *
-   */
   constructor(
-    private formBuilder: FormBuilder,
     private translate: TranslateService,
     public gameSrv: GameService,
-    public languageHelper: LanguageService) {
-    this.languageForm = this.formBuilder.group({
-      selectedLanguage: [translate.currentLang]
-    });
+    public languageHelper: LanguageService
+  ) {
+    this.languages = this.languageHelper.constructPossibleLanguages();
+    const browserLang = translate.getBrowserLang() ?? 'fr';
+    this.selectedLanguage = translate.currentLang || translate.getDefaultLang() || browserLang;
   }
-
 
   restartGame() {
     this.gameSrv.resetGame();
     this.gameSrv.game.status = 0;
   }
 
-  public getPossibleLanguages(): Language[] {
-    return this.languageHelper.constructPossibleLanguages();
-  }
-
   public onLanguageChange() {
-    const selectedLanguage: string = this.languageForm.get('selectedLanguage')?.value;
-
-    if (!String.isNullOrWhiteSpace(selectedLanguage)) {
-      this.translate.use(selectedLanguage);
+    if (this.selectedLanguage) {
+      this.translate.use(this.selectedLanguage);
     }
   }
 }
