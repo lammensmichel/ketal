@@ -1,0 +1,18 @@
+# Build outputs
+dist/
+build/
+coverage/
+
+# Dependencies
+node_modules/
+nodejs/
+
+# Angular cache
+.angular/
+
+# Configuration files
+*.config.js
+karma.conf.js
+
+# Assets
+src/assets/

@@ -1,18 +1,12 @@
-import {Injectable} from '@angular/core';
-import {CardType} from 'src/app/_shared/_models/card-type.model';
-import {CardValueEnum} from 'src/app/_shared/_models/enums/card_value.enum';
-import {SuitsEnum} from "../../_shared/_models/enums/suits.enum";
-
+import { Injectable } from '@angular/core';
+import { CardType } from 'src/app/_shared/_models/card-type.model';
+import { CardValueEnum } from 'src/app/_shared/_models/enums/card_value.enum';
+import { SuitsEnum } from '../../_shared/_models/enums/suits.enum';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class CardService {
-
-
-  constructor() {
-  }
-
   /**
    *
    * @param card
@@ -53,13 +47,13 @@ export class CardService {
     let lnRet: number = -2;
     switch (true) {
       case this.getCardValue(card1) === this.getCardValue(card2):
-        lnRet =  0;
+        lnRet = 0;
         break;
       case this.getCardValue(card1) < this.getCardValue(card2):
-        lnRet =  -1;
+        lnRet = -1;
         break;
       case this.getCardValue(card1) > this.getCardValue(card2):
-        lnRet =  1;
+        lnRet = 1;
         break;
     }
     return lnRet;
@@ -92,5 +86,4 @@ export class CardService {
   isBlackCard(card: CardType): boolean {
     return card.suit === SuitsEnum.Spades || card.suit === SuitsEnum.Clubs;
   }
-
 }

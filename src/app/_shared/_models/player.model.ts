@@ -1,18 +1,14 @@
-import {CardType} from "./card-type.model";
-
+import { CardType } from './card-type.model';
 
 type UUIDv4 = string;
-
 
 export interface PlayerChoice {
   [key: string]: string;
 }
 
-
 export interface PlayerSips {
   [key: string]: number;
 }
-
 
 export class PlayerModel {
   public name: string = '';
@@ -23,13 +19,12 @@ export class PlayerModel {
     color: '',
     plus_or_minus: '',
     in_out: '',
-    suit: ''
+    suit: '',
   };
   public sips: PlayerSips = {
     drunk: 0,
-    given: 0
+    given: 0,
   };
-
 
   public constructor(init?: Partial<PlayerModel>) {
     Object.bind(this, init);

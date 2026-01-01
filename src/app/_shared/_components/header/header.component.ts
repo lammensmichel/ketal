@@ -1,5 +1,8 @@
-import { Component } from '@angular/core';
-import { TranslateService } from '@ngx-translate/core';
+import { Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { FontAwesomeIconsModule } from '../../../font-awesome.module';
 import { LanguageService } from '../../_helpers/language.helper';
 import { GameService } from '../../../services/game/game.service';
 import { Language } from '../../_models/language.model';
@@ -7,25 +10,28 @@ import { Language } from '../../_models/language.model';
 @Component({
   selector: 'app-header',
   templateUrl: './header.component.html',
-  styleUrls: ['./header.component.scss']
+  styleUrls: ['./header.component.scss'],
+  standalone: true,
+  imports: [FormsModule, TranslateModule, FontAwesomeIconsModule],
 })
 export class HeaderComponent {
-  public selectedLanguage: string;
-  public languages: Language[];
+  private readonly router = inject(Router);
+  private readonly translate = inject(TranslateService);
+  readonly gameSrv = inject(GameService);
+  readonly languageHelper = inject(LanguageService);
 
-  constructor(
-    private translate: TranslateService,
-    public gameSrv: GameService,
-    public languageHelper: LanguageService
-  ) {
+  selectedLanguage: string;
+  languages: Language[];
+
+  constructor() {
     this.languages = this.languageHelper.constructPossibleLanguages();
-    const browserLang = translate.getBrowserLang() ?? 'fr';
-    this.selectedLanguage = translate.currentLang || translate.getDefaultLang() || browserLang;
+    const browserLang = this.translate.getBrowserLang() ?? 'fr';
+    this.selectedLanguage = this.translate.currentLang || this.translate.getDefaultLang() || browserLang;
   }
 
-  restartGame() {
+  restartGame(): void {
     this.gameSrv.resetGame();
-    this.gameSrv.game.status = 0;
+    this.router.navigate(['/players']);
   }
 
   public onLanguageChange() {

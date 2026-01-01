@@ -1,4 +1,6 @@
-import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, inject, Input, ViewChild } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
+import { FontAwesomeIconsModule } from '../../../font-awesome.module';
 import { ToastComponent } from '../../../_shared/_components/toast/toast.component';
 import { PlayerHelperService } from '../../../_shared/_helpers/player.helper';
 import { CardType } from '../../../_shared/_models/card-type.model';
@@ -9,30 +11,24 @@ import { GameService } from '../../../services/game/game.service';
   selector: 'app-player-given-sips-selection',
   templateUrl: './player-given-sips-selection.component.html',
   styleUrls: ['./player-given-sips-selection.component.scss'],
+  standalone: true,
+  imports: [TranslateModule, FontAwesomeIconsModule, ToastComponent],
 })
-export class PlayerGivenSipsSelectionComponent implements OnInit {
-  constructor(
-    private elementRef: ElementRef,
-    public gameSrv: GameService,
-    public playerHelper: PlayerHelperService
-  ) {}
+export class PlayerGivenSipsSelectionComponent {
+  private readonly elementRef = inject(ElementRef);
+  readonly gameSrv = inject(GameService);
+  readonly playerHelper = inject(PlayerHelperService);
 
-  @Input() public currentCard: CardType | undefined;
+  @Input() currentCard: CardType | undefined;
 
   @ViewChild('assignAllSips') toastComponent: ToastComponent | undefined;
 
-  public players: PlayerModel[] = [];
-  public tempSips: { [key: string]: number } = {};
+  tempSips: { [key: string]: number } = {};
+  sipsToGive = 0;
+  givenPlayer = new PlayerModel();
 
-  public sipsToGive: number = 0;
-  public givenPlayer = new PlayerModel();
-
-  ngOnInit(): void {
-    this.players = this.gameSrv.game.players;
-
-    this.players.forEach((player) => {
-      this.tempSips[player.id] = 0;
-    });
+  get players(): PlayerModel[] {
+    return this.gameSrv.players();
   }
 
   increase(player: any, sips: number = 0) {
@@ -79,32 +75,32 @@ export class PlayerGivenSipsSelectionComponent implements OnInit {
       this.gameSrv.updatePlayerGivenSipsFromCard(this.givenPlayer, card, 0);
     });
 
-    this.gameSrv.refreshSession();
     this.closeModal();
   }
 
   resetSips() {
-    for (let key in this.tempSips) {
+    for (const key in this.tempSips) {
       this.tempSips[key] = 0;
     }
     this.sipsToGive = 0;
   }
 
   closeModal() {
-    const modal = this.elementRef.nativeElement.querySelector(
-      '#playerSipsSelectionModal'
-    );
+    const modal = this.elementRef.nativeElement.querySelector('#playerSipsSelectionModal');
     modal.style.display = 'none';
 
     this.resetSips();
   }
 
-  openModal(player: PlayerModel) {
+  openModal(player: PlayerModel): void {
     this.givenPlayer = player;
-    this.sipsToGive = this.playerHelper.getSipCnt(this.gameSrv.game, player);
-    const modal = this.elementRef.nativeElement.querySelector(
-      '#playerSipsSelectionModal'
-    );
+    this.sipsToGive = this.playerHelper.getSipCnt(this.gameSrv.game(), player);
+
+    this.players.forEach((p) => {
+      this.tempSips[p.id] = 0;
+    });
+
+    const modal = this.elementRef.nativeElement.querySelector('#playerSipsSelectionModal');
     modal.style.display = 'flex';
   }
 }

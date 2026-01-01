@@ -4,7 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Ketal is a French drinking card game ("Grosse Guinze") with an Angular 16 frontend and Node.js/Socket.IO backend. The game has two phases: players make predictions about cards (color, higher/lower, in/out, suit), then cards are drawn with sips assigned based on matches.
+Ketal is a French drinking card game ("Grosse Guinze") with an **Angular 19** frontend and Node.js/Socket.IO backend. The game has two phases: players make predictions about cards (color, higher/lower, in/out, suit), then cards are drawn with sips assigned based on matches.
+
+## Modern Angular 19 Patterns
+
+This project uses cutting-edge Angular 19 features:
+
+- **Standalone Components**: All components use `standalone: true` (no NgModules for components)
+- **Signals**: `signal()`, `computed()`, `WritableSignal` for reactive state
+- **New Control Flow**: `@if`, `@for`, `@switch` with `track` for optimal rendering
+- **inject() Function**: Modern DI pattern instead of constructor injection
+- **OnPush Change Detection**: All components use `ChangeDetectionStrategy.OnPush`
+- **Lazy Loading**: Routes use `loadComponent` for code splitting
 
 ## Development Commands
 
@@ -46,7 +57,7 @@ src/app/
 
 ### Key Services
 
-- **GameService** (`services/game/game.service.ts`): Central game state management using BehaviorSubject, handles game phases, turn logic, and sip calculations
+- **GameService** (`services/game/game.service.ts`): Central game state management using **Signals** (`gameSignal`, `withSummaryMode`), handles game phases, turn logic, and sip calculations
 - **PlayerHelperService** (`_shared/_helpers/player.helper.ts`): Player CRUD, choice tracking, sip calculations
 - **CardDeckHelperService** (`_shared/_helpers/card-deck.helper.ts`): Deck construction, card randomization (auto-doubles deck for >10 players)
 - **LocalService** (`services/local/`): localStorage wrapper for persisting game state
@@ -73,5 +84,32 @@ Uses ngx-translate with translation files in `src/assets/i18n/` (French is defau
 - Development: `src/environments/environment.ts` (localhost:3000)
 - Production: `src/environments/environment.prod.ts` (configurable via window.env)
 
+## Code Quality
+
+- **ESLint + Prettier**: Linting and formatting with pre-commit hooks
+- **Husky**: Git hooks for automated checks
+- **Tests**: Karma/Jasmine with 80% coverage threshold
+- **Tree-shaking**: Custom Bootstrap SCSS, FontAwesome SVG icons
+
+```bash
+npm run lint          # Run ESLint
+npm run lint:fix      # Auto-fix lint issues
+npm run format        # Format with Prettier
+npm run test:coverage # Run tests with coverage report
+```
+
 ## Git Commit Rules
 - Do not add Claude mentions, footers, or co-author tags in commit messages
+
+## Implementation Tracking
+All feature requests and fixes must be tracked in the `implementation/` folder:
+
+1. **New request**: Create a `.md` file in `implementation/pending/` with:
+   - Initial request description
+   - Implementation details as work progresses
+
+2. **When complete**: Add a summary section with what was done
+
+3. **On user "go"**: Move the file from `pending/` to `implementation/` root
+
+File naming: `YYYY-MM-DD-short-description.md`

@@ -25,8 +25,7 @@
             "inlineStyleLanguage": "scss",
             "assets": ["src/favicon.ico", "src/assets"],
             "styles": [
-              "node_modules/bootstrap-scss/bootstrap.scss",
-              "node_modules/@fortawesome/fontawesome-free/css/all.css",
+              "src/custom-bootstrap.scss",
               "src/styles.scss"
             ],
             "scripts": [
@@ -70,10 +69,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "ketal:build:production"
+              "buildTarget": "ketal:build:production"
             },
             "development": {
-              "browserTarget": "ketal:build:development"
+              "buildTarget": "ketal:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -81,7 +80,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "ketal:build"
+            "buildTarget": "ketal:build"
           }
         },
         "test": {
@@ -89,10 +88,17 @@
           "options": {
             "polyfills": ["zone.js", "zone.js/testing"],
             "tsConfig": "tsconfig.spec.json",
+            "karmaConfig": "karma.conf.js",
             "inlineStyleLanguage": "scss",
             "assets": ["src/favicon.ico", "src/assets"],
             "styles": ["src/styles.scss"],
             "scripts": []
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": ["src/**/*.ts", "src/**/*.html"]
           }
         }
       }

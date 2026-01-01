@@ -1,13 +1,21 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { PlayersListComponent } from 'src/app/_components/players/players-list/players-list.component';
 
-const appRoutes: Routes = [
-  { path: 'players', component: PlayersListComponent },
+export const routes: Routes = [
+  {
+    path: 'players',
+    loadComponent: () =>
+      import('./_components/players/players-list/players-list.component').then((m) => m.PlayersListComponent),
+  },
+  {
+    path: 'game',
+    loadComponent: () => import('./_components/game/game/game.component').then((m) => m.GameComponent),
+  },
+  { path: '', redirectTo: 'players', pathMatch: 'full' },
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(appRoutes)],
+  imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule],
 })
 export class AppRoutingModule {}

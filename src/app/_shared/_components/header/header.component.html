@@ -2,25 +2,34 @@
   <div class="text-center my-4">
     <div class="row position-absolute top-0 end-12">
       <div class="col-12">
-        <select id="language-select" class="form-select form-select-sm"
-                [(ngModel)]="selectedLanguage"
-                (ngModelChange)="onLanguageChange()">
-          <option *ngFor="let lang of languages" [ngValue]="lang.shortName">{{ lang.name }}</option>
+        <select
+          id="language-select"
+          class="form-select form-select-sm"
+          [(ngModel)]="selectedLanguage"
+          (ngModelChange)="onLanguageChange()"
+        >
+          @for (lang of languages; track lang.shortName) {
+            <option [ngValue]="lang.shortName">{{ lang.name }}</option>
+          }
         </select>
       </div>
     </div>
     <div class="column">
-      <h1 class="display-4 font-monospace" style="font-variant: small-caps;" [translate]="'Label_App_¨Title'"></h1>
+      <h1 class="display-4 font-monospace" style="font-variant: small-caps" [translate]="'Label_App_¨Title'"></h1>
       <div class="lead">
-        <div *ngIf="gameSrv.isNewGame()">
-          <span [translate]="'Label_App_Subtitle'"></span>
-        </div>
-        <div *ngIf="gameSrv.isGameStarted()">
-          <button type="button" class="btn btn-secondary ms-2" (click)="restartGame()">
-            <i class="fa-regular fa-circle-xmark"></i>
-            <span class="ms-2" [translate]="'Button_ExitGame'"></span>
-          </button>
-        </div>
+        @if (gameSrv.isNewGame()) {
+          <div>
+            <span [translate]="'Label_App_Subtitle'"></span>
+          </div>
+        }
+        @if (gameSrv.isGameStarted()) {
+          <div>
+            <button type="button" class="btn btn-secondary ms-2" (click)="restartGame()">
+              <fa-icon [icon]="['far', 'circle-xmark']"></fa-icon>
+              <span class="ms-2" [translate]="'Button_ExitGame'"></span>
+            </button>
+          </div>
+        }
       </div>
     </div>
   </div>

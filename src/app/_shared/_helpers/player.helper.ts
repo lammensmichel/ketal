@@ -1,29 +1,28 @@
-import {v4 as uuidv4} from 'uuid';
-import {CardType} from '../_models/card-type.model';
-import {PlayerChoice, PlayerModel} from '../_models/player.model';
-import {LocalService} from "../../services/local/local.service";
-import {Injectable} from "@angular/core";
-import {CardService} from "../../services/card/card.service";
-import {Game} from "../_models/game.model";
+import { v4 as uuidv4 } from 'uuid';
+import { CardType } from '../_models/card-type.model';
+import { PlayerChoice, PlayerModel } from '../_models/player.model';
+import { LocalService } from '../../services/local/local.service';
+import { inject, Injectable } from '@angular/core';
+import { CardService } from '../../services/card/card.service';
+import { Game } from '../_models/game.model';
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class PlayerHelperService {
+  public localService = inject(LocalService);
+  public cardSrv = inject(CardService);
+
   public players: PlayerModel[] = [];
 
-  constructor(public localService: LocalService,
-              public cardSrv: CardService) {
-  }
-
   public addPlayer(player: string): void {
-    const playerModel = new PlayerModel;
+    const playerModel = new PlayerModel();
     playerModel.name = player;
     playerModel.id = uuidv4();
-    playerModel.cards = new Array<CardType>;
+    playerModel.cards = new Array<CardType>();
     playerModel.choice = {
       color: '',
       plus_or_minus: '',
       in_out: '',
-      suit: ''
+      suit: '',
     } as PlayerChoice;
 
     playerModel.avatarSrc = `https://api.dicebear.com/7.x/avataaars/svg?seed=${playerModel.id}`;
@@ -31,20 +30,14 @@ export class PlayerHelperService {
     this.savePlayerToStorage(this.players);
   }
 
-
   public deletePlayer(player: PlayerModel) {
-    this.players = this.players.filter(
-      (playerSelected) => playerSelected.id !== player.id
-    );
+    this.players = this.players.filter((playerSelected) => playerSelected.id !== player.id);
 
     this.savePlayerToStorage(this.players);
   }
 
   public savePlayerToStorage(players: Array<PlayerModel>) {
-    this.localService.saveData(
-      'players',
-      JSON.stringify(players)
-    );
+    this.localService.saveData('players', JSON.stringify(players));
   }
 
   public getPlayerNumber(): number {
@@ -59,11 +52,10 @@ export class PlayerHelperService {
     return this.getPlayerNumber() < 23;
   }
 
-
   public getPlayers(): Array<PlayerModel> {
     let playerList: Array<PlayerModel> = [];
     if (this.players.length === 0) {
-      let playersFromSession = this.localService.getData('players');
+      const playersFromSession = this.localService.getData('players');
       playerList = playersFromSession ? JSON.parse(this.localService.getData('players') as string) : [];
     } else {
       playerList = this.players;
@@ -72,31 +64,49 @@ export class PlayerHelperService {
   }
 
   public getPlayerCardListValues(player: PlayerModel): string[] {
-    return player.cards.map(card => card.value).filter(value => value !== null) as string[];
+    return player.cards.map((card) => card.value).filter((value) => value !== null) as string[];
   }
 
   getSipCnt(game: Game, player: PlayerModel, absolute: boolean = false) {
-    const {activePlayer, drinkingCards, givingCards, phase, players} = game;
-    const currentIndex = players.findIndex(player => player.id === activePlayer?.id);
-    const previousPlayer = currentIndex === 0 ? players[players.length - 1] : players[currentIndex - 1];
+    const { activePlayer, drinkingCards, givingCards, phase, players } = game;
     const maybeAbs = absolute ? Math.abs : (v: number) => v;
-    if (phase === 1) {
-      // Should be 0 for player who is not the previous player
-      if (player.id !== previousPlayer.id) {
-        return 0;
+
+    // In phase 2, activePlayer is undefined - use total sips from player
+    if (!activePlayer || phase === 2) {
+      if (drinkingCards.length === 0 && givingCards.length === 0) {
+        // Just transitioned to phase 2, show last card sips
+        return maybeAbs(-(player.cards.at(-1)?.sips ?? 0));
       }
-      return maybeAbs(-(player.cards.at(-1)?.sips ?? 0));
+      // Phase 2 with cards - calculate based on drinking/giving cards
     } else {
-      if (player.id === previousPlayer.id && drinkingCards.length === 0 && givingCards.length === 0) {
+      // Phase 1 logic
+      const currentIndex = players.findIndex((p) => p.id === activePlayer.id);
+      const previousPlayer = currentIndex === 0 ? players[players.length - 1] : players[currentIndex - 1];
+
+      if (phase === 1) {
+        if (player.id !== previousPlayer?.id) {
+          return 0;
+        }
         return maybeAbs(-(player.cards.at(-1)?.sips ?? 0));
       }
     }
 
+    // No cards to compare yet
+    if (drinkingCards.length === 0 && givingCards.length === 0) {
+      return 0;
+    }
+
     let cntNbSips = 0;
     const isOdd = (drinkingCards.length + givingCards.length) % 2 === 1;
+    const lastCard = isOdd ? drinkingCards.at(-1) : givingCards.at(-1);
+
+    if (!lastCard) {
+      return 0;
+    }
+
+    const lastCardValue = this.cardSrv.getCardValue(lastCard);
     for (const card of player.cards) {
       const playerCardValue = this.cardSrv.getCardValue(card);
-      const lastCardValue = isOdd ? this.cardSrv.getCardValue(drinkingCards.at(-1)!) : this.cardSrv.getCardValue(givingCards.at(-1)!);
       if (playerCardValue === lastCardValue) {
         cntNbSips += drinkingCards.length * (isOdd ? -1 : 1);
       }
@@ -108,14 +118,15 @@ export class PlayerHelperService {
   getTotalGivenSips(player: PlayerModel): number {
     let totalGivenSips = 0;
 
-    player.cards.filter((card: CardType) => card.givenSips !== 0).forEach((card: CardType) => {
-      if (card.givenSips && card.givenSips > 0) {
-        totalGivenSips += card.givenSips;
-      }
-    });
+    player.cards
+      .filter((card: CardType) => card.givenSips !== 0)
+      .forEach((card: CardType) => {
+        if (card.givenSips && card.givenSips > 0) {
+          totalGivenSips += card.givenSips;
+        }
+      });
     return totalGivenSips;
   }
-
 
   getPlayerChoice(player: PlayerModel, choice: string): string {
     return player.choice[choice];

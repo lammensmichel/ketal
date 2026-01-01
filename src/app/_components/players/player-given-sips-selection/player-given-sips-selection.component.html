@@ -1,12 +1,7 @@
 <div id="playerSipsSelectionModal" class="modal">
   <div class="modal-content">
     <span class="input-group-text">
-      <span>
-        <img
-          alt="avatar"
-          class="img-thumbnail"
-          src="{{ givenPlayer.avatarSrc }}"
-      /></span>
+      <span> <img alt="avatar" class="img-thumbnail" src="{{ givenPlayer.avatarSrc }}" /></span>
       <span> {{ givenPlayer.name }}</span>
       <span [translate]="'Label_Give'"> </span>
       <span> {{ sipsToGive }}</span>
@@ -14,41 +9,27 @@
     </span>
 
     <div class="list-group">
-      <div class="list-group-item" *ngFor="let player of players">
-        {{ player.name }}
-        <div class="input-group">
-          <div class="d-flex justify-content-center">
-            <input
-              type="number"
-              class="form-control"
-              [value]="tempSips[player.id]"
-              readonly
-            />
-            <button
-              class="btn btn-outline-secondary"
-              type="button"
-              (click)="decrease(player)"
-            >
-              <i class="fa-solid fa-minus"></i>
-            </button>
-            <button
-              class="btn btn-outline-secondary"
-              type="button"
-              (click)="increase(player)"
-            >
-              <i class="fa-solid fa-plus"></i>
-            </button>
-            <button
-              *ngIf="sipsToGive > 0"
-              class="btn btn-outline-secondary"
-              type="button"
-              (click)="increase(player, sipsToGive)"
-            >
-              {{ sipsToGive }}
-            </button>
+      @for (player of players; track player.id) {
+        <div class="list-group-item">
+          {{ player.name }}
+          <div class="input-group">
+            <div class="d-flex justify-content-center">
+              <input type="number" class="form-control" [value]="tempSips[player.id]" readonly />
+              <button class="btn btn-outline-secondary" type="button" (click)="decrease(player)">
+                <fa-icon [icon]="['fas', 'minus']"></fa-icon>
+              </button>
+              <button class="btn btn-outline-secondary" type="button" (click)="increase(player)">
+                <fa-icon [icon]="['fas', 'plus']"></fa-icon>
+              </button>
+              @if (sipsToGive > 0) {
+                <button class="btn btn-outline-secondary" type="button" (click)="increase(player, sipsToGive)">
+                  {{ sipsToGive }}
+                </button>
+              }
+            </div>
           </div>
         </div>
-      </div>
+      }
     </div>
 
     <div class="button-container">
@@ -58,8 +39,4 @@
   </div>
 </div>
 
-<app-toast
-  #assignAllSips
-  [titleMessage]="'Warning'"
-  [bodyMessage]="'Assign_All_Given_Sips'"
-></app-toast>
+<app-toast #assignAllSips [titleMessage]="'Warning'" [bodyMessage]="'Assign_All_Given_Sips'"></app-toast>

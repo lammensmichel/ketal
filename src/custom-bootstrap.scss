@@ -1,0 +1,81 @@
+// Custom Bootstrap SCSS - Only imports the modules actually used in this project
+// This significantly reduces bundle size compared to importing the full Bootstrap CSS
+
+// ============================================================
+// 1. Required Bootstrap Core (must be imported first)
+// ============================================================
+@import 'bootstrap-scss/functions';
+@import 'bootstrap-scss/variables';
+@import 'bootstrap-scss/variables-dark';
+@import 'bootstrap-scss/maps';
+@import 'bootstrap-scss/mixins';
+@import 'bootstrap-scss/root';
+
+// ============================================================
+// 2. Optional: Reboot (normalize/reset CSS)
+// ============================================================
+@import 'bootstrap-scss/reboot';
+
+// ============================================================
+// 3. Layout
+// ============================================================
+@import 'bootstrap-scss/containers';
+@import 'bootstrap-scss/grid';
+
+// ============================================================
+// 4. Content / Typography
+// ============================================================
+@import 'bootstrap-scss/type';
+
+// ============================================================
+// 5. Forms
+// ============================================================
+@import 'bootstrap-scss/forms';
+
+// ============================================================
+// 6. Components (only the ones used in the project)
+// ============================================================
+@import 'bootstrap-scss/buttons';
+@import 'bootstrap-scss/card';
+@import 'bootstrap-scss/badge';
+@import 'bootstrap-scss/alert';
+@import 'bootstrap-scss/list-group';
+@import 'bootstrap-scss/close';
+@import 'bootstrap-scss/toasts';
+
+// Note: Modal is used with custom styles, not full Bootstrap modal
+// Only importing if needed for basic modal structure
+// @import "bootstrap-scss/modal";
+
+// ============================================================
+// 7. Helpers
+// ============================================================
+@import 'bootstrap-scss/helpers';
+
+// ============================================================
+// 8. Utilities API (generates utility classes)
+// ============================================================
+@import 'bootstrap-scss/utilities';
+@import 'bootstrap-scss/utilities/api';
+
+// ============================================================
+// Components NOT imported (to reduce bundle size):
+// ============================================================
+// @import "bootstrap-scss/accordion";
+// @import "bootstrap-scss/breadcrumb";
+// @import "bootstrap-scss/button-group";
+// @import "bootstrap-scss/carousel";
+// @import "bootstrap-scss/dropdown";
+// @import "bootstrap-scss/images";
+// @import "bootstrap-scss/modal";
+// @import "bootstrap-scss/nav";
+// @import "bootstrap-scss/navbar";
+// @import "bootstrap-scss/offcanvas";
+// @import "bootstrap-scss/pagination";
+// @import "bootstrap-scss/placeholders";
+// @import "bootstrap-scss/popover";
+// @import "bootstrap-scss/progress";
+// @import "bootstrap-scss/spinners";
+// @import "bootstrap-scss/tables";
+// @import "bootstrap-scss/tooltip";
+// @import "bootstrap-scss/transitions";

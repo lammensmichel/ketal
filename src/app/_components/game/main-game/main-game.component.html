@@ -1,15 +1,15 @@
-<div
-  class="container"
-  *ngIf="this.gameSrv.isGameStarted() || this.gameSrv.isGameFinished()"
->
-  <div class="row gap-1 justify-content-evenly">
-    <div
-      class="col-md-6 player p-0"
-      *ngFor="let player of this.gameSrv.game.players"
-    >
-      <app-player-card [player]="player"></app-player-card>
+@if (gameSrv.isGameStarted() || gameSrv.isGameFinished()) {
+  <div class="container">
+    <div class="row gap-1 justify-content-evenly">
+      @for (player of gameSrv.players(); track player.id) {
+        <div class="col-md-6 player p-0">
+          <app-player-card [player]="player"></app-player-card>
+        </div>
+      }
     </div>
   </div>
-</div>
+}
 
-<app-game-summary *ngIf="this.gameSrv.isSummaryMode()"></app-game-summary>
+@if (gameSrv.isSummaryMode()) {
+  <app-game-summary></app-game-summary>
+}

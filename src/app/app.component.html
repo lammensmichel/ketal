@@ -1,44 +1,32 @@
 <div class="main-container">
   <app-header></app-header>
 
-  <div
-    class="content container d-flex gap-1 justify-content-center my-4 mt-2 mb-2"
-  >
+  <div class="content container d-flex gap-1 justify-content-center my-4 mt-2 mb-2">
     <div class="d-flex flex-column gap-2">
-      <div
-        *ngIf="this.gameSrv.isNewGame() && this.playerSrv.getPlayerNumber() > 1"
-        id="summaryMode"
-      >
-        <div class="card">
-          <div class="card-body">
-            <div class="form-check">
-              <input
-                class="form-check-input"
-                type="checkbox"
-                id="summaryModeCheck"
-                [(ngModel)]="withSummaryMode"
-                (change)="onSummaryModeCheckChange($event)"
-              />
-              <label
-                class="form-check-label"
-                for="summaryModeCheck"
-                [translate]="'Summary_Mode_Selection'"
-              >
-                Mode avancé
-              </label>
+      @if (gameSrv.isNewGame() && playerSrv.getPlayerNumber() > 1) {
+        <div id="summaryMode">
+          <div class="card">
+            <div class="card-body">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="summaryModeCheck"
+                  [checked]="withSummaryMode()"
+                  (change)="onSummaryModeCheckChange($event)"
+                />
+                <label class="form-check-label" for="summaryModeCheck" [translate]="'Summary_Mode_Selection'">
+                  Mode avancé
+                </label>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      <!-- Display the player choices -->
-      <app-players-list *ngIf="this.gameSrv.isNewGame()"></app-players-list>
-      <!-- Guinze -->
-      <app-game
-        class="flex-grow-1"
-        *ngIf="!this.gameSrv.isNewGame()"
-      ></app-game>
+      }
+      <!-- Router outlet for lazy loaded modules -->
+      <router-outlet></router-outlet>
     </div>
   </div>
 
-  <app-footer [withSummaryMode]="withSummaryMode"></app-footer>
+  <app-footer [withSummaryMode]="withSummaryMode()"></app-footer>
 </div>

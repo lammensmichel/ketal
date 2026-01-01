@@ -2,20 +2,29 @@
   <div class="card-body p-2 container">
     <div class="row mb-1">
       <label for="avatar" class="d-flex flex-nowrap justify-content-around flex-fill align-items-center">
-        <img alt="avatar" class="img-thumbnail" width="40" height="40" src="{{ player.avatarSrc }}">
-        <span class="ms-1 fs-5 flex-fill">{{player.name}}</span>
-        <span (click)="onpenPlayerGivenSipsSelectionModal(player)" class="badge" [ngClass]="{
-                'bg-success': getSipCount(player) > 0,
-                'bg-danger': getSipCount(player) < 0,
-                'bg-secondary': getSipCount(player) == 0,
-              }">{{getSipCount(player, true)}}  <i class="fa fa-glass"></i></span>
+        <img alt="avatar" class="img-thumbnail" width="40" height="40" src="{{ player.avatarSrc }}" />
+        <span class="ms-1 fs-5 flex-fill">{{ player.name }}</span>
+        <span
+          (click)="openPlayerGivenSipsModal(player)"
+          class="badge"
+          [ngClass]="{
+            'bg-success': getSipCount(player) > 0,
+            'bg-danger': getSipCount(player) < 0,
+            'bg-secondary': getSipCount(player) === 0,
+          }"
+          >{{ getSipCount(player, true) }} <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon
+        ></span>
       </label>
     </div>
     <div class="row">
-      <div class="card-group d-flex flex-wrap flex-sm-wrap flex-md-nowrap flex-lg-nowrap flex-xl-nowrap  justify-content-center gap-1">
-        <div *ngFor="let loop of [].constructor(4); let i = index">
-          <app-playing-card [card]="player.cards[i]"></app-playing-card>
-        </div>
+      <div
+        class="card-group d-flex flex-wrap flex-sm-wrap flex-md-nowrap flex-lg-nowrap flex-xl-nowrap justify-content-center gap-1"
+      >
+        @for (i of cardSlots; track i) {
+          <div>
+            <app-playing-card [card]="player.cards[i]"></app-playing-card>
+          </div>
+        }
       </div>
     </div>
   </div>

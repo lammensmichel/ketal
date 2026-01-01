@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Socket } from 'ngx-socket-io';
 import { Observable } from 'rxjs';
 import { Room } from 'src/app/_shared/_models/room.model';
@@ -7,7 +7,7 @@ import { Room } from 'src/app/_shared/_models/room.model';
   providedIn: 'root',
 })
 export class WebsocketService {
-  constructor(private socket: Socket) {}
+  private socket = inject(Socket);
 
   getRooms(): Observable<Room[]> {
     return this.socket.fromEvent('rooms');
