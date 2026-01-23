@@ -1,6 +1,6 @@
 # Story: 8.2 - Appwrite Multiplayer Integration
 
-**Status**: In Progress
+**Status**: Complete
 **Epic**: Epic 8: Multiplayer
 **Created**: 2026-01-23
 **Updated**: 2026-01-23
@@ -140,13 +140,17 @@ Cette story remplace le backend Node.js/Socket.IO par Appwrite (fug-backend). L'
   - [x] Même structure de données que Appwrite
   - [x] Migration vers Appwrite (migrateRoomToCloud)
 
-### Phase 5: Cleanup
+### Phase 5: Cleanup ✅ COMPLETED
 
-- [ ] **T12** (AC: 10): Supprimer backend Node.js
-  - [ ] Supprimer dossier nodejs/
-  - [ ] Supprimer WebsocketService
-  - [ ] Mettre à jour package.json scripts
-  - [ ] Mettre à jour documentation
+- [x] **T12** (AC: 10): Supprimer backend Node.js
+  - [x] Supprimer dossier nodejs/
+  - [x] Supprimer WebsocketService
+  - [x] Supprimer game-room component (orphaned)
+  - [x] Mettre à jour package.json scripts
+  - [x] Mettre à jour environments (remove socketIoUrl)
+  - [x] Mettre à jour main.ts (remove SocketIoModule)
+  - [x] Mettre à jour app.module.ts
+  - [x] Mettre à jour CLAUDE.md documentation
 
 ---
 
@@ -369,6 +373,10 @@ Claude Opus 4.5
 - Offline detection with online/offline events
 - localStorage persistence mirroring Appwrite structure
 - Cloud migration capability
+- 2026-01-24: Phase 5 completed - Node.js backend cleanup
+- Removed nodejs/, WebsocketService, game-room component
+- Cleaned package.json, environments, main.ts, app.module.ts
+- Updated CLAUDE.md documentation
 
 ### File List
 - `src/app/services/appwrite/appwrite.service.ts` (existing)

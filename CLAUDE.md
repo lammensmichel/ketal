@@ -71,14 +71,8 @@ This project uses cutting-edge Angular 19 features:
 ## Development Commands
 
 ```bash
-# Start both Angular frontend and Node.js backend concurrently
+# Start Angular frontend (port 4200)
 npm start
-
-# Start Angular only (port 4200)
-npm run start-angular
-
-# Start Node.js backend only (port 3000)
-cd nodejs && npm run dev
 
 # Build for production
 npm run build
@@ -89,34 +83,36 @@ npm test
 
 ## Application Architecture
 
-### Current State (Transitioning)
 - **Angular Frontend** (`src/`): Serves on port 4200
-- **Node.js Backend** (`nodejs/`): Legacy Socket.IO server (being replaced by Appwrite)
-- **Appwrite Backend** (`fug-backend`): New authentication, database, and realtime
-
-### Target State
-- **Angular Frontend** connecting directly to **fug-backend** (Appwrite)
-- Node.js backend will be removed once migration is complete
+- **Appwrite Backend** (`fug-backend`): Authentication, database, and realtime
 
 ### Frontend Structure
 ```
 src/app/
 ├── _components/
-│   ├── game/          # Game flow: main-game, game-room, game, game-summary
-│   └── players/       # Player management: players-list, player-card, player-given-sips-selection
+│   ├── auth/          # Login, Register components
+│   ├── game/          # Game flow: main-game, game, game-summary
+│   ├── players/       # Player management: players-list, player-card
+│   └── room/          # Room management: create-room, join-room, lobby, room-stats
 ├── _shared/
 │   ├── _components/   # Reusable: header, footer, playing-card, toast
 │   ├── _helpers/      # Services: player.helper.ts, card-deck.helper.ts
 │   └── _models/       # TypeScript interfaces and enums
-└── services/          # Core services: game, card, local (localStorage), websocket
+└── services/          # Core services: appwrite, auth, room, member, ketal-session, local-mode
 ```
 
 ### Key Services
 
-- **GameService** (`services/game/game.service.ts`): Central game state management using **Signals** (`gameSignal`, `withSummaryMode`), handles game phases, turn logic, and sip calculations
-- **PlayerHelperService** (`_shared/_helpers/player.helper.ts`): Player CRUD, choice tracking, sip calculations
-- **CardDeckHelperService** (`_shared/_helpers/card-deck.helper.ts`): Deck construction, card randomization (auto-doubles deck for >10 players)
-- **LocalService** (`services/local/`): localStorage wrapper for persisting game state
+- **AppwriteService** (`services/appwrite/`): Appwrite SDK client wrapper
+- **AuthService** (`services/auth/`): User authentication (email, Google OAuth, anonymous)
+- **RoomService** (`services/room/`): Game room CRUD and realtime subscriptions
+- **MemberService** (`services/member/`): Room member management and stats
+- **KetalSessionService** (`services/ketal-session/`): Game session state management
+- **RealtimeService** (`services/realtime/`): Appwrite realtime subscription manager
+- **LocalModeService** (`services/local-mode/`): Offline mode with localStorage persistence
+- **GameService** (`services/game/`): Game state using signals, phases, turns, sip calculations
+- **PlayerHelperService** (`_shared/_helpers/player.helper.ts`): Player CRUD, choice tracking
+- **CardDeckHelperService** (`_shared/_helpers/card-deck.helper.ts`): Deck construction
 
 ### Game State Model
 - **status**: 0=new, 1=started, 2=finished, 3=summary
@@ -129,15 +125,14 @@ Uses ngx-translate with translation files in `src/assets/i18n/` (French is defau
 ## Docker Deployment
 
 ```bash
-# Build and run both containers
+# Build and run frontend container
 ./start.sh
 
 # Frontend: nginx on port 4211
-# Backend: Node.js on port 3000
 ```
 
 ## Environment Configuration
-- Development: `src/environments/environment.ts` (localhost:3000)
+- Development: `src/environments/environment.ts` (localhost Appwrite)
 - Production: `src/environments/environment.prod.ts` (configurable via window.env)
 
 ## Code Quality

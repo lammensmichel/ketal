@@ -5,16 +5,12 @@ import { provideHttpClient, withInterceptorsFromDi, HttpClient } from '@angular/
 import { importProvidersFrom } from '@angular/core';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
-import { SocketIoConfig, SocketIoModule } from 'ngx-socket-io';
 import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
 import { faCaretRight, faCaretLeft, faMinus, faPlus, faWineGlass } from '@fortawesome/free-solid-svg-icons';
 import { faCircleXmark } from '@fortawesome/free-regular-svg-icons';
 
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app-routing.module';
-import { environment } from './environments/environment';
-
-const config: SocketIoConfig = { url: environment.socketIoUrl, options: {} };
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
@@ -26,7 +22,6 @@ bootstrapApplication(AppComponent, {
     provideAnimations(),
     provideHttpClient(withInterceptorsFromDi()),
     importProvidersFrom(
-      SocketIoModule.forRoot(config),
       TranslateModule.forRoot({
         loader: {
           provide: TranslateLoader,
