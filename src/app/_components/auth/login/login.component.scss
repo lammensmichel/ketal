@@ -1,0 +1,172 @@
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 120px);
+  padding: 1rem;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 2rem;
+  background-color: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.branding {
+  text-align: center;
+  margin-bottom: 2rem;
+
+  .app-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #212529;
+    margin-bottom: 0.25rem;
+    letter-spacing: 0.1em;
+  }
+
+  .app-subtitle {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-bottom: 0;
+  }
+}
+
+.login-form {
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .input-group-text {
+    background-color: #f8f9fa;
+    border-right: none;
+  }
+
+  .form-control {
+    border-left: none;
+
+    &:focus {
+      border-color: #ced4da;
+      box-shadow: none;
+    }
+
+    &.is-invalid {
+      border-color: #dc3545;
+    }
+  }
+
+  .input-group .btn {
+    border-left: none;
+    border-color: #ced4da;
+
+    &:hover {
+      background-color: #f8f9fa;
+    }
+
+    &:focus {
+      box-shadow: none;
+    }
+  }
+
+  .invalid-feedback {
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+  }
+}
+
+.forgot-password {
+  text-align: right;
+  margin-bottom: 1.5rem;
+
+  a {
+    font-size: 0.875rem;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.btn-login {
+  width: 100%;
+  padding: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 1.5rem 0;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background-color: #dee2e6;
+  }
+
+  span {
+    padding: 0 1rem;
+    color: #6c757d;
+    font-size: 0.875rem;
+  }
+}
+
+.btn-social {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+
+  &:hover {
+    background-color: #f8f9fa;
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
+.signup-link {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  color: #6c757d;
+
+  a {
+    text-decoration: none;
+    font-weight: 500;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 576px) {
+  .login-container {
+    padding: 0.5rem;
+  }
+
+  .login-card {
+    padding: 1.5rem;
+    box-shadow: none;
+    border: 1px solid #dee2e6;
+  }
+
+  .branding {
+    .app-title {
+      font-size: 2rem;
+    }
+  }
+}
