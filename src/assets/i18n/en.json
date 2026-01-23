@@ -31,6 +31,39 @@
   "Warning": "Warning",
   "Assign_All_Sips": "Each user that owned the drawed card have to use the icon <i class=\"fa fa-glass\"></i> to give sips",
   "Assign_All_Given_Sips": " Please assign all sips before saving",
-  "Summary_Mode_Selection": "Activate summary at ending of the game"
-
+  "Summary_Mode_Selection": "Activate summary at ending of the game",
+  "auth": {
+    "login": "Log in",
+    "register": "Sign up",
+    "logout": "Log out",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "fullName": "Full name",
+    "forgotPassword": "Forgot password?",
+    "continueWithGoogle": "Continue with Google",
+    "playAsGuest": "Play as guest",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "createAccount": "Create my account",
+    "partOfFug": "A game from the FUG universe",
+    "or": "or",
+    "errors": {
+      "invalidEmail": "Invalid email address",
+      "passwordTooShort": "Password must be at least 8 characters",
+      "passwordMismatch": "Passwords do not match",
+      "emailRequired": "Please enter your email",
+      "passwordRequired": "Please enter your password",
+      "nameRequired": "Please enter your name",
+      "invalidCredentials": "Invalid email or password",
+      "emailExists": "An account already exists with this email",
+      "genericError": "An error occurred",
+      "tooManyAttempts": "Too many attempts, please wait"
+    },
+    "success": {
+      "accountCreated": "Account created successfully",
+      "passwordRecoverySent": "Recovery email sent",
+      "loggedIn": "Logged in successfully"
+    }
+  }
 }

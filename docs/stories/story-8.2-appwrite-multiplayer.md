@@ -1,6 +1,6 @@
 # Story: 8.2 - Appwrite Multiplayer Integration
 
-**Status**: Draft
+**Status**: In Progress
 **Epic**: Epic 8: Multiplayer
 **Created**: 2026-01-23
 **Updated**: 2026-01-23
@@ -74,28 +74,28 @@ Cette story remplace le backend Node.js/Socket.IO par Appwrite (fug-backend). L'
 
 ## Tasks
 
-### Phase 1: Services Appwrite
+### Phase 1: Services Appwrite ✅ COMPLETED
 
-- [ ] **T1** (AC: 1-5): Créer AppwriteService
-  - [ ] Configuration client Appwrite
-  - [ ] Gestion de session (auth ou guest)
-  - [ ] Connection au projet fug-backend
+- [x] **T1** (AC: 1-5): Créer AppwriteService
+  - [x] Configuration client Appwrite
+  - [x] Gestion de session (auth ou guest)
+  - [x] Connection au projet fug-backend
 
-- [ ] **T2** (AC: 1, 2): Créer RoomService
-  - [ ] createRoom() → génère code + inviteToken
-  - [ ] joinRoom(code) → ajoute member
-  - [ ] leaveRoom()
-  - [ ] deleteRoom()
+- [x] **T2** (AC: 1, 2): Créer RoomService
+  - [x] createRoom() → génère code + inviteToken
+  - [x] joinRoom(code) → ajoute member
+  - [x] leaveRoom()
+  - [x] deleteRoom()
 
-- [ ] **T3** (AC: 3): Créer GuestService
-  - [ ] Générer deviceId unique (localStorage)
-  - [ ] Créer session anonyme Appwrite
-  - [ ] Persister identité guest
+- [x] **T3** (AC: 3): Créer GuestService
+  - [x] Générer deviceId unique (localStorage)
+  - [x] Créer session anonyme Appwrite
+  - [x] Persister identité guest
 
-- [ ] **T4** (AC: 5): Créer RealtimeService
-  - [ ] Subscribe aux changements de room
-  - [ ] Subscribe aux changements de session
-  - [ ] Gérer reconnexion automatique
+- [x] **T4** (AC: 5): Créer RealtimeService
+  - [x] Subscribe aux changements de room
+  - [x] Subscribe aux changements de session
+  - [x] Gérer reconnexion automatique
 
 ### Phase 2: Game Sessions
 
@@ -340,13 +340,35 @@ interface KetalPlayer {
 ## Dev Agent Record
 
 ### Agent Model Used
+Claude Opus 4.5
 
 ### Debug Log References
+- QA Review: AuthService - APPROVED (34 tests)
+- QA Review: RoomService - Fixed error handling
+- QA Review: GuestService - EXCELLENT
+- QA Review: RealtimeService - EXCELLENT
 
 ### Completion Notes List
+- 2026-01-24: Phase 1 completed - All Appwrite services implemented
+- Services use Angular 19 patterns (signals, inject, OnPush)
+- RoomService enhanced with try/catch error handling after QA review
 
 ### File List
+- `src/app/services/appwrite/appwrite.service.ts` (existing)
+- `src/app/services/auth/auth.service.ts` (new)
+- `src/app/services/auth/auth.service.spec.ts` (new)
+- `src/app/services/room/room.service.ts` (new)
+- `src/app/services/guest/guest.service.ts` (new)
+- `src/app/services/realtime/realtime.service.ts` (new)
 
 ---
 
 ## QA Results
+
+### Phase 1 QA Summary (2026-01-24)
+| Service | Rating | Notes |
+|---------|--------|-------|
+| AuthService | APPROVED | 34 tests, proper signals/computed |
+| RoomService | FIXED | Error handling added post-QA |
+| GuestService | EXCELLENT | localStorage + UUID fallback |
+| RealtimeService | EXCELLENT | DestroyRef cleanup, subscription management |

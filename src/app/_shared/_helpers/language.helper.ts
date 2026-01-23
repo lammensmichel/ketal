@@ -7,6 +7,8 @@ export class LanguageService {
     const possibleLanguages: Language[] = [
       { name: 'Français', shortName: 'fr' },
       { name: 'English', shortName: 'en' },
+      { name: 'Nederlands', shortName: 'nl' },
+      { name: 'Deutsch', shortName: 'de' },
     ];
 
     return possibleLanguages;
