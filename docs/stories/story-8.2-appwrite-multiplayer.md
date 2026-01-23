@@ -97,18 +97,18 @@ Cette story remplace le backend Node.js/Socket.IO par Appwrite (fug-backend). L'
   - [x] Subscribe aux changements de session
   - [x] Gérer reconnexion automatique
 
-### Phase 2: Game Sessions
+### Phase 2: Game Sessions ✅ COMPLETED
 
-- [ ] **T5** (AC: 4, 8): Créer KetalSessionService
-  - [ ] startGame() → crée ketal_session
-  - [ ] updateGameState() → sync état
-  - [ ] endGame() → met à jour stats membres
-  - [ ] Transition vers nouvelle partie
+- [x] **T5** (AC: 4, 8): Créer KetalSessionService
+  - [x] startGame() → crée ketal_session
+  - [x] updateGameState() → sync état
+  - [x] endGame() → met à jour stats membres
+  - [x] Transition vers nouvelle partie
 
-- [ ] **T6** (AC: 6): Implémenter calcul des stats
-  - [ ] Mise à jour gameStats par jeu
-  - [ ] Mise à jour totalSips
-  - [ ] Affichage tableau récapitulatif
+- [x] **T6** (AC: 6): Implémenter MemberService avec calcul des stats
+  - [x] Mise à jour gameStats par jeu
+  - [x] Mise à jour totalSips
+  - [ ] Affichage tableau récapitulatif (Phase 3 UI)
 
 ### Phase 3: UI Components
 
@@ -347,11 +347,16 @@ Claude Opus 4.5
 - QA Review: RoomService - Fixed error handling
 - QA Review: GuestService - EXCELLENT
 - QA Review: RealtimeService - EXCELLENT
+- QA Review: KetalSessionService - PASS (Angular 19 patterns)
+- QA Review: MemberService - PASS (production-ready)
 
 ### Completion Notes List
 - 2026-01-24: Phase 1 completed - All Appwrite services implemented
 - Services use Angular 19 patterns (signals, inject, OnPush)
 - RoomService enhanced with try/catch error handling after QA review
+- 2026-01-24: Phase 2 completed - KetalSessionService and MemberService
+- Full CRUD for game sessions with realtime sync
+- Member stats tracking with per-game statistics
 
 ### File List
 - `src/app/services/appwrite/appwrite.service.ts` (existing)
@@ -360,6 +365,8 @@ Claude Opus 4.5
 - `src/app/services/room/room.service.ts` (new)
 - `src/app/services/guest/guest.service.ts` (new)
 - `src/app/services/realtime/realtime.service.ts` (new)
+- `src/app/services/ketal-session/ketal-session.service.ts` (new - Phase 2)
+- `src/app/services/member/member.service.ts` (new - Phase 2)
 
 ---
 
@@ -372,3 +379,9 @@ Claude Opus 4.5
 | RoomService | FIXED | Error handling added post-QA |
 | GuestService | EXCELLENT | localStorage + UUID fallback |
 | RealtimeService | EXCELLENT | DestroyRef cleanup, subscription management |
+
+### Phase 2 QA Summary (2026-01-24)
+| Service | Rating | Notes |
+|---------|--------|-------|
+| KetalSessionService | PASS | Signals, realtime, JSON serialization |
+| MemberService | PASS | Stats tracking, Query API, proper error handling |
