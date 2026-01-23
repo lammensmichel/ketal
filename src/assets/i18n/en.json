@@ -65,5 +65,60 @@
       "passwordRecoverySent": "Recovery email sent",
       "loggedIn": "Logged in successfully"
     }
+  },
+  "room": {
+    "createRoom": "Create a room",
+    "roomName": "Room name",
+    "roomNamePlaceholder": "Enter room name",
+    "createRoomButton": "Create room",
+    "code": "Code",
+    "copyLink": "Copy link",
+    "enterRoom": "Enter room",
+    "linkCopied": "Link copied!",
+    "joinTitle": "Join a room",
+    "displayName": "Your nickname",
+    "displayNamePlaceholder": "Enter your nickname",
+    "join": "Join",
+    "backToHome": "Back to home",
+    "errors": {
+      "nameRequired": "Room name is required",
+      "nameTooShort": "Name must be at least 3 characters",
+      "genericError": "An error occurred",
+      "copyFailed": "Failed to copy link",
+      "codeRequired": "Room code is required",
+      "codeLength": "Code must be 6 characters",
+      "codeInvalid": "Code must only contain letters and numbers",
+      "displayNameRequired": "Nickname is required",
+      "displayNameTooShort": "Nickname must be at least 2 characters",
+      "displayNameTooLong": "Nickname cannot exceed 30 characters",
+      "notFound": "Room not found. Please check the code and try again."
+    },
+    "stats": {
+      "title": "Room Statistics",
+      "player": "Player",
+      "sipsGiven": "Sips Given",
+      "sipsTaken": "Sips Taken",
+      "total": "TOTAL",
+      "gamesPlayed": "Games played:",
+      "noMembers": "No members in the room"
+    }
+  },
+  "lobby": {
+    "code": "Code",
+    "copyCode": "Click to copy code",
+    "players": "Players",
+    "noPlayers": "Waiting for players...",
+    "startGame": "Start Game",
+    "leave": "Leave",
+    "minPlayersRequired": "Minimum 2 players required to start the game",
+    "toggleRole": "Toggle role",
+    "role": {
+      "host": "Host",
+      "player": "Player",
+      "spectator": "Spectator"
+    },
+    "errors": {
+      "generic": "An error occurred"
+    }
   }
 }

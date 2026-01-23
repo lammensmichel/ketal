@@ -197,7 +197,9 @@ export class RoomService {
 
       return this.mapDocumentToGameRoom(response.documents[0]);
     } catch (error) {
-      throw new Error(`Failed to find room by invite token: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to find room by invite token: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 

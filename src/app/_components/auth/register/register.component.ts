@@ -1,6 +1,13 @@
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../../services/auth/auth.service';
@@ -127,7 +134,9 @@ export class RegisterComponent {
    */
   getFieldError(fieldName: 'name' | 'email' | 'password' | 'confirmPassword'): string {
     const field = this.registerForm.get(fieldName);
-    if (!field?.errors) return '';
+    if (!field?.errors) {
+      return '';
+    }
 
     if (field.errors['required']) {
       const errorKeys: Record<string, string> = {

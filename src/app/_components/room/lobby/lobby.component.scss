@@ -1,0 +1,282 @@
+.lobby-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: calc(100vh - 120px);
+  padding: 1.5rem;
+}
+
+.lobby-card {
+  width: 100%;
+  max-width: 500px;
+  padding: 2rem;
+  background-color: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+// Room Header
+.room-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #dee2e6;
+
+  .room-name {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 0.5rem;
+  }
+
+  .room-code-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .room-code-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+  }
+
+  .room-code {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+    color: #0d6efd;
+    background-color: #e7f1ff;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: #cfe2ff;
+    }
+
+    .copy-icon {
+      opacity: 0.6;
+    }
+  }
+}
+
+// Members Section
+.members-section {
+  margin-bottom: 1.5rem;
+}
+
+.members-header {
+  margin-bottom: 1rem;
+
+  .members-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #495057;
+    margin: 0;
+  }
+}
+
+.members-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.member-card {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background-color: #f8f9fa;
+  border-radius: 0.5rem;
+  border: 2px solid transparent;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+
+  &.is-current {
+    border-color: #0d6efd;
+    background-color: #e7f1ff;
+  }
+
+  &:hover {
+    background-color: #e9ecef;
+  }
+}
+
+.member-role-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  margin-right: 0.75rem;
+
+  &.role-host {
+    background-color: #ffc107;
+    color: #212529;
+  }
+
+  &.role-player {
+    background-color: #198754;
+    color: #fff;
+  }
+
+  &.role-spectator {
+    background-color: #6c757d;
+    color: #fff;
+  }
+}
+
+.member-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  .member-name {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #212529;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .member-role-label {
+    font-size: 0.8rem;
+    color: #6c757d;
+  }
+}
+
+.member-status {
+  display: flex;
+  align-items: center;
+  margin-left: 0.75rem;
+
+  .status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+  }
+
+  &.online .status-indicator {
+    background-color: #198754;
+  }
+
+  &.offline .status-indicator {
+    background-color: #dc3545;
+  }
+}
+
+.role-toggle {
+  margin-left: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+
+  &:hover {
+    background-color: #e9ecef;
+  }
+
+  &:focus {
+    box-shadow: none;
+  }
+}
+
+.no-members {
+  padding: 2rem;
+  text-align: center;
+  color: #6c757d;
+  background-color: #f8f9fa;
+  border-radius: 0.5rem;
+}
+
+// Actions
+.lobby-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid #dee2e6;
+}
+
+.btn-start {
+  width: 100%;
+  padding: 0.875rem;
+  font-weight: 600;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.btn-leave {
+  width: 100%;
+  padding: 0.75rem;
+  font-weight: 500;
+}
+
+.min-players-hint {
+  font-size: 0.85rem;
+  color: #6c757d;
+  text-align: center;
+  margin: 0;
+}
+
+// Alert styling
+.alert {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+}
+
+// Responsive adjustments
+@media (max-width: 576px) {
+  .lobby-container {
+    padding: 0.75rem;
+  }
+
+  .lobby-card {
+    padding: 1.25rem;
+    box-shadow: none;
+    border: 1px solid #dee2e6;
+  }
+
+  .room-header {
+    .room-name {
+      font-size: 1.5rem;
+    }
+
+    .room-code {
+      font-size: 1.1rem;
+    }
+  }
+
+  .member-card {
+    padding: 0.625rem 0.75rem;
+  }
+
+  .member-role-icon {
+    width: 32px;
+    height: 32px;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  .member-info {
+    .member-name {
+      font-size: 0.9rem;
+    }
+
+    .member-role-label {
+      font-size: 0.75rem;
+    }
+  }
+}

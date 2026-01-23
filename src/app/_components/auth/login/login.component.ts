@@ -106,7 +106,9 @@ export class LoginComponent {
    */
   getFieldError(fieldName: 'email' | 'password'): string {
     const field = this.loginForm.get(fieldName);
-    if (!field?.errors) return '';
+    if (!field?.errors) {
+      return '';
+    }
 
     if (field.errors['required']) {
       return fieldName === 'email' ? 'auth.errors.emailRequired' : 'auth.errors.passwordRequired';

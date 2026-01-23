@@ -110,27 +110,27 @@ Cette story remplace le backend Node.js/Socket.IO par Appwrite (fug-backend). L'
   - [x] Mise à jour totalSips
   - [ ] Affichage tableau récapitulatif (Phase 3 UI)
 
-### Phase 3: UI Components
+### Phase 3: UI Components ✅ COMPLETED
 
-- [ ] **T7** (AC: 1): Composant création de room
-  - [ ] Formulaire nom de room
-  - [ ] Affichage QR code généré
-  - [ ] Bouton copier lien
+- [x] **T7** (AC: 1): Composant création de room
+  - [x] Formulaire nom de room
+  - [x] Affichage QR code généré
+  - [x] Bouton copier lien
 
-- [ ] **T8** (AC: 2, 3): Composant rejoindre room
-  - [ ] Input code 6 caractères
-  - [ ] Saisie pseudo pour guests
-  - [ ] Page d'invitation via URL
+- [x] **T8** (AC: 2, 3): Composant rejoindre room
+  - [x] Input code 6 caractères
+  - [x] Saisie pseudo pour guests
+  - [x] Page d'invitation via URL
 
-- [ ] **T9** (AC: 7): Composant lobby
-  - [ ] Liste des membres (joueurs/spectateurs)
-  - [ ] Bouton changer rôle
-  - [ ] Bouton lancer partie (host only)
+- [x] **T9** (AC: 7): Composant lobby
+  - [x] Liste des membres (joueurs/spectateurs)
+  - [x] Bouton changer rôle
+  - [x] Bouton lancer partie (host only)
 
-- [ ] **T10** (AC: 6): Composant stats
-  - [ ] Tableau récapitulatif par membre
-  - [ ] Détail par type de jeu
-  - [ ] Total gorgées données/bues
+- [x] **T10** (AC: 6): Composant stats
+  - [x] Tableau récapitulatif par membre
+  - [x] Détail par type de jeu
+  - [x] Total gorgées données/bues
 
 ### Phase 4: Mode Local
 
@@ -349,6 +349,10 @@ Claude Opus 4.5
 - QA Review: RealtimeService - EXCELLENT
 - QA Review: KetalSessionService - PASS (Angular 19 patterns)
 - QA Review: MemberService - PASS (production-ready)
+- QA Review: CreateRoomComponent - MINOR ISSUES (approved for merge)
+- QA Review: JoinRoomComponent - PASS
+- QA Review: LobbyComponent - PASS
+- QA Review: RoomStatsComponent - PASS
 
 ### Completion Notes List
 - 2026-01-24: Phase 1 completed - All Appwrite services implemented
@@ -357,6 +361,9 @@ Claude Opus 4.5
 - 2026-01-24: Phase 2 completed - KetalSessionService and MemberService
 - Full CRUD for game sessions with realtime sync
 - Member stats tracking with per-game statistics
+- 2026-01-24: Phase 3 completed - All room UI components
+- CreateRoom, JoinRoom, Lobby, RoomStats components
+- Routes configured for room management flow
 
 ### File List
 - `src/app/services/appwrite/appwrite.service.ts` (existing)
@@ -367,6 +374,11 @@ Claude Opus 4.5
 - `src/app/services/realtime/realtime.service.ts` (new)
 - `src/app/services/ketal-session/ketal-session.service.ts` (new - Phase 2)
 - `src/app/services/member/member.service.ts` (new - Phase 2)
+- `src/app/_components/room/create-room/*` (new - Phase 3)
+- `src/app/_components/room/join-room/*` (new - Phase 3)
+- `src/app/_components/room/lobby/*` (new - Phase 3)
+- `src/app/_components/room/room-stats/*` (new - Phase 3)
+- `src/app/app-routing.module.ts` (modified - Phase 3)
 
 ---
 
@@ -385,3 +397,11 @@ Claude Opus 4.5
 |---------|--------|-------|
 | KetalSessionService | PASS | Signals, realtime, JSON serialization |
 | MemberService | PASS | Stats tracking, Query API, proper error handling |
+
+### Phase 3 QA Summary (2026-01-24)
+| Component | Rating | Notes |
+|-----------|--------|-------|
+| CreateRoomComponent | MINOR ISSUES | QR code, clipboard, minor cleanup needed |
+| JoinRoomComponent | PASS | Route params, auto-uppercase, guest support |
+| LobbyComponent | PASS | Realtime sync, DestroyRef cleanup, role toggle |
+| RoomStatsComponent | PASS | Computed sorting, totals, responsive table |

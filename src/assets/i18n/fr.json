@@ -60,5 +60,60 @@
       "passwordRecoverySent": "Email de récupération envoyé",
       "loggedIn": "Connexion réussie"
     }
+  },
+  "room": {
+    "createRoom": "Créer une room",
+    "roomName": "Nom de la room",
+    "roomNamePlaceholder": "Entrez le nom de la room",
+    "createRoomButton": "Créer la room",
+    "code": "Code",
+    "copyLink": "Copier le lien",
+    "enterRoom": "Entrer dans la room",
+    "linkCopied": "Lien copié!",
+    "joinTitle": "Rejoindre une room",
+    "displayName": "Votre pseudo",
+    "displayNamePlaceholder": "Entrez votre pseudo",
+    "join": "Rejoindre",
+    "backToHome": "Retour a l'accueil",
+    "errors": {
+      "nameRequired": "Le nom de la room est requis",
+      "nameTooShort": "Le nom doit contenir au moins 3 caractères",
+      "genericError": "Une erreur est survenue",
+      "copyFailed": "Impossible de copier le lien",
+      "codeRequired": "Le code de la room est requis",
+      "codeLength": "Le code doit contenir 6 caractères",
+      "codeInvalid": "Le code ne doit contenir que des lettres et chiffres",
+      "displayNameRequired": "Le pseudo est requis",
+      "displayNameTooShort": "Le pseudo doit contenir au moins 2 caractères",
+      "displayNameTooLong": "Le pseudo ne peut pas dépasser 30 caractères",
+      "notFound": "Room introuvable. Vérifiez le code et réessayez."
+    },
+    "stats": {
+      "title": "Statistiques de la room",
+      "player": "Joueur",
+      "sipsGiven": "Gorgées données",
+      "sipsTaken": "Gorgées bues",
+      "total": "TOTAL",
+      "gamesPlayed": "Parties jouées:",
+      "noMembers": "Aucun membre dans la room"
+    }
+  },
+  "lobby": {
+    "code": "Code",
+    "copyCode": "Cliquer pour copier le code",
+    "players": "Joueurs",
+    "noPlayers": "En attente de joueurs...",
+    "startGame": "Lancer la partie",
+    "leave": "Quitter",
+    "minPlayersRequired": "Minimum 2 joueurs requis pour lancer la partie",
+    "toggleRole": "Changer le rôle",
+    "role": {
+      "host": "Hôte",
+      "player": "Joueur",
+      "spectator": "Spectateur"
+    },
+    "errors": {
+      "generic": "Une erreur est survenue"
+    }
   }
 }
