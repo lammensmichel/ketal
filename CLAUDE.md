@@ -101,6 +101,27 @@ npm run test:coverage # Run tests with coverage report
 ## Git Commit Rules
 - Do not add Claude mentions, footers, or co-author tags in commit messages
 
+## BMAD Development Methodology
+
+This project uses the **BMAD (Agentic Agile Driven Development)** method for structured development. See `.bmad/README.md` for full details.
+
+### Workflow Overview
+1. **Major Features**: Analyst → PM (PRD) → Architect → SM (Stories) → Dev → QA
+2. **Small Features**: SM (Stories) → Dev → QA
+3. **Bug Fixes**: Dev → QA
+
+### Key Resources
+- `.bmad/bmad-config.yaml` - Configuration
+- `.bmad/agents/` - Agent definitions for Claude Code sub-agents
+- `.bmad/templates/` - PRD, architecture, story templates
+- `.bmad/checklists/` - Quality gates
+- `.bmad/data/ketal-kb.md` - Project knowledge base
+
+### Documentation Output
+- `docs/prd.md` - Product requirements
+- `docs/architecture.md` - Architecture documentation
+- `docs/stories/` - Story files with full context
+
 ## Implementation Tracking
 All feature requests and fixes must be tracked in the `implementation/` folder:
 
