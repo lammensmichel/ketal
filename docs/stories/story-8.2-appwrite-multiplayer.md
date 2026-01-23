@@ -1,0 +1,352 @@
+# Story: 8.2 - Appwrite Multiplayer Integration
+
+**Status**: Draft
+**Epic**: Epic 8: Multiplayer
+**Created**: 2026-01-23
+**Updated**: 2026-01-23
+
+---
+
+## Story
+
+**As a** player
+**I want** to create and join game rooms that persist in the cloud
+**So that** I can play with friends across devices, invite new players via QR code/link, and keep track of stats across multiple games
+
+---
+
+## Context
+
+Cette story remplace le backend Node.js/Socket.IO par Appwrite (fug-backend). L'architecture permet:
+- Rooms persistantes avec invitations par lien/QR code
+- Plusieurs parties dans une même room
+- Stats cumulées par joueur (gorgées données/bues)
+- Support des utilisateurs anonymes (invités)
+- Mode local (single device) ou multiplayer (multi device)
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      fug-backend (Appwrite)                      │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  fug_games              fug_game_rooms         fug_game_members │
+│  ───────────           ───────────────        ─────────────────  │
+│  • $id: 'ketal'        • code: 'ABC123'       • roomId           │
+│  • name                • inviteToken          • userId/deviceId  │
+│  • minPlayers          • currentGameId        • displayName      │
+│  • maxPlayers          • status               • role             │
+│  • isEnabled           • hostMemberId         • gameStats: {     │
+│                                               •   ketal: {...}   │
+│                                               • }                │
+│                                               • totalSips        │
+│                        ▼                                         │
+│                  ketal_sessions                                  │
+│                  ───────────────                                 │
+│                  • roomId                                        │
+│                  • gameNumber                                    │
+│                  • phase                                         │
+│                  • deck, pyramidCards                           │
+│                  • players: [embedded]                          │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Acceptance Criteria
+
+1. [ ] **AC1**: Utilisateur peut créer une room et obtenir un code/lien d'invitation
+2. [ ] **AC2**: Utilisateur peut rejoindre une room via code ou lien
+3. [ ] **AC3**: Invités anonymes peuvent rejoindre sans compte FUG
+4. [ ] **AC4**: Host peut lancer une partie (crée ketal_session)
+5. [ ] **AC5**: État du jeu synchronisé en temps réel via Appwrite Realtime
+6. [ ] **AC6**: Stats de gorgées cumulées par membre et par type de jeu
+7. [ ] **AC7**: Spectateurs peuvent rejoindre et voir sans jouer
+8. [ ] **AC8**: Plusieurs parties successives dans la même room
+9. [ ] **AC9**: Mode local fonctionne sans connexion (localStorage)
+10. [ ] **AC10**: Backend Node.js supprimé
+
+---
+
+## Tasks
+
+### Phase 1: Services Appwrite
+
+- [ ] **T1** (AC: 1-5): Créer AppwriteService
+  - [ ] Configuration client Appwrite
+  - [ ] Gestion de session (auth ou guest)
+  - [ ] Connection au projet fug-backend
+
+- [ ] **T2** (AC: 1, 2): Créer RoomService
+  - [ ] createRoom() → génère code + inviteToken
+  - [ ] joinRoom(code) → ajoute member
+  - [ ] leaveRoom()
+  - [ ] deleteRoom()
+
+- [ ] **T3** (AC: 3): Créer GuestService
+  - [ ] Générer deviceId unique (localStorage)
+  - [ ] Créer session anonyme Appwrite
+  - [ ] Persister identité guest
+
+- [ ] **T4** (AC: 5): Créer RealtimeService
+  - [ ] Subscribe aux changements de room
+  - [ ] Subscribe aux changements de session
+  - [ ] Gérer reconnexion automatique
+
+### Phase 2: Game Sessions
+
+- [ ] **T5** (AC: 4, 8): Créer KetalSessionService
+  - [ ] startGame() → crée ketal_session
+  - [ ] updateGameState() → sync état
+  - [ ] endGame() → met à jour stats membres
+  - [ ] Transition vers nouvelle partie
+
+- [ ] **T6** (AC: 6): Implémenter calcul des stats
+  - [ ] Mise à jour gameStats par jeu
+  - [ ] Mise à jour totalSips
+  - [ ] Affichage tableau récapitulatif
+
+### Phase 3: UI Components
+
+- [ ] **T7** (AC: 1): Composant création de room
+  - [ ] Formulaire nom de room
+  - [ ] Affichage QR code généré
+  - [ ] Bouton copier lien
+
+- [ ] **T8** (AC: 2, 3): Composant rejoindre room
+  - [ ] Input code 6 caractères
+  - [ ] Saisie pseudo pour guests
+  - [ ] Page d'invitation via URL
+
+- [ ] **T9** (AC: 7): Composant lobby
+  - [ ] Liste des membres (joueurs/spectateurs)
+  - [ ] Bouton changer rôle
+  - [ ] Bouton lancer partie (host only)
+
+- [ ] **T10** (AC: 6): Composant stats
+  - [ ] Tableau récapitulatif par membre
+  - [ ] Détail par type de jeu
+  - [ ] Total gorgées données/bues
+
+### Phase 4: Mode Local
+
+- [ ] **T11** (AC: 9): Implémenter mode local
+  - [ ] Détection mode offline
+  - [ ] Stockage localStorage/IndexedDB
+  - [ ] Même structure de données que Appwrite
+  - [ ] Bouton "Partager la room" → migration vers Appwrite
+
+### Phase 5: Cleanup
+
+- [ ] **T12** (AC: 10): Supprimer backend Node.js
+  - [ ] Supprimer dossier nodejs/
+  - [ ] Supprimer WebsocketService
+  - [ ] Mettre à jour package.json scripts
+  - [ ] Mettre à jour documentation
+
+---
+
+## Dev Notes
+
+### Collections Appwrite (fug-backend)
+
+| Collection | Description |
+|------------|-------------|
+| `fug_games` | Catalogue des jeux disponibles |
+| `fug_game_rooms` | Salons de jeu persistants |
+| `fug_game_members` | Membres des salons avec stats |
+| `ketal_sessions` | Sessions de jeu Ketal |
+
+### Environnement
+
+```typescript
+// src/environments/environment.ts
+export const environment = {
+  production: false,
+  appwrite: {
+    endpoint: 'http://localhost/v1',
+    projectId: 'fug',
+  }
+};
+```
+
+### Services Architecture
+
+```
+AppwriteService (singleton)
+├── client: Client
+├── account: Account
+├── databases: Databases
+└── realtime: Realtime
+
+RoomService
+├── createRoom(name): Promise<Room>
+├── joinRoom(code, displayName): Promise<Member>
+├── subscribeToRoom(roomId): Observable<Room>
+└── getMyRooms(): Promise<Room[]>
+
+KetalSessionService
+├── startGame(roomId): Promise<Session>
+├── subscribeToSession(sessionId): Observable<Session>
+├── updatePlayerState(data): Promise<void>
+└── endGame(): Promise<void>
+```
+
+### Schéma des Données
+
+```typescript
+interface GameRoom {
+  $id: string;
+  name: string;
+  code: string;           // 6 chars pour rejoindre
+  inviteToken: string;    // UUID pour URL
+  currentGameId: string | null;
+  currentSessionId: string | null;
+  status: 'idle' | 'playing';
+  hostMemberId: string;
+  mode: 'local' | 'multiplayer';
+  maxPlayers: number;
+  gamesPlayed: number;
+}
+
+interface GameMember {
+  $id: string;
+  roomId: string;
+  oderId: string | null;  // FUG user
+  deviceId: string | null; // Guest
+  displayName: string;
+  role: 'host' | 'player' | 'spectator';
+  preferences: {
+    viewMode: 'private' | 'full';
+  };
+  totalSipsGiven: number;
+  totalSipsTaken: number;
+  totalGamesPlayed: number;
+  gameStats: {
+    [gameId: string]: {
+      sipsGiven: number;
+      sipsTaken: number;
+      gamesPlayed: number;
+    }
+  };
+  isOnline: boolean;
+}
+
+interface KetalSession {
+  $id: string;
+  roomId: string;
+  gameId: 'ketal';
+  gameNumber: number;
+  status: 'waiting' | 'playing' | 'finished';
+  phase: 'setup' | 'dealing' | 'pyramid' | 'bus' | 'finished';
+  deck: Card[];
+  pyramidCards: Card[];
+  busCards: Card[];
+  pyramidRow: number;
+  currentCard: Card | null;
+  activePlayerId: string;
+  busRiderId: string | null;
+  players: KetalPlayer[];
+}
+
+interface KetalPlayer {
+  memberId: string;
+  displayName: string;
+  cards: Card[];
+  sipsGiven: number;
+  sipsTaken: number;
+  order: number;
+  isReady: boolean;
+}
+```
+
+### Flux d'Invitation
+
+```
+1. Host crée room
+   └── POST fug_game_rooms → code: "ABC123", inviteToken: "uuid..."
+
+2. Partage invitation
+   ├── QR Code → https://ketal.app/join/ABC123
+   ├── Lien → https://ketal.app/join/ABC123
+   └── Code vocal → "ABC123"
+
+3. Invité clique sur lien
+   ├── Si connecté FUG → récupère profil
+   └── Si anonyme → demande pseudo, génère deviceId
+
+4. Création membre
+   └── POST fug_game_members { roomId, displayName, role: 'player' }
+
+5. Realtime sync
+   └── Subscribe: databases.fug.fug_game_rooms.{roomId}
+   └── Subscribe: databases.fug.ketal_sessions.{sessionId}
+```
+
+### Angular 19 Patterns à Utiliser
+
+- [ ] Signals pour état réactif
+- [ ] Standalone components
+- [ ] OnPush change detection
+- [ ] New control flow (@if, @for)
+- [ ] inject() pour DI
+- [ ] Resource API pour async data (si applicable)
+
+---
+
+## Dependencies
+
+### Blocked By
+- fug-backend migrations 028-033 (game rooms infrastructure)
+
+### Blocks
+- Story 2.2 (Integrate Ketal with Backend) - partage de l'architecture auth
+
+---
+
+## Testing Requirements
+
+### Unit Tests
+- [ ] RoomService: create, join, leave, delete
+- [ ] KetalSessionService: start, update, end
+- [ ] Stats calculation correctness
+- [ ] Guest session handling
+
+### Integration Tests
+- [ ] Full flow: create room → join → play → stats update
+- [ ] Realtime synchronization between 2 clients
+- [ ] Guest joining via invite link
+
+### Edge Cases
+- [ ] Reconnexion après déconnexion
+- [ ] Room supprimée pendant jeu
+- [ ] Guest qui quitte et revient
+- [ ] Changement de host si host quitte
+
+---
+
+## Change Log
+
+| Date | Description | Author |
+|------|-------------|--------|
+| 2026-01-23 | Created story from architecture discussion | Architect |
+
+---
+
+## Dev Agent Record
+
+### Agent Model Used
+
+### Debug Log References
+
+### Completion Notes List
+
+### File List
+
+---
+
+## QA Results

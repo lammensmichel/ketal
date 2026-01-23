@@ -4,7 +4,58 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Ketal is a French drinking card game ("Grosse Guinze") with an **Angular 19** frontend and Node.js/Socket.IO backend. The game has two phases: players make predictions about cards (color, higher/lower, in/out, suit), then cards are drawn with sips assigned based on matches.
+Ketal is a French drinking card game ("Grosse Guinze") with an **Angular 19** frontend. The game has two phases: players make predictions about cards (color, higher/lower, in/out, suit), then cards are drawn with sips assigned based on matches.
+
+Ketal is part of the **FUG ecosystem** and shares its backend infrastructure.
+
+## Backend Dependency
+
+Ketal uses **fug-backend** as its shared Appwrite infrastructure.
+
+### Prerequisites
+
+Before starting Ketal development:
+
+```bash
+# 1. Clone fug-backend (if not already done)
+git clone git@github.com:knabo6/fug-backend.git
+
+# 2. Start the backend
+cd fug-backend && make dev
+
+# 3. Verify Appwrite is running
+open http://localhost  # Should show Appwrite console
+```
+
+### Architecture
+```
+┌─────────────────┐     ┌─────────────────┐
+│      FUG        │     │     KETAL       │
+│  (Flutter app)  │     │  (Angular app)  │
+└────────┬────────┘     └────────┬────────┘
+         │                       │
+         └───────────┬───────────┘
+                     │
+                     ▼
+         ┌───────────────────────┐
+         │     fug-backend       │
+         │  (Appwrite + Docker)  │
+         ├───────────────────────┤
+         │ • Authentication      │
+         │ • Database (MariaDB)  │
+         │ • Realtime (WS)       │
+         │ • Storage             │
+         └───────────────────────┘
+```
+
+### Minimum Backend Version
+- Required: fug-backend >= v1.0.0
+
+### Ketal Collections in Appwrite
+- `games` - Game definitions
+- `game_rooms` - Active game rooms
+- `game_members` - Players in rooms
+- `ketal_sessions` - Game session state
 
 ## Modern Angular 19 Patterns
 
@@ -36,11 +87,16 @@ npm run build
 npm test
 ```
 
-## Architecture
+## Application Architecture
 
-### Two-Server Architecture
-- **Angular Frontend** (`src/`): Serves on port 4200, uses Socket.IO client for real-time updates
-- **Node.js Backend** (`nodejs/Node.js`): Express + Socket.IO server on port 3000, manages room state
+### Current State (Transitioning)
+- **Angular Frontend** (`src/`): Serves on port 4200
+- **Node.js Backend** (`nodejs/`): Legacy Socket.IO server (being replaced by Appwrite)
+- **Appwrite Backend** (`fug-backend`): New authentication, database, and realtime
+
+### Target State
+- **Angular Frontend** connecting directly to **fug-backend** (Appwrite)
+- Node.js backend will be removed once migration is complete
 
 ### Frontend Structure
 ```
