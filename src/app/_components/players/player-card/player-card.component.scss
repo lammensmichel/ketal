@@ -2,4 +2,13 @@
   max-width: calc(50% - 0.125rem) !important; // 0.125rem = 0.5 * gap-1
 }
 
+.player-card--active {
+  box-shadow: 0 0 15px rgba(var(--bs-primary-rgb), 0.5);
+  transform: scale(1.02);
+  transition: all 0.3s ease;
+}
 
+.player-card--inactive {
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}

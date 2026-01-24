@@ -1,0 +1,50 @@
+<div class="game-progress">
+  <!-- Phase indicator -->
+  <div class="phase-indicator">
+    @if (phase() === 1) {
+      <span class="phase-label">{{ 'game.progress.phase1' | translate }}</span>
+    } @else if (phase() === 2) {
+      <span class="phase-label">{{ 'game.progress.phase2' | translate }}</span>
+    }
+  </div>
+
+  <!-- Phase 1: Prediction stepper -->
+  @if (phase() === 1) {
+    <div class="phase1-stepper">
+      <div class="stepper-dots">
+        @for (step of [1, 2, 3, 4]; track step) {
+          <span
+            class="stepper-dot"
+            [class.completed]="isStepCompleted(step)"
+            [class.active]="isStepActive(step)"
+          >
+            @if (isStepCompleted(step)) {
+              <span class="dot-filled"></span>
+            } @else if (isStepActive(step)) {
+              <span class="dot-active"></span>
+            } @else {
+              <span class="dot-empty"></span>
+            }
+          </span>
+        }
+      </div>
+      <div class="turn-label">
+        {{ currentTurnKey() | translate }}
+      </div>
+    </div>
+  }
+
+  <!-- Phase 2: Distribution progress -->
+  @if (phase() === 2) {
+    <div class="phase2-progress">
+      <div class="progress-row">
+        <span class="progress-label">{{ 'game.progress.drinking' | translate }}</span>
+        <span class="progress-value">{{ drinkingCardsCount() }}/6</span>
+      </div>
+      <div class="progress-row">
+        <span class="progress-label">{{ 'game.progress.giving' | translate }}</span>
+        <span class="progress-value">{{ givingCardsCount() }}/6</span>
+      </div>
+    </div>
+  }
+</div>

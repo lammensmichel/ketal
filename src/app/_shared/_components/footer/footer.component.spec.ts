@@ -41,7 +41,7 @@ describe('FooterComponent', () => {
   beforeEach(async () => {
     mockGameService = createMockGameService();
     mockPlayerHelperService = createMockPlayerHelperService();
-    mockRouter = jasmine.createSpyObj('Router', ['navigate']);
+    mockRouter = jasmine.createSpyObj('Router', ['navigate'], { url: '/game' });
 
     // Set initial game state via signal
     mockGameService.game.set(mockGame);

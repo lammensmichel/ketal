@@ -67,5 +67,28 @@
     "myProfile": "Mein Profil",
     "language": "Sprache",
     "guest": "Gast"
+  },
+  "game": {
+    "phase1": "Phase 1: Vorhersagen",
+    "phase2": "Phase 2: Verteilung",
+    "turn": "Runde",
+    "turnLabels": {
+      "color": "Farbe",
+      "plusMinus": "Höher oder Niedriger",
+      "inOut": "Drinnen oder Draußen",
+      "suit": "Genaue Farbe"
+    },
+    "progress": {
+      "phase1": "Phase 1: Vorhersagen",
+      "phase2": "Phase 2: Verteilung",
+      "drinking": "Trinken",
+      "giving": "Geben",
+      "turn": {
+        "color": "Farbe",
+        "plusMinus": "Höher/Niedriger",
+        "inOut": "Drinnen/Draußen",
+        "suit": "Exakte Farbe"
+      }
+    }
   }
 }

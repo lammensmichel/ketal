@@ -122,5 +122,28 @@
     "myProfile": "Mon profil",
     "language": "Langue",
     "guest": "Invité"
+  },
+  "game": {
+    "phase1": "Phase 1: Prédictions",
+    "phase2": "Phase 2: Distribution",
+    "turn": "Tour",
+    "turnLabels": {
+      "color": "Couleur",
+      "plusMinus": "Plus ou Moins",
+      "inOut": "Entre ou Dehors",
+      "suit": "Couleur exacte"
+    },
+    "progress": {
+      "phase1": "Phase 1: Prédictions",
+      "phase2": "Phase 2: Distribution",
+      "drinking": "Boire",
+      "giving": "Donner",
+      "turn": {
+        "color": "Couleur",
+        "plusMinus": "Plus/Moins",
+        "inOut": "Entre/Dehors",
+        "suit": "Couleur exacte"
+      }
+    }
   }
 }

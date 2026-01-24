@@ -67,5 +67,28 @@
     "myProfile": "Mijn profiel",
     "language": "Taal",
     "guest": "Gast"
+  },
+  "game": {
+    "phase1": "Fase 1: Voorspellingen",
+    "phase2": "Fase 2: Verdeling",
+    "turn": "Beurt",
+    "turnLabels": {
+      "color": "Kleur",
+      "plusMinus": "Hoger of Lager",
+      "inOut": "Binnen of Buiten",
+      "suit": "Exacte Kleur"
+    },
+    "progress": {
+      "phase1": "Fase 1: Voorspellingen",
+      "phase2": "Fase 2: Verdeling",
+      "drinking": "Drinken",
+      "giving": "Geven",
+      "turn": {
+        "color": "Kleur",
+        "plusMinus": "Hoger/Lager",
+        "inOut": "Binnen/Buiten",
+        "suit": "Exacte Kleur"
+      }
+    }
   }
 }

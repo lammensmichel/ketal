@@ -98,6 +98,59 @@ describe('PlayerCardComponent', () => {
     });
   });
 
+  describe('@Input isActive', () => {
+    it('should default to false', () => {
+      expect(component.isActive).toBe(false);
+    });
+
+    it('should accept isActive input', () => {
+      component.isActive = true;
+      expect(component.isActive).toBe(true);
+    });
+  });
+
+  describe('@Input hasActivePlayer', () => {
+    it('should default to false', () => {
+      expect(component.hasActivePlayer).toBe(false);
+    });
+
+    it('should accept hasActivePlayer input', () => {
+      component.hasActivePlayer = true;
+      expect(component.hasActivePlayer).toBe(true);
+    });
+  });
+
+  describe('active/inactive CSS classes', () => {
+    it('should apply player-card--active class when isActive is true', () => {
+      component.isActive = true;
+      fixture.detectChanges();
+
+      const cardElement = fixture.nativeElement.querySelector('.card');
+      expect(cardElement.classList.contains('player-card--active')).toBe(true);
+      expect(cardElement.classList.contains('player-card--inactive')).toBe(false);
+    });
+
+    it('should apply player-card--inactive class when isActive is false and hasActivePlayer is true', () => {
+      component.isActive = false;
+      component.hasActivePlayer = true;
+      fixture.detectChanges();
+
+      const cardElement = fixture.nativeElement.querySelector('.card');
+      expect(cardElement.classList.contains('player-card--inactive')).toBe(true);
+      expect(cardElement.classList.contains('player-card--active')).toBe(false);
+    });
+
+    it('should not apply any highlight class when hasActivePlayer is false', () => {
+      component.isActive = false;
+      component.hasActivePlayer = false;
+      fixture.detectChanges();
+
+      const cardElement = fixture.nativeElement.querySelector('.card');
+      expect(cardElement.classList.contains('player-card--active')).toBe(false);
+      expect(cardElement.classList.contains('player-card--inactive')).toBe(false);
+    });
+  });
+
   describe('cardSlots', () => {
     it('should have 4 card slots', () => {
       expect(component.cardSlots).toEqual([0, 1, 2, 3]);

@@ -24,6 +24,8 @@ export class PlayerCardComponent implements OnInit {
   private playerGivenSipsModal: PlayerGivenSipsSelectionComponent | undefined;
 
   @Input() player: PlayerModel = new PlayerModel();
+  @Input() isActive = false;
+  @Input() hasActivePlayer = false;
 
   readonly cardSlots = [0, 1, 2, 3];
 

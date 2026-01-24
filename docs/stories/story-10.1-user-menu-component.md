@@ -1,7 +1,7 @@
 # Story 10.1: User Menu Component
 
 ## Status
-Draft
+Completed
 
 ## Story
 **As a** Ketal user,

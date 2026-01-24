@@ -127,5 +127,28 @@
     "myProfile": "My profile",
     "language": "Language",
     "guest": "Guest"
+  },
+  "game": {
+    "phase1": "Phase 1: Predictions",
+    "phase2": "Phase 2: Distribution",
+    "turn": "Turn",
+    "turnLabels": {
+      "color": "Color",
+      "plusMinus": "Higher or Lower",
+      "inOut": "In or Out",
+      "suit": "Exact Suit"
+    },
+    "progress": {
+      "phase1": "Phase 1: Predictions",
+      "phase2": "Phase 2: Distribution",
+      "drinking": "Drink",
+      "giving": "Give",
+      "turn": {
+        "color": "Color",
+        "plusMinus": "Higher/Lower",
+        "inOut": "In/Out",
+        "suit": "Exact Suit"
+      }
+    }
   }
 }

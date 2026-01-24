@@ -1,4 +1,10 @@
-<div class="card">
+<div
+  class="card"
+  [ngClass]="{
+    'player-card--active': isActive,
+    'player-card--inactive': !isActive && hasActivePlayer
+  }"
+>
   <div class="card-body p-2 container">
     <div class="row mb-1">
       <label for="avatar" class="d-flex flex-nowrap justify-content-around flex-fill align-items-center">

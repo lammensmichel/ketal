@@ -19,7 +19,7 @@ export class ToastComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {}
 
   ngAfterViewInit(): void {
-    if (this.toastElement) {
+    if (this.toastElement && typeof bootstrap !== 'undefined') {
       this.toast = new bootstrap.Toast(this.toastElement.nativeElement, { delay: 2000 });
     }
   }
