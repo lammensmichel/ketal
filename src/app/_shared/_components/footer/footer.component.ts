@@ -1,4 +1,4 @@
-import { Component, Input, ViewChild, inject } from '@angular/core';
+import { Component, Input, ViewChild, inject, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { NgClass } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
@@ -9,6 +9,9 @@ import { CardType } from '../../_models/card-type.model';
 import { DrinkChoiceEnum } from '../../_models/enums/drink_choice.enum';
 import { ToastComponent } from '../toast/toast.component';
 import { PlayingCardComponent } from '../playing-card/playing-card.component';
+
+/** Routes where the game footer should be hidden */
+const AUTH_ROUTES = ['/login', '/register', '/forgot-password'];
 
 @Component({
   selector: 'app-footer',
@@ -26,6 +29,11 @@ export class FooterComponent {
   @ViewChild('notAllSipsGiven') toastComponent: ToastComponent | undefined;
 
   readonly cardSlots = [0, 1, 2, 3, 4, 5];
+
+  /** Check if current route is an auth page where footer should be hidden */
+  isAuthPage(): boolean {
+    return AUTH_ROUTES.some((route) => this.router.url.startsWith(route));
+  }
 
   chooseColor(color: string) {
     this.gameSrv.setChoiceAndPickCard(DrinkChoiceEnum.Color, color);

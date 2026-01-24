@@ -1,4 +1,5 @@
 <div class="mt-2">
+  @if (!isAuthPage()) {
   <div class="white-background">
     @if (gameSrv.isGameStarted() && [1, 2, 3, 4].includes(gameSrv.turn())) {
       <div class="mt-2 mb-2 space-below white-background">
@@ -185,5 +186,6 @@
       </div>
     }
   </div>
+  }
 </div>
 <app-toast #notAllSipsGiven [titleMessage]="'Warning'" [bodyMessage]="'Assign_All_Sips'"></app-toast>

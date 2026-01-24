@@ -53,15 +53,20 @@ export class AuthService {
    * Initialize the auth service by checking for an existing session
    *
    * Should be called on app startup to restore any existing session.
-   * If no valid session exists, the user will remain null.
+   * If no valid session exists or Appwrite is unavailable, the user will remain null.
+   * Uses a timeout to prevent blocking when backend is unreachable.
    */
   async init(): Promise<void> {
     this._isLoading.set(true);
     try {
-      const user = await this.appwrite.account.get();
+      // Add timeout to prevent blocking when Appwrite is unavailable
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Auth init timeout')), 5000)
+      );
+      const user = await Promise.race([this.appwrite.account.get(), timeoutPromise]);
       this._currentUser.set(user);
     } catch {
-      // No valid session exists, user remains null
+      // No valid session exists or Appwrite unavailable, user remains null
       this._currentUser.set(null);
     } finally {
       this._isLoading.set(false);

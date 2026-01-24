@@ -1,5 +1,5 @@
 {
-  "Label_App_¨Title": "Ketal",
+  "Label_App_Title": "Ketal",
   "Label_App_Subtitle": "Grosse Guinze Generator",
   "Label_YouDrink": "Du trinkst",
   "Label_YouGive": "Du gibst",
@@ -60,5 +60,12 @@
       "passwordRecoverySent": "Wiederherstellungs-E-Mail gesendet",
       "loggedIn": "Erfolgreich angemeldet"
     }
+  },
+  "userMenu": {
+    "login": "Anmelden",
+    "logout": "Abmelden",
+    "myProfile": "Mein Profil",
+    "language": "Sprache",
+    "guest": "Gast"
   }
 }

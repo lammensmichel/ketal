@@ -11,6 +11,15 @@ import { faCircleXmark } from '@fortawesome/free-regular-svg-icons';
 
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app-routing.module';
+import { AuthService } from './app/services/auth/auth.service';
+
+/**
+ * Initialize authentication on app startup
+ * Restores any existing session from Appwrite
+ */
+function initializeAuth(authService: AuthService): () => Promise<void> {
+  return () => authService.init();
+}
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
@@ -38,5 +47,12 @@ bootstrapApplication(AppComponent, {
         return library;
       },
     },
+    // TODO: Re-enable when fug-backend is accessible from browser
+    // {
+    //   provide: APP_INITIALIZER,
+    //   useFactory: initializeAuth,
+    //   deps: [AuthService],
+    //   multi: true,
+    // },
   ],
 }).catch((err) => console.error(err));

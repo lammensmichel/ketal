@@ -1,0 +1,76 @@
+<div class="user-menu">
+  @if (!isLoggedIn()) {
+    <!-- Not logged in: Show login button -->
+    <button
+      type="button"
+      class="btn btn-outline-primary btn-sm login-btn"
+      (click)="navigateToLogin()"
+      [attr.aria-label]="'userMenu.login' | translate"
+    >
+      <span class="login-icon" aria-hidden="true">&#128100;</span>
+      <span class="login-text" [translate]="'userMenu.login'"></span>
+    </button>
+  } @else {
+    <!-- Logged in: Show user menu -->
+    <div class="dropdown">
+      <button
+        type="button"
+        class="btn user-menu-trigger"
+        (click)="toggleMenu()"
+        [attr.aria-expanded]="isOpen()"
+        aria-haspopup="true"
+        [attr.aria-label]="'userMenu.myProfile' | translate"
+      >
+        <span class="user-avatar" aria-hidden="true">{{ userInitials() }}</span>
+      </button>
+
+      @if (isOpen()) {
+        <div class="dropdown-menu show" role="menu">
+          <!-- User info section -->
+          <div class="user-info">
+            <div class="user-avatar-large" aria-hidden="true">{{ userInitials() }}</div>
+            <div class="user-details">
+              <span class="user-name">{{ displayName() }}</span>
+              @if (!isAnonymous() && currentUser()?.email) {
+                <span class="user-email">{{ currentUser()?.email }}</span>
+              }
+            </div>
+          </div>
+
+          <div class="dropdown-divider"></div>
+
+          <!-- Language selector -->
+          <div class="dropdown-item-form">
+            <label for="language-select-menu" class="language-label">
+              <span [translate]="'userMenu.language'"></span>
+            </label>
+            <select
+              id="language-select-menu"
+              class="form-select form-select-sm language-select"
+              [(ngModel)]="selectedLanguage"
+              (ngModelChange)="onLanguageChange()"
+            >
+              @for (lang of languages; track lang.shortName) {
+                <option [ngValue]="lang.shortName">{{ lang.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="dropdown-divider"></div>
+
+          <!-- Logout button -->
+          <button
+            type="button"
+            class="dropdown-item logout-item"
+            (click)="logout()"
+            role="menuitem"
+            [disabled]="isLoading()"
+          >
+            <span class="logout-icon" aria-hidden="true">&#128682;</span>
+            <span [translate]="'userMenu.logout'"></span>
+          </button>
+        </div>
+      }
+    </div>
+  }
+</div>

@@ -41,11 +41,7 @@ export class PlayerHelperService {
   }
 
   public getPlayerNumber(): number {
-    if (this.getPlayers()) {
-      return this.getPlayers().length;
-    } else {
-      return 0;
-    }
+    return this.getPlayers().length;
   }
 
   public isMaxPlayerNumberNotReached(): boolean {
@@ -53,14 +49,13 @@ export class PlayerHelperService {
   }
 
   public getPlayers(): Array<PlayerModel> {
-    let playerList: Array<PlayerModel> = [];
     if (this.players.length === 0) {
       const playersFromSession = this.localService.getData('players');
-      playerList = playersFromSession ? JSON.parse(this.localService.getData('players') as string) : [];
-    } else {
-      playerList = this.players;
+      if (playersFromSession) {
+        this.players = JSON.parse(playersFromSession);
+      }
     }
-    return playerList;
+    return this.players;
   }
 
   public getPlayerCardListValues(player: PlayerModel): string[] {

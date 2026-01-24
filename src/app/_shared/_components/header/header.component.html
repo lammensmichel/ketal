@@ -2,20 +2,11 @@
   <div class="text-center my-4">
     <div class="row position-absolute top-0 end-12">
       <div class="col-12">
-        <select
-          id="language-select"
-          class="form-select form-select-sm"
-          [(ngModel)]="selectedLanguage"
-          (ngModelChange)="onLanguageChange()"
-        >
-          @for (lang of languages; track lang.shortName) {
-            <option [ngValue]="lang.shortName">{{ lang.name }}</option>
-          }
-        </select>
+        <app-user-menu></app-user-menu>
       </div>
     </div>
     <div class="column">
-      <h1 class="display-4 font-monospace" style="font-variant: small-caps" [translate]="'Label_App_¨Title'"></h1>
+      <h1 class="display-4 font-monospace" style="font-variant: small-caps" [translate]="'Label_App_Title'"></h1>
       <div class="lead">
         @if (gameSrv.isNewGame()) {
           <div>

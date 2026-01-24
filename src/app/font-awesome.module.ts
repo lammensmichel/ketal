@@ -2,7 +2,17 @@ import { NgModule } from '@angular/core';
 import { FaIconLibrary, FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 // Solid icons
-import { faCaretRight, faCaretLeft, faMinus, faPlus, faWineGlass } from '@fortawesome/free-solid-svg-icons';
+import {
+  faCaretRight,
+  faCaretLeft,
+  faMinus,
+  faPlus,
+  faWineGlass,
+  faUserCircle,
+  faGlobe,
+  faSignInAlt,
+  faSignOutAlt,
+} from '@fortawesome/free-solid-svg-icons';
 
 // Regular icons
 import { faCircleXmark } from '@fortawesome/free-regular-svg-icons';
@@ -14,7 +24,17 @@ import { faCircleXmark } from '@fortawesome/free-regular-svg-icons';
 export class FontAwesomeIconsModule {
   constructor(library: FaIconLibrary) {
     // Add solid icons
-    library.addIcons(faCaretRight, faCaretLeft, faMinus, faPlus, faWineGlass);
+    library.addIcons(
+      faCaretRight,
+      faCaretLeft,
+      faMinus,
+      faPlus,
+      faWineGlass,
+      faUserCircle,
+      faGlobe,
+      faSignInAlt,
+      faSignOutAlt
+    );
 
     // Add regular icons
     library.addIcons(faCircleXmark);
