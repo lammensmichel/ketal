@@ -19,7 +19,7 @@
           ></button>
         }
       </div>
-      @if (newPlayer?.invalid && (newPlayer?.dirty || newPlayer?.touched) && newPlayer?.errors?.['required']) {
+      @if (newPlayer?.invalid && newPlayer?.dirty && newPlayer?.errors?.['required']) {
         <div class="alert alert-danger">
           <span [translate]="'Label_Error_NameRequired'"></span>
         </div>

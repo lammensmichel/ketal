@@ -40,7 +40,7 @@ export const routes: Routes = [
     path: 'game',
     loadComponent: () => import('./_components/game/game/game.component').then((m) => m.GameComponent),
   },
-  { path: '', redirectTo: 'players', pathMatch: 'full' },
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
 ];
 
 @NgModule({
