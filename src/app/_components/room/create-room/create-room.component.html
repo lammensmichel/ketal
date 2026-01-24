@@ -75,7 +75,13 @@
 
         <!-- QR Code Display -->
         <div class="qr-code-section">
-          <div class="qr-code-wrapper" [innerHTML]="qrCodeSvg()"></div>
+          <qrcode
+            [qrdata]="inviteUrl()"
+            [width]="180"
+            [errorCorrectionLevel]="'M'"
+            [margin]="1"
+          ></qrcode>
+          <p class="qr-hint">{{ 'room.scanToJoin' | translate }}</p>
         </div>
 
         <!-- Invite Link -->

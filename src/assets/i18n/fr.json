@@ -70,6 +70,7 @@
     "copyLink": "Copier le lien",
     "enterRoom": "Entrer dans la room",
     "linkCopied": "Lien copié!",
+    "scanToJoin": "Scannez pour rejoindre",
     "joinTitle": "Rejoindre une room",
     "displayName": "Votre pseudo",
     "displayNamePlaceholder": "Entrez votre pseudo",
@@ -107,6 +108,9 @@
     "leave": "Quitter",
     "minPlayersRequired": "Minimum 2 joueurs requis pour lancer la partie",
     "toggleRole": "Changer le rôle",
+    "showQr": "QR Code",
+    "hideQr": "Masquer",
+    "scanToJoin": "Scannez pour rejoindre",
     "role": {
       "host": "Hôte",
       "player": "Joueur",

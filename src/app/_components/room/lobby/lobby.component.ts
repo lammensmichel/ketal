@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, OnIni
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
+import { QRCodeComponent } from 'angularx-qrcode';
 import { RoomService, GameRoom } from '../../../services/room/room.service';
 import { MemberService, GameMember, MemberRole } from '../../../services/member/member.service';
 import { RealtimeService, GameMember as RealtimeGameMember } from '../../../services/realtime/realtime.service';
@@ -25,7 +26,7 @@ import { KetalSessionService, KetalPlayer } from '../../../services/ketal-sessio
   templateUrl: './lobby.component.html',
   styleUrls: ['./lobby.component.scss'],
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [CommonModule, TranslateModule, QRCodeComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LobbyComponent implements OnInit {
@@ -83,6 +84,23 @@ export class LobbyComponent implements OnInit {
       return roleOrder[a.role] - roleOrder[b.role];
     });
   });
+
+  /** Computed signal for invite URL */
+  readonly inviteUrl = computed(() => {
+    const room = this.currentRoom();
+    if (!room) {
+      return '';
+    }
+    return `${window.location.origin}/room/join/${room.code}`;
+  });
+
+  /** Toggle QR code visibility */
+  readonly showQrCode = signal(false);
+
+  /** Toggle QR code display */
+  toggleQrCode(): void {
+    this.showQrCode.update((v) => !v);
+  }
 
   ngOnInit(): void {
     this.loadRoomMembers();

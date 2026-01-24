@@ -1,6 +1,6 @@
 # Story 13.1: Add QR Code for Room Invitation
 
-**Status**: Ready
+**Status**: Done
 **Epic**: Epic 13: Room UX Improvements
 **Priority**: Medium
 **Depends On**: None
