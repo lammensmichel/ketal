@@ -11,6 +11,14 @@ app-header {
 .content {
   overflow-y: auto;
   flex-grow: 1;
+
+  // Hide scrollbar but keep scroll functionality
+  scrollbar-width: none; // Firefox
+  -ms-overflow-style: none; // IE/Edge
+
+  &::-webkit-scrollbar {
+    display: none; // Chrome/Safari/Opera
+  }
 }
 
 app-footer {
