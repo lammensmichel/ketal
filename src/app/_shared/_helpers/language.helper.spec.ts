@@ -29,10 +29,10 @@ describe('LanguageService', () => {
       expect(languages.length).toBeGreaterThan(0);
     });
 
-    it('should return exactly 2 languages', () => {
+    it('should return exactly 4 languages', () => {
       const languages = service.constructPossibleLanguages();
 
-      expect(languages.length).toBe(2);
+      expect(languages.length).toBe(4);
     });
 
     it('should have each language with name property', () => {
@@ -71,6 +71,24 @@ describe('LanguageService', () => {
 
       expect(english).toBeDefined();
       expect(english?.name).toBe('English');
+    });
+
+    it('should include Dutch language', () => {
+      const languages = service.constructPossibleLanguages();
+
+      const dutch = languages.find((lang) => lang.shortName === 'nl');
+
+      expect(dutch).toBeDefined();
+      expect(dutch?.name).toBe('Nederlands');
+    });
+
+    it('should include German language', () => {
+      const languages = service.constructPossibleLanguages();
+
+      const german = languages.find((lang) => lang.shortName === 'de');
+
+      expect(german).toBeDefined();
+      expect(german?.name).toBe('Deutsch');
     });
 
     it('should return a new array on each call', () => {

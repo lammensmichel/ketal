@@ -17,13 +17,11 @@ export const routes: Routes = [
   },
   {
     path: 'room/join',
-    loadComponent: () =>
-      import('./_components/room/join-room/join-room.component').then((m) => m.JoinRoomComponent),
+    loadComponent: () => import('./_components/room/join-room/join-room.component').then((m) => m.JoinRoomComponent),
   },
   {
     path: 'room/join/:code',
-    loadComponent: () =>
-      import('./_components/room/join-room/join-room.component').then((m) => m.JoinRoomComponent),
+    loadComponent: () => import('./_components/room/join-room/join-room.component').then((m) => m.JoinRoomComponent),
   },
   {
     path: 'room/:id',
@@ -31,8 +29,7 @@ export const routes: Routes = [
   },
   {
     path: 'room/:id/stats',
-    loadComponent: () =>
-      import('./_components/room/room-stats/room-stats.component').then((m) => m.RoomStatsComponent),
+    loadComponent: () => import('./_components/room/room-stats/room-stats.component').then((m) => m.RoomStatsComponent),
   },
   {
     path: 'players',

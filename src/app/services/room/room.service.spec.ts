@@ -211,11 +211,9 @@ describe('RoomService', () => {
 
       const result = await service.getRoomByCode('ABC123');
 
-      expect(mockDatabases.listDocuments).toHaveBeenCalledWith(
-        'fug',
-        'fug_game_rooms',
-        jasmine.arrayContaining([jasmine.objectContaining({ method: 'equal', attribute: 'code', values: ['ABC123'] })])
-      );
+      expect(mockDatabases.listDocuments).toHaveBeenCalledWith('fug', 'fug_game_rooms', jasmine.any(Array));
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      expect(queries.some((q) => q.includes('"code"') && q.includes('"ABC123"'))).toBeTrue();
       expect(result).toEqual(mockGameRoom);
     });
 
@@ -226,9 +224,8 @@ describe('RoomService', () => {
 
       await service.getRoomByCode('abc123');
 
-      const callArgs = mockDatabases.listDocuments.calls.mostRecent().args;
-      const queries = callArgs[2] as Array<{ values: string[] }>;
-      expect(queries[0].values[0]).toBe('ABC123');
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      expect(queries.some((q) => q.includes('"ABC123"'))).toBeTrue();
     });
 
     it('should trim whitespace from code', async () => {
@@ -238,9 +235,8 @@ describe('RoomService', () => {
 
       await service.getRoomByCode('  ABC123  ');
 
-      const callArgs = mockDatabases.listDocuments.calls.mostRecent().args;
-      const queries = callArgs[2] as Array<{ values: string[] }>;
-      expect(queries[0].values[0]).toBe('ABC123');
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      expect(queries.some((q) => q.includes('"ABC123"'))).toBeTrue();
     });
 
     it('should return null for invalid code length', async () => {
@@ -277,17 +273,11 @@ describe('RoomService', () => {
 
       const result = await service.getRoomByInviteToken('550e8400-e29b-41d4-a716-446655440000');
 
-      expect(mockDatabases.listDocuments).toHaveBeenCalledWith(
-        'fug',
-        'fug_game_rooms',
-        jasmine.arrayContaining([
-          jasmine.objectContaining({
-            method: 'equal',
-            attribute: 'inviteToken',
-            values: ['550e8400-e29b-41d4-a716-446655440000'],
-          }),
-        ])
-      );
+      expect(mockDatabases.listDocuments).toHaveBeenCalledWith('fug', 'fug_game_rooms', jasmine.any(Array));
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      expect(
+        queries.some((q) => q.includes('"inviteToken"') && q.includes('"550e8400-e29b-41d4-a716-446655440000"'))
+      ).toBeTrue();
       expect(result).toEqual(mockGameRoom);
     });
 
@@ -298,9 +288,8 @@ describe('RoomService', () => {
 
       await service.getRoomByInviteToken('  550E8400-E29B-41D4-A716-446655440000  ');
 
-      const callArgs = mockDatabases.listDocuments.calls.mostRecent().args;
-      const queries = callArgs[2] as Array<{ values: string[] }>;
-      expect(queries[0].values[0]).toBe('550e8400-e29b-41d4-a716-446655440000');
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      expect(queries.some((q) => q.includes('"550e8400-e29b-41d4-a716-446655440000"'))).toBeTrue();
     });
 
     it('should return null when token not found', async () => {
@@ -331,14 +320,10 @@ describe('RoomService', () => {
 
       const result = await service.getMyRooms();
 
-      expect(mockDatabases.listDocuments).toHaveBeenCalledWith(
-        'fug',
-        'fug_game_rooms',
-        jasmine.arrayContaining([
-          jasmine.objectContaining({ method: 'orderDesc', attribute: '$createdAt' }),
-          jasmine.objectContaining({ method: 'limit', values: [100] }),
-        ])
-      );
+      expect(mockDatabases.listDocuments).toHaveBeenCalledWith('fug', 'fug_game_rooms', jasmine.any(Array));
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      expect(queries.some((q) => q.includes('orderDesc') && q.includes('$createdAt'))).toBeTrue();
+      expect(queries.some((q) => q.includes('limit') && q.includes('100'))).toBeTrue();
       expect(result.length).toBe(2);
       expect(result[0].$id).toBe('room123');
       expect(result[1].$id).toBe('room456');

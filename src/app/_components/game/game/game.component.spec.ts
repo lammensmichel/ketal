@@ -22,7 +22,8 @@ describe('GameComponent', () => {
     });
 
     it('should have correct selector', () => {
-      expect(fixture.debugElement.nativeElement.tagName.toLowerCase()).toBe('app-game');
+      const metadata = (GameComponent as any).ɵcmp;
+      expect(metadata.selectors[0][0]).toBe('app-game');
     });
 
     it('should be a standalone component', () => {

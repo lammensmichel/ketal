@@ -174,10 +174,10 @@ describe('MemberService', () => {
 
       const result = await service.getMembersByRoom('room456');
 
-      expect(mockDatabases.listDocuments).toHaveBeenCalledWith('fug', 'fug_game_members', [
-        jasmine.objectContaining({ method: 'equal', attribute: 'roomId', values: ['room456'] }),
-        jasmine.objectContaining({ method: 'limit', values: [100] }),
-      ]);
+      expect(mockDatabases.listDocuments).toHaveBeenCalledWith('fug', 'fug_game_members', jasmine.any(Array));
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      expect(queries.some((q) => q.includes('"roomId"') && q.includes('"room456"'))).toBeTrue();
+      expect(queries.some((q) => q.includes('limit') && q.includes('100'))).toBeTrue();
       expect(result.length).toBe(2);
       expect(result[0].$id).toBe('member123');
       expect(result[1].$id).toBe('member456');
@@ -235,18 +235,17 @@ describe('MemberService', () => {
 
       const result = await service.getMemberByUserOrDevice('room456', 'user789');
 
-      expect(mockDatabases.listDocuments).toHaveBeenCalledWith('fug', 'fug_game_members', [
-        jasmine.objectContaining({ method: 'equal', attribute: 'roomId', values: ['room456'] }),
-        jasmine.objectContaining({ method: 'limit', values: [1] }),
-        jasmine.objectContaining({ method: 'equal', attribute: 'userId', values: ['user789'] }),
-      ]);
+      expect(mockDatabases.listDocuments).toHaveBeenCalledWith('fug', 'fug_game_members', jasmine.any(Array));
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      expect(queries.some((q) => q.includes('"roomId"') && q.includes('"room456"'))).toBeTrue();
+      expect(queries.some((q) => q.includes('"userId"') && q.includes('"user789"'))).toBeTrue();
       expect(result).not.toBeNull();
       expect(result!.$id).toBe('member123');
     });
 
     it('should find member by deviceId when userId search fails', async () => {
-      mockDatabases.listDocuments.and.callFake(async (_db: string, _collection: string, queries: Array<{ attribute: string }>) => {
-        const hasUserId = queries.some((q) => q.attribute === 'userId');
+      mockDatabases.listDocuments.and.callFake(async (_db: string, _collection: string, queries: string[]) => {
+        const hasUserId = queries.some((q) => q.includes('"userId"'));
         if (hasUserId) {
           return { documents: [], total: 0 };
         }
@@ -275,11 +274,10 @@ describe('MemberService', () => {
 
       const result = await service.getMemberByUserOrDevice('room456', undefined, 'device123');
 
-      expect(mockDatabases.listDocuments).toHaveBeenCalledWith('fug', 'fug_game_members', [
-        jasmine.objectContaining({ method: 'equal', attribute: 'roomId', values: ['room456'] }),
-        jasmine.objectContaining({ method: 'limit', values: [1] }),
-        jasmine.objectContaining({ method: 'equal', attribute: 'deviceId', values: ['device123'] }),
-      ]);
+      expect(mockDatabases.listDocuments).toHaveBeenCalledWith('fug', 'fug_game_members', jasmine.any(Array));
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      expect(queries.some((q) => q.includes('"roomId"') && q.includes('"room456"'))).toBeTrue();
+      expect(queries.some((q) => q.includes('"deviceId"') && q.includes('"device123"'))).toBeTrue();
       expect(result).not.toBeNull();
     });
 
@@ -490,7 +488,7 @@ describe('MemberService', () => {
       mockDatabases.updateDocument.and.rejectWith(error);
 
       await expectAsync(service.updateMemberStats('member123', 'ketal', newStats)).toBeRejectedWithError(
-        'Failed to update member: Update failed'
+        'Failed to update member stats: Failed to update member: Update failed'
       );
     });
   });

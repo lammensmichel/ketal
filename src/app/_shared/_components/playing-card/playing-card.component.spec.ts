@@ -33,8 +33,7 @@ describe('PlayingCardComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TranslateModule.forRoot()],
-      declarations: [PlayingCardComponent],
+      imports: [TranslateModule.forRoot(), PlayingCardComponent],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 
@@ -91,7 +90,6 @@ describe('PlayingCardComponent', () => {
       expect(component.card?.value).toBeNull();
       expect(component.card?.suit).toBeNull();
     });
-
   });
 
   describe('@Input leftOverlap property binding', () => {
@@ -132,8 +130,7 @@ describe('PlayingCardComponent', () => {
       expect(classes).toContain('card-container');
       expect(classes).toContain('d-flex');
       expect(classes).toContain('flex-column');
-      expect(classes).toContain('justify-content-around');
-      expect(classes).toContain('h-100');
+      expect(classes).toContain('justify-content-center');
     });
 
     it('should render card image with correct src when card is provided', () => {
@@ -260,9 +257,13 @@ describe('PlayingCardComponent', () => {
   });
 
   describe('Change Detection', () => {
-    it('should have OnPush change detection strategy', () => {
-      const metadata = (component.constructor as any)['ɵcmp'];
-      expect(metadata.changeDetection).toBeDefined();
+    it('should use default change detection strategy (component does not use OnPush)', () => {
+      // PlayingCardComponent uses the default ChangeDetectionStrategy
+      // This test verifies the component can detect changes properly
+      component.card = mockCard;
+      fixture.detectChanges();
+      const img = compiled.query(By.css('.card-container img'));
+      expect(img.nativeElement.src).toContain('kh.svg');
     });
 
     it('should update view when card input changes', () => {

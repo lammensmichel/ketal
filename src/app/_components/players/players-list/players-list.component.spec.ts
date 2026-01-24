@@ -151,18 +151,9 @@ describe('PlayersListComponent', () => {
     it('should return players from game when game is started', () => {
       mockGameService.isNewGame.and.returnValue(false);
       const gamePlayers = [mockPlayer, { ...mockPlayer, id: '2', name: 'Player 2' }];
-      // Set up the game with players on the mock service via signal
-      mockGameService.game.set({
-        players: gamePlayers,
-        turn: 1,
-        phase: 1,
-        maxTurnCount: 4,
-        drinkingCards: [],
-        givingCards: [],
-        activePlayer: undefined,
-        status: 1,
-        summary: false,
-      });
+      // Set up the players signal on the mock service
+      // The component calls gameSrv.players() when game is not new
+      (mockGameService.players as any).set(gamePlayers);
       const result = component.getPlayers();
       expect(result).toEqual(gamePlayers);
     });

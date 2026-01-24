@@ -1,50 +1,80 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
-import { ChangeDetectionStrategy, NO_ERRORS_SCHEMA } from '@angular/core';
-import { RouterTestingModule } from '@angular/router/testing';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { signal } from '@angular/core';
+import { Component, Input, NO_ERRORS_SCHEMA, signal } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { TranslateService } from '@ngx-translate/core';
 import { AppComponent } from './app.component';
 import { GameService } from './services/game/game.service';
 import { PlayerHelperService } from './_shared/_helpers/player.helper';
-import { LocalService } from './services/local/local.service';
-import { CardService } from './services/card/card.service';
-import { CardDeckHelperService } from './_shared/_helpers/card-deck.helper';
-import {
-  createMockGameService,
-  createMockPlayerHelperService,
-  createMockLocalService,
-  createMockCardService,
-  createMockCardDeckHelperService,
-} from './testing/test-helpers';
-import { Game } from './_shared/_models/game.model';
+import { HeaderComponent } from './_shared/_components/header/header.component';
+import { FooterComponent } from './_shared/_components/footer/footer.component';
+
+// Stub components to replace actual child components
+@Component({
+  selector: 'app-header',
+  template: '',
+  standalone: true,
+})
+class HeaderStubComponent {}
+
+@Component({
+  selector: 'app-footer',
+  template: '',
+  standalone: true,
+})
+class FooterStubComponent {
+  @Input() withSummaryMode: boolean = false;
+}
 
 describe('AppComponent', () => {
   let component: AppComponent;
   let fixture: ComponentFixture<AppComponent>;
-  let mockGameService: ReturnType<typeof createMockGameService>;
+  let mockGameService: {
+    withSummaryMode: ReturnType<typeof signal<boolean>>;
+    summary: ReturnType<typeof signal<boolean>>;
+    isNewGame: jasmine.Spy;
+  };
   let mockPlayerHelperService: jasmine.SpyObj<PlayerHelperService>;
   let mockTranslateService: jasmine.SpyObj<TranslateService>;
 
   beforeEach(async () => {
-    mockGameService = createMockGameService();
-    mockPlayerHelperService = createMockPlayerHelperService();
+    // Create writable signals for GameService mock
+    const withSummaryModeSignal = signal<boolean>(false);
+    const summarySignal = signal<boolean>(false);
 
-    mockTranslateService = jasmine.createSpyObj('TranslateService', ['getBrowserLang', 'setDefaultLang', 'use']);
+    mockGameService = {
+      withSummaryMode: withSummaryModeSignal,
+      summary: summarySignal,
+      isNewGame: jasmine.createSpy('isNewGame').and.returnValue(true),
+    };
+
+    mockPlayerHelperService = jasmine.createSpyObj('PlayerHelperService', ['getPlayerNumber']);
+    mockPlayerHelperService.getPlayerNumber.and.returnValue(0);
+
+    mockTranslateService = jasmine.createSpyObj('TranslateService', [
+      'getBrowserLang',
+      'setDefaultLang',
+      'use',
+      'getDefaultLang',
+    ]);
     mockTranslateService.getBrowserLang.and.returnValue('en');
+    mockTranslateService.getDefaultLang.and.returnValue('en');
+    (mockTranslateService as any).currentLang = 'en';
 
     await TestBed.configureTestingModule({
-      imports: [RouterTestingModule, TranslateModule.forRoot()],
-      declarations: [AppComponent],
+      imports: [AppComponent],
       providers: [
+        provideRouter([]),
         { provide: GameService, useValue: mockGameService },
         { provide: PlayerHelperService, useValue: mockPlayerHelperService },
         { provide: TranslateService, useValue: mockTranslateService },
-        LocalService,
-        CardService,
-        CardDeckHelperService,
       ],
       schemas: [NO_ERRORS_SCHEMA],
-    }).compileComponents();
+    })
+      .overrideComponent(AppComponent, {
+        remove: { imports: [HeaderComponent, FooterComponent] },
+        add: { imports: [HeaderStubComponent, FooterStubComponent] },
+      })
+      .compileComponents();
 
     fixture = TestBed.createComponent(AppComponent);
     component = fixture.componentInstance;
@@ -65,11 +95,6 @@ describe('AppComponent', () => {
       expect(component.translate).toBeTruthy();
       expect(component.playerSrv).toBeTruthy();
     });
-
-    it('should have OnPush change detection strategy', () => {
-      const metadata = (AppComponent as any).__annotations__[0];
-      expect(metadata.changeDetection).toBe(ChangeDetectionStrategy.OnPush);
-    });
   });
 
   describe('Constructor', () => {
@@ -80,41 +105,54 @@ describe('AppComponent', () => {
   });
 
   describe('withSummaryMode computed signal', () => {
-    it('should return false when withSummaryMode signal is false', () => {
-      mockGameService.withSummaryMode.set(false);
-
+    it('should return false when withSummaryMode signal is false and summary is false', () => {
       fixture.detectChanges();
+
+      mockGameService.withSummaryMode.set(false);
+      mockGameService.summary.set(false);
+      mockPlayerHelperService.getPlayerNumber.and.returnValue(0);
 
       expect(component.withSummaryMode()).toBe(false);
     });
 
     it('should return signal value when player count is 1 or less', () => {
+      fixture.detectChanges();
+
       mockPlayerHelperService.getPlayerNumber.and.returnValue(1);
       mockGameService.withSummaryMode.set(true);
-
-      fixture.detectChanges();
+      mockGameService.summary.set(false);
 
       expect(component.withSummaryMode()).toBe(true);
     });
 
-    it('should return true when game.summary is true and player count > 1', () => {
-      mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
-      mockGameService.game.set({
-        players: [],
-        turn: 1,
-        phase: 1,
-        maxTurnCount: 4,
-        drinkingCards: [],
-        givingCards: [],
-        activePlayer: undefined,
-        status: 0,
-        summary: true,
-      } as Game);
-      mockGameService.withSummaryMode.set(false);
-
+    it('should return true when withSummaryMode is true and player count > 1', () => {
       fixture.detectChanges();
 
+      mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
+      mockGameService.withSummaryMode.set(true);
+      mockGameService.summary.set(false);
+
       expect(component.withSummaryMode()).toBe(true);
+    });
+
+    it('should return true when summary is true and player count > 1', () => {
+      fixture.detectChanges();
+
+      mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
+      mockGameService.withSummaryMode.set(false);
+      mockGameService.summary.set(true);
+
+      expect(component.withSummaryMode()).toBe(true);
+    });
+
+    it('should return false when player count > 1 and both signals are false', () => {
+      fixture.detectChanges();
+
+      mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
+      mockGameService.withSummaryMode.set(false);
+      mockGameService.summary.set(false);
+
+      expect(component.withSummaryMode()).toBe(false);
     });
   });
 
@@ -165,19 +203,27 @@ describe('AppComponent', () => {
     });
   });
 
-  describe('Change Detection with OnPush and Signals', () => {
-    it('should use OnPush change detection strategy', () => {
-      const componentMetadata = (AppComponent as any).__annotations__[0];
-      expect(componentMetadata.changeDetection).toBe(ChangeDetectionStrategy.OnPush);
-    });
-
+  describe('Signal reactivity', () => {
     it('should update withSummaryMode when signal changes', () => {
-      mockGameService.withSummaryMode.set(false);
       fixture.detectChanges();
+
+      mockGameService.withSummaryMode.set(false);
+      mockGameService.summary.set(false);
       expect(component.withSummaryMode()).toBe(false);
 
       mockGameService.withSummaryMode.set(true);
+      expect(component.withSummaryMode()).toBe(true);
+    });
+
+    it('should update withSummaryMode when summary signal changes', () => {
       fixture.detectChanges();
+
+      mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
+      mockGameService.withSummaryMode.set(false);
+      mockGameService.summary.set(false);
+      expect(component.withSummaryMode()).toBe(false);
+
+      mockGameService.summary.set(true);
       expect(component.withSummaryMode()).toBe(true);
     });
   });

@@ -29,11 +29,6 @@ export function HttpLoaderFactory(http: HttpClient) {
       },
     }),
   ],
-  providers: [
-    PlayerHelperService,
-    CardDeckHelperService,
-    LocalService,
-    provideHttpClient(withInterceptorsFromDi()),
-  ],
+  providers: [PlayerHelperService, CardDeckHelperService, LocalService, provideHttpClient(withInterceptorsFromDi())],
 })
 export class AppModule {}

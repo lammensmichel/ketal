@@ -1,14 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { NO_ERRORS_SCHEMA, signal, WritableSignal } from '@angular/core';
 import { MainGameComponent } from './main-game.component';
 import { GameService } from '../../../services/game/game.service';
 import { PlayerModel } from '../../../_shared/_models/player.model';
-import { createMockGameService } from '../../../testing/test-helpers';
 
 describe('MainGameComponent', () => {
   let component: MainGameComponent;
   let fixture: ComponentFixture<MainGameComponent>;
-  let mockGameService: ReturnType<typeof createMockGameService>;
+
+  // Writable signals for controlling test state
+  let playersSignal: WritableSignal<PlayerModel[]>;
+  let isGameStartedSpy: jasmine.Spy;
+  let isGameFinishedSpy: jasmine.Spy;
+  let isSummaryModeSpy: jasmine.Spy;
 
   const createTestPlayer = (id: string, name: string): PlayerModel => {
     const player = new PlayerModel();
@@ -20,13 +24,30 @@ describe('MainGameComponent', () => {
   };
 
   beforeEach(async () => {
-    mockGameService = createMockGameService();
+    // Create writable signals for test control
+    playersSignal = signal<PlayerModel[]>([]);
+
+    // Create spies for methods
+    isGameStartedSpy = jasmine.createSpy('isGameStarted').and.returnValue(false);
+    isGameFinishedSpy = jasmine.createSpy('isGameFinished').and.returnValue(false);
+    isSummaryModeSpy = jasmine.createSpy('isSummaryMode').and.returnValue(false);
+
+    const mockGameService = {
+      players: playersSignal,
+      isGameStarted: isGameStartedSpy,
+      isGameFinished: isGameFinishedSpy,
+      isSummaryMode: isSummaryModeSpy,
+    };
 
     await TestBed.configureTestingModule({
       imports: [MainGameComponent],
       providers: [{ provide: GameService, useValue: mockGameService }],
       schemas: [NO_ERRORS_SCHEMA],
-    }).compileComponents();
+    })
+      .overrideComponent(MainGameComponent, {
+        set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+      })
+      .compileComponents();
 
     fixture = TestBed.createComponent(MainGameComponent);
     component = fixture.componentInstance;
@@ -50,12 +71,12 @@ describe('MainGameComponent', () => {
   describe('Template Rendering', () => {
     beforeEach(() => {
       const mockPlayers = [createTestPlayer('p1', 'Player 1'), createTestPlayer('p2', 'Player 2')];
-      mockGameService.players.and.returnValue(mockPlayers);
+      playersSignal.set(mockPlayers);
     });
 
     it('should render main container when game is started', () => {
-      mockGameService.isGameStarted.and.returnValue(true);
-      mockGameService.isGameFinished.and.returnValue(false);
+      isGameStartedSpy.and.returnValue(true);
+      isGameFinishedSpy.and.returnValue(false);
       fixture.detectChanges();
 
       const container = fixture.nativeElement.querySelector('.container');
@@ -63,8 +84,8 @@ describe('MainGameComponent', () => {
     });
 
     it('should render main container when game is finished', () => {
-      mockGameService.isGameStarted.and.returnValue(false);
-      mockGameService.isGameFinished.and.returnValue(true);
+      isGameStartedSpy.and.returnValue(false);
+      isGameFinishedSpy.and.returnValue(true);
       fixture.detectChanges();
 
       const container = fixture.nativeElement.querySelector('.container');
@@ -72,8 +93,8 @@ describe('MainGameComponent', () => {
     });
 
     it('should not render main container when game is not started and not finished', () => {
-      mockGameService.isGameStarted.and.returnValue(false);
-      mockGameService.isGameFinished.and.returnValue(false);
+      isGameStartedSpy.and.returnValue(false);
+      isGameFinishedSpy.and.returnValue(false);
       fixture.detectChanges();
 
       const container = fixture.nativeElement.querySelector('.container');
@@ -81,7 +102,7 @@ describe('MainGameComponent', () => {
     });
 
     it('should render player cards for each player', () => {
-      mockGameService.isGameStarted.and.returnValue(true);
+      isGameStartedSpy.and.returnValue(true);
       fixture.detectChanges();
 
       const playerCards = fixture.nativeElement.querySelectorAll('app-player-card');
@@ -89,7 +110,7 @@ describe('MainGameComponent', () => {
     });
 
     it('should render player cards in correct bootstrap grid layout', () => {
-      mockGameService.isGameStarted.and.returnValue(true);
+      isGameStartedSpy.and.returnValue(true);
       fixture.detectChanges();
 
       const rowDiv = fixture.nativeElement.querySelector('.row.gap-1.justify-content-evenly');
@@ -100,7 +121,7 @@ describe('MainGameComponent', () => {
     });
 
     it('should render game summary when in summary mode', () => {
-      mockGameService.isSummaryMode.and.returnValue(true);
+      isSummaryModeSpy.and.returnValue(true);
       fixture.detectChanges();
 
       const gameSummary = fixture.nativeElement.querySelector('app-game-summary');
@@ -108,7 +129,7 @@ describe('MainGameComponent', () => {
     });
 
     it('should not render game summary when not in summary mode', () => {
-      mockGameService.isSummaryMode.and.returnValue(false);
+      isSummaryModeSpy.and.returnValue(false);
       fixture.detectChanges();
 
       const gameSummary = fixture.nativeElement.querySelector('app-game-summary');
@@ -116,8 +137,8 @@ describe('MainGameComponent', () => {
     });
 
     it('should render game summary and main container simultaneously if both conditions are true', () => {
-      mockGameService.isGameStarted.and.returnValue(true);
-      mockGameService.isSummaryMode.and.returnValue(true);
+      isGameStartedSpy.and.returnValue(true);
+      isSummaryModeSpy.and.returnValue(true);
       fixture.detectChanges();
 
       const container = fixture.nativeElement.querySelector('.container');
@@ -131,43 +152,45 @@ describe('MainGameComponent', () => {
   describe('Service Integration', () => {
     it('should access gameSrv.players() for player list', () => {
       const mockPlayers = [createTestPlayer('p1', 'Player 1')];
-      mockGameService.players.and.returnValue(mockPlayers);
-      mockGameService.isGameStarted.and.returnValue(true);
+      playersSignal.set(mockPlayers);
+      isGameStartedSpy.and.returnValue(true);
 
       fixture.detectChanges();
 
-      expect(mockGameService.players).toHaveBeenCalled();
+      // Verify players are rendered from the signal
+      const playerCards = fixture.nativeElement.querySelectorAll('app-player-card');
+      expect(playerCards.length).toBe(1);
     });
 
     it('should access gameSrv.isGameStarted() for conditional rendering', () => {
-      mockGameService.isGameStarted.and.returnValue(true);
-      mockGameService.players.and.returnValue([]);
+      playersSignal.set([]);
+      isGameStartedSpy.and.returnValue(true);
 
       fixture.detectChanges();
 
-      expect(mockGameService.isGameStarted).toHaveBeenCalled();
+      expect(isGameStartedSpy).toHaveBeenCalled();
     });
 
     it('should access gameSrv.isGameFinished() for conditional rendering', () => {
-      mockGameService.isGameFinished.and.returnValue(true);
-      mockGameService.players.and.returnValue([]);
+      playersSignal.set([]);
+      isGameFinishedSpy.and.returnValue(true);
 
       fixture.detectChanges();
 
-      expect(mockGameService.isGameFinished).toHaveBeenCalled();
+      expect(isGameFinishedSpy).toHaveBeenCalled();
     });
 
     it('should access gameSrv.isSummaryMode() for game summary rendering', () => {
       fixture.detectChanges();
 
-      expect(mockGameService.isSummaryMode).toHaveBeenCalled();
+      expect(isSummaryModeSpy).toHaveBeenCalled();
     });
   });
 
   describe('Edge Cases', () => {
     it('should handle empty player list gracefully', () => {
-      mockGameService.players.and.returnValue([]);
-      mockGameService.isGameStarted.and.returnValue(true);
+      playersSignal.set([]);
+      isGameStartedSpy.and.returnValue(true);
 
       expect(() => fixture.detectChanges()).not.toThrow();
 
@@ -177,8 +200,8 @@ describe('MainGameComponent', () => {
 
     it('should handle large player counts correctly', () => {
       const mockPlayers = Array.from({ length: 10 }, (_, i) => createTestPlayer(`p${i + 1}`, `Player ${i + 1}`));
-      mockGameService.players.and.returnValue(mockPlayers);
-      mockGameService.isGameStarted.and.returnValue(true);
+      playersSignal.set(mockPlayers);
+      isGameStartedSpy.and.returnValue(true);
 
       fixture.detectChanges();
 
@@ -196,7 +219,7 @@ describe('MainGameComponent', () => {
 
     it('should not require ngOnInit (standalone component with inject)', () => {
       // MainGameComponent uses inject() and doesn't need ngOnInit
-      expect((component as any).ngOnInit).toBeUndefined();
+      expect((component as unknown as { ngOnInit?: unknown }).ngOnInit).toBeUndefined();
     });
   });
 });

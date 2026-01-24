@@ -60,6 +60,9 @@ describe('PlayerGivenSipsSelectionComponent', () => {
       summary: false,
     });
 
+    // Set the players signal to testPlayers (the mock now exposes players as WritableSignal)
+    mockGameService.players.set(testPlayers);
+
     await TestBed.configureTestingModule({
       imports: [TranslateModule.forRoot(), PlayerGivenSipsSelectionComponent],
       providers: [

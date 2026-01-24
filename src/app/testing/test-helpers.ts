@@ -6,12 +6,17 @@ import { CardDeckHelperService } from '../_shared/_helpers/card-deck.helper';
 import { LocalService } from '../services/local/local.service';
 import { CardService } from '../services/card/card.service';
 import { Game } from '../_shared/_models/game.model';
+import { PlayerModel } from '../_shared/_models/player.model';
+import { CardType } from '../_shared/_models/card-type.model';
 
 /**
  * Creates a mock GameService for testing
  */
 export function createMockGameService(): jasmine.SpyObj<GameService> & {
   game: WritableSignal<Game>;
+  players: WritableSignal<PlayerModel[]>;
+  drinkingCards: WritableSignal<CardType[]>;
+  givingCards: WritableSignal<CardType[]>;
 } {
   // Create mock signals
   const mockWithSummaryMode = signal<boolean>(false);
@@ -26,6 +31,9 @@ export function createMockGameService(): jasmine.SpyObj<GameService> & {
     status: 0,
     summary: false,
   });
+  const mockPlayers = signal<PlayerModel[]>([]);
+  const mockDrinkingCards = signal<CardType[]>([]);
+  const mockGivingCards = signal<CardType[]>([]);
 
   const mock = jasmine.createSpyObj(
     'GameService',
@@ -51,10 +59,10 @@ export function createMockGameService(): jasmine.SpyObj<GameService> & {
       status: signal(0),
       turn: signal(1),
       phase: signal(1),
-      players: signal([]),
+      players: mockPlayers,
       activePlayer: signal(undefined),
-      drinkingCards: signal([]),
-      givingCards: signal([]),
+      drinkingCards: mockDrinkingCards,
+      givingCards: mockGivingCards,
       summary: signal(false),
       openSipGiveModalEvent$: NEVER,
     }
@@ -64,7 +72,12 @@ export function createMockGameService(): jasmine.SpyObj<GameService> & {
   mock.isGameFinished.and.returnValue(false);
   mock.isSummaryMode.and.returnValue(false);
   mock.isSummaryActivated.and.returnValue(false);
-  return mock as jasmine.SpyObj<GameService> & { game: WritableSignal<Game> };
+  return mock as jasmine.SpyObj<GameService> & {
+    game: WritableSignal<Game>;
+    players: WritableSignal<PlayerModel[]>;
+    drinkingCards: WritableSignal<CardType[]>;
+    givingCards: WritableSignal<CardType[]>;
+  };
 }
 
 /**
