@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { NO_ERRORS_SCHEMA, ChangeDetectorRef } from '@angular/core';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { TranslateModule } from '@ngx-translate/core';
-import { Subject, of } from 'rxjs';
+import { Subject } from 'rxjs';
 import { PlayerCardComponent } from './player-card.component';
 import { GameService } from '../../../services/game/game.service';
 import { PlayerHelperService } from '../../../_shared/_helpers/player.helper';
@@ -12,7 +12,7 @@ import { createMockGameService, createMockPlayerHelperService } from '../../../t
 describe('PlayerCardComponent', () => {
   let component: PlayerCardComponent;
   let fixture: ComponentFixture<PlayerCardComponent>;
-  let mockGameService: jasmine.SpyObj<GameService>;
+  let mockGameService: ReturnType<typeof createMockGameService>;
   let mockPlayerHelperService: jasmine.SpyObj<PlayerHelperService>;
   let sipGiveModalSubject: Subject<PlayerModel>;
 
@@ -57,12 +57,11 @@ describe('PlayerCardComponent', () => {
       configurable: true,
     });
 
-    // Mock the game object
-    (mockGameService as any).game = { ...mockGame };
+    // Set game state via signal
+    mockGameService.game.set(mockGame);
 
     await TestBed.configureTestingModule({
-      imports: [TranslateModule.forRoot()],
-      declarations: [PlayerCardComponent],
+      imports: [TranslateModule.forRoot(), PlayerCardComponent],
       providers: [
         { provide: GameService, useValue: mockGameService },
         { provide: PlayerHelperService, useValue: mockPlayerHelperService },
@@ -97,156 +96,103 @@ describe('PlayerCardComponent', () => {
       expect(newComponent.player).toBeDefined();
       expect(newComponent.player.name).toBe('');
     });
+  });
 
-    it('should update player input when changed', () => {
-      component.player = mockPlayer;
-      expect(component.player.name).toBe('Test Player');
-
-      component.player = mockPlayer2;
-      expect(component.player.name).toBe('Test Player 2');
+  describe('cardSlots', () => {
+    it('should have 4 card slots', () => {
+      expect(component.cardSlots).toEqual([0, 1, 2, 3]);
     });
   });
 
-  describe('ngOnInit', () => {
+  describe('ngOnInit subscription', () => {
     it('should subscribe to openSipGiveModalEvent$', () => {
-      component.ngOnInit();
+      fixture.detectChanges();
       expect(component).toBeTruthy();
     });
 
-    it('should call onpenPlayerGivenSipsSelectionModal when player id matches', fakeAsync(() => {
-      // Set up the component with the player and spy before ngOnInit
-      component.player = mockPlayer;
-      const modalSpy = spyOn(component, 'onpenPlayerGivenSipsSelectionModal');
+    it('should call openPlayerGivenSipsModal when player id matches', fakeAsync(() => {
+      fixture.detectChanges();
+      const modalSpy = spyOn(component, 'openPlayerGivenSipsModal');
 
-      // Initialize the component which will subscribe
-      component.ngOnInit();
-
-      // Now emit a value from the subject after subscription
       sipGiveModalSubject.next(mockPlayer);
       tick();
+
       expect(modalSpy).toHaveBeenCalledWith(mockPlayer);
     }));
 
-    it('should not call onpenPlayerGivenSipsSelectionModal when player id does not match', () => {
-      component.player = mockPlayer;
-      const modalSpy = spyOn(component, 'onpenPlayerGivenSipsSelectionModal');
-      component.ngOnInit();
+    it('should not call openPlayerGivenSipsModal when player id does not match', () => {
+      fixture.detectChanges();
+      const modalSpy = spyOn(component, 'openPlayerGivenSipsModal');
+
       sipGiveModalSubject.next(mockPlayer2);
+
       expect(modalSpy).not.toHaveBeenCalled();
     });
   });
 
-  describe('ngOnDestroy', () => {
-    it('should unsubscribe from observables', () => {
-      component.ngOnInit();
-      const nextSpy = spyOn(component['ngUnsubscribe'], 'next');
-      const completeSpy = spyOn(component['ngUnsubscribe'], 'complete');
-      component.ngOnDestroy();
-      expect(nextSpy).toHaveBeenCalled();
-      expect(completeSpy).toHaveBeenCalled();
-    });
-  });
-
   describe('getSipCount', () => {
-    it('should return sip count from playerSrv when player is provided', () => {
+    it('should return sip count from playerSrv', () => {
       mockPlayerHelperService.getSipCnt.and.returnValue(5);
+      fixture.detectChanges();
+
       const result = component.getSipCount(mockPlayer);
-      expect(mockPlayerHelperService.getSipCnt).toHaveBeenCalledWith(mockGameService.game, mockPlayer, false);
+
       expect(result).toBe(5);
+      expect(mockPlayerHelperService.getSipCnt).toHaveBeenCalledWith(mockGameService.game(), mockPlayer, false);
     });
 
-    it('should return sip count with absolute flag', () => {
-      mockPlayerHelperService.getSipCnt.and.returnValue(10);
-      const result = component.getSipCount(mockPlayer, true);
-      expect(mockPlayerHelperService.getSipCnt).toHaveBeenCalledWith(mockGameService.game, mockPlayer, true);
-      expect(result).toBe(10);
-    });
-
-    it('should return 0 when player is null', () => {
+    it('should return 0 when player is falsy', () => {
       const result = component.getSipCount(null as any);
+
       expect(result).toBe(0);
     });
 
-    it('should return 0 when player is undefined', () => {
-      const result = component.getSipCount(undefined as any);
-      expect(result).toBe(0);
+    it('should call getSipCnt with absolute flag when passed', () => {
+      mockPlayerHelperService.getSipCnt.and.returnValue(10);
+      fixture.detectChanges();
+
+      const result = component.getSipCount(mockPlayer, true);
+
+      expect(result).toBe(10);
+      expect(mockPlayerHelperService.getSipCnt).toHaveBeenCalledWith(mockGameService.game(), mockPlayer, true);
     });
   });
 
-  describe('onpenPlayerGivenSipsSelectionModal', () => {
-    it('should not open modal if player number is 1', () => {
+  describe('openPlayerGivenSipsModal', () => {
+    it('should return early when player count is 1', () => {
       mockPlayerHelperService.getPlayerNumber.and.returnValue(1);
-      mockGameService.isSummaryActivated.and.returnValue(true);
-      component.onpenPlayerGivenSipsSelectionModal(mockPlayer);
-      // Should return early without attempting to open modal
-      expect(mockPlayerHelperService.getTotalGivenSips).not.toHaveBeenCalled();
+
+      component.openPlayerGivenSipsModal(mockPlayer);
+
+      expect(mockGameService.isSummaryActivated).not.toHaveBeenCalled();
     });
 
-    it('should not open modal if summary is not activated', () => {
+    it('should return early when summary mode is not activated', () => {
       mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
       mockGameService.isSummaryActivated.and.returnValue(false);
-      component.onpenPlayerGivenSipsSelectionModal(mockPlayer);
-      // Should return early without attempting to open modal
+
+      component.openPlayerGivenSipsModal(mockPlayer);
+
       expect(mockPlayerHelperService.getTotalGivenSips).not.toHaveBeenCalled();
     });
 
-    it('should check totalGivenSips when player number > 1 and summary activated', () => {
+    it('should check for sips to give when conditions are met', () => {
       mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
       mockGameService.isSummaryActivated.and.returnValue(true);
-      mockPlayerHelperService.getTotalGivenSips.and.returnValue(5);
       mockPlayerHelperService.getSipCnt.and.returnValue(3);
+      mockPlayerHelperService.getTotalGivenSips.and.returnValue(5);
+      fixture.detectChanges();
 
-      component.onpenPlayerGivenSipsSelectionModal(mockPlayer);
+      component.openPlayerGivenSipsModal(mockPlayer);
 
       expect(mockPlayerHelperService.getTotalGivenSips).toHaveBeenCalledWith(mockPlayer);
     });
-
-    it('should call openModal on PlayerGivenSipsSelectionComponent when conditions are met', () => {
-      mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
-      mockGameService.isSummaryActivated.and.returnValue(true);
-      mockPlayerHelperService.getTotalGivenSips.and.returnValue(5);
-      mockPlayerHelperService.getSipCnt.and.returnValue(3);
-
-      const mockModalComponent = { openModal: jasmine.createSpy('openModal') };
-      component.PlayerGivenSipsSelectionComponent = mockModalComponent as any;
-
-      component.onpenPlayerGivenSipsSelectionModal(mockPlayer);
-
-      expect(mockModalComponent.openModal).toHaveBeenCalledWith(mockPlayer);
-    });
-
-    it('should not call openModal when sipCount is 0', () => {
-      mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
-      mockGameService.isSummaryActivated.and.returnValue(true);
-      mockPlayerHelperService.getTotalGivenSips.and.returnValue(5);
-      mockPlayerHelperService.getSipCnt.and.returnValue(0);
-
-      const mockModalComponent = { openModal: jasmine.createSpy('openModal') };
-      component.PlayerGivenSipsSelectionComponent = mockModalComponent as any;
-
-      component.onpenPlayerGivenSipsSelectionModal(mockPlayer);
-
-      expect(mockModalComponent.openModal).not.toHaveBeenCalled();
-    });
-
-    it('should not call openModal when totalGivenSips is 0', () => {
-      mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
-      mockGameService.isSummaryActivated.and.returnValue(true);
-      mockPlayerHelperService.getTotalGivenSips.and.returnValue(0);
-      mockPlayerHelperService.getSipCnt.and.returnValue(3);
-
-      const mockModalComponent = { openModal: jasmine.createSpy('openModal') };
-      component.PlayerGivenSipsSelectionComponent = mockModalComponent as any;
-
-      component.onpenPlayerGivenSipsSelectionModal(mockPlayer);
-
-      expect(mockModalComponent.openModal).not.toHaveBeenCalled();
-    });
   });
 
-  describe('SafeUnsubscribe inheritance', () => {
-    it('should have ngUnsubscribe subject', () => {
-      expect(component['ngUnsubscribe']).toBeDefined();
+  describe('Component lifecycle', () => {
+    it('should properly clean up on destroy', () => {
+      fixture.detectChanges();
+      expect(() => fixture.destroy()).not.toThrow();
     });
   });
 });

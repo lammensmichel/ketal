@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { HeaderComponent } from './header.component';
 import { GameService } from '../../../services/game/game.service';
@@ -9,37 +10,26 @@ import { createMockGameService } from '../../../testing/test-helpers';
 describe('HeaderComponent', () => {
   let component: HeaderComponent;
   let fixture: ComponentFixture<HeaderComponent>;
-  let mockGameService: jasmine.SpyObj<GameService>;
+  let mockGameService: ReturnType<typeof createMockGameService>;
   let mockLanguageService: jasmine.SpyObj<LanguageService>;
+  let mockRouter: jasmine.SpyObj<Router>;
   let translateService: TranslateService;
 
   beforeEach(async () => {
     mockGameService = createMockGameService();
     mockLanguageService = jasmine.createSpyObj('LanguageService', ['constructPossibleLanguages']);
+    mockRouter = jasmine.createSpyObj('Router', ['navigate']);
     mockLanguageService.constructPossibleLanguages.and.returnValue([
       { name: 'Francais', shortName: 'fr' },
       { name: 'English', shortName: 'en' },
     ]);
 
-    // Mock game object for resetGame
-    (mockGameService as any).game = {
-      status: 1,
-      players: [],
-      turn: 1,
-      phase: 1,
-      maxTurnCount: 0,
-      drinkingCards: [],
-      givingCards: [],
-      activePlayer: undefined,
-      summary: false,
-    };
-
     await TestBed.configureTestingModule({
-      imports: [TranslateModule.forRoot()],
-      declarations: [HeaderComponent],
+      imports: [TranslateModule.forRoot(), HeaderComponent],
       providers: [
         { provide: GameService, useValue: mockGameService },
         { provide: LanguageService, useValue: mockLanguageService },
+        { provide: Router, useValue: mockRouter },
       ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
@@ -99,19 +89,14 @@ describe('HeaderComponent', () => {
   });
 
   describe('restartGame', () => {
-    beforeEach(() => {
-      // Set up game on the mock before each test
-      mockGameService.game = { status: 1 } as any;
-    });
-
     it('should call gameSrv.resetGame()', () => {
       component.restartGame();
       expect(mockGameService.resetGame).toHaveBeenCalled();
     });
 
-    it('should set game.status to 0', () => {
+    it('should navigate to /players', () => {
       component.restartGame();
-      expect(mockGameService.game.status).toBe(0);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/players']);
     });
   });
 });

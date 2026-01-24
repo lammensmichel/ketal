@@ -96,11 +96,19 @@ describe('CardDeckHelperService', () => {
       mockStorage['cardDeck'] = JSON.stringify(storedDeck);
 
       // Re-create the service to trigger constructor with stored data
-      service = new CardDeckHelperService(mockLocalService, mockPlayerHelperService);
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          CardDeckHelperService,
+          { provide: LocalService, useValue: mockLocalService },
+          { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+        ],
+      });
+      const newService = TestBed.inject(CardDeckHelperService);
 
-      expect(service.createdCardDeck.length).toBe(1);
-      expect(service.createdCardDeck[0].value).toBe('A');
-      expect(service.createdCardDeck[0].suit).toBe('hearts');
+      expect(newService.createdCardDeck.length).toBe(1);
+      expect(newService.createdCardDeck[0].value).toBe('A');
+      expect(newService.createdCardDeck[0].suit).toBe('hearts');
     });
   });
 

@@ -55,10 +55,6 @@ describe('PlayingCardComponent', () => {
     it('should have leftOverlap property initialized to false', () => {
       expect(component.leftOverlap).toBe(false);
     });
-
-    it('should have suit property initialized as empty string', () => {
-      expect(component.suit).toBe('');
-    });
   });
 
   describe('@Input card property binding', () => {
@@ -96,32 +92,6 @@ describe('PlayingCardComponent', () => {
       expect(component.card?.suit).toBeNull();
     });
 
-    it('should update suit in ngOnInit when card is set', () => {
-      component.card = mockCard;
-      component.ngOnInit();
-      expect(component.suit).toBe('Hearts');
-    });
-
-    it('should set suit to empty string if card.suit is null', () => {
-      const cardWithNullSuit: CardType = {
-        value: 'King',
-        suit: null,
-        icon: 'hearts',
-        sips: 5,
-        selected: false,
-        img: 'assets/images/cards/svg/kh.svg',
-        givenSips: 0,
-      };
-      component.card = cardWithNullSuit;
-      component.ngOnInit();
-      expect(component.suit).toBe('');
-    });
-
-    it('should handle undefined card in ngOnInit', () => {
-      component.card = undefined;
-      component.ngOnInit();
-      expect(component.suit).toBe('');
-    });
   });
 
   describe('@Input leftOverlap property binding', () => {
@@ -263,11 +233,10 @@ describe('PlayingCardComponent', () => {
     });
   });
 
-  describe('ngOnInit lifecycle hook', () => {
-    it('should initialize suit from card.suit on init', () => {
+  describe('card input property', () => {
+    it('should accept card with suit property', () => {
       component.card = mockCard;
-      component.ngOnInit();
-      expect(component.suit).toBe('Hearts');
+      expect(component.card?.suit).toBe('Hearts');
     });
 
     it('should handle card without suit property', () => {
@@ -281,22 +250,12 @@ describe('PlayingCardComponent', () => {
         givenSips: 0,
       };
       component.card = cardWithoutSuit;
-      component.ngOnInit();
-      expect(component.suit).toBe('');
+      expect(component.card?.suit).toBeNull();
     });
 
-    it('should handle undefined card on init', () => {
+    it('should handle undefined card', () => {
       component.card = undefined;
-      component.ngOnInit();
-      expect(component.suit).toBe('');
-    });
-
-    it('should preserve suit value after multiple ngOnInit calls', () => {
-      component.card = mockCard;
-      component.ngOnInit();
-      expect(component.suit).toBe('Hearts');
-      component.ngOnInit();
-      expect(component.suit).toBe('Hearts');
+      expect(component.card).toBeUndefined();
     });
   });
 
@@ -343,8 +302,6 @@ describe('PlayingCardComponent', () => {
         givenSips: 0,
       };
       component.card = cardWithEmptyStrings;
-      component.ngOnInit();
-      expect(component.suit).toBe('');
       fixture.detectChanges();
       const img = compiled.query(By.css('.card-container img'));
       expect(img).toBeTruthy();
@@ -361,8 +318,7 @@ describe('PlayingCardComponent', () => {
         givenSips: 0,
       };
       component.card = cardWithSpecialChars;
-      component.ngOnInit();
-      expect(component.suit).toBe('♥ Hearts');
+      expect(component.card?.suit).toBe('♥ Hearts');
     });
 
     it('should handle card with large sips value', () => {
@@ -382,16 +338,13 @@ describe('PlayingCardComponent', () => {
 
     it('should handle rapid card changes', () => {
       component.card = mockCard;
-      component.ngOnInit();
-      expect(component.suit).toBe('Hearts');
+      expect(component.card?.suit).toBe('Hearts');
 
       component.card = mockSelectedCard;
-      component.ngOnInit();
-      expect(component.suit).toBe('Spades');
+      expect(component.card?.suit).toBe('Spades');
 
       component.card = mockCard;
-      component.ngOnInit();
-      expect(component.suit).toBe('Hearts');
+      expect(component.card?.suit).toBe('Hearts');
     });
   });
 });

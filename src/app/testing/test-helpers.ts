@@ -10,10 +10,12 @@ import { Game } from '../_shared/_models/game.model';
 /**
  * Creates a mock GameService for testing
  */
-export function createMockGameService(): jasmine.SpyObj<GameService> {
+export function createMockGameService(): jasmine.SpyObj<GameService> & {
+  game: WritableSignal<Game>;
+} {
   // Create mock signals
   const mockWithSummaryMode = signal<boolean>(false);
-  const mockGameSignal = signal<Game | null>({
+  const mockGame = signal<Game>({
     players: [],
     turn: 1,
     phase: 1,
@@ -33,7 +35,6 @@ export function createMockGameService(): jasmine.SpyObj<GameService> {
       'isGameFinished',
       'isSummaryMode',
       'isSummaryActivated',
-      'refreshSession',
       'setStatus',
       'resetGame',
       'beginGame',
@@ -46,18 +47,15 @@ export function createMockGameService(): jasmine.SpyObj<GameService> {
     ],
     {
       withSummaryMode: mockWithSummaryMode,
-      game: {
-        players: [],
-        turn: 1,
-        phase: 1,
-        maxTurnCount: 4,
-        drinkingCards: [],
-        givingCards: [],
-        activePlayer: undefined,
-        status: 0,
-        summary: false,
-      },
-      gameSignal: mockGameSignal,
+      game: mockGame,
+      status: signal(0),
+      turn: signal(1),
+      phase: signal(1),
+      players: signal([]),
+      activePlayer: signal(undefined),
+      drinkingCards: signal([]),
+      givingCards: signal([]),
+      summary: signal(false),
       openSipGiveModalEvent$: NEVER,
     }
   );
@@ -66,7 +64,7 @@ export function createMockGameService(): jasmine.SpyObj<GameService> {
   mock.isGameFinished.and.returnValue(false);
   mock.isSummaryMode.and.returnValue(false);
   mock.isSummaryActivated.and.returnValue(false);
-  return mock;
+  return mock as jasmine.SpyObj<GameService> & { game: WritableSignal<Game> };
 }
 
 /**

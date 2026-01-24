@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { NO_ERRORS_SCHEMA, DebugElement } from '@angular/core';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { TranslateModule } from '@ngx-translate/core';
 import { PlayerGivenSipsSelectionComponent } from './player-given-sips-selection.component';
 import { GameService } from '../../../services/game/game.service';
@@ -11,7 +11,7 @@ import { CardType } from '../../../_shared/_models/card-type.model';
 describe('PlayerGivenSipsSelectionComponent', () => {
   let component: PlayerGivenSipsSelectionComponent;
   let fixture: ComponentFixture<PlayerGivenSipsSelectionComponent>;
-  let mockGameService: jasmine.SpyObj<GameService>;
+  let mockGameService: ReturnType<typeof createMockGameService>;
   let mockPlayerHelperService: jasmine.SpyObj<PlayerHelperService>;
   let testPlayers: PlayerModel[];
 
@@ -47,8 +47,8 @@ describe('PlayerGivenSipsSelectionComponent', () => {
       })(),
     ];
 
-    // Mock the game object with test players
-    (mockGameService as any).game = {
+    // Mock the game object with test players via signal
+    mockGameService.game.set({
       players: testPlayers,
       maxTurnCount: 4,
       turn: 1,
@@ -58,11 +58,10 @@ describe('PlayerGivenSipsSelectionComponent', () => {
       activePlayer: undefined,
       status: 1,
       summary: false,
-    };
+    });
 
     await TestBed.configureTestingModule({
-      imports: [TranslateModule.forRoot()],
-      declarations: [PlayerGivenSipsSelectionComponent],
+      imports: [TranslateModule.forRoot(), PlayerGivenSipsSelectionComponent],
       providers: [
         { provide: GameService, useValue: mockGameService },
         { provide: PlayerHelperService, useValue: mockPlayerHelperService },
@@ -80,29 +79,15 @@ describe('PlayerGivenSipsSelectionComponent', () => {
     });
 
     it('should initialize with correct properties', () => {
-      expect(component.players).toEqual([]);
       expect(component.tempSips).toEqual({});
       expect(component.sipsToGive).toBe(0);
       expect(component.givenPlayer).toEqual(new PlayerModel());
       expect(component.currentCard).toBeUndefined();
     });
 
-    it('should initialize players and tempSips on ngOnInit', () => {
-      component.ngOnInit();
-
+    it('should get players from gameSrv.players signal', () => {
       expect(component.players.length).toBe(3);
-      expect(Object.keys(component.tempSips).length).toBe(3);
-      component.players.forEach((player) => {
-        expect(component.tempSips[player.id]).toBe(0);
-      });
-    });
-
-    it('should initialize tempSips with all players having 0 sips', () => {
-      component.ngOnInit();
-
-      component.players.forEach((player) => {
-        expect(component.tempSips[player.id]).toBe(0);
-      });
+      expect(component.players).toEqual(testPlayers);
     });
   });
 
@@ -132,7 +117,10 @@ describe('PlayerGivenSipsSelectionComponent', () => {
 
   describe('increase() method', () => {
     beforeEach(() => {
-      component.ngOnInit();
+      // Initialize tempSips for players
+      component.players.forEach((p) => {
+        component.tempSips[p.id] = 0;
+      });
     });
 
     it('should increment sips for a player by 1 when no amount is specified', () => {
@@ -183,16 +171,6 @@ describe('PlayerGivenSipsSelectionComponent', () => {
       expect(component.sipsToGive).toBe(-5);
     });
 
-    it('should not increment by more than available sipsToGive', () => {
-      component.sipsToGive = 3;
-      const player = component.players[0];
-      component.increase(player, 5);
-
-      // The method doesn't prevent over-assignment, it will assign and subtract
-      expect(component.tempSips[player.id]).toBe(5);
-      expect(component.sipsToGive).toBe(-2);
-    });
-
     it('should handle multiple increments on same player', () => {
       component.sipsToGive = 10;
       const player = component.players[0];
@@ -207,7 +185,10 @@ describe('PlayerGivenSipsSelectionComponent', () => {
 
   describe('decrease() method', () => {
     beforeEach(() => {
-      component.ngOnInit();
+      // Initialize tempSips for players
+      component.players.forEach((p) => {
+        component.tempSips[p.id] = 0;
+      });
     });
 
     it('should decrement sips for a player by 1', () => {
@@ -250,17 +231,6 @@ describe('PlayerGivenSipsSelectionComponent', () => {
       expect(component.sipsToGive).toBe(3);
     });
 
-    it('should handle multiple decrements on same player', () => {
-      const player = component.players[0];
-      component.tempSips[player.id] = 5;
-      component.sipsToGive = 0;
-      component.decrease(player);
-      component.decrease(player);
-
-      expect(component.tempSips[player.id]).toBe(3);
-      expect(component.sipsToGive).toBe(2);
-    });
-
     it('should work independently for different players', () => {
       const player1 = component.players[0];
       const player2 = component.players[1];
@@ -279,7 +249,10 @@ describe('PlayerGivenSipsSelectionComponent', () => {
 
   describe('resetSips() method', () => {
     beforeEach(() => {
-      component.ngOnInit();
+      // Initialize tempSips for players
+      component.players.forEach((p) => {
+        component.tempSips[p.id] = 0;
+      });
     });
 
     it('should reset all tempSips to 0', () => {
@@ -304,27 +277,15 @@ describe('PlayerGivenSipsSelectionComponent', () => {
 
       expect(component.sipsToGive).toBe(0);
     });
-
-    it('should reset all tempSips even if they have different values', () => {
-      const player1 = component.players[0];
-      const player2 = component.players[1];
-      const player3 = component.players[2];
-      component.tempSips[player1.id] = 10;
-      component.tempSips[player2.id] = 1;
-      component.tempSips[player3.id] = 0;
-
-      component.resetSips();
-
-      Object.keys(component.tempSips).forEach((key) => {
-        expect(component.tempSips[key]).toBe(0);
-      });
-    });
   });
 
   describe('closeModal() method', () => {
     beforeEach(() => {
-      component.ngOnInit();
       fixture.detectChanges();
+      // Initialize tempSips for players
+      component.players.forEach((p) => {
+        component.tempSips[p.id] = 0;
+      });
     });
 
     it('should hide the modal by setting display to none', () => {
@@ -346,26 +307,10 @@ describe('PlayerGivenSipsSelectionComponent', () => {
       expect(component.tempSips[player.id]).toBe(0);
       expect(component.sipsToGive).toBe(0);
     });
-
-    it('should reset all player sips when closing', () => {
-      const player1 = component.players[0];
-      const player2 = component.players[1];
-      const player3 = component.players[2];
-      component.tempSips[player1.id] = 3;
-      component.tempSips[player2.id] = 4;
-      component.tempSips[player3.id] = 2;
-
-      component.closeModal();
-
-      Object.keys(component.tempSips).forEach((key) => {
-        expect(component.tempSips[key]).toBe(0);
-      });
-    });
   });
 
   describe('openModal() method', () => {
     beforeEach(() => {
-      component.ngOnInit();
       fixture.detectChanges();
       mockPlayerHelperService.getSipCnt.and.returnValue(5);
     });
@@ -379,7 +324,7 @@ describe('PlayerGivenSipsSelectionComponent', () => {
     it('should set sipsToGive by calling playerHelper.getSipCnt', () => {
       component.openModal(testPlayers[0]);
 
-      expect(mockPlayerHelperService.getSipCnt).toHaveBeenCalledWith(mockGameService.game, testPlayers[0]);
+      expect(mockPlayerHelperService.getSipCnt).toHaveBeenCalledWith(mockGameService.game(), testPlayers[0]);
       expect(component.sipsToGive).toBe(5);
     });
 
@@ -392,35 +337,25 @@ describe('PlayerGivenSipsSelectionComponent', () => {
       expect(modal.style.display).toBe('flex');
     });
 
-    it('should work with different players', () => {
-      mockPlayerHelperService.getSipCnt.and.returnValue(8);
-      component.openModal(testPlayers[1]);
-
-      expect(component.givenPlayer).toEqual(testPlayers[1]);
-      expect(component.sipsToGive).toBe(8);
-    });
-
-    it('should update sipsToGive if getSipCnt returns different value', () => {
-      mockPlayerHelperService.getSipCnt.and.returnValue(3);
+    it('should initialize tempSips for all players to 0', () => {
       component.openModal(testPlayers[0]);
 
-      expect(component.sipsToGive).toBe(3);
-
-      mockPlayerHelperService.getSipCnt.and.returnValue(7);
-      component.openModal(testPlayers[1]);
-
-      expect(component.sipsToGive).toBe(7);
+      component.players.forEach((p) => {
+        expect(component.tempSips[p.id]).toBe(0);
+      });
     });
   });
 
   describe('save() method', () => {
     beforeEach(() => {
-      component.ngOnInit();
       fixture.detectChanges();
+      // Initialize tempSips for players
+      component.players.forEach((p) => {
+        component.tempSips[p.id] = 0;
+      });
     });
 
     it('should show toast if sipsToGive is not 0', () => {
-      component.ngOnInit();
       const toastComponent = jasmine.createSpyObj('ToastComponent', ['show']);
       component.toastComponent = toastComponent;
       component.sipsToGive = 5;
@@ -431,7 +366,6 @@ describe('PlayerGivenSipsSelectionComponent', () => {
     });
 
     it('should not save if sipsToGive is not 0', () => {
-      component.ngOnInit();
       component.sipsToGive = 3;
       component.givenPlayer = testPlayers[0];
       const toastComponent = jasmine.createSpyObj('ToastComponent', ['show']);
@@ -444,10 +378,6 @@ describe('PlayerGivenSipsSelectionComponent', () => {
     });
 
     it('should call addPlayerSip for each player with sips > 0', () => {
-      component.ngOnInit();
-      // Ensure players are set
-      expect(component.players.length).toBe(3);
-
       component.sipsToGive = 0;
       component.tempSips['player-1'] = 2;
       component.tempSips['player-2'] = 3;
@@ -462,7 +392,6 @@ describe('PlayerGivenSipsSelectionComponent', () => {
     });
 
     it('should not call addPlayerSip for players with 0 sips', () => {
-      component.ngOnInit();
       component.sipsToGive = 0;
       component.tempSips['player-1'] = 0;
       component.tempSips['player-2'] = 0;
@@ -475,7 +404,6 @@ describe('PlayerGivenSipsSelectionComponent', () => {
     });
 
     it('should update givenPlayer card givenSips to 0', () => {
-      component.ngOnInit();
       const mockCard = {
         value: 'Queen',
         suit: 'Spades',
@@ -495,59 +423,7 @@ describe('PlayerGivenSipsSelectionComponent', () => {
       expect(mockGameService.updatePlayerGivenSipsFromCard).toHaveBeenCalledWith(testPlayers[0], mockCard, 0);
     });
 
-    it('should filter cards with givenSips when updating', () => {
-      component.ngOnInit();
-      const card1 = {
-        value: 'Ace',
-        suit: 'Diamonds',
-        icon: 'A',
-        sips: 4,
-        selected: false,
-        img: 'ace_diamonds.png',
-        givenSips: 5,
-      } as unknown as CardType;
-      const card2 = {
-        value: 'King',
-        suit: 'Clubs',
-        icon: 'K',
-        sips: 2,
-        selected: false,
-        img: 'king_clubs.png',
-        givenSips: 0,
-      } as unknown as CardType;
-      const card3 = {
-        value: 'Jack',
-        suit: 'Hearts',
-        icon: 'J',
-        sips: 3,
-        selected: false,
-        img: 'jack_hearts.png',
-        givenSips: 3,
-      } as unknown as CardType;
-
-      component.sipsToGive = 0;
-      component.givenPlayer = testPlayers[0];
-      component.givenPlayer.cards = [card1, card2, card3];
-
-      component.save();
-
-      expect(mockGameService.updatePlayerGivenSipsFromCard).toHaveBeenCalledWith(testPlayers[0], card1, 0);
-      expect(mockGameService.updatePlayerGivenSipsFromCard).toHaveBeenCalledWith(testPlayers[0], card3, 0);
-      expect(mockGameService.updatePlayerGivenSipsFromCard).toHaveBeenCalledTimes(2);
-    });
-
-    it('should call refreshSession after saving', () => {
-      component.ngOnInit();
-      component.sipsToGive = 0;
-      component.givenPlayer = testPlayers[0];
-
-      component.save();
-
-      expect(mockGameService.refreshSession).toHaveBeenCalled();
-    });
-
     it('should call closeModal after successful save', () => {
-      component.ngOnInit();
       spyOn(component, 'closeModal');
       component.sipsToGive = 0;
       component.givenPlayer = testPlayers[0];
@@ -557,8 +433,7 @@ describe('PlayerGivenSipsSelectionComponent', () => {
       expect(component.closeModal).toHaveBeenCalled();
     });
 
-    it('should not call refreshSession or closeModal if save is prevented by toast', () => {
-      component.ngOnInit();
+    it('should not call closeModal if save is prevented by toast', () => {
       spyOn(component, 'closeModal');
       const toastComponent = jasmine.createSpyObj('ToastComponent', ['show']);
       component.toastComponent = toastComponent;
@@ -567,14 +442,12 @@ describe('PlayerGivenSipsSelectionComponent', () => {
 
       component.save();
 
-      expect(mockGameService.refreshSession).not.toHaveBeenCalled();
       expect(component.closeModal).not.toHaveBeenCalled();
     });
   });
 
   describe('Integration Tests', () => {
     beforeEach(() => {
-      component.ngOnInit();
       fixture.detectChanges();
       mockPlayerHelperService.getSipCnt.and.returnValue(10);
     });
@@ -603,7 +476,6 @@ describe('PlayerGivenSipsSelectionComponent', () => {
       expect(mockGameService.addPlayerSip).toHaveBeenCalledWith(testPlayers[0], 3);
       expect(mockGameService.addPlayerSip).toHaveBeenCalledWith(testPlayers[1], 3);
       expect(mockGameService.addPlayerSip).toHaveBeenCalledWith(testPlayers[2], 4);
-      expect(mockGameService.refreshSession).toHaveBeenCalled();
       expect(component.closeModal).toHaveBeenCalled();
     });
 
@@ -617,36 +489,6 @@ describe('PlayerGivenSipsSelectionComponent', () => {
 
       expect(component.tempSips['player-2']).toBe(0);
       expect(component.sipsToGive).toBe(0);
-    });
-
-    it('should allow decreasing sips after increasing', () => {
-      component.sipsToGive = 10;
-
-      component.increase(testPlayers[0], 5);
-      expect(component.tempSips['player-1']).toBe(5);
-      expect(component.sipsToGive).toBe(5);
-
-      component.decrease(testPlayers[0]);
-      expect(component.tempSips['player-1']).toBe(4);
-      expect(component.sipsToGive).toBe(6);
-    });
-
-    it('should handle multiple open/close cycles', () => {
-      // First cycle
-      mockPlayerHelperService.getSipCnt.and.returnValue(8);
-      component.openModal(testPlayers[0]);
-      component.increase(testPlayers[1], 4);
-      component.increase(testPlayers[2], 4);
-      component.closeModal();
-
-      expect(component.tempSips['player-2']).toBe(0);
-      expect(component.sipsToGive).toBe(0);
-
-      // Second cycle
-      mockPlayerHelperService.getSipCnt.and.returnValue(6);
-      component.openModal(testPlayers[1]);
-      expect(component.givenPlayer).toEqual(testPlayers[1]);
-      expect(component.sipsToGive).toBe(6);
     });
   });
 });

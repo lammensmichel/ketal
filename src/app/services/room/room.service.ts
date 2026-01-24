@@ -1,6 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { ID, Query } from 'appwrite';
 import { AppwriteService } from '../appwrite/appwrite.service';
+import { RealtimeService, SubscriptionCallback } from '../realtime/realtime.service';
 
 /**
  * Collection ID for game rooms in Appwrite
@@ -77,6 +78,7 @@ interface CreateRoomData {
 })
 export class RoomService {
   private readonly appwrite = inject(AppwriteService);
+  private readonly realtime = inject(RealtimeService);
 
   /** Signal holding the current room the user is in */
   private readonly _currentRoom = signal<GameRoom | null>(null);
@@ -248,6 +250,17 @@ export class RoomService {
    */
   setCurrentRoom(room: GameRoom | null): void {
     this._currentRoom.set(room);
+  }
+
+  /**
+   * Subscribe to realtime updates for a specific room
+   *
+   * @param roomId - The ID of the room to subscribe to
+   * @param callback - Callback function to handle room updates
+   * @returns Subscription ID for unsubscribing
+   */
+  subscribeToRoom(roomId: string, callback: SubscriptionCallback<GameRoom>): string {
+    return this.realtime.subscribeToRoom(roomId, callback);
   }
 
   /**

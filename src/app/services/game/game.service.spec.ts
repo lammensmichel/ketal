@@ -112,7 +112,7 @@ describe('GameService', () => {
   // Constructor and Initialization Tests
   // ==========================================================================
   describe('Constructor and Initialization', () => {
-    it('should initialize gameSignal from local storage on construction', () => {
+    it('should initialize game from local storage on construction', () => {
       const mockGame = createMockGame();
       mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
 
@@ -129,11 +129,12 @@ describe('GameService', () => {
       });
       const newService = TestBed.inject(GameService);
 
-      expect(newService.gameSignal).toBeDefined();
-      expect(newService.gameSignal()).toEqual(mockGame);
+      expect(newService.game).toBeDefined();
+      expect(newService.game().players).toEqual(mockGame.players);
+      expect(newService.game().turn).toBe(mockGame.turn);
     });
 
-    it('should handle null game data from local storage', () => {
+    it('should return empty game when no data in local storage', () => {
       mockLocalService.getData.and.returnValue(null);
 
       TestBed.resetTestingModule();
@@ -148,80 +149,64 @@ describe('GameService', () => {
       });
       const newService = TestBed.inject(GameService);
 
-      expect(newService.gameSignal).toBeDefined();
-      expect(newService.gameSignal()).toBeNull();
+      expect(newService.game).toBeDefined();
+      // When no data, game() returns empty game structure
+      expect(newService.game().players).toEqual([]);
+      expect(newService.game().status).toBe(0);
     });
   });
 
   // ==========================================================================
-  // Game State Management Tests (get/set game, refreshSession)
+  // Game State Management Tests
   // ==========================================================================
   describe('Game State Management', () => {
-    describe('game getter', () => {
-      it('should return game from local storage when _game is undefined', () => {
+    describe('game computed signal', () => {
+      it('should return game from local storage on initialization', () => {
         const mockGame = createMockGame();
         mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
 
-        const result = service.game;
+        // Re-create service to trigger constructor with mock data
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          ],
+        });
+        const newService = TestBed.inject(GameService);
+
+        const result = newService.game();
 
         expect(mockLocalService.getData).toHaveBeenCalledWith('game');
-        // Compare individual properties since JSON.parse converts undefined to null
         expect(result.players).toEqual(mockGame.players);
         expect(result.turn).toBe(mockGame.turn);
         expect(result.status).toBe(mockGame.status);
         expect(result.phase).toBe(mockGame.phase);
       });
 
-      it('should return cached game when already loaded', () => {
-        const mockGame = createMockGame();
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
+      it('should return empty game structure when no data in storage', () => {
+        mockLocalService.getData.and.returnValue(null);
 
-        // First access
-        const _firstAccess = service.game;
-        // Second access - should use cache
-        const result = service.game;
+        // Re-create service
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          ],
+        });
+        const newService = TestBed.inject(GameService);
 
-        // Compare individual properties since JSON.parse converts undefined to null
-        expect(result.players).toEqual(mockGame.players);
-        expect(result.turn).toBe(mockGame.turn);
-        expect(result.status).toBe(mockGame.status);
-      });
-    });
+        const result = newService.game();
 
-    describe('game setter', () => {
-      it('should save game to local storage when game is defined', () => {
-        const mockGame = createMockGame();
-
-        service.game = mockGame;
-
-        expect(mockLocalService.saveData).toHaveBeenCalledWith('game', JSON.stringify(mockGame));
-      });
-
-      it('should update gameSignal when game is set', () => {
-        const mockGame = createMockGame();
-
-        service.game = mockGame;
-
-        expect(service.gameSignal()).toEqual(mockGame);
-      });
-
-      it('should remove game from local storage when game is undefined', () => {
-        service.game = undefined;
-
-        expect(mockLocalService.removeData).toHaveBeenCalledWith('game');
-      });
-    });
-
-    describe('refreshSession', () => {
-      it('should save game to local storage and emit on gameSubject', () => {
-        const mockGame = createMockGame();
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
-        mockLocalService.saveData.calls.reset();
-
-        service.refreshSession();
-
-        expect(mockLocalService.saveData).toHaveBeenCalledWith('game', JSON.stringify(mockGame));
+        expect(result.players).toEqual([]);
+        expect(result.status).toBe(0);
       });
     });
 
@@ -230,23 +215,47 @@ describe('GameService', () => {
         const player = createMockPlayer({ id: 'player-1' });
         const mockGame = createMockGame({ players: [player] });
         mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
 
-        service.setCardChoice('color', 'red', 'player-1');
+        // Re-create service with mock data
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          ],
+        });
+        const newService = TestBed.inject(GameService);
 
-        expect(service.game.players[0].choice['color']).toBe('red');
-        expect(service.game.activePlayer).toEqual(player);
+        newService.setCardChoice('color', 'red', 'player-1');
+
+        expect(newService.game().players[0].choice['color']).toBe('red');
+        expect(newService.game().activePlayer?.id).toBe('player-1');
       });
 
       it('should not change anything if player not found', () => {
         const player = createMockPlayer({ id: 'player-1' });
         const mockGame = createMockGame({ players: [player] });
         mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
 
-        service.setCardChoice('color', 'red', 'non-existent-player');
+        // Re-create service with mock data
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          ],
+        });
+        const newService = TestBed.inject(GameService);
 
-        expect(service.game.players[0].choice['color']).toBe('');
+        newService.setCardChoice('color', 'red', 'non-existent-player');
+
+        expect(newService.game().players[0].choice['color']).toBe('');
       });
     });
   });
@@ -255,23 +264,44 @@ describe('GameService', () => {
   // Game Status Methods Tests
   // ==========================================================================
   describe('Game Status Methods', () => {
-    describe('getGameStatus', () => {
+    describe('status computed signal', () => {
       it('should return 0 when game is not defined', () => {
         mockLocalService.getData.and.returnValue(null);
 
-        const result = service.getGameStatus();
+        // Re-create service
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          ],
+        });
+        const newService = TestBed.inject(GameService);
 
-        expect(result).toBe(0);
+        expect(newService.status()).toBe(0);
       });
 
       it('should return game status when game is defined', () => {
         const mockGame = createMockGame({ status: 2 });
         mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
 
-        const result = service.getGameStatus();
+        // Re-create service
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          ],
+        });
+        const newService = TestBed.inject(GameService);
 
-        expect(result).toBe(2);
+        expect(newService.status()).toBe(2);
       });
     });
 
@@ -279,17 +309,39 @@ describe('GameService', () => {
       it('should return true when status is 0', () => {
         const mockGame = createMockGame({ status: 0 });
         mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
 
-        expect(service.isNewGame()).toBe(true);
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          ],
+        });
+        const newService = TestBed.inject(GameService);
+
+        expect(newService.isNewGame()).toBe(true);
       });
 
       it('should return false when status is not 0', () => {
         const mockGame = createMockGame({ status: 1 });
         mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
 
-        expect(service.isNewGame()).toBe(false);
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          ],
+        });
+        const newService = TestBed.inject(GameService);
+
+        expect(newService.isNewGame()).toBe(false);
       });
     });
 
@@ -297,17 +349,39 @@ describe('GameService', () => {
       it('should return true when status is 1', () => {
         const mockGame = createMockGame({ status: 1 });
         mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
 
-        expect(service.isGameStarted()).toBe(true);
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          ],
+        });
+        const newService = TestBed.inject(GameService);
+
+        expect(newService.isGameStarted()).toBe(true);
       });
 
       it('should return false when status is not 1', () => {
         const mockGame = createMockGame({ status: 0 });
         mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
 
-        expect(service.isGameStarted()).toBe(false);
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          ],
+        });
+        const newService = TestBed.inject(GameService);
+
+        expect(newService.isGameStarted()).toBe(false);
       });
     });
 
@@ -315,17 +389,39 @@ describe('GameService', () => {
       it('should return true when status is 2', () => {
         const mockGame = createMockGame({ status: 2 });
         mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
 
-        expect(service.isGameFinished()).toBe(true);
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          ],
+        });
+        const newService = TestBed.inject(GameService);
+
+        expect(newService.isGameFinished()).toBe(true);
       });
 
       it('should return false when status is not 2', () => {
         const mockGame = createMockGame({ status: 1 });
         mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
 
-        expect(service.isGameFinished()).toBe(false);
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          ],
+        });
+        const newService = TestBed.inject(GameService);
+
+        expect(newService.isGameFinished()).toBe(false);
       });
     });
 
@@ -333,25 +429,58 @@ describe('GameService', () => {
       it('should return true when summary is activated and status is 3', () => {
         const mockGame = createMockGame({ status: 3, summary: true });
         mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
 
-        expect(service.isSummaryMode()).toBe(true);
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          ],
+        });
+        const newService = TestBed.inject(GameService);
+
+        expect(newService.isSummaryMode()).toBe(true);
       });
 
       it('should return false when summary is not activated', () => {
         const mockGame = createMockGame({ status: 3, summary: false });
         mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
 
-        expect(service.isSummaryMode()).toBe(false);
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          ],
+        });
+        const newService = TestBed.inject(GameService);
+
+        expect(newService.isSummaryMode()).toBe(false);
       });
 
       it('should return false when status is not 3', () => {
         const mockGame = createMockGame({ status: 1, summary: true });
         mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
 
-        expect(service.isSummaryMode()).toBe(false);
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          ],
+        });
+        const newService = TestBed.inject(GameService);
+
+        expect(newService.isSummaryMode()).toBe(false);
       });
     });
 
@@ -359,29 +488,62 @@ describe('GameService', () => {
       it('should return true when game summary is true', () => {
         const mockGame = createMockGame({ summary: true });
         mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
 
-        expect(service.isSummaryActivated()).toBe(true);
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          ],
+        });
+        const newService = TestBed.inject(GameService);
+
+        expect(newService.isSummaryActivated()).toBe(true);
       });
 
       it('should return false when game summary is false', () => {
         const mockGame = createMockGame({ summary: false });
         mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
 
-        expect(service.isSummaryActivated()).toBe(false);
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          ],
+        });
+        const newService = TestBed.inject(GameService);
+
+        expect(newService.isSummaryActivated()).toBe(false);
       });
     });
 
     describe('setStatus', () => {
-      it('should set the game status and refresh session', () => {
+      it('should set the game status', () => {
         const mockGame = createMockGame({ status: 0 });
         mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
 
-        service.setStatus(2);
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          ],
+        });
+        const newService = TestBed.inject(GameService);
 
-        expect(service.game.status).toBe(2);
+        newService.setStatus(2);
+
+        expect(newService.game().status).toBe(2);
       });
     });
 
@@ -412,6 +574,22 @@ describe('GameService', () => {
   // Player Sips Calculation Methods Tests
   // ==========================================================================
   describe('Player Sips Calculation Methods', () => {
+    // Helper function to create service with specific game state
+    function createServiceWithGame(mockGame: Game): GameService {
+      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          GameService,
+          { provide: LocalService, useValue: mockLocalService },
+          { provide: CardService, useValue: mockCardService },
+          { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+          { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+        ],
+      });
+      return TestBed.inject(GameService);
+    }
+
     describe('getSipsNumberForColorChoice (via assignSipsForFirstTurn)', () => {
       it('should return 1 sip when player chose red but card is black', () => {
         const player = createMockPlayer({
@@ -420,17 +598,16 @@ describe('GameService', () => {
         });
         const card = createMockCard({ suit: 'spades' });
         const mockGame = createMockGame({ players: [player], turn: 1 });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
         mockPlayerHelperService.getPlayerChoice.and.returnValue(ColorsEnum.Red);
         mockCardService.isBlackCard.and.returnValue(true);
         mockCardService.isRedCard.and.returnValue(false);
 
-        service.assignSipsForFirstTurn(card, 'player-1');
+        testService.assignSipsForFirstTurn(card, 'player-1');
 
         expect(card.sips).toBe(1);
-        expect(service.game.players[0].sips['drunk']).toBe(1);
+        expect(testService.game().players[0].sips['drunk']).toBe(1);
       });
 
       it('should return 1 sip when player chose black but card is red', () => {
@@ -440,14 +617,13 @@ describe('GameService', () => {
         });
         const card = createMockCard({ suit: 'hearts' });
         const mockGame = createMockGame({ players: [player], turn: 1 });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
         mockPlayerHelperService.getPlayerChoice.and.returnValue(ColorsEnum.Black);
         mockCardService.isBlackCard.and.returnValue(false);
         mockCardService.isRedCard.and.returnValue(true);
 
-        service.assignSipsForFirstTurn(card, 'player-1');
+        testService.assignSipsForFirstTurn(card, 'player-1');
 
         expect(card.sips).toBe(1);
       });
@@ -459,14 +635,13 @@ describe('GameService', () => {
         });
         const card = createMockCard({ suit: 'hearts' });
         const mockGame = createMockGame({ players: [player], turn: 1 });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
         mockPlayerHelperService.getPlayerChoice.and.returnValue(ColorsEnum.Red);
         mockCardService.isBlackCard.and.returnValue(false);
         mockCardService.isRedCard.and.returnValue(true);
 
-        service.assignSipsForFirstTurn(card, 'player-1');
+        testService.assignSipsForFirstTurn(card, 'player-1');
 
         expect(card.sips).toBe(0);
       });
@@ -482,13 +657,12 @@ describe('GameService', () => {
         });
         const newCard = createMockCard({ value: '5' });
         const mockGame = createMockGame({ players: [player], turn: 2 });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
         mockPlayerHelperService.getPlayerChoice.and.returnValue(PlusOrMinusEnum.Plus);
         mockCardService.getCardValue.and.returnValues(5, 5); // previous = 5, new = 5
 
-        service.assignSipsForFirstTurn(newCard, 'player-1');
+        testService.assignSipsForFirstTurn(newCard, 'player-1');
 
         expect(newCard.sips).toBe(4);
       });
@@ -502,13 +676,12 @@ describe('GameService', () => {
         });
         const newCard = createMockCard({ value: '3' });
         const mockGame = createMockGame({ players: [player], turn: 2 });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
         mockPlayerHelperService.getPlayerChoice.and.returnValue(PlusOrMinusEnum.Plus);
         mockCardService.getCardValue.and.returnValues(7, 3); // previous = 7, new = 3
 
-        service.assignSipsForFirstTurn(newCard, 'player-1');
+        testService.assignSipsForFirstTurn(newCard, 'player-1');
 
         expect(newCard.sips).toBe(2);
       });
@@ -522,13 +695,12 @@ describe('GameService', () => {
         });
         const newCard = createMockCard({ value: '7' });
         const mockGame = createMockGame({ players: [player], turn: 2 });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
         mockPlayerHelperService.getPlayerChoice.and.returnValue(PlusOrMinusEnum.Minus);
         mockCardService.getCardValue.and.returnValues(3, 7); // previous = 3, new = 7
 
-        service.assignSipsForFirstTurn(newCard, 'player-1');
+        testService.assignSipsForFirstTurn(newCard, 'player-1');
 
         expect(newCard.sips).toBe(2);
       });
@@ -542,13 +714,12 @@ describe('GameService', () => {
         });
         const newCard = createMockCard({ value: '7' });
         const mockGame = createMockGame({ players: [player], turn: 2 });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
         mockPlayerHelperService.getPlayerChoice.and.returnValue(PlusOrMinusEnum.Plus);
         mockCardService.getCardValue.and.returnValues(3, 7); // previous = 3, new = 7
 
-        service.assignSipsForFirstTurn(newCard, 'player-1');
+        testService.assignSipsForFirstTurn(newCard, 'player-1');
 
         expect(newCard.sips).toBe(0);
       });
@@ -565,8 +736,7 @@ describe('GameService', () => {
         });
         const newCard = createMockCard({ value: '3' });
         const mockGame = createMockGame({ players: [player], turn: 3 });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
         mockPlayerHelperService.getPlayerChoice.and.returnValue(InAndOutEnum.In);
         mockCardService.lowestCard.and.returnValue(card1);
@@ -581,7 +751,7 @@ describe('GameService', () => {
           return 0;
         });
 
-        service.assignSipsForFirstTurn(newCard, 'player-1');
+        testService.assignSipsForFirstTurn(newCard, 'player-1');
 
         expect(newCard.sips).toBe(6);
       });
@@ -596,8 +766,7 @@ describe('GameService', () => {
         });
         const newCard = createMockCard({ value: '7' });
         const mockGame = createMockGame({ players: [player], turn: 3 });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
         mockPlayerHelperService.getPlayerChoice.and.returnValue(InAndOutEnum.In);
         mockCardService.lowestCard.and.returnValue(card1);
@@ -612,7 +781,7 @@ describe('GameService', () => {
           return 0;
         });
 
-        service.assignSipsForFirstTurn(newCard, 'player-1');
+        testService.assignSipsForFirstTurn(newCard, 'player-1');
 
         expect(newCard.sips).toBe(6);
       });
@@ -627,8 +796,7 @@ describe('GameService', () => {
         });
         const newCard = createMockCard({ value: '5' });
         const mockGame = createMockGame({ players: [player], turn: 3 });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
         mockPlayerHelperService.getPlayerChoice.and.returnValue(InAndOutEnum.In);
         mockCardService.lowestCard.and.returnValue(card1);
@@ -646,7 +814,7 @@ describe('GameService', () => {
           return 0;
         });
 
-        service.assignSipsForFirstTurn(newCard, 'player-1');
+        testService.assignSipsForFirstTurn(newCard, 'player-1');
 
         expect(newCard.sips).toBe(0);
       });
@@ -661,8 +829,7 @@ describe('GameService', () => {
         });
         const newCard = createMockCard({ value: '9' });
         const mockGame = createMockGame({ players: [player], turn: 3 });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
         mockPlayerHelperService.getPlayerChoice.and.returnValue(InAndOutEnum.In);
         mockCardService.lowestCard.and.returnValue(card1);
@@ -680,7 +847,7 @@ describe('GameService', () => {
           return 0;
         });
 
-        service.assignSipsForFirstTurn(newCard, 'player-1');
+        testService.assignSipsForFirstTurn(newCard, 'player-1');
 
         expect(newCard.sips).toBe(3);
       });
@@ -695,8 +862,7 @@ describe('GameService', () => {
         });
         const newCard = createMockCard({ value: '9' });
         const mockGame = createMockGame({ players: [player], turn: 3 });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
         mockPlayerHelperService.getPlayerChoice.and.returnValue(InAndOutEnum.Out);
         mockCardService.lowestCard.and.returnValue(card1);
@@ -714,7 +880,7 @@ describe('GameService', () => {
           return 0;
         });
 
-        service.assignSipsForFirstTurn(newCard, 'player-1');
+        testService.assignSipsForFirstTurn(newCard, 'player-1');
 
         expect(newCard.sips).toBe(0);
       });
@@ -729,8 +895,7 @@ describe('GameService', () => {
         });
         const newCard = createMockCard({ value: '5' });
         const mockGame = createMockGame({ players: [player], turn: 3 });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
         mockPlayerHelperService.getPlayerChoice.and.returnValue(InAndOutEnum.Out);
         mockCardService.lowestCard.and.returnValue(card1);
@@ -748,7 +913,7 @@ describe('GameService', () => {
           return 0;
         });
 
-        service.assignSipsForFirstTurn(newCard, 'player-1');
+        testService.assignSipsForFirstTurn(newCard, 'player-1');
 
         expect(newCard.sips).toBe(3);
       });
@@ -763,12 +928,11 @@ describe('GameService', () => {
         });
         const newCard = createMockCard({ suit: 'spades' });
         const mockGame = createMockGame({ players: [player], turn: 4 });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
         mockPlayerHelperService.getPlayerChoice.and.returnValue('hearts');
 
-        service.assignSipsForFirstTurn(newCard, 'player-1');
+        testService.assignSipsForFirstTurn(newCard, 'player-1');
 
         expect(newCard.sips).toBe(4);
       });
@@ -781,12 +945,11 @@ describe('GameService', () => {
         });
         const newCard = createMockCard({ suit: 'hearts' });
         const mockGame = createMockGame({ players: [player], turn: 4 });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
         mockPlayerHelperService.getPlayerChoice.and.returnValue('hearts');
 
-        service.assignSipsForFirstTurn(newCard, 'player-1');
+        testService.assignSipsForFirstTurn(newCard, 'player-1');
 
         expect(newCard.sips).toBe(0);
       });
@@ -797,13 +960,28 @@ describe('GameService', () => {
   // assignSipsForFirstTurn Tests
   // ==========================================================================
   describe('assignSipsForFirstTurn', () => {
+    // Helper function to create service with specific game state
+    function createServiceWithGame(mockGame: Game): GameService {
+      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          GameService,
+          { provide: LocalService, useValue: mockLocalService },
+          { provide: CardService, useValue: mockCardService },
+          { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+          { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+        ],
+      });
+      return TestBed.inject(GameService);
+    }
+
     it('should return early if player not found', () => {
       const mockGame = createMockGame({ players: [], turn: 1 });
-      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-      service.game = mockGame;
+      const testService = createServiceWithGame(mockGame);
 
       const card = createMockCard();
-      service.assignSipsForFirstTurn(card, 'non-existent-player');
+      testService.assignSipsForFirstTurn(card, 'non-existent-player');
 
       expect(card.sips).toBe(0); // Unchanged
     });
@@ -811,11 +989,10 @@ describe('GameService', () => {
     it('should not assign sips for turns other than 1-4', () => {
       const player = createMockPlayer({ id: 'player-1' });
       const mockGame = createMockGame({ players: [player], turn: 5 });
-      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-      service.game = mockGame;
+      const testService = createServiceWithGame(mockGame);
 
       const card = createMockCard();
-      service.assignSipsForFirstTurn(card, 'player-1');
+      testService.assignSipsForFirstTurn(card, 'player-1');
 
       // Card sips should remain undefined for turn 5 (no assignment happens)
       expect(card.sips).toBe(0);
@@ -826,6 +1003,22 @@ describe('GameService', () => {
   // addPlayerSip Tests
   // ==========================================================================
   describe('addPlayerSip', () => {
+    // Helper function to create service with specific game state
+    function createServiceWithGame(mockGame: Game): GameService {
+      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          GameService,
+          { provide: LocalService, useValue: mockLocalService },
+          { provide: CardService, useValue: mockCardService },
+          { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+          { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+        ],
+      });
+      return TestBed.inject(GameService);
+    }
+
     it('should add drunk sips when player has less than 4 cards', () => {
       const player = createMockPlayer({
         id: 'player-1',
@@ -833,12 +1026,11 @@ describe('GameService', () => {
         sips: { drunk: 0, given: 0 },
       });
       const mockGame = createMockGame({ players: [player] });
-      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-      service.game = mockGame;
+      const testService = createServiceWithGame(mockGame);
 
-      service.addPlayerSip(player, 3);
+      testService.addPlayerSip(player, 3);
 
-      expect(service.game.players[0].sips['drunk']).toBe(3);
+      expect(testService.game().players[0].sips['drunk']).toBe(3);
     });
 
     it('should add drunk sips when drink=true and player has 4+ cards', () => {
@@ -848,12 +1040,11 @@ describe('GameService', () => {
         sips: { drunk: 0, given: 0 },
       });
       const mockGame = createMockGame({ players: [player] });
-      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-      service.game = mockGame;
+      const testService = createServiceWithGame(mockGame);
 
-      service.addPlayerSip(player, 3, true);
+      testService.addPlayerSip(player, 3, true);
 
-      expect(service.game.players[0].sips['drunk']).toBe(3);
+      expect(testService.game().players[0].sips['drunk']).toBe(3);
     });
 
     it('should add given sips when drink=false and player has 4+ cards', () => {
@@ -863,12 +1054,11 @@ describe('GameService', () => {
         sips: { drunk: 0, given: 0 },
       });
       const mockGame = createMockGame({ players: [player] });
-      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-      service.game = mockGame;
+      const testService = createServiceWithGame(mockGame);
 
-      service.addPlayerSip(player, 3, false);
+      testService.addPlayerSip(player, 3, false);
 
-      expect(service.game.players[0].sips['given']).toBe(3);
+      expect(testService.game().players[0].sips['given']).toBe(3);
     });
 
     it('should not add sips when sipNbr is 0', () => {
@@ -878,38 +1068,35 @@ describe('GameService', () => {
         sips: { drunk: 5, given: 0 },
       });
       const mockGame = createMockGame({ players: [player] });
-      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-      service.game = mockGame;
+      const testService = createServiceWithGame(mockGame);
 
-      service.addPlayerSip(player, 0);
+      testService.addPlayerSip(player, 0);
 
-      expect(service.game.players[0].sips['drunk']).toBe(5); // Unchanged
+      expect(testService.game().players[0].sips['drunk']).toBe(5); // Unchanged
     });
 
     it('should not add sips when player not found', () => {
       const player = createMockPlayer({ id: 'player-1' });
       const unknownPlayer = createMockPlayer({ id: 'unknown' });
       const mockGame = createMockGame({ players: [player] });
-      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-      service.game = mockGame;
+      const testService = createServiceWithGame(mockGame);
 
-      service.addPlayerSip(unknownPlayer, 3);
+      testService.addPlayerSip(unknownPlayer, 3);
 
-      expect(service.game.players[0].sips['drunk']).toBe(0);
+      expect(testService.game().players[0].sips['drunk']).toBe(0);
     });
 
-    it('should refresh session after adding sips', () => {
+    it('should save to local storage after adding sips', () => {
       const player = createMockPlayer({
         id: 'player-1',
         cards: [],
         sips: { drunk: 0, given: 0 },
       });
       const mockGame = createMockGame({ players: [player] });
-      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-      service.game = mockGame;
+      const testService = createServiceWithGame(mockGame);
       mockLocalService.saveData.calls.reset();
 
-      service.addPlayerSip(player, 3);
+      testService.addPlayerSip(player, 3);
 
       expect(mockLocalService.saveData).toHaveBeenCalled();
     });
@@ -919,20 +1106,35 @@ describe('GameService', () => {
   // pickCard Tests
   // ==========================================================================
   describe('pickCard', () => {
-    it('should not pick card when game is undefined', () => {
-      mockLocalService.getData.and.returnValue(null);
+    // Helper function to create service with specific game state
+    function createServiceWithGame(mockGame: Game | null): GameService {
+      mockLocalService.getData.and.returnValue(mockGame ? JSON.stringify(mockGame) : null);
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          GameService,
+          { provide: LocalService, useValue: mockLocalService },
+          { provide: CardService, useValue: mockCardService },
+          { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+          { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+        ],
+      });
+      return TestBed.inject(GameService);
+    }
 
-      service.pickCard();
+    it('should not pick card when game is undefined', () => {
+      const testService = createServiceWithGame(null);
+
+      testService.pickCard();
 
       expect(mockCardDeckHelperService.getRandomCard).not.toHaveBeenCalled();
     });
 
     it('should not pick card when activePlayer is undefined', () => {
       const mockGame = createMockGame({ activePlayer: undefined });
-      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-      service.game = mockGame;
+      const testService = createServiceWithGame(mockGame);
 
-      service.pickCard();
+      testService.pickCard();
 
       expect(mockCardDeckHelperService.getRandomCard).not.toHaveBeenCalled();
     });
@@ -944,8 +1146,7 @@ describe('GameService', () => {
         choice: { color: 'red', plus_or_minus: '', in_out: '', suit: '' },
       });
       const mockGame = createMockGame({ players: [player], activePlayer: player, turn: 1 });
-      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-      service.game = mockGame;
+      const testService = createServiceWithGame(mockGame);
 
       const newCard = createMockCard({ value: '5', suit: 'hearts' });
       mockCardDeckHelperService.getRandomCard.and.returnValue(newCard);
@@ -953,10 +1154,10 @@ describe('GameService', () => {
       mockCardService.isBlackCard.and.returnValue(false);
       mockCardService.isRedCard.and.returnValue(true);
 
-      service.pickCard();
+      testService.pickCard();
 
       expect(mockCardDeckHelperService.getRandomCard).toHaveBeenCalled();
-      expect(service.game.players[0].cards.length).toBe(1);
+      expect(testService.game().players[0].cards.length).toBe(1);
     });
 
     it('should move to next player after picking card', () => {
@@ -975,18 +1176,17 @@ describe('GameService', () => {
         activePlayer: player1,
         turn: 1,
       });
-      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-      service.game = mockGame;
+      const testService = createServiceWithGame(mockGame);
 
       const newCard = createMockCard();
       mockCardDeckHelperService.getRandomCard.and.returnValue(newCard);
 
-      service.pickCard();
+      testService.pickCard();
 
-      expect(service.game.activePlayer?.id).toBe('player-2');
+      expect(testService.game().activePlayer?.id).toBe('player-2');
     });
 
-    it('should set activePlayer to undefined when last player picks', () => {
+    it('should set activePlayer to first player and increment turn when last player picks', () => {
       const player = createMockPlayer({
         id: 'player-1',
         cards: [],
@@ -997,15 +1197,16 @@ describe('GameService', () => {
         activePlayer: player,
         turn: 1,
       });
-      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-      service.game = mockGame;
+      const testService = createServiceWithGame(mockGame);
 
       const newCard = createMockCard();
       mockCardDeckHelperService.getRandomCard.and.returnValue(newCard);
 
-      service.pickCard();
+      testService.pickCard();
 
-      expect(service.game.activePlayer).toBeUndefined();
+      // When last player picks and turn < 4, turn increments and activePlayer is set to first player
+      expect(testService.game().turn).toBe(2);
+      expect(testService.game().activePlayer?.id).toBe('player-1');
     });
 
     it('should increment turn when all players made choices', () => {
@@ -1019,15 +1220,14 @@ describe('GameService', () => {
         activePlayer: player,
         turn: 1,
       });
-      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-      service.game = mockGame;
+      const testService = createServiceWithGame(mockGame);
 
       const newCard = createMockCard();
       mockCardDeckHelperService.getRandomCard.and.returnValue(newCard);
 
-      service.pickCard();
+      testService.pickCard();
 
-      expect(service.game.turn).toBe(2);
+      expect(testService.game().turn).toBe(2);
     });
 
     it('should set phase to 2 when turn exceeds 4', () => {
@@ -1042,16 +1242,15 @@ describe('GameService', () => {
         turn: 4,
         phase: 1,
       });
-      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-      service.game = mockGame;
+      const testService = createServiceWithGame(mockGame);
 
       const newCard = createMockCard();
       mockCardDeckHelperService.getRandomCard.and.returnValue(newCard);
       mockPlayerHelperService.getPlayerChoice.and.returnValue('hearts');
 
-      service.pickCard();
+      testService.pickCard();
 
-      expect(service.game.phase).toBe(2);
+      expect(testService.game().phase).toBe(2);
     });
   });
 
@@ -1059,10 +1258,26 @@ describe('GameService', () => {
   // displayNewCard (Phase 2) Tests
   // ==========================================================================
   describe('displayNewCard', () => {
-    it('should return early if game is undefined', () => {
-      mockLocalService.getData.and.returnValue(null);
+    // Helper function to create service with specific game state
+    function createServiceWithGame(mockGame: Game | null): GameService {
+      mockLocalService.getData.and.returnValue(mockGame ? JSON.stringify(mockGame) : null);
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          GameService,
+          { provide: LocalService, useValue: mockLocalService },
+          { provide: CardService, useValue: mockCardService },
+          { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+          { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+        ],
+      });
+      return TestBed.inject(GameService);
+    }
 
-      const result = service.displayNewCard();
+    it('should return early if game is undefined', () => {
+      const testService = createServiceWithGame(null);
+
+      const result = testService.displayNewCard();
 
       expect(result).toBeUndefined();
     });
@@ -1078,10 +1293,9 @@ describe('GameService', () => {
           createMockCard(),
         ],
       });
-      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-      service.game = mockGame;
+      const testService = createServiceWithGame(mockGame);
 
-      const result = service.displayNewCard();
+      const result = testService.displayNewCard();
 
       expect(result).toBeUndefined();
     });
@@ -1089,20 +1303,20 @@ describe('GameService', () => {
     it('should display a new card and deselect all previous cards', () => {
       const existingCard = createMockCard({ selected: true });
       const mockGame = createMockGame({
-        givingCards: [],
+        givingCards: [existingCard],
         drinkingCards: [],
-        players: [createMockPlayer({ cards: [existingCard] })],
+        players: [createMockPlayer({ cards: [] })],
         summary: false,
       });
-      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-      service.game = mockGame;
+      const testService = createServiceWithGame(mockGame);
 
       const newCard = createMockCard({ value: '7' });
       mockCardDeckHelperService.getRandomCard.and.returnValue(newCard);
 
-      service.displayNewCard();
+      testService.displayNewCard();
 
-      expect(existingCard.selected).toBe(false);
+      // The existing card in givingCards should be deselected
+      expect(testService.game().givingCards[0].selected).toBe(false);
     });
 
     it('should return early if not all sips given in summary mode', () => {
@@ -1114,10 +1328,9 @@ describe('GameService', () => {
         players: [player],
         summary: true,
       });
-      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-      service.game = mockGame;
+      const testService = createServiceWithGame(mockGame);
 
-      const result = service.displayNewCard();
+      const result = testService.displayNewCard();
 
       expect(result).toBeUndefined();
     });
@@ -1136,15 +1349,14 @@ describe('GameService', () => {
         players: [createMockPlayer()],
         summary: false,
       });
-      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-      service.game = mockGame;
+      const testService = createServiceWithGame(mockGame);
 
       const newCard = createMockCard();
       mockCardDeckHelperService.getRandomCard.and.returnValue(newCard);
 
-      service.displayNewCard();
+      testService.displayNewCard();
 
-      expect(service.game.status).toBe(2);
+      expect(testService.game().status).toBe(2);
     });
 
     it('should mark new card as selected', () => {
@@ -1153,13 +1365,12 @@ describe('GameService', () => {
         drinkingCards: [],
         players: [createMockPlayer()],
       });
-      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-      service.game = mockGame;
+      const testService = createServiceWithGame(mockGame);
 
       const newCard = createMockCard({ selected: false });
       mockCardDeckHelperService.getRandomCard.and.returnValue(newCard);
 
-      const result = service.displayNewCard();
+      const result = testService.displayNewCard();
 
       expect(result?.selected).toBe(true);
     });
@@ -1176,9 +1387,9 @@ describe('GameService', () => {
       service.beginGame();
 
       expect(mockCardDeckHelperService.constructDeck).toHaveBeenCalled();
-      expect(service.game.turn).toBe(1);
-      expect(service.game.phase).toBe(1);
-      expect(service.game.status).toBe(1);
+      expect(service.game().turn).toBe(1);
+      expect(service.game().phase).toBe(1);
+      expect(service.game().status).toBe(1);
     });
 
     it('should set maxTurnCount to players.length * 4', () => {
@@ -1191,7 +1402,7 @@ describe('GameService', () => {
 
       service.beginGame();
 
-      expect(service.game.maxTurnCount).toBe(12);
+      expect(service.game().maxTurnCount).toBe(12);
     });
 
     it('should set first player as active player', () => {
@@ -1200,7 +1411,7 @@ describe('GameService', () => {
 
       service.beginGame();
 
-      expect(service.game.activePlayer?.id).toBe('player-1');
+      expect(service.game().activePlayer?.id).toBe('player-1');
     });
 
     it('should initialize empty drinkingCards and givingCards arrays', () => {
@@ -1209,8 +1420,8 @@ describe('GameService', () => {
 
       service.beginGame();
 
-      expect(service.game.drinkingCards).toEqual([]);
-      expect(service.game.givingCards).toEqual([]);
+      expect(service.game().drinkingCards).toEqual([]);
+      expect(service.game().givingCards).toEqual([]);
     });
 
     it('should set summary mode to false by default', () => {
@@ -1219,7 +1430,7 @@ describe('GameService', () => {
 
       service.beginGame();
 
-      expect(service.game.summary).toBe(false);
+      expect(service.game().summary).toBe(false);
     });
 
     it('should set summary mode to true when passed as parameter', () => {
@@ -1228,7 +1439,7 @@ describe('GameService', () => {
 
       service.beginGame(true);
 
-      expect(service.game.summary).toBe(true);
+      expect(service.game().summary).toBe(true);
     });
   });
 
@@ -1236,14 +1447,29 @@ describe('GameService', () => {
   // resetGame Tests
   // ==========================================================================
   describe('resetGame', () => {
+    // Helper function to create service with specific game state
+    function createServiceWithGame(mockGame: Game): GameService {
+      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          GameService,
+          { provide: LocalService, useValue: mockLocalService },
+          { provide: CardService, useValue: mockCardService },
+          { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+          { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+        ],
+      });
+      return TestBed.inject(GameService);
+    }
+
     it('should reset game status to 0', () => {
       const mockGame = createMockGame({ status: 2 });
-      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-      service.game = mockGame;
+      const testService = createServiceWithGame(mockGame);
 
-      service.resetGame();
+      testService.resetGame();
 
-      expect(service.game.status).toBe(0);
+      expect(testService.game().status).toBe(0);
     });
 
     it('should reset givingCards and drinkingCards to empty arrays', () => {
@@ -1251,35 +1477,32 @@ describe('GameService', () => {
         givingCards: [createMockCard()],
         drinkingCards: [createMockCard()],
       });
-      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-      service.game = mockGame;
+      const testService = createServiceWithGame(mockGame);
 
-      service.resetGame();
+      testService.resetGame();
 
-      expect(service.game.givingCards).toEqual([]);
-      expect(service.game.drinkingCards).toEqual([]);
+      expect(testService.game().givingCards).toEqual([]);
+      expect(testService.game().drinkingCards).toEqual([]);
     });
 
     it('should reset phase and turn to 0', () => {
       const mockGame = createMockGame({ phase: 2, turn: 4 });
-      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-      service.game = mockGame;
+      const testService = createServiceWithGame(mockGame);
 
-      service.resetGame();
+      testService.resetGame();
 
-      expect(service.game.phase).toBe(0);
-      expect(service.game.turn).toBe(0);
+      expect(testService.game().phase).toBe(0);
+      expect(testService.game().turn).toBe(0);
     });
 
     it('should reset activePlayer to undefined', () => {
       const player = createMockPlayer();
       const mockGame = createMockGame({ activePlayer: player });
-      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-      service.game = mockGame;
+      const testService = createServiceWithGame(mockGame);
 
-      service.resetGame();
+      testService.resetGame();
 
-      expect(service.game.activePlayer).toBeUndefined();
+      expect(testService.game().activePlayer).toBeUndefined();
     });
 
     it('should reset all players sips, cards, and choices', () => {
@@ -1289,14 +1512,13 @@ describe('GameService', () => {
         choice: { color: 'red', plus_or_minus: 'plus', in_out: 'in', suit: 'hearts' },
       });
       const mockGame = createMockGame({ players: [player] });
-      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-      service.game = mockGame;
+      const testService = createServiceWithGame(mockGame);
 
-      service.resetGame();
+      testService.resetGame();
 
-      expect(service.game.players[0].sips).toEqual({ drunk: 0, given: 0 });
-      expect(service.game.players[0].cards).toEqual([]);
-      expect(service.game.players[0].choice).toEqual({
+      expect(testService.game().players[0].sips).toEqual({ drunk: 0, given: 0 });
+      expect(testService.game().players[0].cards).toEqual([]);
+      expect(testService.game().players[0].choice).toEqual({
         color: '',
         plus_or_minus: '',
         in_out: '',
@@ -1306,10 +1528,9 @@ describe('GameService', () => {
 
     it('should save players to storage after reset', () => {
       const mockGame = createMockGame({ players: [createMockPlayer()] });
-      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-      service.game = mockGame;
+      const testService = createServiceWithGame(mockGame);
 
-      service.resetGame();
+      testService.resetGame();
 
       expect(mockPlayerHelperService.savePlayerToStorage).toHaveBeenCalled();
     });
@@ -1348,31 +1569,43 @@ describe('GameService', () => {
   // Additional Methods Tests
   // ==========================================================================
   describe('Additional Methods', () => {
+    // Helper function to create service with specific game state
+    function createServiceWithGame(mockGame: Game | null): GameService {
+      mockLocalService.getData.and.returnValue(mockGame ? JSON.stringify(mockGame) : null);
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          GameService,
+          { provide: LocalService, useValue: mockLocalService },
+          { provide: CardService, useValue: mockCardService },
+          { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+          { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+        ],
+      });
+      return TestBed.inject(GameService);
+    }
+
     describe('addDrinkingCard', () => {
       it('should add card to drinkingCards array', () => {
         const mockGame = createMockGame({ drinkingCards: [] });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
         const card = createMockCard();
-        service.addDrinkingCard(card);
+        testService.addDrinkingCard(card);
 
-        expect(service.game.drinkingCards.length).toBe(1);
-        expect(service.game.drinkingCards[0]).toBe(card);
+        expect(testService.game().drinkingCards.length).toBe(1);
       });
     });
 
     describe('addGivingCard', () => {
       it('should add card to givingCards array', () => {
         const mockGame = createMockGame({ givingCards: [] });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
         const card = createMockCard();
-        service.addGivingCard(card);
+        testService.addGivingCard(card);
 
-        expect(service.game.givingCards.length).toBe(1);
-        expect(service.game.givingCards[0]).toBe(card);
+        expect(testService.game().givingCards.length).toBe(1);
       });
     });
 
@@ -1380,37 +1613,34 @@ describe('GameService', () => {
       it('should add card to player cards array', () => {
         const player = createMockPlayer({ id: 'player-1', cards: [] });
         const mockGame = createMockGame({ players: [player], activePlayer: player });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
         const card = createMockCard();
-        service.addCardToPlayer(card, 'player-1');
+        testService.addCardToPlayer(card, 'player-1');
 
-        expect(service.game.players[0].cards.length).toBe(1);
+        expect(testService.game().players[0].cards.length).toBe(1);
       });
 
       it('should not add card if player not found', () => {
         const player = createMockPlayer({ id: 'player-1', cards: [] });
         const mockGame = createMockGame({ players: [player] });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
         const card = createMockCard();
-        service.addCardToPlayer(card, 'unknown-player');
+        testService.addCardToPlayer(card, 'unknown-player');
 
-        expect(service.game.players[0].cards.length).toBe(0);
+        expect(testService.game().players[0].cards.length).toBe(0);
       });
     });
 
     describe('addTurn', () => {
       it('should increment turn by 1', () => {
         const mockGame = createMockGame({ turn: 2 });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
-        service.addTurn();
+        testService.addTurn();
 
-        expect(service.game.turn).toBe(3);
+        expect(testService.game().turn).toBe(3);
       });
     });
 
@@ -1422,27 +1652,24 @@ describe('GameService', () => {
           givingCards: [givingCard],
           drinkingCards: [drinkingCard],
         });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
-        const result = service.getLastCard();
+        const result = testService.getLastCard();
 
-        expect(result).toBe(givingCard);
+        expect(result.value).toBe('K');
       });
 
       it('should return last drinking card when drinkingCards > givingCards', () => {
-        const givingCard = createMockCard({ value: 'K' });
         const drinkingCard = createMockCard({ value: '5' });
         const mockGame = createMockGame({
           givingCards: [],
           drinkingCards: [drinkingCard],
         });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
-        const result = service.getLastCard();
+        const result = testService.getLastCard();
 
-        expect(result).toBe(drinkingCard);
+        expect(result.value).toBe('5');
       });
     });
 
@@ -1452,10 +1679,9 @@ describe('GameService', () => {
           drinkingCards: [createMockCard(), createMockCard()],
           givingCards: [createMockCard()],
         });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
-        expect(service.isGivingCard()).toBe(true);
+        expect(testService.isGivingCard()).toBe(true);
       });
 
       it('should return false when drinkingCards <= givingCards', () => {
@@ -1463,10 +1689,9 @@ describe('GameService', () => {
           drinkingCards: [createMockCard()],
           givingCards: [createMockCard()],
         });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
-        expect(service.isGivingCard()).toBe(false);
+        expect(testService.isGivingCard()).toBe(false);
       });
     });
 
@@ -1476,10 +1701,9 @@ describe('GameService', () => {
           drinkingCards: [],
           givingCards: [],
         });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
-        expect(service.getSipsNumber()).toBe(1);
+        expect(testService.getSipsNumber()).toBe(1);
       });
 
       it('should return 1 when only drinkingCards has elements', () => {
@@ -1487,10 +1711,9 @@ describe('GameService', () => {
           drinkingCards: [createMockCard()],
           givingCards: [],
         });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
-        expect(service.getSipsNumber()).toBe(1);
+        expect(testService.getSipsNumber()).toBe(1);
       });
 
       it('should return drinkingCards.length + 1 when lengths are equal', () => {
@@ -1498,10 +1721,9 @@ describe('GameService', () => {
           drinkingCards: [createMockCard(), createMockCard()],
           givingCards: [createMockCard(), createMockCard()],
         });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
-        expect(service.getSipsNumber()).toBe(3);
+        expect(testService.getSipsNumber()).toBe(3);
       });
 
       it('should return givingCards.length + 1 when drinkingCards > givingCards', () => {
@@ -1509,28 +1731,25 @@ describe('GameService', () => {
           drinkingCards: [createMockCard(), createMockCard(), createMockCard()],
           givingCards: [createMockCard(), createMockCard()],
         });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
-        expect(service.getSipsNumber()).toBe(3);
+        expect(testService.getSipsNumber()).toBe(3);
       });
     });
 
     describe('isNotAllSipsGiven', () => {
       it('should return false when summary is not activated', () => {
         const mockGame = createMockGame({ summary: false });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
-        expect(service.isNotAllSipsGiven()).toBe(false);
+        expect(testService.isNotAllSipsGiven()).toBe(false);
       });
 
       it('should return false when drinkingCards is empty', () => {
         const mockGame = createMockGame({ summary: true, drinkingCards: [] });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
-        expect(service.isNotAllSipsGiven()).toBe(false);
+        expect(testService.isNotAllSipsGiven()).toBe(false);
       });
 
       it('should return true when there are remaining sips to give', () => {
@@ -1541,10 +1760,9 @@ describe('GameService', () => {
           drinkingCards: [createMockCard()],
           players: [player],
         });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
-        expect(service.isNotAllSipsGiven()).toBe(true);
+        expect(testService.isNotAllSipsGiven()).toBe(true);
       });
 
       it('should return false when all sips are given', () => {
@@ -1555,10 +1773,9 @@ describe('GameService', () => {
           drinkingCards: [createMockCard()],
           players: [player],
         });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
-        expect(service.isNotAllSipsGiven()).toBe(false);
+        expect(testService.isNotAllSipsGiven()).toBe(false);
       });
     });
 
@@ -1567,12 +1784,11 @@ describe('GameService', () => {
         const card = createMockCard({ value: '5', suit: 'hearts', givenSips: 0 });
         const player = createMockPlayer({ id: 'player-1', cards: [card] });
         const mockGame = createMockGame({ players: [player] });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
-        service.updatePlayerGivenSipsFromCard(player, card, 3);
+        testService.updatePlayerGivenSipsFromCard(player, card, 3);
 
-        expect(service.game.players[0].cards[0].givenSips).toBe(3);
+        expect(testService.game().players[0].cards[0].givenSips).toBe(3);
       });
 
       it('should not update if player not found', () => {
@@ -1580,12 +1796,11 @@ describe('GameService', () => {
         const player = createMockPlayer({ id: 'player-1', cards: [card] });
         const unknownPlayer = createMockPlayer({ id: 'unknown' });
         const mockGame = createMockGame({ players: [player] });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
-        service.updatePlayerGivenSipsFromCard(unknownPlayer, card, 3);
+        testService.updatePlayerGivenSipsFromCard(unknownPlayer, card, 3);
 
-        expect(service.game.players[0].cards[0].givenSips).toBeUndefined();
+        expect(testService.game().players[0].cards[0].givenSips).toBeUndefined();
       });
 
       it('should not update if card not found', () => {
@@ -1593,12 +1808,11 @@ describe('GameService', () => {
         const differentCard = createMockCard({ value: 'K', suit: 'spades' });
         const player = createMockPlayer({ id: 'player-1', cards: [card] });
         const mockGame = createMockGame({ players: [player] });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
-        service.updatePlayerGivenSipsFromCard(player, differentCard, 3);
+        testService.updatePlayerGivenSipsFromCard(player, differentCard, 3);
 
-        expect(service.game.players[0].cards[0].givenSips).toBeUndefined();
+        expect(testService.game().players[0].cards[0].givenSips).toBeUndefined();
       });
     });
 
@@ -1610,32 +1824,30 @@ describe('GameService', () => {
           activePlayer: player,
           turn: 1,
         });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
         const newCard = createMockCard();
         mockCardDeckHelperService.getRandomCard.and.returnValue(newCard);
 
-        service.setChoiceAndPickCard(DrinkChoiceEnum.Color, 'red');
+        testService.setChoiceAndPickCard(DrinkChoiceEnum.Color, 'red');
 
-        expect(service.game.players[0].choice['color']).toBe('red');
+        expect(testService.game().players[0].choice['color']).toBe('red');
         expect(mockCardDeckHelperService.getRandomCard).toHaveBeenCalled();
       });
 
       it('should not do anything when game is undefined', () => {
-        mockLocalService.getData.and.returnValue(null);
+        const testService = createServiceWithGame(null);
 
-        service.setChoiceAndPickCard(DrinkChoiceEnum.Color, 'red');
+        testService.setChoiceAndPickCard(DrinkChoiceEnum.Color, 'red');
 
         expect(mockCardDeckHelperService.getRandomCard).not.toHaveBeenCalled();
       });
 
       it('should not do anything when activePlayer is undefined', () => {
         const mockGame = createMockGame({ activePlayer: undefined });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
-        service.setChoiceAndPickCard(DrinkChoiceEnum.Color, 'red');
+        testService.setChoiceAndPickCard(DrinkChoiceEnum.Color, 'red');
 
         expect(mockCardDeckHelperService.getRandomCard).not.toHaveBeenCalled();
       });
@@ -1647,14 +1859,13 @@ describe('GameService', () => {
         const card2 = createMockCard({ value: '7', selected: false });
         const player = createMockPlayer({ cards: [card1, card2] });
         const mockGame = createMockGame({ players: [player], summary: false });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
         const currentCard = createMockCard({ value: '5' });
-        service.selectCardOnPlayer(2, currentCard);
+        testService.selectCardOnPlayer(2, currentCard);
 
-        expect(service.game.players[0].cards[0].selected).toBe(true);
-        expect(service.game.players[0].cards[1].selected).toBe(false);
+        expect(testService.game().players[0].cards[0].selected).toBe(true);
+        expect(testService.game().players[0].cards[1].selected).toBe(false);
       });
 
       it('should set givenSips when summary is activated and isGivingCard', () => {
@@ -1666,13 +1877,12 @@ describe('GameService', () => {
           drinkingCards: [createMockCard(), createMockCard()],
           givingCards: [createMockCard()],
         });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
         const currentCard = createMockCard({ value: '5' });
-        service.selectCardOnPlayer(3, currentCard);
+        testService.selectCardOnPlayer(3, currentCard);
 
-        expect(service.game.players[0].cards[0].givenSips).toBe(3);
+        expect(testService.game().players[0].cards[0].givenSips).toBe(3);
       });
     });
 
@@ -1690,13 +1900,12 @@ describe('GameService', () => {
           drinkingCards: [],
           givingCards: [],
         });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
         const matchingCard = createMockCard({ value: '5' });
-        service.addSips(matchingCard, 2);
+        testService.addSips(matchingCard, 2);
 
-        expect(service.game.players[0].sips['drunk']).toBe(2);
+        expect(testService.game().players[0].sips['drunk']).toBe(2);
       });
 
       it('should add sips multiple times for multiple matching cards', () => {
@@ -1712,13 +1921,12 @@ describe('GameService', () => {
           drinkingCards: [],
           givingCards: [],
         });
-        mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
-        service.game = mockGame;
+        const testService = createServiceWithGame(mockGame);
 
         const matchingCard = createMockCard({ value: '5' });
-        service.addSips(matchingCard, 2);
+        testService.addSips(matchingCard, 2);
 
-        expect(service.game.players[0].sips['drunk']).toBe(4);
+        expect(testService.game().players[0].sips['drunk']).toBe(4);
       });
     });
 

@@ -11,15 +11,14 @@ describe('PlayerListPlayerComponent', () => {
   let component: PlayerListPlayerComponent;
   let fixture: ComponentFixture<PlayerListPlayerComponent>;
   let mockPlayerHelperService: jasmine.SpyObj<PlayerHelperService>;
-  let mockGameService: jasmine.SpyObj<GameService>;
+  let mockGameService: ReturnType<typeof createMockGameService>;
 
   beforeEach(async () => {
     mockPlayerHelperService = createMockPlayerHelperService();
     mockGameService = createMockGameService();
 
     await TestBed.configureTestingModule({
-      imports: [TranslateModule.forRoot()],
-      declarations: [PlayerListPlayerComponent],
+      imports: [TranslateModule.forRoot(), PlayerListPlayerComponent],
       providers: [
         { provide: PlayerHelperService, useValue: mockPlayerHelperService },
         { provide: GameService, useValue: mockGameService },
@@ -36,20 +35,8 @@ describe('PlayerListPlayerComponent', () => {
       expect(component).toBeTruthy();
     });
 
-    it('should have playerHelper service injected', () => {
-      expect(component.playerHelper).toBe(mockPlayerHelperService);
-    });
-
-    it('should have gameSrv service injected', () => {
-      expect(component.gameSrv).toBe(mockGameService);
-    });
-
     it('should initialize with undefined player', () => {
       expect(component.player).toBeUndefined();
-    });
-
-    it('should call ngOnInit without errors', () => {
-      expect(() => component.ngOnInit()).not.toThrow();
     });
   });
 
@@ -90,296 +77,121 @@ describe('PlayerListPlayerComponent', () => {
       expect(component.player?.name).toBe('Player 2');
     });
 
-    it('should store player with all properties', () => {
+    it('should handle player with all properties set', () => {
       const testPlayer = new PlayerModel();
-      testPlayer.name = 'Jane Smith';
-      testPlayer.id = 'test-id-456';
+      testPlayer.id = 'full-player-id';
+      testPlayer.name = 'Full Player';
       testPlayer.cards = [];
-      testPlayer.avatarSrc = 'https://example.com/avatar2.jpg';
-      testPlayer.choice = { color: 'red', plus_or_minus: 'plus', in_out: 'in', suit: 'hearts' };
+      testPlayer.avatarSrc = 'avatar.png';
+      testPlayer.choice = { color: 'red', plus_or_minus: '', in_out: '', suit: '' };
       testPlayer.sips = { drunk: 5, given: 3 };
 
       component.player = testPlayer;
 
-      expect(component.player?.name).toBe('Jane Smith');
-      expect(component.player?.id).toBe('test-id-456');
+      expect(component.player?.id).toBe('full-player-id');
+      expect(component.player?.name).toBe('Full Player');
+      expect(component.player?.cards).toEqual([]);
+      expect(component.player?.avatarSrc).toBe('avatar.png');
       expect(component.player?.choice['color']).toBe('red');
       expect(component.player?.sips['drunk']).toBe(5);
-      expect(component.player?.sips['given']).toBe(3);
     });
   });
 
-  describe('deletePlayer()', () => {
-    let testPlayer: PlayerModel;
-
-    beforeEach(() => {
-      testPlayer = new PlayerModel({
-        name: 'Test Player',
-        id: 'test-player-id',
-        cards: [],
-      });
-      component.player = testPlayer;
-    });
-
+  describe('deletePlayer', () => {
     it('should call playerHelper.deletePlayer with the provided player', () => {
+      const testPlayer = new PlayerModel();
+      testPlayer.name = 'Delete Me';
+      testPlayer.id = 'delete-id';
+
+      mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
+
       component.deletePlayer(testPlayer);
 
       expect(mockPlayerHelperService.deletePlayer).toHaveBeenCalledWith(testPlayer);
-      expect(mockPlayerHelperService.deletePlayer).toHaveBeenCalledTimes(1);
     });
 
-    it('should call gameSrv.setWithSummaryMode(false) when player count is 1 or less', () => {
+    it('should set withSummaryMode to false when player count is 1 or less after deletion', () => {
+      const testPlayer = new PlayerModel();
+      testPlayer.name = 'Last Player';
+      testPlayer.id = 'last-id';
+
       mockPlayerHelperService.getPlayerNumber.and.returnValue(1);
+      mockGameService.withSummaryMode.set(true);
 
       component.deletePlayer(testPlayer);
 
-      expect(mockGameService.setWithSummaryMode).toHaveBeenCalledWith(false);
+      expect(mockGameService.withSummaryMode()).toBe(false);
     });
 
-    it('should call gameSrv.setWithSummaryMode(false) when player count becomes 0 after deletion', () => {
+    it('should set withSummaryMode to false when player count becomes 0 after deletion', () => {
+      const testPlayer = new PlayerModel();
+      testPlayer.name = 'Only Player';
+      testPlayer.id = 'only-id';
+
       mockPlayerHelperService.getPlayerNumber.and.returnValue(0);
+      mockGameService.withSummaryMode.set(true);
 
       component.deletePlayer(testPlayer);
 
-      expect(mockGameService.setWithSummaryMode).toHaveBeenCalledWith(false);
+      expect(mockGameService.withSummaryMode()).toBe(false);
     });
 
-    it('should not call gameSrv.setWithSummaryMode when player count is greater than 1', () => {
-      mockPlayerHelperService.getPlayerNumber.and.returnValue(5);
+    it('should not change withSummaryMode when player count is greater than 1', () => {
+      const testPlayer = new PlayerModel();
+      testPlayer.name = 'One of Many';
+      testPlayer.id = 'many-id';
+
+      mockPlayerHelperService.getPlayerNumber.and.returnValue(3);
+      mockGameService.withSummaryMode.set(true);
 
       component.deletePlayer(testPlayer);
 
-      expect(mockGameService.setWithSummaryMode).not.toHaveBeenCalled();
+      expect(mockGameService.withSummaryMode()).toBe(true);
     });
 
-    it('should call gameSrv.setWithSummaryMode after playerHelper.deletePlayer', () => {
-      mockPlayerHelperService.getPlayerNumber.and.returnValue(1);
+    it('should handle deleting different players', () => {
+      const player1 = new PlayerModel();
+      player1.name = 'Player 1';
+      player1.id = 'id-1';
 
-      component.deletePlayer(testPlayer);
-
-      expect(mockPlayerHelperService.deletePlayer).toHaveBeenCalled();
-      expect(mockGameService.setWithSummaryMode).toHaveBeenCalled();
-    });
-
-    it('should delete player with specific id', () => {
       const player2 = new PlayerModel();
-      player2.name = 'Another Player';
-      player2.id = 'another-id';
+      player2.name = 'Player 2';
+      player2.id = 'id-2';
+
+      mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
+
+      component.deletePlayer(player1);
+      expect(mockPlayerHelperService.deletePlayer).toHaveBeenCalledWith(player1);
 
       component.deletePlayer(player2);
-
       expect(mockPlayerHelperService.deletePlayer).toHaveBeenCalledWith(player2);
     });
 
-    it('should handle deletion of multiple players sequentially', () => {
-      const player1 = new PlayerModel();
-      player1.name = 'Player 1';
-      player1.id = 'id-1';
-
-      const player2 = new PlayerModel();
-      player2.name = 'Player 2';
-      player2.id = 'id-2';
-
-      mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
-      component.deletePlayer(player1);
-      expect(mockGameService.setWithSummaryMode).not.toHaveBeenCalled();
-
-      mockPlayerHelperService.getPlayerNumber.and.returnValue(1);
-      component.deletePlayer(player2);
-      expect(mockGameService.setWithSummaryMode).toHaveBeenCalledWith(false);
-    });
-
-    it('should properly handle edge case where getPlayerNumber returns 1 exactly', () => {
-      mockPlayerHelperService.getPlayerNumber.and.returnValue(1);
-
-      component.deletePlayer(testPlayer);
-
-      expect(mockGameService.setWithSummaryMode).toHaveBeenCalledWith(false);
-      expect(mockGameService.setWithSummaryMode).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe('ngOnInit()', () => {
-    it('should execute without errors', () => {
-      expect(() => component.ngOnInit()).not.toThrow();
-    });
-
-    it('should be callable multiple times', () => {
-      expect(() => {
-        component.ngOnInit();
-        component.ngOnInit();
-      }).not.toThrow();
-    });
-  });
-
-  describe('Service Integration', () => {
-    it('should have access to playerHelper methods through component', () => {
-      expect(typeof component.playerHelper.deletePlayer).toBe('function');
-      expect(typeof component.playerHelper.getPlayerNumber).toBe('function');
-    });
-
-    it('should have access to gameSrv methods through component', () => {
-      expect(typeof component.gameSrv.setWithSummaryMode).toBe('function');
-    });
-
-    it('should maintain service references across component lifecycle', () => {
-      const playerHelperRef = component.playerHelper;
-      const gameServiceRef = component.gameSrv;
-
-      component.ngOnInit();
-
-      expect(component.playerHelper).toBe(playerHelperRef);
-      expect(component.gameSrv).toBe(gameServiceRef);
-    });
-  });
-
-  describe('Edge Cases and Boundary Conditions', () => {
-    let testPlayer: PlayerModel;
-
-    beforeEach(() => {
-      testPlayer = new PlayerModel();
-      testPlayer.name = 'Test';
-      testPlayer.id = 'test-id';
-    });
-
-    it('should handle player with empty name', () => {
-      const playerWithEmptyName = new PlayerModel();
-      playerWithEmptyName.name = '';
-      playerWithEmptyName.id = 'id-empty';
-      component.player = playerWithEmptyName;
-
-      expect(component.player?.name).toBe('');
-    });
-
-    it('should handle player with special characters in name', () => {
-      const specialPlayer = new PlayerModel();
-      specialPlayer.name = 'Player @#$%';
-      specialPlayer.id = 'special-id';
-      component.player = specialPlayer;
-
-      expect(component.player?.name).toBe('Player @#$%');
-    });
-
-    it('should handle deletePlayer when getPlayerNumber is 0', () => {
-      mockPlayerHelperService.getPlayerNumber.and.returnValue(0);
-
-      component.deletePlayer(testPlayer);
-
-      expect(mockGameService.setWithSummaryMode).toHaveBeenCalledWith(false);
-    });
-
-    it('should handle deletePlayer when getPlayerNumber is 2 (boundary)', () => {
-      mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
-
-      component.deletePlayer(testPlayer);
-
-      expect(mockGameService.setWithSummaryMode).not.toHaveBeenCalled();
-    });
-
-    it('should handle deletePlayer when getPlayerNumber is very large', () => {
-      mockPlayerHelperService.getPlayerNumber.and.returnValue(1000);
-
-      component.deletePlayer(testPlayer);
-
-      expect(mockGameService.setWithSummaryMode).not.toHaveBeenCalled();
-    });
-
-    it('should delete player with undefined properties', () => {
-      const incompletePlayer = new PlayerModel();
-      incompletePlayer.id = 'incomplete-id';
-
-      component.deletePlayer(incompletePlayer);
-
-      expect(mockPlayerHelperService.deletePlayer).toHaveBeenCalledWith(incompletePlayer);
-    });
-  });
-
-  describe('Method Call Order and Synchronization', () => {
-    it('should call deletePlayer before checking player count', () => {
-      const callOrder: string[] = [];
-
-      mockPlayerHelperService.deletePlayer.and.callFake(() => {
-        callOrder.push('deletePlayer');
-      });
-
-      mockPlayerHelperService.getPlayerNumber.and.callFake(() => {
-        callOrder.push('getPlayerNumber');
-        return 1;
-      });
-
+    it('should handle deletion boundary case at exactly 1 player', () => {
       const testPlayer = new PlayerModel();
-      testPlayer.name = 'Test';
-      testPlayer.id = 'test';
+      testPlayer.name = 'Boundary Player';
+      testPlayer.id = 'boundary-id';
+
+      mockPlayerHelperService.getPlayerNumber.and.returnValue(1);
+      mockGameService.withSummaryMode.set(true);
+
       component.deletePlayer(testPlayer);
 
-      expect(callOrder[0]).toBe('deletePlayer');
-      expect(callOrder[1]).toBe('getPlayerNumber');
+      expect(mockGameService.withSummaryMode()).toBe(false);
     });
 
-    it('should check player count after deletion in deletePlayer', () => {
+    it('should handle deletion boundary case at exactly 2 players', () => {
       const testPlayer = new PlayerModel();
-      testPlayer.name = 'Test';
-      testPlayer.id = 'test';
-      mockPlayerHelperService.getPlayerNumber.and.returnValue(0);
-
-      component.deletePlayer(testPlayer);
-
-      expect(mockPlayerHelperService.deletePlayer).toHaveBeenCalled();
-      expect(mockPlayerHelperService.getPlayerNumber).toHaveBeenCalled();
-    });
-  });
-
-  describe('Change Detection Strategy', () => {
-    it('should be configured with OnPush change detection', () => {
-      const metadata = (component.constructor as any).__annotations__[0];
-      expect(metadata.changeDetection).toBeDefined();
-    });
-  });
-
-  describe('Multiple Player Deletion Scenarios', () => {
-    it('should handle deletion of all players from a group', () => {
-      const player1 = new PlayerModel();
-      player1.name = 'Player 1';
-      player1.id = 'id-1';
-
-      const player2 = new PlayerModel();
-      player2.name = 'Player 2';
-      player2.id = 'id-2';
-
-      const player3 = new PlayerModel();
-      player3.name = 'Player 3';
-      player3.id = 'id-3';
-
-      mockPlayerHelperService.getPlayerNumber.and.returnValue(3);
-      component.deletePlayer(player1);
-      expect(mockGameService.setWithSummaryMode).not.toHaveBeenCalled();
+      testPlayer.name = 'Second Player';
+      testPlayer.id = 'second-id';
 
       mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
-      component.deletePlayer(player2);
-      expect(mockGameService.setWithSummaryMode).not.toHaveBeenCalled();
+      mockGameService.withSummaryMode.set(true);
 
-      mockPlayerHelperService.getPlayerNumber.and.returnValue(1);
-      component.deletePlayer(player3);
-      expect(mockGameService.setWithSummaryMode).toHaveBeenCalledWith(false);
-      expect(mockGameService.setWithSummaryMode).toHaveBeenCalledTimes(1);
-    });
+      component.deletePlayer(testPlayer);
 
-    it('should handle rapid consecutive player deletions', () => {
-      const player1 = new PlayerModel();
-      player1.name = 'Player 1';
-      player1.id = 'id-1';
-
-      const player2 = new PlayerModel();
-      player2.name = 'Player 2';
-      player2.id = 'id-2';
-
-      mockPlayerHelperService.getPlayerNumber.and.returnValue(1);
-
-      component.deletePlayer(player1);
-      component.deletePlayer(player2);
-
-      expect(mockPlayerHelperService.deletePlayer).toHaveBeenCalledTimes(2);
-      expect(mockGameService.setWithSummaryMode).toHaveBeenCalledTimes(2);
+      // With 2 players remaining, withSummaryMode should not be changed
+      expect(mockGameService.withSummaryMode()).toBe(true);
     });
   });
 });

@@ -21,7 +21,7 @@ import { Game } from './_shared/_models/game.model';
 describe('AppComponent', () => {
   let component: AppComponent;
   let fixture: ComponentFixture<AppComponent>;
-  let mockGameService: jasmine.SpyObj<GameService>;
+  let mockGameService: ReturnType<typeof createMockGameService>;
   let mockPlayerHelperService: jasmine.SpyObj<PlayerHelperService>;
   let mockTranslateService: jasmine.SpyObj<TranslateService>;
 
@@ -80,8 +80,7 @@ describe('AppComponent', () => {
   });
 
   describe('withSummaryMode computed signal', () => {
-    it('should return false when game is null', () => {
-      mockGameService.gameSignal.set(null);
+    it('should return false when withSummaryMode signal is false', () => {
       mockGameService.withSummaryMode.set(false);
 
       fixture.detectChanges();
@@ -100,7 +99,7 @@ describe('AppComponent', () => {
 
     it('should return true when game.summary is true and player count > 1', () => {
       mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
-      mockGameService.gameSignal.set({
+      mockGameService.game.set({
         players: [],
         turn: 1,
         phase: 1,

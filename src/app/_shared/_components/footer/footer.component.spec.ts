@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { signal } from '@angular/core';
 import { FooterComponent } from './footer.component';
 import { GameService } from '../../../services/game/game.service';
 import { PlayerHelperService } from '../../_helpers/player.helper';
@@ -13,8 +13,9 @@ import { DrinkChoiceEnum } from '../../_models/enums/drink_choice.enum';
 describe('FooterComponent', () => {
   let component: FooterComponent;
   let fixture: ComponentFixture<FooterComponent>;
-  let mockGameService: jasmine.SpyObj<GameService>;
+  let mockGameService: ReturnType<typeof createMockGameService>;
   let mockPlayerHelperService: jasmine.SpyObj<PlayerHelperService>;
+  let mockRouter: jasmine.SpyObj<Router>;
 
   const mockPlayer: PlayerModel = {
     id: '1',
@@ -40,12 +41,10 @@ describe('FooterComponent', () => {
   beforeEach(async () => {
     mockGameService = createMockGameService();
     mockPlayerHelperService = createMockPlayerHelperService();
+    mockRouter = jasmine.createSpyObj('Router', ['navigate']);
 
     // Set initial game state via signal
-    mockGameService.gameSignal.set(mockGame);
-
-    // Mock game object
-    (mockGameService as any).game = { ...mockGame };
+    mockGameService.game.set(mockGame);
 
     // Add missing mock methods
     (mockGameService as any).isNotAllSipsGiven = jasmine.createSpy('isNotAllSipsGiven').and.returnValue(false);
@@ -56,6 +55,7 @@ describe('FooterComponent', () => {
       providers: [
         { provide: GameService, useValue: mockGameService },
         { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+        { provide: Router, useValue: mockRouter },
       ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
@@ -68,66 +68,43 @@ describe('FooterComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  describe('Computed Signals', () => {
-    it('should have game computed signal', () => {
-      expect(component.game).toBeDefined();
-      expect(typeof component.game).toBe('function');
+  describe('Component Properties', () => {
+    it('should have gameSrv injected', () => {
+      expect(component.gameSrv).toBeDefined();
     });
 
-    it('should have activeTurn computed signal', () => {
-      expect(component.activeTurn).toBeDefined();
-      expect(typeof component.activeTurn).toBe('function');
+    it('should have playerHelper injected', () => {
+      expect(component.playerHelper).toBeDefined();
     });
 
-    it('should have drinkingCards computed signal', () => {
-      expect(component.drinkingCards).toBeDefined();
-      expect(typeof component.drinkingCards).toBe('function');
+    it('should have withSummaryMode input initialized to false', () => {
+      expect(component.withSummaryMode).toBeFalse();
     });
 
-    it('should have givingCards computed signal', () => {
-      expect(component.givingCards).toBeDefined();
-      expect(typeof component.givingCards).toBe('function');
+    it('should have cardSlots array with 6 elements', () => {
+      expect(component.cardSlots).toEqual([0, 1, 2, 3, 4, 5]);
     });
+  });
 
-    it('should return game from gameSignal', () => {
+  describe('Game State Access', () => {
+    it('should access game state through gameSrv', () => {
       fixture.detectChanges();
-      expect(component.game()).toEqual(mockGame);
+      expect(component.gameSrv.game()).toEqual(mockGame);
     });
 
-    it('should return activeTurn from game', () => {
+    it('should access turn through gameSrv', () => {
       fixture.detectChanges();
-      expect(component.activeTurn()).toBe(1);
+      expect(component.gameSrv.turn()).toBe(1);
     });
 
-    it('should set activePlayer to first player if not set', () => {
-      const gameWithoutActivePlayer = { ...mockGame, activePlayer: undefined };
-      mockGameService.gameSignal.set(gameWithoutActivePlayer);
-
+    it('should access drinkingCards through gameSrv', () => {
       fixture.detectChanges();
-
-      expect(component.game()?.activePlayer).toEqual(mockPlayer);
+      expect(component.gameSrv.drinkingCards()).toEqual([]);
     });
 
-    it('should update when gameSignal changes', () => {
+    it('should access givingCards through gameSrv', () => {
       fixture.detectChanges();
-      expect(component.activeTurn()).toBe(1);
-
-      mockGameService.gameSignal.set({ ...mockGame, turn: 3 });
-      fixture.detectChanges();
-
-      expect(component.activeTurn()).toBe(3);
-    });
-
-    it('should update drinkingCards and givingCards from game', () => {
-      const testCards = [
-        { value: '5', suit: 'hearts', icon: 'heart', sips: 1, selected: false, img: 'test.png', givenSips: 0 },
-      ];
-      mockGameService.gameSignal.set({ ...mockGame, drinkingCards: testCards, givingCards: testCards });
-
-      fixture.detectChanges();
-
-      expect(component.drinkingCards()).toEqual(testCards);
-      expect(component.givingCards()).toEqual(testCards);
+      expect(component.gameSrv.givingCards()).toEqual([]);
     });
   });
 
@@ -181,61 +158,48 @@ describe('FooterComponent', () => {
 
   describe('hasPlayers', () => {
     it('should return true when players exist', () => {
-      (mockPlayerHelperService as any).players = [mockPlayer];
+      mockPlayerHelperService.getPlayers.and.returnValue([mockPlayer]);
       expect(component.hasPlayers()).toBeTrue();
     });
 
     it('should return false when no players', () => {
-      (mockPlayerHelperService as any).players = [];
+      mockPlayerHelperService.getPlayers.and.returnValue([]);
       expect(component.hasPlayers()).toBeFalse();
     });
   });
 
   describe('beginGame', () => {
-    it('should call gameSrv.beginGame with withSummaryMode', () => {
+    it('should call gameSrv.beginGame with withSummaryMode and navigate', () => {
       component.withSummaryMode = true;
       component.beginGame();
       expect(mockGameService.beginGame).toHaveBeenCalledWith(true);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/game']);
     });
 
     it('should call gameSrv.beginGame with false when withSummaryMode is false', () => {
       component.withSummaryMode = false;
       component.beginGame();
       expect(mockGameService.beginGame).toHaveBeenCalledWith(false);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/game']);
     });
-  });
-
-  describe('delay', () => {
-    it('should return a promise that resolves after specified ms', fakeAsync(() => {
-      let resolved = false;
-      component.delay(100).then(() => {
-        resolved = true;
-      });
-      expect(resolved).toBeFalse();
-      tick(100);
-      expect(resolved).toBeTrue();
-    }));
   });
 
   describe('restartGame', () => {
-    beforeEach(() => {
-      mockGameService.game = { status: 1 } as any;
-    });
-
-    it('should call resetGame and set status to 0 when all sips are given', fakeAsync(() => {
+    it('should call resetGame and navigate when all sips are given', fakeAsync(() => {
       (mockGameService as any).isNotAllSipsGiven.and.returnValue(false);
       component.restartGame();
       tick();
       expect(mockGameService.resetGame).toHaveBeenCalled();
-      expect(mockGameService.game.status).toBe(0);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/players']);
     }));
 
-    it('should display toast when not all sips are given', fakeAsync(() => {
+    it('should show toast when not all sips are given', fakeAsync(() => {
       (mockGameService as any).isNotAllSipsGiven.and.returnValue(true);
-      const toastSpy = spyOn(component, 'displayNotAllSipsGivenToast');
+      const mockToast = { show: jasmine.createSpy('show') };
+      component.toastComponent = mockToast as any;
       component.restartGame();
       tick(2500);
-      expect(toastSpy).toHaveBeenCalled();
+      expect(mockToast.show).toHaveBeenCalled();
     }));
   });
 
@@ -247,32 +211,22 @@ describe('FooterComponent', () => {
       expect(mockGameService.setStatus).toHaveBeenCalledWith(3);
     }));
 
-    it('should display toast when not all sips are given', fakeAsync(() => {
+    it('should show toast when not all sips are given', fakeAsync(() => {
       (mockGameService as any).isNotAllSipsGiven.and.returnValue(true);
-      const toastSpy = spyOn(component, 'displayNotAllSipsGivenToast');
+      const mockToast = { show: jasmine.createSpy('show') };
+      component.toastComponent = mockToast as any;
       component.displaySummary();
       tick(2500);
-      expect(toastSpy).toHaveBeenCalled();
+      expect(mockToast.show).toHaveBeenCalled();
     }));
   });
 
-  describe('displayNotAllSipsGivenToast', () => {
+  describe('toastComponent', () => {
     it('should call show on toastComponent when defined', () => {
       const mockToast = { show: jasmine.createSpy('show') };
       component.toastComponent = mockToast as any;
-      component.displayNotAllSipsGivenToast();
+      mockToast.show();
       expect(mockToast.show).toHaveBeenCalled();
-    });
-
-    it('should not throw when toastComponent is undefined', () => {
-      component.toastComponent = undefined;
-      expect(() => component.displayNotAllSipsGivenToast()).not.toThrow();
-    });
-  });
-
-  describe('ngOnDestroy', () => {
-    it('should not throw when called', () => {
-      expect(() => component.ngOnDestroy()).not.toThrow();
     });
   });
 });

@@ -18,7 +18,7 @@ describe('PlayersListComponent', () => {
   let component: PlayersListComponent;
   let fixture: ComponentFixture<PlayersListComponent>;
   let mockPlayerHelperService: jasmine.SpyObj<PlayerHelperService>;
-  let mockGameService: jasmine.SpyObj<GameService>;
+  let mockGameService: ReturnType<typeof createMockGameService>;
   let mockLocalService: jasmine.SpyObj<LocalService>;
   let translateService: TranslateService;
 
@@ -36,8 +36,8 @@ describe('PlayersListComponent', () => {
     mockGameService = createMockGameService();
     mockLocalService = createMockLocalService();
 
-    // Setup mock game object
-    (mockGameService as any).game = {
+    // Setup mock game object with players
+    mockGameService.game.set({
       players: [mockPlayer],
       turn: 1,
       phase: 1,
@@ -47,11 +47,10 @@ describe('PlayersListComponent', () => {
       activePlayer: undefined,
       status: 0,
       summary: false,
-    };
+    });
 
     await TestBed.configureTestingModule({
-      imports: [TranslateModule.forRoot(), ReactiveFormsModule, MatDialogModule],
-      declarations: [PlayersListComponent],
+      imports: [TranslateModule.forRoot(), ReactiveFormsModule, MatDialogModule, PlayersListComponent],
       providers: [
         { provide: PlayerHelperService, useValue: mockPlayerHelperService },
         { provide: GameService, useValue: mockGameService },
@@ -97,9 +96,9 @@ describe('PlayersListComponent', () => {
     });
   });
 
-  describe('ngOnInit', () => {
-    it('should be defined and callable', () => {
-      expect(() => component.ngOnInit()).not.toThrow();
+  describe('Component initialization', () => {
+    it('should have playersForm defined after initialization', () => {
+      expect(component.playersForm).toBeDefined();
     });
   });
 
@@ -152,8 +151,18 @@ describe('PlayersListComponent', () => {
     it('should return players from game when game is started', () => {
       mockGameService.isNewGame.and.returnValue(false);
       const gamePlayers = [mockPlayer, { ...mockPlayer, id: '2', name: 'Player 2' }];
-      // Set up the game with players on the mock service
-      mockGameService.game = { players: gamePlayers } as any;
+      // Set up the game with players on the mock service via signal
+      mockGameService.game.set({
+        players: gamePlayers,
+        turn: 1,
+        phase: 1,
+        maxTurnCount: 4,
+        drinkingCards: [],
+        givingCards: [],
+        activePlayer: undefined,
+        status: 1,
+        summary: false,
+      });
       const result = component.getPlayers();
       expect(result).toEqual(gamePlayers);
     });
