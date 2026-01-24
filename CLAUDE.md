@@ -110,7 +110,7 @@ src/app/
 - **KetalSessionService** (`services/ketal-session/`): Game session state management
 - **RealtimeService** (`services/realtime/`): Appwrite realtime subscription manager
 - **LocalModeService** (`services/local-mode/`): Offline mode with localStorage persistence
-- **GameService** (`services/game/`): Game state using signals, phases, turns, sip calculations
+- **GameService** (`services/game/`): Game state using signals, phases, turns, sip calculations (dual-mode: local/Appwrite)
 - **PlayerHelperService** (`_shared/_helpers/player.helper.ts`): Player CRUD, choice tracking
 - **CardDeckHelperService** (`_shared/_helpers/card-deck.helper.ts`): Deck construction
 
@@ -118,6 +118,35 @@ src/app/
 - **status**: 0=new, 1=started, 2=finished, 3=summary
 - **phase**: 1=prediction phase (4 rounds), 2=drinking/giving phase (6 cards)
 - **turn**: 1-4 in phase 1 (color, plus/minus, in/out, suit predictions)
+
+### GameService Dual-Mode Architecture
+
+GameService supports two operational modes for flexibility between offline and multiplayer:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      GameService                             │
+├─────────────────────────────────────────────────────────────┤
+│  gameMode: Signal<'local' | 'room'>                         │
+│                                                              │
+│  Local Mode (default)      │      Room Mode (multiplayer)   │
+│  - localStorage            │      - Appwrite KetalSession   │
+│  - Single device           │      - Realtime sync           │
+│  - Offline capable         │      - Multi-player            │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Mode Detection**: `gameMode = computed(() => roomService.currentRoom() ? 'room' : 'local')`
+
+**Data Mapping (Game <-> KetalSession)**:
+| Game (local) | KetalSession (Appwrite) |
+|--------------|-------------------------|
+| players | players (KetalPlayer[]) |
+| turn | turn |
+| phase | phase ('dealing'/'pyramid') |
+| status | status ('waiting'/'playing'/'finished') |
+| activePlayer | activePlayerId |
+| summary | withSummary |
 
 ### Internationalization
 Uses ngx-translate with translation files in `src/assets/i18n/` (French is default).
