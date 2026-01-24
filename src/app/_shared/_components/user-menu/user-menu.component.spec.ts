@@ -1,7 +1,8 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { Subject } from 'rxjs';
 import { UserMenuComponent } from './user-menu.component';
 import { AuthService } from '../../../services/auth/auth.service';
 import { LanguageService } from '../../_helpers/language.helper';
@@ -38,13 +39,18 @@ describe('UserMenuComponent', () => {
   let fixture: ComponentFixture<UserMenuComponent>;
   let mockAuthService: ReturnType<typeof createMockAuthService>;
   let mockLanguageService: jasmine.SpyObj<LanguageService>;
-  let mockRouter: jasmine.SpyObj<Router>;
+  let mockRouter: jasmine.SpyObj<Router> & { events: Subject<NavigationEnd>; url: string };
   let translateService: TranslateService;
+  let routerEventsSubject: Subject<NavigationEnd>;
 
   beforeEach(async () => {
     mockAuthService = createMockAuthService();
     mockLanguageService = jasmine.createSpyObj('LanguageService', ['constructPossibleLanguages']);
-    mockRouter = jasmine.createSpyObj('Router', ['navigate']);
+    routerEventsSubject = new Subject<NavigationEnd>();
+    mockRouter = jasmine.createSpyObj('Router', ['navigate'], {
+      events: routerEventsSubject.asObservable(),
+      url: '/',
+    }) as jasmine.SpyObj<Router> & { events: Subject<NavigationEnd>; url: string };
 
     mockLanguageService.constructPossibleLanguages.and.returnValue([
       { name: 'Francais', shortName: 'fr' },

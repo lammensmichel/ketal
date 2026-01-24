@@ -50,6 +50,9 @@ describe('FooterComponent', () => {
     (mockGameService as any).isNotAllSipsGiven = jasmine.createSpy('isNotAllSipsGiven').and.returnValue(false);
     (mockGameService as any).getLastCard = jasmine.createSpy('getLastCard').and.returnValue(null);
 
+    // beginGame is async - must return a Promise
+    mockGameService.beginGame.and.returnValue(Promise.resolve());
+
     await TestBed.configureTestingModule({
       imports: [TranslateModule.forRoot(), FooterComponent],
       providers: [
@@ -176,19 +179,21 @@ describe('FooterComponent', () => {
   });
 
   describe('beginGame', () => {
-    it('should call gameSrv.beginGame with withSummaryMode and navigate', () => {
+    it('should call gameSrv.beginGame with withSummaryMode and navigate', fakeAsync(() => {
       component.withSummaryMode = true;
       component.beginGame();
+      tick();
       expect(mockGameService.beginGame).toHaveBeenCalledWith(true);
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/game']);
-    });
+    }));
 
-    it('should call gameSrv.beginGame with false when withSummaryMode is false', () => {
+    it('should call gameSrv.beginGame with false when withSummaryMode is false', fakeAsync(() => {
       component.withSummaryMode = false;
       component.beginGame();
+      tick();
       expect(mockGameService.beginGame).toHaveBeenCalledWith(false);
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/game']);
-    });
+    }));
   });
 
   describe('restartGame', () => {

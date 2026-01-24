@@ -1,16 +1,5 @@
 <div class="user-menu">
-  @if (!isLoggedIn()) {
-    <!-- Not logged in: Show login button -->
-    <button
-      type="button"
-      class="btn btn-outline-primary btn-sm login-btn"
-      (click)="navigateToLogin()"
-      [attr.aria-label]="'userMenu.login' | translate"
-    >
-      <span class="login-icon" aria-hidden="true">&#128100;</span>
-      <span class="login-text" [translate]="'userMenu.login'"></span>
-    </button>
-  } @else {
+  @if (isLoggedIn()) {
     <!-- Logged in: Show user menu -->
     <div class="dropdown">
       <button
@@ -66,11 +55,23 @@
             role="menuitem"
             [disabled]="isLoading()"
           >
-            <span class="logout-icon" aria-hidden="true">&#128682;</span>
+            <fa-icon [icon]="['fas', 'sign-out-alt']" class="logout-icon" aria-hidden="true"></fa-icon>
             <span [translate]="'userMenu.logout'"></span>
           </button>
         </div>
       }
     </div>
+  } @else if (!isAuthPage()) {
+    <!-- Not logged in and not on auth page: Show login button -->
+    <button
+      type="button"
+      class="btn btn-outline-primary btn-sm login-btn"
+      (click)="navigateToLogin()"
+      [attr.aria-label]="'userMenu.login' | translate"
+    >
+      <fa-icon [icon]="['fas', 'sign-in-alt']" class="login-icon" aria-hidden="true"></fa-icon>
+      <span class="login-text" [translate]="'userMenu.login'"></span>
+    </button>
   }
+  <!-- If not logged in and on auth page: show nothing -->
 </div>

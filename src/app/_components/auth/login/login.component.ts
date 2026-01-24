@@ -4,6 +4,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../../services/auth/auth.service';
+import { GameService } from '../../../services/game/game.service';
 
 /**
  * LoginComponent - Authentication page for Ketal
@@ -22,6 +23,7 @@ import { AuthService } from '../../../services/auth/auth.service';
 export class LoginComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly gameService = inject(GameService);
 
   /** Reactive form for email/password login */
   readonly loginForm = new FormGroup({
@@ -52,7 +54,7 @@ export class LoginComponent {
     try {
       const { email, password } = this.loginForm.value;
       await this.authService.loginWithEmail(email!, password!);
-      await this.router.navigate(['/']);
+      await this.navigateAfterLogin();
     } catch (err) {
       this.error.set(this.getErrorMessage(err));
     }
@@ -80,10 +82,19 @@ export class LoginComponent {
 
     try {
       await this.authService.createAnonymousSession();
-      await this.router.navigate(['/']);
+      await this.navigateAfterLogin();
     } catch (err) {
       this.error.set(this.getErrorMessage(err));
     }
+  }
+
+  /**
+   * Navigate to appropriate page after login
+   * Goes to /game if a game is in progress, otherwise /players
+   */
+  private async navigateAfterLogin(): Promise<void> {
+    const route = this.gameService.isGameStarted() ? '/game' : '/players';
+    await this.router.navigate([route]);
   }
 
   /**

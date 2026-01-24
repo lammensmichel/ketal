@@ -9,12 +9,18 @@ import {
   OnInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, map, startWith } from 'rxjs/operators';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { FontAwesomeIconsModule } from '../../../font-awesome.module';
 import { AuthService } from '../../../services/auth/auth.service';
 import { LanguageService } from '../../_helpers/language.helper';
 import { Language } from '../../_models/language.model';
+
+/** Routes where login button should not be shown */
+const AUTH_ROUTES = ['/login', '/register', '/forgot-password'];
 
 /**
  * UserMenuComponent - Dropdown menu for user profile and settings
@@ -33,7 +39,7 @@ import { Language } from '../../_models/language.model';
   templateUrl: './user-menu.component.html',
   styleUrls: ['./user-menu.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule, FontAwesomeIconsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UserMenuComponent implements OnInit {
@@ -45,6 +51,22 @@ export class UserMenuComponent implements OnInit {
 
   /** Whether the dropdown menu is open */
   readonly isOpen = signal(false);
+
+  /** Current URL path as a signal that updates on navigation */
+  private readonly currentPath = toSignal(
+    this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      map((event) => event.urlAfterRedirects),
+      startWith(this.router.url)
+    ),
+    { initialValue: this.router.url }
+  );
+
+  /** Whether current route is an auth page (reactive signal) */
+  readonly isAuthPage = computed(() => {
+    const path = this.currentPath();
+    return AUTH_ROUTES.some((route) => path.startsWith(route));
+  });
 
   /** Available languages for selection */
   readonly languages: Language[];

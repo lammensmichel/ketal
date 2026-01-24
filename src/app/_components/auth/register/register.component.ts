@@ -11,6 +11,7 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../../services/auth/auth.service';
+import { GameService } from '../../../services/game/game.service';
 
 /**
  * RegisterComponent - User registration page for Ketal
@@ -29,6 +30,7 @@ import { AuthService } from '../../../services/auth/auth.service';
 export class RegisterComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly gameService = inject(GameService);
 
   /** Reactive form for registration with password match validation */
   readonly registerForm = new FormGroup(
@@ -92,10 +94,19 @@ export class RegisterComponent {
     try {
       const { name, email, password } = this.registerForm.value;
       await this.authService.signUp(email!, password!, name!);
-      await this.router.navigate(['/']);
+      await this.navigateAfterRegistration();
     } catch (err) {
       this.error.set(this.getErrorMessage(err));
     }
+  }
+
+  /**
+   * Navigate to appropriate page after registration
+   * Goes to /game if a game is in progress, otherwise /players
+   */
+  private async navigateAfterRegistration(): Promise<void> {
+    const route = this.gameService.isGameStarted() ? '/game' : '/players';
+    await this.router.navigate([route]);
   }
 
   /**

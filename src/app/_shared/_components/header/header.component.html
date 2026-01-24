@@ -8,18 +8,20 @@
     <div class="column">
       <h1 class="display-4 font-monospace" style="font-variant: small-caps" [translate]="'Label_App_Title'"></h1>
       <div class="lead">
-        @if (gameSrv.isNewGame()) {
-          <div>
-            <span [translate]="'Label_App_Subtitle'"></span>
-          </div>
-        }
-        @if (gameSrv.isGameStarted()) {
-          <div>
-            <button type="button" class="btn btn-secondary ms-2" (click)="restartGame()">
-              <fa-icon [icon]="['far', 'circle-xmark']"></fa-icon>
-              <span class="ms-2" [translate]="'Button_ExitGame'"></span>
-            </button>
-          </div>
+        @if (!isAuthPage()) {
+          @if (gameSrv.isNewGame()) {
+            <div>
+              <span [translate]="'Label_App_Subtitle'"></span>
+            </div>
+          }
+          @if (gameSrv.isGameStarted()) {
+            <div>
+              <button type="button" class="btn btn-secondary ms-2" (click)="restartGame()">
+                <fa-icon [icon]="['far', 'circle-xmark']"></fa-icon>
+                <span class="ms-2" [translate]="'Button_ExitGame'"></span>
+              </button>
+            </div>
+          }
         }
       </div>
     </div>

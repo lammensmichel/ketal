@@ -2,7 +2,7 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideHttpClient, withInterceptorsFromDi, HttpClient } from '@angular/common/http';
-import { importProvidersFrom } from '@angular/core';
+import { APP_INITIALIZER, importProvidersFrom } from '@angular/core';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
@@ -47,12 +47,11 @@ bootstrapApplication(AppComponent, {
         return library;
       },
     },
-    // TODO: Re-enable when fug-backend is accessible from browser
-    // {
-    //   provide: APP_INITIALIZER,
-    //   useFactory: initializeAuth,
-    //   deps: [AuthService],
-    //   multi: true,
-    // },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeAuth,
+      deps: [AuthService],
+      multi: true,
+    },
   ],
 }).catch((err) => console.error(err));

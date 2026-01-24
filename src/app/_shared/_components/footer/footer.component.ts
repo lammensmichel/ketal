@@ -107,8 +107,8 @@ export class FooterComponent {
     return this.playerHelper?.getPlayers()?.length > 0;
   }
 
-  beginGame(): void {
-    this.gameSrv.beginGame(this.withSummaryMode);
+  async beginGame(): Promise<void> {
+    await this.gameSrv.beginGame(this.withSummaryMode);
     this.router.navigate(['/game']);
   }
 

@@ -87,6 +87,13 @@ export class AuthService {
   async signUp(email: string, password: string, name: string): Promise<void> {
     this._isLoading.set(true);
     try {
+      // Logout any existing session first (e.g., guest session)
+      try {
+        await this.appwrite.account.deleteSession('current');
+      } catch {
+        // No session to delete, continue
+      }
+
       // Create the account
       await this.appwrite.account.create(ID.unique(), email, password, name);
 
@@ -129,6 +136,13 @@ export class AuthService {
   async loginWithEmail(email: string, password: string): Promise<void> {
     this._isLoading.set(true);
     try {
+      // Logout any existing session first (e.g., guest session)
+      try {
+        await this.appwrite.account.deleteSession('current');
+      } catch {
+        // No session to delete, continue
+      }
+
       await this.appwrite.account.createEmailPasswordSession(email, password);
       const user = await this.appwrite.account.get();
       this._currentUser.set(user);
@@ -162,6 +176,7 @@ export class AuthService {
    * Create an anonymous session
    *
    * Creates a new anonymous session for guest users.
+   * If a session already exists, uses that session instead.
    * Anonymous users have an empty email string.
    *
    * @throws Error if anonymous session creation fails
@@ -172,7 +187,17 @@ export class AuthService {
       await this.appwrite.account.createAnonymousSession();
       const user = await this.appwrite.account.get();
       this._currentUser.set(user);
-    } catch (error) {
+    } catch (error: unknown) {
+      // If session already exists, try to use it
+      if (error instanceof Error && error.message.includes('session is active')) {
+        try {
+          const user = await this.appwrite.account.get();
+          this._currentUser.set(user);
+          return;
+        } catch {
+          // Failed to get existing session
+        }
+      }
       this._currentUser.set(null);
       throw error;
     } finally {

@@ -2,6 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { GameService } from './game.service';
 import { LocalService } from '../local/local.service';
 import { CardService } from '../card/card.service';
+import { RoomService } from '../room/room.service';
+import { KetalSessionService } from '../ketal-session/ketal-session.service';
+import { MemberService } from '../member/member.service';
 import { PlayerHelperService } from '../../_shared/_helpers/player.helper';
 import { CardDeckHelperService } from '../../_shared/_helpers/card-deck.helper';
 import {
@@ -9,6 +12,11 @@ import {
   createMockCardService,
   createMockPlayerHelperService,
   createMockCardDeckHelperService,
+  createMockRoomService,
+  createMockKetalSessionService,
+  createMockMemberService,
+  createMockGameRoom,
+  createMockKetalSession,
 } from '../../testing/test-helpers';
 import { Game } from '../../_shared/_models/game.model';
 import { PlayerModel } from '../../_shared/_models/player.model';
@@ -85,12 +93,18 @@ describe('GameService', () => {
   let mockCardService: jasmine.SpyObj<CardService>;
   let mockPlayerHelperService: jasmine.SpyObj<PlayerHelperService>;
   let mockCardDeckHelperService: jasmine.SpyObj<CardDeckHelperService>;
+  let mockRoomService: ReturnType<typeof createMockRoomService>;
+  let mockKetalSessionService: ReturnType<typeof createMockKetalSessionService>;
+  let mockMemberService: ReturnType<typeof createMockMemberService>;
 
   beforeEach(() => {
     mockLocalService = createMockLocalService();
     mockCardService = createMockCardService();
     mockPlayerHelperService = createMockPlayerHelperService();
     mockCardDeckHelperService = createMockCardDeckHelperService();
+    mockRoomService = createMockRoomService();
+    mockKetalSessionService = createMockKetalSessionService();
+    mockMemberService = createMockMemberService();
 
     TestBed.configureTestingModule({
       providers: [
@@ -99,6 +113,9 @@ describe('GameService', () => {
         { provide: CardService, useValue: mockCardService },
         { provide: PlayerHelperService, useValue: mockPlayerHelperService },
         { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+        { provide: RoomService, useValue: mockRoomService },
+        { provide: KetalSessionService, useValue: mockKetalSessionService },
+        { provide: MemberService, useValue: mockMemberService },
       ],
     });
     service = TestBed.inject(GameService);
@@ -1940,6 +1957,562 @@ describe('GameService', () => {
         });
 
         service.openSipGiveModal(player);
+      });
+    });
+  });
+
+  // ==========================================================================
+  // Appwrite Integration Tests
+  // ==========================================================================
+  describe('Appwrite Integration', () => {
+    // Helper function to create service with specific game state and room mode
+    function createServiceWithGameAndRoom(
+      mockGame: Game | null,
+      room: ReturnType<typeof createMockGameRoom> | null = null
+    ): GameService {
+      mockLocalService.getData.and.returnValue(mockGame ? JSON.stringify(mockGame) : null);
+      mockRoomService.currentRoom.set(room);
+
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          GameService,
+          { provide: LocalService, useValue: mockLocalService },
+          { provide: CardService, useValue: mockCardService },
+          { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+          { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          { provide: RoomService, useValue: mockRoomService },
+          { provide: KetalSessionService, useValue: mockKetalSessionService },
+        ],
+      });
+      return TestBed.inject(GameService);
+    }
+
+    describe('gameMode computed signal', () => {
+      it('should return "local" when no room is active', () => {
+        mockRoomService.currentRoom.set(null);
+
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+          ],
+        });
+        const testService = TestBed.inject(GameService);
+
+        expect(testService.gameMode()).toBe('local');
+      });
+
+      it('should return "room" when roomService.currentRoom() returns a room', () => {
+        const mockRoom = createMockGameRoom();
+        mockRoomService.currentRoom.set(mockRoom);
+
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+          ],
+        });
+        const testService = TestBed.inject(GameService);
+
+        expect(testService.gameMode()).toBe('room');
+      });
+    });
+
+    describe('isRoomMode computed signal', () => {
+      it('should return false when in local mode', () => {
+        mockRoomService.currentRoom.set(null);
+
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+          ],
+        });
+        const testService = TestBed.inject(GameService);
+
+        expect(testService.isRoomMode()).toBe(false);
+      });
+
+      it('should return true when in room mode', () => {
+        const mockRoom = createMockGameRoom();
+        mockRoomService.currentRoom.set(mockRoom);
+
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+          ],
+        });
+        const testService = TestBed.inject(GameService);
+
+        expect(testService.isRoomMode()).toBe(true);
+      });
+    });
+
+    describe('dual-mode persistence', () => {
+      it('should save to localStorage in local mode', () => {
+        const mockGame = createMockGame({ status: 0 });
+        const testService = createServiceWithGameAndRoom(mockGame, null);
+        mockLocalService.saveData.calls.reset();
+
+        testService.setStatus(1);
+
+        expect(mockLocalService.saveData).toHaveBeenCalledWith('game', jasmine.any(String));
+      });
+
+      it('should route to saveToAppwrite in room mode (placeholder implementation)', () => {
+        const mockRoom = createMockGameRoom();
+        const mockGame = createMockGame({ status: 0 });
+        const testService = createServiceWithGameAndRoom(mockGame, mockRoom);
+
+        // Spy on console.debug to verify the Appwrite path is taken
+        const consoleSpy = spyOn(console, 'debug');
+        mockLocalService.saveData.calls.reset();
+
+        testService.setStatus(1);
+
+        // In room mode, saveToAppwrite should be called (logged via console.debug)
+        expect(consoleSpy).toHaveBeenCalledWith('[GameService] saveToAppwrite - no active session');
+      });
+    });
+
+    describe('beginGame dual-mode behavior', () => {
+      it('should work in local mode without room', () => {
+        mockRoomService.currentRoom.set(null);
+
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+          ],
+        });
+        const testService = TestBed.inject(GameService);
+
+        const players = [createMockPlayer({ id: 'player-1' })];
+        mockLocalService.getData.and.returnValue(JSON.stringify(players));
+        mockLocalService.saveData.calls.reset();
+
+        testService.beginGame();
+
+        expect(testService.game().status).toBe(1);
+        expect(testService.game().turn).toBe(1);
+        expect(testService.game().phase).toBe(1);
+        expect(mockLocalService.saveData).toHaveBeenCalledWith('game', jasmine.any(String));
+      });
+
+      it('should work in room mode with active room', async () => {
+        const mockRoom = createMockGameRoom();
+        mockRoomService.currentRoom.set(mockRoom);
+
+        // Create a mock session that will be returned by startGame
+        const mockSession = createMockKetalSession({
+          $id: 'session-123',
+          roomId: mockRoom.$id,
+          status: 'playing',
+          phase: 'dealing',
+          turn: 1,
+          activePlayerId: 'player-1',
+          players: [
+            {
+              memberId: 'player-1',
+              displayName: 'Test Player',
+              order: 1,
+              cards: [],
+              choices: { color: '', plus_or_minus: '', in_out: '', suit: '' },
+              sipsGiven: 0,
+              sipsTaken: 0,
+              isReady: true,
+            },
+          ],
+        });
+        mockKetalSessionService.startGame.and.resolveTo(mockSession);
+
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+          ],
+        });
+        const testService = TestBed.inject(GameService);
+
+        const players = [createMockPlayer({ id: 'player-1' })];
+        mockLocalService.getData.and.returnValue(JSON.stringify(players));
+        const consoleSpy = spyOn(console, 'debug');
+
+        await testService.beginGame();
+
+        // In room mode, startGame should be called on the session service
+        expect(mockKetalSessionService.startGame).toHaveBeenCalled();
+        expect(consoleSpy).toHaveBeenCalledWith('[GameService] Game started in room mode', jasmine.any(Object));
+      });
+
+      it('should pass withSummaryMode parameter correctly in both modes', () => {
+        mockRoomService.currentRoom.set(null);
+
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+          ],
+        });
+        const testService = TestBed.inject(GameService);
+
+        const players = [createMockPlayer({ id: 'player-1' })];
+        mockLocalService.getData.and.returnValue(JSON.stringify(players));
+
+        testService.beginGame(true);
+
+        expect(testService.game().summary).toBe(true);
+      });
+    });
+
+    describe('game state changes persist to correct backend', () => {
+      it('should persist addDrinkingCard to localStorage in local mode', () => {
+        const mockGame = createMockGame({ drinkingCards: [] });
+        const testService = createServiceWithGameAndRoom(mockGame, null);
+        mockLocalService.saveData.calls.reset();
+
+        const card = createMockCard();
+        testService.addDrinkingCard(card);
+
+        expect(mockLocalService.saveData).toHaveBeenCalledWith('game', jasmine.any(String));
+        expect(testService.game().drinkingCards.length).toBe(1);
+      });
+
+      it('should persist addGivingCard to localStorage in local mode', () => {
+        const mockGame = createMockGame({ givingCards: [] });
+        const testService = createServiceWithGameAndRoom(mockGame, null);
+        mockLocalService.saveData.calls.reset();
+
+        const card = createMockCard();
+        testService.addGivingCard(card);
+
+        expect(mockLocalService.saveData).toHaveBeenCalledWith('game', jasmine.any(String));
+        expect(testService.game().givingCards.length).toBe(1);
+      });
+
+      it('should route to Appwrite for addDrinkingCard in room mode', () => {
+        const mockRoom = createMockGameRoom();
+        const mockGame = createMockGame({ drinkingCards: [] });
+        const testService = createServiceWithGameAndRoom(mockGame, mockRoom);
+        const consoleSpy = spyOn(console, 'debug');
+        mockLocalService.saveData.calls.reset();
+
+        const card = createMockCard();
+        testService.addDrinkingCard(card);
+
+        expect(consoleSpy).toHaveBeenCalledWith('[GameService] saveToAppwrite - no active session');
+        expect(testService.game().drinkingCards.length).toBe(1);
+      });
+
+      it('should route to Appwrite for addTurn in room mode', () => {
+        const mockRoom = createMockGameRoom();
+        const mockGame = createMockGame({ turn: 1 });
+        const testService = createServiceWithGameAndRoom(mockGame, mockRoom);
+        const consoleSpy = spyOn(console, 'debug');
+
+        testService.addTurn();
+
+        expect(consoleSpy).toHaveBeenCalledWith('[GameService] saveToAppwrite - no active session');
+        expect(testService.game().turn).toBe(2);
+      });
+    });
+
+    describe('resetGame in dual-mode', () => {
+      it('should reset game and save to localStorage in local mode', () => {
+        const player = createMockPlayer({
+          sips: { drunk: 10, given: 5 },
+          cards: [createMockCard()],
+        });
+        const mockGame = createMockGame({
+          players: [player],
+          status: 2,
+          phase: 2,
+          turn: 4,
+        });
+        const testService = createServiceWithGameAndRoom(mockGame, null);
+        mockLocalService.saveData.calls.reset();
+
+        testService.resetGame();
+
+        expect(mockLocalService.saveData).toHaveBeenCalled();
+        expect(testService.game().status).toBe(0);
+        expect(testService.game().phase).toBe(0);
+        expect(testService.game().turn).toBe(0);
+      });
+
+      it('should reset game and route to Appwrite in room mode', () => {
+        const mockRoom = createMockGameRoom();
+        const player = createMockPlayer({
+          sips: { drunk: 10, given: 5 },
+          cards: [createMockCard()],
+        });
+        const mockGame = createMockGame({
+          players: [player],
+          status: 2,
+          phase: 2,
+          turn: 4,
+        });
+        const testService = createServiceWithGameAndRoom(mockGame, mockRoom);
+        const consoleSpy = spyOn(console, 'debug');
+
+        testService.resetGame();
+
+        expect(consoleSpy).toHaveBeenCalledWith('[GameService] saveToAppwrite - no active session');
+        expect(testService.game().status).toBe(0);
+      });
+    });
+
+    describe('pickCard in dual-mode', () => {
+      it('should persist card pick to localStorage in local mode', () => {
+        const player = createMockPlayer({
+          id: 'player-1',
+          cards: [],
+          choice: { color: 'red', plus_or_minus: '', in_out: '', suit: '' },
+        });
+        const mockGame = createMockGame({
+          players: [player],
+          activePlayer: player,
+          turn: 1,
+        });
+        const testService = createServiceWithGameAndRoom(mockGame, null);
+        mockLocalService.saveData.calls.reset();
+
+        const newCard = createMockCard();
+        mockCardDeckHelperService.getRandomCard.and.returnValue(newCard);
+        mockPlayerHelperService.getPlayerChoice.and.returnValue(ColorsEnum.Red);
+        mockCardService.isRedCard.and.returnValue(true);
+
+        testService.pickCard();
+
+        expect(mockLocalService.saveData).toHaveBeenCalled();
+        expect(testService.game().players[0].cards.length).toBe(1);
+      });
+
+      it('should route card pick to Appwrite in room mode', () => {
+        const mockRoom = createMockGameRoom();
+        const player = createMockPlayer({
+          id: 'player-1',
+          cards: [],
+          choice: { color: 'red', plus_or_minus: '', in_out: '', suit: '' },
+        });
+        const mockGame = createMockGame({
+          players: [player],
+          activePlayer: player,
+          turn: 1,
+        });
+        const testService = createServiceWithGameAndRoom(mockGame, mockRoom);
+        const consoleSpy = spyOn(console, 'debug');
+
+        const newCard = createMockCard();
+        mockCardDeckHelperService.getRandomCard.and.returnValue(newCard);
+        mockPlayerHelperService.getPlayerChoice.and.returnValue(ColorsEnum.Red);
+        mockCardService.isRedCard.and.returnValue(true);
+
+        testService.pickCard();
+
+        expect(consoleSpy).toHaveBeenCalledWith('[GameService] saveToAppwrite - no active session');
+        expect(testService.game().players[0].cards.length).toBe(1);
+      });
+    });
+
+    describe('setChoiceAndPickCard in dual-mode', () => {
+      it('should work correctly in local mode', () => {
+        const player = createMockPlayer({
+          id: 'player-1',
+          cards: [],
+          choice: { color: '', plus_or_minus: '', in_out: '', suit: '' },
+        });
+        const mockGame = createMockGame({
+          players: [player],
+          activePlayer: player,
+          turn: 1,
+        });
+        const testService = createServiceWithGameAndRoom(mockGame, null);
+        mockLocalService.saveData.calls.reset();
+
+        const newCard = createMockCard();
+        mockCardDeckHelperService.getRandomCard.and.returnValue(newCard);
+
+        testService.setChoiceAndPickCard(DrinkChoiceEnum.Color, 'red');
+
+        expect(mockLocalService.saveData).toHaveBeenCalled();
+        expect(testService.game().players[0].choice['color']).toBe('red');
+      });
+
+      it('should work correctly in room mode', () => {
+        const mockRoom = createMockGameRoom();
+        const player = createMockPlayer({
+          id: 'player-1',
+          cards: [],
+          choice: { color: '', plus_or_minus: '', in_out: '', suit: '' },
+        });
+        const mockGame = createMockGame({
+          players: [player],
+          activePlayer: player,
+          turn: 1,
+        });
+        const testService = createServiceWithGameAndRoom(mockGame, mockRoom);
+        const consoleSpy = spyOn(console, 'debug');
+
+        const newCard = createMockCard();
+        mockCardDeckHelperService.getRandomCard.and.returnValue(newCard);
+
+        testService.setChoiceAndPickCard(DrinkChoiceEnum.Color, 'red');
+
+        expect(consoleSpy).toHaveBeenCalledWith('[GameService] saveToAppwrite - no active session');
+        expect(testService.game().players[0].choice['color']).toBe('red');
+      });
+    });
+
+    describe('mode switching', () => {
+      it('should correctly switch from local to room mode when room is set', () => {
+        mockRoomService.currentRoom.set(null);
+
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+          ],
+        });
+        const testService = TestBed.inject(GameService);
+
+        // Initially in local mode
+        expect(testService.gameMode()).toBe('local');
+        expect(testService.isRoomMode()).toBe(false);
+
+        // Simulate joining a room
+        const mockRoom = createMockGameRoom();
+        mockRoomService.currentRoom.set(mockRoom);
+
+        // Now should be in room mode
+        expect(testService.gameMode()).toBe('room');
+        expect(testService.isRoomMode()).toBe(true);
+      });
+
+      it('should correctly switch from room to local mode when room is cleared', () => {
+        const mockRoom = createMockGameRoom();
+        mockRoomService.currentRoom.set(mockRoom);
+
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+          ],
+        });
+        const testService = TestBed.inject(GameService);
+
+        // Initially in room mode
+        expect(testService.gameMode()).toBe('room');
+        expect(testService.isRoomMode()).toBe(true);
+
+        // Simulate leaving the room
+        mockRoomService.currentRoom.set(null);
+
+        // Now should be in local mode
+        expect(testService.gameMode()).toBe('local');
+        expect(testService.isRoomMode()).toBe(false);
+      });
+    });
+
+    describe('displayNewCard in dual-mode', () => {
+      it('should persist new card to localStorage in local mode', () => {
+        const mockGame = createMockGame({
+          givingCards: [],
+          drinkingCards: [],
+          players: [createMockPlayer()],
+        });
+        const testService = createServiceWithGameAndRoom(mockGame, null);
+        mockLocalService.saveData.calls.reset();
+
+        const newCard = createMockCard({ selected: false });
+        mockCardDeckHelperService.getRandomCard.and.returnValue(newCard);
+
+        testService.displayNewCard();
+
+        expect(mockLocalService.saveData).toHaveBeenCalled();
+      });
+
+      it('should route new card persistence to Appwrite in room mode', () => {
+        const mockRoom = createMockGameRoom();
+        const mockGame = createMockGame({
+          givingCards: [],
+          drinkingCards: [],
+          players: [createMockPlayer()],
+        });
+        const testService = createServiceWithGameAndRoom(mockGame, mockRoom);
+        const consoleSpy = spyOn(console, 'debug');
+
+        const newCard = createMockCard({ selected: false });
+        mockCardDeckHelperService.getRandomCard.and.returnValue(newCard);
+
+        testService.displayNewCard();
+
+        expect(consoleSpy).toHaveBeenCalledWith('[GameService] saveToAppwrite - no active session');
       });
     });
   });

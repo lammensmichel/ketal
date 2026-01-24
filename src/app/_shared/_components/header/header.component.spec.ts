@@ -1,7 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, Event } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
+import { Subject } from 'rxjs';
 import { HeaderComponent } from './header.component';
 import { GameService } from '../../../services/game/game.service';
 import { createMockGameService } from '../../../testing/test-helpers';
@@ -11,10 +12,15 @@ describe('HeaderComponent', () => {
   let fixture: ComponentFixture<HeaderComponent>;
   let mockGameService: ReturnType<typeof createMockGameService>;
   let mockRouter: jasmine.SpyObj<Router>;
+  let routerEventsSubject: Subject<Event>;
 
   beforeEach(async () => {
     mockGameService = createMockGameService();
-    mockRouter = jasmine.createSpyObj('Router', ['navigate']);
+    routerEventsSubject = new Subject<Event>();
+    mockRouter = jasmine.createSpyObj('Router', ['navigate'], {
+      events: routerEventsSubject.asObservable(),
+      url: '/',
+    });
 
     await TestBed.configureTestingModule({
       imports: [TranslateModule.forRoot(), HeaderComponent],
