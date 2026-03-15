@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { QRCodeComponent } from 'angularx-qrcode';
 import { RoomService, GameRoom } from '../../../services/room/room.service';
+import { MemberService, CreateMemberData } from '../../../services/member/member.service';
 import { AuthService } from '../../../services/auth/auth.service';
 
 /**
@@ -28,6 +29,7 @@ import { AuthService } from '../../../services/auth/auth.service';
 })
 export class CreateRoomComponent {
   private readonly roomService = inject(RoomService);
+  private readonly memberService = inject(MemberService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -125,13 +127,63 @@ export class CreateRoomComponent {
   }
 
   /**
-   * Navigate to the created room's lobby
+   * Enter the room as host and navigate to lobby
    */
-  enterRoom(): void {
+  async enterRoom(): Promise<void> {
     const room = this.createdRoom();
-    if (room) {
-      this.router.navigate(['/room', room.$id]);
+    if (!room) {
+      return;
     }
+
+    this.isLoading.set(true);
+    this.error.set(null);
+
+    try {
+      // Get current user info
+      const user = this.authService.currentUser();
+      const displayName = user?.name || 'Host';
+
+      // Create host member
+      const memberData: CreateMemberData = {
+        roomId: room.$id,
+        userId: user?.$id || null,
+        deviceId: user ? null : this.getDeviceId(),
+        displayName,
+        role: 'host',
+        isOnline: true,
+        totalSipsGiven: 0,
+        totalSipsTaken: 0,
+        totalGamesPlayed: 0,
+        gameStats: {},
+      };
+
+      const member = await this.memberService.createMember(memberData);
+
+      // Set as current member
+      this.memberService.setCurrentMember(member);
+
+      // Update room with host member ID
+      await this.roomService.updateRoom(room.$id, { hostMemberId: member.$id });
+
+      // Navigate to lobby
+      await this.router.navigate(['/room', room.$id]);
+    } catch (err) {
+      this.error.set(this.getErrorMessage(err));
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  /**
+   * Generate or retrieve device ID for guest users
+   */
+  private getDeviceId(): string {
+    let deviceId = localStorage.getItem('ketal_device_id');
+    if (!deviceId) {
+      deviceId = crypto.randomUUID();
+      localStorage.setItem('ketal_device_id', deviceId);
+    }
+    return deviceId;
   }
 
   /**
