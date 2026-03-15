@@ -1,5 +1,5 @@
 # Étape 1 : Build de l'application Angular
-FROM node:18 as build
+FROM node:18.19 as build
 WORKDIR /app
 COPY package*.json ./
 COPY ./nodejs/package*.json ./nodejs/
