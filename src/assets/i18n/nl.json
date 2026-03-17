@@ -23,6 +23,8 @@
   "Button_In": "Binnen",
   "Button_Out": "Buiten",
   "Remaining_Sips": "slokjes",
+  "Label_Sip": "slok",
+  "Label_Sips": "slokken",
   "Warning": "Waarschuwing",
   "Assign_All_Sips": "Elke gebruiker met de getrokken kaart moet het icoon <i class=\"fa fa-glass\"></i> gebruiken om slokjes te geven.",
   "Assign_All_Given_Sips": "Geef eerst alle slokjes",

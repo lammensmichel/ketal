@@ -23,6 +23,8 @@
   "Button_In": "Drinnen",
   "Button_Out": "Draußen",
   "Remaining_Sips": "Schlucke",
+  "Label_Sip": "Schluck",
+  "Label_Sips": "Schlücke",
   "Warning": "Warnung",
   "Assign_All_Sips": "Jeder Benutzer mit der gezogenen Karte muss das Symbol <i class=\"fa fa-glass\"></i> verwenden, um Schlucke zu verteilen.",
   "Assign_All_Given_Sips": "Bitte verteilen Sie zuerst alle Schlucke",

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { MainGameComponent } from '../main-game/main-game.component';
 
 @Component({
@@ -6,6 +6,7 @@ import { MainGameComponent } from '../main-game/main-game.component';
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [MainGameComponent],
 })
 export class GameComponent {}

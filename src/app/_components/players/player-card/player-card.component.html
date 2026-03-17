@@ -14,11 +14,11 @@
           (click)="openPlayerGivenSipsModal(player)"
           class="badge"
           [ngClass]="{
-            'bg-success': getSipCount(player) > 0,
-            'bg-danger': getSipCount(player) < 0,
-            'bg-secondary': getSipCount(player) === 0,
+            'bg-success': sipCount() > 0,
+            'bg-danger': sipCount() < 0,
+            'bg-secondary': sipCount() === 0,
           }"
-          >{{ getSipCount(player, true) }} <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon
+          >{{ sipCountAbsolute() }} {{ sipLabelKey() | translate }} <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon
         ></span>
       </label>
     </div>
