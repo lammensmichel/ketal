@@ -7,7 +7,7 @@
 >
   <div class="card-body p-2 container">
     <div class="row mb-1">
-      <label for="avatar" class="d-flex flex-nowrap justify-content-around flex-fill align-items-center">
+      <label for="avatar" class="d-flex flex-wrap justify-content-around flex-fill align-items-center">
         <img alt="avatar" class="img-thumbnail" width="40" height="40" src="{{ player.avatarSrc }}" />
         <span class="ms-1 fs-5 flex-fill">{{ player.name }}</span>
         <span
@@ -24,7 +24,7 @@
     </div>
     <div class="row">
       <div
-        class="card-group d-flex flex-wrap flex-sm-wrap flex-md-nowrap flex-lg-nowrap flex-xl-nowrap justify-content-center gap-1"
+        class="card-group d-flex flex-nowrap justify-content-center gap-1"
       >
         @for (i of cardSlots; track i) {
           <div>

@@ -2,6 +2,17 @@
   max-width: calc(50% - 0.125rem) !important; // 0.125rem = 0.5 * gap-1
 }
 
+::ng-deep .card-body > .row {
+  --bs-gutter-x: 0;
+}
+
+::ng-deep .card-group .card-container {
+  @media (max-width: 768px) {
+    width: auto;
+    flex: 1 1 0;
+  }
+}
+
 .player-card--active {
   box-shadow: 0 0 15px rgba(var(--bs-primary-rgb), 0.5);
   transform: scale(1.02);

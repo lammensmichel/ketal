@@ -63,27 +63,16 @@ export class PlayerHelperService {
   }
 
   getSipCnt(game: Game, player: PlayerModel, absolute: boolean = false) {
-    const { activePlayer, drinkingCards, givingCards, phase, players } = game;
+    const { drinkingCards, givingCards, phase } = game;
     const maybeAbs = absolute ? Math.abs : (v: number) => v;
 
-    // In phase 2, activePlayer is undefined - use total sips from player
-    if (!activePlayer || phase === 2) {
-      if (drinkingCards.length === 0 && givingCards.length === 0) {
-        // Just transitioned to phase 2, show last card sips
-        return maybeAbs(-(player.cards.at(-1)?.sips ?? 0));
+    if (phase === 1) {
+      // Accumulate sips across all cards dealt so far
+      let totalSips = 0;
+      for (const card of player.cards) {
+        totalSips -= card.sips ?? 0;
       }
-      // Phase 2 with cards - calculate based on drinking/giving cards
-    } else {
-      // Phase 1 logic
-      const currentIndex = players.findIndex((p) => p.id === activePlayer.id);
-      const previousPlayer = currentIndex === 0 ? players[players.length - 1] : players[currentIndex - 1];
-
-      if (phase === 1) {
-        if (player.id !== previousPlayer?.id) {
-          return 0;
-        }
-        return maybeAbs(-(player.cards.at(-1)?.sips ?? 0));
-      }
+      return maybeAbs(totalSips);
     }
 
     // No cards to compare yet
