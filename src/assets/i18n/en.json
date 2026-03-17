@@ -35,6 +35,23 @@
   "Assign_All_Given_Sips": " Please assign all sips before saving",
   "Label_MinimumPlayers": "Minimum 2 players required to start the game",
   "Summary_Mode_Selection": "Activate summary at ending of the game",
+  "legal": {
+    "healthWarning": "Alcohol abuse is dangerous for your health. Drink responsibly.",
+    "terms": {
+      "title": "Terms of Use",
+      "ageRestrictionTitle": "Age Restriction",
+      "ageRestrictionText": "You must be at least 18 years old to use this application. By creating an account, you confirm that you are of legal drinking age in your country of residence.",
+      "healthWarningTitle": "Health Warning",
+      "healthWarningText": "Alcohol abuse is dangerous for your health. Drink responsibly.",
+      "nonAlcoholicTitle": "Non-Alcoholic Alternative",
+      "nonAlcoholicText": "This game can be played with non-alcoholic beverages. Sips can represent any drink of your choice.",
+      "disclaimerTitle": "Legal Disclaimer",
+      "disclaimerText": "This application does not encourage alcohol consumption. It is designed as a party game and the use of alcoholic beverages is entirely at the discretion and responsibility of the users.",
+      "responsibilityTitle": "Responsibility",
+      "responsibilityText": "The creators of this application decline all responsibility for how it is used. You are solely responsible for your own consumption. Never drink and drive.",
+      "backToRegister": "Back to registration"
+    }
+  },
   "auth": {
     "login": "Log in",
     "register": "Sign up",
@@ -50,6 +67,8 @@
     "hasAccount": "Already have an account?",
     "createAccount": "Create my account",
     "partOfFug": "A game from the FUG universe",
+    "ageVerificationPrefix": "I am 18 or older and I accept the",
+    "ageVerificationLink": "terms of use",
     "or": "or",
     "errors": {
       "invalidEmail": "Invalid email address",
@@ -61,7 +80,8 @@
       "invalidCredentials": "Invalid email or password",
       "emailExists": "An account already exists with this email",
       "genericError": "An error occurred",
-      "tooManyAttempts": "Too many attempts, please wait"
+      "tooManyAttempts": "Too many attempts, please wait",
+      "ageVerificationRequired": "You must confirm you are 18 or older and accept the terms"
     },
     "success": {
       "accountCreated": "Account created successfully",

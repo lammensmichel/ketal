@@ -156,6 +156,20 @@
   }
 }
 
+.legal-disclaimer {
+  text-align: center;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid #dee2e6;
+
+  p {
+    font-size: 0.75rem;
+    color: #999;
+    margin: 0;
+    font-style: italic;
+  }
+}
+
 // Responsive adjustments
 @media (max-width: 576px) {
   .login-container {

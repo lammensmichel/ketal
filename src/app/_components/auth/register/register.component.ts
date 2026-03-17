@@ -41,6 +41,7 @@ export class RegisterComponent {
       email: new FormControl('', [Validators.required, Validators.email]),
       password: new FormControl('', [Validators.required, Validators.minLength(8)]),
       confirmPassword: new FormControl('', [Validators.required]),
+      ageVerification: new FormControl(false, [Validators.requiredTrue]),
     },
     { validators: this.passwordMatchValidator }
   );
@@ -153,7 +154,7 @@ export class RegisterComponent {
   /**
    * Check if a form field has errors and has been touched
    */
-  hasFieldError(fieldName: 'name' | 'email' | 'password' | 'confirmPassword'): boolean {
+  hasFieldError(fieldName: 'name' | 'email' | 'password' | 'confirmPassword' | 'ageVerification'): boolean {
     const field = this.registerForm.get(fieldName);
     return !!(field?.invalid && field?.touched);
   }
@@ -161,7 +162,7 @@ export class RegisterComponent {
   /**
    * Get error message for a form field
    */
-  getFieldError(fieldName: 'name' | 'email' | 'password' | 'confirmPassword'): string {
+  getFieldError(fieldName: 'name' | 'email' | 'password' | 'confirmPassword' | 'ageVerification'): string {
     const field = this.registerForm.get(fieldName);
     if (!field?.errors) {
       return '';
@@ -173,6 +174,7 @@ export class RegisterComponent {
         email: 'auth.errors.emailRequired',
         password: 'auth.errors.passwordRequired',
         confirmPassword: 'auth.errors.passwordRequired',
+        ageVerification: 'auth.errors.ageVerificationRequired',
       };
       return errorKeys[fieldName];
     }

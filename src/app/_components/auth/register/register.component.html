@@ -119,6 +119,26 @@
         }
       </div>
 
+      <!-- Age Verification Checkbox -->
+      <div class="form-check age-verification">
+        <input
+          type="checkbox"
+          class="form-check-input"
+          formControlName="ageVerification"
+          id="ageVerification"
+          [class.is-invalid]="hasFieldError('ageVerification')"
+        />
+        <label class="form-check-label" for="ageVerification">
+          {{ 'auth.ageVerificationPrefix' | translate }}
+          <a routerLink="/terms">{{ 'auth.ageVerificationLink' | translate }}</a>
+        </label>
+        @if (hasFieldError('ageVerification')) {
+          <div class="invalid-feedback d-block">
+            {{ getFieldError('ageVerification') | translate }}
+          </div>
+        }
+      </div>
+
       <!-- Submit Button -->
       <button
         type="submit"

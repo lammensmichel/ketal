@@ -35,6 +35,23 @@
   "Assign_All_Given_Sips": "Donnes toutes les gorgées d'abbord",
   "Label_MinimumPlayers": "Minimum 2 joueurs requis pour commencer la partie",
   "Summary_Mode_Selection": "Activer le résumé en fin de partie",
+  "legal": {
+    "healthWarning": "L'abus d'alcool est dangereux pour la sant\u00e9. \u00c0 consommer avec mod\u00e9ration.",
+    "terms": {
+      "title": "Conditions d'utilisation",
+      "ageRestrictionTitle": "Restriction d'\u00e2ge",
+      "ageRestrictionText": "Vous devez avoir au moins 18 ans pour utiliser cette application. En cr\u00e9ant un compte, vous confirmez que vous avez l'\u00e2ge l\u00e9gal pour consommer de l'alcool dans votre pays de r\u00e9sidence.",
+      "healthWarningTitle": "Avertissement sant\u00e9",
+      "healthWarningText": "L'abus d'alcool est dangereux pour la sant\u00e9. \u00c0 consommer avec mod\u00e9ration.",
+      "nonAlcoholicTitle": "Alternative sans alcool",
+      "nonAlcoholicText": "Ce jeu peut \u00eatre jou\u00e9 avec des boissons non alcoolis\u00e9es. Les gorg\u00e9es peuvent repr\u00e9senter n'importe quelle boisson de votre choix.",
+      "disclaimerTitle": "Avertissement l\u00e9gal",
+      "disclaimerText": "Cette application n'encourage pas la consommation d'alcool. Elle est con\u00e7ue comme un jeu de soci\u00e9t\u00e9 et l'utilisation de boissons alcoolis\u00e9es est enti\u00e8rement \u00e0 la discr\u00e9tion et sous la responsabilit\u00e9 des utilisateurs.",
+      "responsibilityTitle": "Responsabilit\u00e9",
+      "responsibilityText": "Les cr\u00e9ateurs de cette application d\u00e9clinent toute responsabilit\u00e9 quant \u00e0 l'usage qui en est fait. Vous \u00eates seul responsable de votre consommation. Ne conduisez jamais apr\u00e8s avoir consomm\u00e9 de l'alcool.",
+      "backToRegister": "Retour \u00e0 l'inscription"
+    }
+  },
   "auth": {
     "login": "Se connecter",
     "register": "S'inscrire",
@@ -50,6 +67,8 @@
     "hasAccount": "Déjà un compte?",
     "createAccount": "Créer mon compte",
     "partOfFug": "Un jeu de l'univers FUG",
+    "ageVerificationPrefix": "J'ai 18 ans ou plus et j'accepte les",
+    "ageVerificationLink": "conditions d'utilisation",
     "or": "ou",
     "errors": {
       "invalidEmail": "Adresse email invalide",
@@ -61,7 +80,8 @@
       "invalidCredentials": "Email ou mot de passe incorrect",
       "emailExists": "Un compte existe déjà avec cet email",
       "genericError": "Une erreur est survenue",
-      "tooManyAttempts": "Trop de tentatives, veuillez patienter"
+      "tooManyAttempts": "Trop de tentatives, veuillez patienter",
+      "ageVerificationRequired": "Vous devez confirmer avoir 18 ans ou plus et accepter les conditions"
     },
     "success": {
       "accountCreated": "Compte créé avec succès",
