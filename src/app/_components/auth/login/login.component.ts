@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -11,6 +11,9 @@ import { GameService } from '../../../services/game/game.service';
  *
  * Provides email/password login, Google OAuth, and guest access options.
  * Uses Angular 19 patterns: standalone, signals, inject(), OnPush.
+ *
+ * On init, checks if the user is already authenticated (e.g. after OAuth redirect)
+ * and auto-redirects to the appropriate page.
  */
 @Component({
   selector: 'app-login',
@@ -20,7 +23,7 @@ import { GameService } from '../../../services/game/game.service';
   imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslateModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly gameService = inject(GameService);
@@ -39,6 +42,19 @@ export class LoginComponent {
 
   /** Password visibility toggle */
   readonly showPassword = signal(false);
+
+  /**
+   * On init, handle OAuth callback: if user is already authenticated
+   * (e.g. after Google OAuth redirect), auto-redirect.
+   */
+  async ngOnInit(): Promise<void> {
+    // Wait for auth init to complete
+    await this.authService.init();
+
+    if (this.authService.isLoggedIn() && !this.authService.isAnonymous()) {
+      await this.navigateAfterLogin();
+    }
+  }
 
   /**
    * Handle form submission for email/password login
@@ -94,26 +110,13 @@ export class LoginComponent {
    * Otherwise goes to /game if a game is in progress, or /players.
    */
   private async navigateAfterLogin(): Promise<void> {
-    if (this.consumePendingSummary()) {
+    if (this.authService.consumePendingSummary()) {
       await this.router.navigate(['/game']);
       this.gameService.setStatus(3);
       return;
     }
     const route = this.gameService.isGameStarted() ? '/game' : '/players';
     await this.router.navigate([route]);
-  }
-
-  /**
-   * Check and consume the pendingSummary flag from localStorage.
-   * Returns true if the flag was set (and clears it).
-   */
-  private consumePendingSummary(): boolean {
-    const pending = localStorage.getItem('pendingSummary');
-    if (pending === 'true') {
-      localStorage.removeItem('pendingSummary');
-      return true;
-    }
-    return false;
   }
 
   /**

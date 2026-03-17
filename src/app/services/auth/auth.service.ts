@@ -173,6 +173,20 @@ export class AuthService {
   }
 
   /**
+   * Check and consume the pendingSummary flag from localStorage.
+   * Returns true if the flag was set (and clears it).
+   * Used after login, registration, or OAuth callback to redirect to summary.
+   */
+  consumePendingSummary(): boolean {
+    const pending = localStorage.getItem('pendingSummary');
+    if (pending === 'true') {
+      localStorage.removeItem('pendingSummary');
+      return true;
+    }
+    return false;
+  }
+
+  /**
    * Create an anonymous session
    *
    * Creates a new anonymous session for guest users.
