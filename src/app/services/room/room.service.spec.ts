@@ -323,12 +323,19 @@ describe('RoomService', () => {
       expect(result).toEqual(mockGameRoom);
     });
 
-    it('should return null when room not found', async () => {
-      mockDatabases.getDocument.and.rejectWith(new Error('Document not found'));
+    it('should return null when room not found (404)', async () => {
+      const notFoundError = { code: 404, message: 'Document not found' };
+      mockDatabases.getDocument.and.rejectWith(notFoundError);
 
       const result = await service.getRoomById('nonexistent');
 
       expect(result).toBeNull();
+    });
+
+    it('should throw error for non-404 errors', async () => {
+      mockDatabases.getDocument.and.rejectWith(new Error('Server error'));
+
+      await expectAsync(service.getRoomById('room123')).toBeRejectedWithError('Failed to get room: Server error');
     });
   });
 

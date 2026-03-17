@@ -217,9 +217,13 @@ export class RoomService {
       );
 
       return this.mapDocumentToGameRoom(document);
-    } catch (error) {
-      console.warn('getRoomById failed:', error);
-      return null;
+    } catch (error: unknown) {
+      // Return null for 404 (document not found), re-throw other errors
+      if (error instanceof Object && 'code' in error && (error as { code: number }).code === 404) {
+        return null;
+      }
+      console.warn('getRoomById failed with unexpected error:', error);
+      throw new Error(`Failed to get room: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

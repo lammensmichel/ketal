@@ -185,15 +185,16 @@ export class LobbyComponent implements OnInit {
     // Mark as online
     try {
       await this.memberService.updateMember(existingMember.$id, { isOnline: true });
-    } catch {
-      // Non-critical: ignore online status update failures
+    } catch (err) {
+      console.warn('Failed to update online status (non-critical):', err);
     }
   }
 
   /**
    * Load all members for the current room
+   * @param showLoading - Whether to set isLoading signal (false for realtime-triggered reloads to avoid UI flicker)
    */
-  private async loadRoomMembers(): Promise<void> {
+  private async loadRoomMembers(showLoading = true): Promise<void> {
     const room = this.currentRoom();
     if (!room) {
       return;
@@ -201,11 +202,17 @@ export class LobbyComponent implements OnInit {
 
     try {
       this.isMembersLoading = true;
+      if (showLoading) {
+        this.isLoading.set(true);
+      }
       await this.memberService.getMembersByRoom(room.$id);
     } catch (err) {
       this.error.set(this.getErrorMessage(err));
     } finally {
       this.isMembersLoading = false;
+      if (showLoading) {
+        this.isLoading.set(false);
+      }
     }
   }
 
@@ -220,6 +227,7 @@ export class LobbyComponent implements OnInit {
 
     // Avoid duplicate subscriptions
     if (this.memberSubscriptionId) {
+      console.warn('subscribeToMemberUpdates: subscription already active, skipping duplicate');
       return;
     }
 
@@ -228,8 +236,8 @@ export class LobbyComponent implements OnInit {
       if (this.isMembersLoading) {
         return;
       }
-      // Refresh members list when any member in the room changes
-      this.loadRoomMembers();
+      // Refresh members list without UI flicker on realtime updates
+      this.loadRoomMembers(false);
     });
   }
 
