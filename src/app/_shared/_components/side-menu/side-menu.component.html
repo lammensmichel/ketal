@@ -1,0 +1,78 @@
+<!-- Backdrop overlay -->
+@if (isOpen()) {
+  <div class="side-menu-backdrop" (click)="closeMenu()"></div>
+}
+
+<!-- Side drawer -->
+<nav class="side-menu-drawer" [class.open]="isOpen()" role="navigation" aria-label="Main menu">
+  <div class="side-menu-header">
+    <button type="button" class="btn-close-menu" (click)="closeMenu()" [attr.aria-label]="'Button_Cancel' | translate">
+      <fa-icon [icon]="['fas', 'times']"></fa-icon>
+    </button>
+  </div>
+
+  <div class="side-menu-content">
+    <!-- Game controls (only when game in progress and not on auth page) -->
+    @if (!isAuthPage() && hasGameInProgress()) {
+      <button type="button" class="side-menu-item" (click)="goToMenu()">
+        <fa-icon [icon]="['fas', 'home']" class="side-menu-icon"></fa-icon>
+        <span [translate]="'Button_GoToMenu'"></span>
+      </button>
+      <button type="button" class="side-menu-item side-menu-item--danger" (click)="showQuitConfirmation()">
+        <fa-icon [icon]="['far', 'circle-xmark']" class="side-menu-icon"></fa-icon>
+        <span [translate]="'Button_QuitGame'"></span>
+      </button>
+      <div class="side-menu-divider"></div>
+    }
+
+    <!-- Auth actions -->
+    @if (isLoggedIn()) {
+      <button type="button" class="side-menu-item side-menu-item--danger" (click)="logout()" [disabled]="isLoading()">
+        <fa-icon [icon]="['fas', 'sign-out-alt']" class="side-menu-icon"></fa-icon>
+        <span [translate]="'userMenu.logout'"></span>
+      </button>
+    } @else if (!isAuthPage()) {
+      <button type="button" class="side-menu-item" (click)="navigateToLogin()">
+        <fa-icon [icon]="['fas', 'sign-in-alt']" class="side-menu-icon"></fa-icon>
+        <span [translate]="'userMenu.login'"></span>
+      </button>
+    }
+
+    <div class="side-menu-divider"></div>
+
+    <!-- Language selector -->
+    <div class="side-menu-language">
+      <label for="side-menu-language-select" class="side-menu-language-label">
+        <fa-icon [icon]="['fas', 'globe']" class="side-menu-icon"></fa-icon>
+        <span [translate]="'userMenu.language'"></span>
+      </label>
+      <select
+        id="side-menu-language-select"
+        class="form-select form-select-sm side-menu-language-select"
+        [(ngModel)]="selectedLanguage"
+        (ngModelChange)="onLanguageChange()"
+      >
+        @for (lang of languages; track lang.shortName) {
+          <option [ngValue]="lang.shortName">{{ lang.name }}</option>
+        }
+      </select>
+    </div>
+  </div>
+</nav>
+
+<!-- Quit confirmation dialog -->
+@if (showQuitConfirm()) {
+  <div class="quit-overlay" (click)="cancelQuit()" role="dialog" aria-modal="true">
+    <div class="quit-dialog" (click)="$event.stopPropagation()">
+      <p class="quit-dialog-message" [translate]="'Dialog_QuitConfirmMessage'"></p>
+      <div class="d-flex justify-content-center gap-2">
+        <button type="button" class="btn btn-outline-secondary" (click)="cancelQuit()">
+          <span [translate]="'Button_Cancel'"></span>
+        </button>
+        <button type="button" class="btn btn-danger" (click)="confirmQuit()">
+          <span [translate]="'Button_QuitGame'"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+}
