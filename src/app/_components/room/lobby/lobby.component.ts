@@ -57,6 +57,9 @@ export class LobbyComponent implements OnInit {
   /** Current retry attempt count for realtime subscription */
   private subscriptionRetryCount = 0;
 
+  /** Timer ID for retry timeout, cleared on destroy */
+  private retryTimerId: ReturnType<typeof setTimeout> | null = null;
+
   /** Loading state for async operations */
   readonly isLoading = signal(false);
 
@@ -264,7 +267,7 @@ export class LobbyComponent implements OnInit {
   }
 
   /**
-   * Retry realtime subscription with exponential backoff
+   * Retry realtime subscription with linear backoff
    */
   private retrySubscription(): void {
     if (this.subscriptionRetryCount >= MAX_SUBSCRIPTION_RETRIES) {
@@ -275,7 +278,8 @@ export class LobbyComponent implements OnInit {
     this.subscriptionRetryCount++;
     const delay = SUBSCRIPTION_RETRY_DELAY_MS * this.subscriptionRetryCount;
 
-    setTimeout(() => {
+    this.retryTimerId = setTimeout(() => {
+      this.retryTimerId = null;
       // Clear failed subscription state before retrying
       this.memberSubscriptionId = null;
       this.subscribeToMemberUpdates();
@@ -287,6 +291,10 @@ export class LobbyComponent implements OnInit {
    */
   private registerCleanup(): void {
     this.destroyRef.onDestroy(() => {
+      if (this.retryTimerId) {
+        clearTimeout(this.retryTimerId);
+        this.retryTimerId = null;
+      }
       if (this.memberSubscriptionId) {
         this.realtimeService.unsubscribe(this.memberSubscriptionId);
         this.memberSubscriptionId = null;

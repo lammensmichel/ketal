@@ -48,12 +48,14 @@
     }
 
     <!-- Connection Status Indicator -->
-    <div class="connection-status" [class.connected]="isConnected()" [class.disconnected]="!isConnected()">
-      <span class="connection-dot"></span>
-      <span class="connection-label">
-        {{ (isConnected() ? 'lobby.connected' : 'lobby.disconnected') | translate }}
-      </span>
-    </div>
+    @if (currentRoom()) {
+      <div class="connection-status" [class.connected]="isConnected()" [class.disconnected]="!isConnected()" aria-live="polite">
+        <span class="connection-dot"></span>
+        <span class="connection-label">
+          {{ (isConnected() ? 'lobby.connected' : 'lobby.disconnected') | translate }}
+        </span>
+      </div>
+    }
 
     <!-- Members Section -->
     <div class="members-section">
