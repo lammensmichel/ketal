@@ -5,7 +5,6 @@ import { TranslateModule } from '@ngx-translate/core';
 import { AppComponent } from './app.component';
 import { AuthService } from './services/auth/auth.service';
 import { GameService } from './services/game/game.service';
-import { AuthService } from './services/auth/auth.service';
 import { SoloRoomService } from './services/solo-room/solo-room.service';
 import { PlayerHelperService } from './_shared/_helpers/player.helper';
 import { HeaderComponent } from './_shared/_components/header/header.component';
@@ -38,7 +37,6 @@ describe('AppComponent', () => {
     isNewGame: jasmine.Spy;
     handleReconnection: jasmine.Spy;
   };
-  let mockAuthService: { isAnonymous: ReturnType<typeof signal<boolean>> };
   let mockPlayerHelperService: jasmine.SpyObj<PlayerHelperService>;
   let mockAuthService: ReturnType<typeof createMockAuthService>;
   let mockSoloRoomService: ReturnType<typeof createMockSoloRoomService>;
@@ -54,10 +52,6 @@ describe('AppComponent', () => {
       handleReconnection: jasmine.createSpy('handleReconnection').and.resolveTo(undefined),
     };
 
-    mockAuthService = {
-      isAnonymous: signal<boolean>(false),
-    };
-
     mockPlayerHelperService = jasmine.createSpyObj('PlayerHelperService', ['getPlayerNumber']);
     mockPlayerHelperService.getPlayerNumber.and.returnValue(0);
     mockAuthService = createMockAuthService();
@@ -70,7 +64,6 @@ describe('AppComponent', () => {
         { provide: AuthService, useValue: mockAuthService },
         { provide: GameService, useValue: mockGameService },
         { provide: PlayerHelperService, useValue: mockPlayerHelperService },
-        { provide: AuthService, useValue: mockAuthService },
         { provide: SoloRoomService, useValue: mockSoloRoomService },
       ],
       schemas: [NO_ERRORS_SCHEMA],

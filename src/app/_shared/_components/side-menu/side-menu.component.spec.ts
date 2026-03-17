@@ -6,6 +6,7 @@ import { Subject } from 'rxjs';
 import { SideMenuComponent } from './side-menu.component';
 import { GameService } from '../../../services/game/game.service';
 import { AuthService } from '../../../services/auth/auth.service';
+import { AppwriteService } from '../../../services/appwrite/appwrite.service';
 import { createMockGameService, createMockAuthService } from '../../../testing/test-helpers';
 
 describe('SideMenuComponent', () => {
@@ -14,6 +15,7 @@ describe('SideMenuComponent', () => {
   let mockGameService: ReturnType<typeof createMockGameService>;
   let mockAuthService: ReturnType<typeof createMockAuthService>;
   let mockRouter: jasmine.SpyObj<Router>;
+  let mockAppwriteService: { account: { deleteSession: jasmine.Spy } };
   let routerEventsSubject: Subject<Event>;
 
   beforeEach(async () => {
@@ -24,12 +26,18 @@ describe('SideMenuComponent', () => {
       events: routerEventsSubject.asObservable(),
       url: '/',
     });
+    mockAppwriteService = {
+      account: {
+        deleteSession: jasmine.createSpy('deleteSession').and.resolveTo({}),
+      },
+    };
 
     await TestBed.configureTestingModule({
       imports: [TranslateModule.forRoot(), SideMenuComponent],
       providers: [
         { provide: GameService, useValue: mockGameService },
         { provide: AuthService, useValue: mockAuthService },
+        { provide: AppwriteService, useValue: mockAppwriteService },
         { provide: Router, useValue: mockRouter },
       ],
       schemas: [NO_ERRORS_SCHEMA],
@@ -122,6 +130,39 @@ describe('SideMenuComponent', () => {
       await component.logout();
       expect(mockAuthService.logout).toHaveBeenCalled();
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/']);
+      expect(component.isOpen()).toBeFalse();
+    });
+  });
+
+  describe('guest menu actions', () => {
+    it('should expose isAnonymous from AuthService', () => {
+      expect(component.isAnonymous()).toBeFalse();
+      mockAuthService.isAnonymous.set(true);
+      expect(component.isAnonymous()).toBeTrue();
+    });
+
+    it('should delete anonymous session and navigate to login on connectToAccount', async () => {
+      component.openMenu();
+      await component.connectToAccount();
+      expect(mockAppwriteService.account.deleteSession).toHaveBeenCalledWith('current');
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/login']);
+      expect(component.isOpen()).toBeFalse();
+      expect(mockAuthService.logout).not.toHaveBeenCalled();
+    });
+
+    it('should navigate to login even if deleteSession fails on connectToAccount', async () => {
+      mockAppwriteService.account.deleteSession.and.rejectWith(new Error('Network error'));
+      component.openMenu();
+      await component.connectToAccount();
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/login']);
+      expect(component.isOpen()).toBeFalse();
+    });
+
+    it('should call full logout and navigate to login on quitGame', async () => {
+      component.openMenu();
+      await component.quitGame();
+      expect(mockAuthService.logout).toHaveBeenCalled();
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/login']);
       expect(component.isOpen()).toBeFalse();
     });
   });

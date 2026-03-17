@@ -131,6 +131,10 @@
       "roomNotFound": "Room introuvable"
     }
   },
+  "menu": {
+    "connect": "Se connecter",
+    "quitGame": "Quitter la partie"
+  },
   "userMenu": {
     "login": "Se connecter",
     "logout": "Se déconnecter",

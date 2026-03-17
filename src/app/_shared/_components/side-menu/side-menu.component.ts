@@ -5,6 +5,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs/operators';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FontAwesomeIconsModule } from '../../../font-awesome.module';
+import { AppwriteService } from '../../../services/appwrite/appwrite.service';
 import { AuthService } from '../../../services/auth/auth.service';
 import { GameService } from '../../../services/game/game.service';
 import { LanguageService } from '../../_helpers/language.helper';
@@ -24,6 +25,7 @@ const AUTH_ROUTES = ['/login', '/register', '/forgot-password'];
 export class SideMenuComponent {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly appwrite = inject(AppwriteService);
   private readonly authService = inject(AuthService);
   private readonly translate = inject(TranslateService);
   private readonly languageService = inject(LanguageService);
@@ -43,6 +45,9 @@ export class SideMenuComponent {
 
   /** Current user from AuthService */
   readonly isLoggedIn = this.authService.isLoggedIn;
+
+  /** Whether the current session is anonymous (guest) */
+  readonly isAnonymous = this.authService.isAnonymous;
 
   /** Loading state from AuthService */
   readonly isLoading = this.authService.isLoading;
@@ -124,6 +129,24 @@ export class SideMenuComponent {
   navigateToLogin(): void {
     this.closeMenu();
     this.router.navigate(['/login']);
+  }
+
+  /** Navigate to login to connect an account (anonymous users only, preserves game data) */
+  async connectToAccount(): Promise<void> {
+    this.closeMenu();
+    try {
+      await this.appwrite.account.deleteSession('current');
+    } catch {
+      // Session might already be invalid, continue
+    }
+    await this.router.navigate(['/login']);
+  }
+
+  /** Quit the game entirely: full logout with game cleanup (anonymous users only) */
+  async quitGame(): Promise<void> {
+    this.closeMenu();
+    await this.authService.logout();
+    await this.router.navigate(['/login']);
   }
 
   /** Logout the current user */
