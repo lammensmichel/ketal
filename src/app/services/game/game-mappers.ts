@@ -279,7 +279,7 @@ export function mapSessionToGame(session: KetalSession): Game {
   return {
     players,
     turn: session.turn,
-    maxTurnCount: 4, // Standard Ketal game has 4 turns in prediction phase
+    maxTurnCount: players.length * 4, // Each player gets 4 turns in prediction phase
     phase: mapSessionPhaseToLocalPhase(session.phase),
     drinkingCards,
     givingCards,

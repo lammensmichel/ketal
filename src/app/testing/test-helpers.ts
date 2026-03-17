@@ -9,6 +9,7 @@ import { CardService } from '../services/card/card.service';
 import { RoomService, GameRoom } from '../services/room/room.service';
 import { KetalSessionService, KetalSession } from '../services/ketal-session/ketal-session.service';
 import { MemberService, GameMember } from '../services/member/member.service';
+import { RealtimeService } from '../services/realtime/realtime.service';
 import { Game } from '../_shared/_models/game.model';
 import { PlayerModel } from '../_shared/_models/player.model';
 import { CardType } from '../_shared/_models/card-type.model';
@@ -336,4 +337,27 @@ export function createMockMemberService(): jasmine.SpyObj<MemberService> & {
     members: WritableSignal<GameMember[]>;
     currentMember: WritableSignal<GameMember | null>;
   };
+}
+
+/**
+ * Creates a mock RealtimeService for testing
+ */
+export function createMockRealtimeService(): jasmine.SpyObj<RealtimeService> {
+  const mock = jasmine.createSpyObj(
+    'RealtimeService',
+    ['subscribeToRoom', 'subscribeToSession', 'subscribeToMembers', 'subscribeToCollection', 'unsubscribe', 'unsubscribeAll', 'hasSubscription', 'getActiveSubscriptionIds'],
+    {
+      isConnected: signal(true),
+      activeSubscriptions: signal(0),
+    }
+  );
+
+  mock.subscribeToRoom.and.returnValue('sub_room_123');
+  mock.subscribeToSession.and.returnValue('sub_session_123');
+  mock.subscribeToMembers.and.returnValue('sub_members_123');
+  mock.subscribeToCollection.and.returnValue('sub_collection_123');
+  mock.hasSubscription.and.returnValue(false);
+  mock.getActiveSubscriptionIds.and.returnValue([]);
+
+  return mock;
 }

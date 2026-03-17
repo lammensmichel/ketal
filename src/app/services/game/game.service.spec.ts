@@ -15,9 +15,11 @@ import {
   createMockRoomService,
   createMockKetalSessionService,
   createMockMemberService,
+  createMockRealtimeService,
   createMockGameRoom,
   createMockKetalSession,
 } from '../../testing/test-helpers';
+import { RealtimeService } from '../realtime/realtime.service';
 import { Game } from '../../_shared/_models/game.model';
 import { PlayerModel } from '../../_shared/_models/player.model';
 import { CardType } from '../../_shared/_models/card-type.model';
@@ -96,6 +98,7 @@ describe('GameService', () => {
   let mockRoomService: ReturnType<typeof createMockRoomService>;
   let mockKetalSessionService: ReturnType<typeof createMockKetalSessionService>;
   let mockMemberService: ReturnType<typeof createMockMemberService>;
+  let mockRealtimeService: ReturnType<typeof createMockRealtimeService>;
 
   beforeEach(() => {
     localStorage.removeItem('ketal_summary_mode');
@@ -106,6 +109,7 @@ describe('GameService', () => {
     mockRoomService = createMockRoomService();
     mockKetalSessionService = createMockKetalSessionService();
     mockMemberService = createMockMemberService();
+    mockRealtimeService = createMockRealtimeService();
 
     TestBed.configureTestingModule({
       providers: [
@@ -117,6 +121,7 @@ describe('GameService', () => {
         { provide: RoomService, useValue: mockRoomService },
         { provide: KetalSessionService, useValue: mockKetalSessionService },
         { provide: MemberService, useValue: mockMemberService },
+        { provide: RealtimeService, useValue: mockRealtimeService },
       ],
     });
     service = TestBed.inject(GameService);
@@ -2578,6 +2583,483 @@ describe('GameService', () => {
         testService.displayNewCard();
 
         expect(consoleSpy).toHaveBeenCalledWith('[GameService] saveToAppwrite - no active session');
+      });
+    });
+  });
+
+  // ==========================================================================
+  // Realtime Synchronization Tests (Story 12.5)
+  // ==========================================================================
+  describe('Realtime Synchronization (Story 12.5)', () => {
+    // Helper function to create service with room mode and realtime
+    function createServiceWithRoomMode(
+      mockGame: Game | null,
+      room: ReturnType<typeof createMockGameRoom> | null = null
+    ): GameService {
+      mockLocalService.getData.and.returnValue(mockGame ? JSON.stringify(mockGame) : null);
+      mockRoomService.currentRoom.set(room);
+
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          GameService,
+          { provide: LocalService, useValue: mockLocalService },
+          { provide: CardService, useValue: mockCardService },
+          { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+          { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          { provide: RoomService, useValue: mockRoomService },
+          { provide: KetalSessionService, useValue: mockKetalSessionService },
+          { provide: MemberService, useValue: mockMemberService },
+          { provide: RealtimeService, useValue: mockRealtimeService },
+        ],
+      });
+      return TestBed.inject(GameService);
+    }
+
+    describe('subscribeToSessionUpdates', () => {
+      it('should subscribe to realtime updates via RealtimeService', () => {
+        const testService = createServiceWithRoomMode(null, createMockGameRoom());
+
+        testService.subscribeToSessionUpdates('session-123');
+
+        expect(mockRealtimeService.subscribeToSession).toHaveBeenCalledWith(
+          'session-123',
+          jasmine.any(Function)
+        );
+      });
+
+      it('should store the subscription ID', () => {
+        mockRealtimeService.subscribeToSession.and.returnValue('sub_new_123');
+        const testService = createServiceWithRoomMode(null, createMockGameRoom());
+
+        testService.subscribeToSessionUpdates('session-123');
+
+        // Verify we can unsubscribe (which proves the ID was stored)
+        testService.unsubscribeFromSession();
+        expect(mockRealtimeService.unsubscribe).toHaveBeenCalledWith('sub_new_123');
+      });
+
+      it('should cleanup existing subscription before creating new one', () => {
+        mockRealtimeService.subscribeToSession.and.returnValues('sub_first', 'sub_second');
+        const testService = createServiceWithRoomMode(null, createMockGameRoom());
+
+        testService.subscribeToSessionUpdates('session-1');
+        testService.subscribeToSessionUpdates('session-2');
+
+        expect(mockRealtimeService.unsubscribe).toHaveBeenCalledWith('sub_first');
+        expect(mockRealtimeService.subscribeToSession).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    describe('unsubscribeFromSession', () => {
+      it('should unsubscribe via RealtimeService when subscription exists', () => {
+        mockRealtimeService.subscribeToSession.and.returnValue('sub_active');
+        const testService = createServiceWithRoomMode(null, createMockGameRoom());
+
+        testService.subscribeToSessionUpdates('session-123');
+        testService.unsubscribeFromSession();
+
+        expect(mockRealtimeService.unsubscribe).toHaveBeenCalledWith('sub_active');
+      });
+
+      it('should not call unsubscribe when no subscription exists', () => {
+        const testService = createServiceWithRoomMode(null, createMockGameRoom());
+
+        testService.unsubscribeFromSession();
+
+        expect(mockRealtimeService.unsubscribe).not.toHaveBeenCalled();
+      });
+
+      it('should clear subscription ID after unsubscribing', () => {
+        mockRealtimeService.subscribeToSession.and.returnValue('sub_active');
+        const testService = createServiceWithRoomMode(null, createMockGameRoom());
+
+        testService.subscribeToSessionUpdates('session-123');
+        testService.unsubscribeFromSession();
+
+        // Second unsubscribe should not call unsubscribe again
+        mockRealtimeService.unsubscribe.calls.reset();
+        testService.unsubscribeFromSession();
+        expect(mockRealtimeService.unsubscribe).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('handleSessionUpdate', () => {
+      it('should update local game state from session update', () => {
+        const testService = createServiceWithRoomMode(createMockGame(), createMockGameRoom());
+
+        const session = createMockKetalSession({
+          $id: 'session-123',
+          status: 'playing',
+          phase: 'dealing',
+          turn: 2,
+          activePlayerId: 'player-1',
+          players: [
+            {
+              memberId: 'player-1',
+              displayName: 'Alice',
+              order: 1,
+              cards: [],
+              choices: { color: 'red', plus_or_minus: '', in_out: '', suit: '' },
+              sipsGiven: 0,
+              sipsTaken: 1,
+              isReady: true,
+            },
+          ],
+          withSummary: false,
+        });
+
+        testService.handleSessionUpdate(session);
+
+        expect(testService.game().turn).toBe(2);
+        expect(testService.game().phase).toBe(1); // 'dealing' maps to phase 1
+        expect(testService.game().status).toBe(1); // 'playing' maps to status 1
+        expect(testService.game().players.length).toBe(1);
+        expect(testService.game().players[0].name).toBe('Alice');
+        expect(testService.game().players[0].sips['drunk']).toBe(1);
+      });
+
+      it('should map session phase "pyramid" to local phase 2', () => {
+        const testService = createServiceWithRoomMode(createMockGame(), createMockGameRoom());
+
+        const session = createMockKetalSession({
+          phase: 'pyramid',
+          status: 'playing',
+          turn: 5,
+        });
+
+        testService.handleSessionUpdate(session);
+
+        expect(testService.game().phase).toBe(2);
+      });
+
+      it('should map session status "finished" with summary to local status 3', () => {
+        const testService = createServiceWithRoomMode(createMockGame(), createMockGameRoom());
+
+        const session = createMockKetalSession({
+          status: 'finished',
+          withSummary: true,
+        });
+
+        testService.handleSessionUpdate(session);
+
+        expect(testService.game().status).toBe(3);
+      });
+
+      it('should map session status "finished" without summary to local status 2', () => {
+        const testService = createServiceWithRoomMode(createMockGame(), createMockGameRoom());
+
+        const session = createMockKetalSession({
+          status: 'finished',
+          withSummary: false,
+        });
+
+        testService.handleSessionUpdate(session);
+
+        expect(testService.game().status).toBe(2);
+      });
+
+      it('should map player choices correctly', () => {
+        const testService = createServiceWithRoomMode(createMockGame(), createMockGameRoom());
+
+        const session = createMockKetalSession({
+          status: 'playing',
+          phase: 'dealing',
+          turn: 1,
+          players: [
+            {
+              memberId: 'p1',
+              displayName: 'Player 1',
+              order: 1,
+              cards: [],
+              choices: { color: 'red', plus_or_minus: 'plus', in_out: 'in', suit: 'hearts' },
+              sipsGiven: 3,
+              sipsTaken: 5,
+              isReady: true,
+            },
+          ],
+        });
+
+        testService.handleSessionUpdate(session);
+
+        const player = testService.game().players[0];
+        expect(player.choice['color']).toBe('red');
+        expect(player.choice['plus_or_minus']).toBe('plus');
+        expect(player.choice['in_out']).toBe('in');
+        expect(player.choice['suit']).toBe('hearts');
+        expect(player.sips['drunk']).toBe(5);
+        expect(player.sips['given']).toBe(3);
+      });
+
+      it('should set activePlayer from activePlayerId', () => {
+        const testService = createServiceWithRoomMode(createMockGame(), createMockGameRoom());
+
+        const session = createMockKetalSession({
+          status: 'playing',
+          phase: 'dealing',
+          turn: 1,
+          activePlayerId: 'p2',
+          players: [
+            {
+              memberId: 'p1',
+              displayName: 'Player 1',
+              order: 1,
+              cards: [],
+              choices: { color: '', plus_or_minus: '', in_out: '', suit: '' },
+              sipsGiven: 0,
+              sipsTaken: 0,
+              isReady: true,
+            },
+            {
+              memberId: 'p2',
+              displayName: 'Player 2',
+              order: 2,
+              cards: [],
+              choices: { color: '', plus_or_minus: '', in_out: '', suit: '' },
+              sipsGiven: 0,
+              sipsTaken: 0,
+              isReady: true,
+            },
+          ],
+        });
+
+        testService.handleSessionUpdate(session);
+
+        expect(testService.game().activePlayer?.id).toBe('p2');
+        expect(testService.game().activePlayer?.name).toBe('Player 2');
+      });
+
+      it('should handle errors gracefully', () => {
+        const testService = createServiceWithRoomMode(createMockGame(), createMockGameRoom());
+        const consoleSpy = spyOn(console, 'error');
+
+        // Pass a session with invalid data that will cause mapping to fail
+        const invalidSession = { $id: 'bad' } as any;
+
+        testService.handleSessionUpdate(invalidSession);
+
+        expect(consoleSpy).toHaveBeenCalledWith(
+          '[GameService] Failed to handle session update:',
+          jasmine.anything()
+        );
+      });
+    });
+
+    describe('sync loop prevention', () => {
+      it('should not re-save data received from realtime updates', () => {
+        const mockRoom = createMockGameRoom();
+        const mockGame = createMockGame();
+        const testService = createServiceWithRoomMode(mockGame, mockRoom);
+
+        const session = createMockKetalSession({
+          status: 'playing',
+          phase: 'dealing',
+          turn: 2,
+          players: [],
+        });
+
+        // handleSessionUpdate should update the signal but NOT trigger saveToAppwrite
+        mockKetalSessionService.updateSession.calls.reset();
+        testService.handleSessionUpdate(session);
+
+        // The update should NOT trigger a save to Appwrite
+        // (saveToAppwrite is only called through saveAndNotify/syncToAppwrite)
+        expect(mockKetalSessionService.updateSession).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('subscription cleanup', () => {
+      it('should unsubscribe when resetGame is called', () => {
+        mockRealtimeService.subscribeToSession.and.returnValue('sub_active');
+        const testService = createServiceWithRoomMode(createMockGame(), createMockGameRoom());
+
+        testService.subscribeToSessionUpdates('session-123');
+        mockRealtimeService.unsubscribe.calls.reset();
+
+        testService.resetGame();
+
+        expect(mockRealtimeService.unsubscribe).toHaveBeenCalledWith('sub_active');
+      });
+
+      it('should unsubscribe when game ends (status 2) in room mode', async () => {
+        const mockRoom = createMockGameRoom();
+        const mockSession = createMockKetalSession({ $id: 'session-123' });
+        mockKetalSessionService.currentSession.set(mockSession);
+        mockRealtimeService.subscribeToSession.and.returnValue('sub_active');
+
+        const testService = createServiceWithRoomMode(createMockGame(), mockRoom);
+        testService.subscribeToSessionUpdates('session-123');
+        mockRealtimeService.unsubscribe.calls.reset();
+
+        testService.setStatus(2);
+
+        // Allow async finalizeGameStats to complete
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        expect(mockRealtimeService.unsubscribe).toHaveBeenCalledWith('sub_active');
+      });
+
+      it('should subscribe during beginGame in room mode', async () => {
+        const mockRoom = createMockGameRoom();
+        mockRoomService.currentRoom.set(mockRoom);
+
+        const mockSession = createMockKetalSession({
+          $id: 'session-456',
+          status: 'playing',
+          phase: 'dealing',
+          turn: 1,
+          players: [
+            {
+              memberId: 'player-1',
+              displayName: 'Test Player',
+              order: 1,
+              cards: [],
+              choices: { color: '', plus_or_minus: '', in_out: '', suit: '' },
+              sipsGiven: 0,
+              sipsTaken: 0,
+              isReady: true,
+            },
+          ],
+        });
+        mockKetalSessionService.startGame.and.resolveTo(mockSession);
+
+        const testService = createServiceWithRoomMode(null, mockRoom);
+        const players = [createMockPlayer({ id: 'player-1' })];
+        mockLocalService.getData.and.returnValue(JSON.stringify(players));
+
+        await testService.beginGame();
+
+        expect(mockRealtimeService.subscribeToSession).toHaveBeenCalledWith(
+          'session-456',
+          jasmine.any(Function)
+        );
+      });
+    });
+
+    describe('handleReconnection', () => {
+      it('should fetch session and update game state', async () => {
+        const mockRoom = createMockGameRoom();
+        const mockSession = createMockKetalSession({
+          $id: 'session-123',
+          status: 'playing',
+          phase: 'dealing',
+          turn: 3,
+          players: [
+            {
+              memberId: 'p1',
+              displayName: 'Reconnected Player',
+              order: 1,
+              cards: [],
+              choices: { color: 'red', plus_or_minus: '', in_out: '', suit: '' },
+              sipsGiven: 0,
+              sipsTaken: 2,
+              isReady: true,
+            },
+          ],
+        });
+        mockKetalSessionService.getSession.and.resolveTo(mockSession);
+
+        const testService = createServiceWithRoomMode(createMockGame(), mockRoom);
+
+        await testService.handleReconnection('session-123');
+
+        expect(mockKetalSessionService.getSession).toHaveBeenCalledWith('session-123');
+        expect(testService.game().turn).toBe(3);
+        expect(testService.game().players[0].name).toBe('Reconnected Player');
+      });
+
+      it('should re-subscribe to realtime updates after reconnection', async () => {
+        const mockRoom = createMockGameRoom();
+        const mockSession = createMockKetalSession({ $id: 'session-123' });
+        mockKetalSessionService.getSession.and.resolveTo(mockSession);
+
+        const testService = createServiceWithRoomMode(createMockGame(), mockRoom);
+        mockRealtimeService.subscribeToSession.calls.reset();
+
+        await testService.handleReconnection('session-123');
+
+        expect(mockRealtimeService.subscribeToSession).toHaveBeenCalledWith(
+          'session-123',
+          jasmine.any(Function)
+        );
+      });
+
+      it('should use stored activeSessionId when no sessionId provided', async () => {
+        const mockRoom = createMockGameRoom();
+        const mockSession = createMockKetalSession({ $id: 'session-stored' });
+        mockKetalSessionService.getSession.and.resolveTo(mockSession);
+
+        const testService = createServiceWithRoomMode(createMockGame(), mockRoom);
+
+        // Subscribe first to store activeSessionId
+        testService.subscribeToSessionUpdates('session-stored');
+        mockRealtimeService.subscribeToSession.calls.reset();
+
+        await testService.handleReconnection();
+
+        expect(mockKetalSessionService.getSession).toHaveBeenCalledWith('session-stored');
+      });
+
+      it('should do nothing when no session ID is available', async () => {
+        const testService = createServiceWithRoomMode(createMockGame(), createMockGameRoom());
+
+        await testService.handleReconnection();
+
+        expect(mockKetalSessionService.getSession).not.toHaveBeenCalled();
+      });
+
+      it('should do nothing when session is not found', async () => {
+        const mockRoom = createMockGameRoom();
+        mockKetalSessionService.getSession.and.resolveTo(null);
+
+        const testService = createServiceWithRoomMode(createMockGame(), mockRoom);
+        const consoleSpy = spyOn(console, 'debug');
+
+        await testService.handleReconnection('session-missing');
+
+        expect(consoleSpy).toHaveBeenCalledWith('[GameService] handleReconnection - session not found');
+      });
+
+      it('should handle errors gracefully', async () => {
+        mockKetalSessionService.getSession.and.rejectWith(new Error('Network error'));
+
+        const testService = createServiceWithRoomMode(createMockGame(), createMockGameRoom());
+        const consoleSpy = spyOn(console, 'error');
+
+        await testService.handleReconnection('session-123');
+
+        expect(consoleSpy).toHaveBeenCalledWith(
+          '[GameService] handleReconnection - failed:',
+          jasmine.anything()
+        );
+      });
+    });
+
+    describe('realtime callback invocation', () => {
+      it('should call handleSessionUpdate when realtime update is received', () => {
+        let capturedCallback: ((session: any) => void) | undefined;
+
+        mockRealtimeService.subscribeToSession.and.callFake((_id: string, cb: (session: any) => void) => {
+          capturedCallback = cb;
+          return 'sub_captured';
+        });
+
+        const testService = createServiceWithRoomMode(createMockGame(), createMockGameRoom());
+        testService.subscribeToSessionUpdates('session-123');
+
+        expect(capturedCallback).toBeDefined();
+
+        // Simulate realtime update
+        const session = createMockKetalSession({
+          status: 'playing',
+          phase: 'pyramid',
+          turn: 5,
+          players: [],
+        });
+
+        capturedCallback!(session);
+
+        expect(testService.game().phase).toBe(2); // 'pyramid' maps to phase 2
       });
     });
   });

@@ -42,6 +42,12 @@ export class GameService {
   private sessionSubscriptionId: string | null = null;
 
   /**
+   * The session ID we are currently subscribed to.
+   * Used for reconnection to resubscribe after a disconnect.
+   */
+  private activeSessionId: string | null = null;
+
+  /**
    * Signal to prevent sync loops when receiving realtime updates.
    * When true, incoming session updates will not trigger re-sync to Appwrite.
    */
@@ -168,6 +174,13 @@ export class GameService {
       console.error('[GameService] Failed to sync to Appwrite:', error);
     } finally {
       this._isSyncing.set(false);
+
+      // Apply any pending session update that arrived during sync
+      if (this._pendingSessionUpdate) {
+        const pending = this._pendingSessionUpdate;
+        this._pendingSessionUpdate = null;
+        this.handleSessionUpdate(pending);
+      }
     }
   }
 
@@ -201,7 +214,11 @@ export class GameService {
     // Cleanup any existing subscription first
     this.unsubscribeFromSession();
 
+    // Store the session ID for reconnection
+    this.activeSessionId = sessionId;
+
     // Subscribe to realtime updates via RealtimeService
+    // The payload from Appwrite realtime is a raw document that matches KetalSession
     this.sessionSubscriptionId = this.realtimeService.subscribeToSession(sessionId, (updatedSession) => {
       this.handleSessionUpdate(updatedSession as unknown as KetalSession);
     });
@@ -222,6 +239,8 @@ export class GameService {
       console.debug('[GameService] Unsubscribed from session', { subscriptionId: this.sessionSubscriptionId });
       this.sessionSubscriptionId = null;
     }
+    // Note: activeSessionId is NOT cleared here to allow reconnection.
+    // It is only cleared in resetGame() when the game truly ends.
   }
 
   /**
@@ -234,10 +253,14 @@ export class GameService {
    *
    * @param session - The updated KetalSession from Appwrite
    */
+  /** Pending session update received while syncing */
+  private _pendingSessionUpdate: KetalSession | null = null;
+
   handleSessionUpdate(session: KetalSession): void {
-    // Skip if we're in the middle of syncing to Appwrite (prevent loops)
+    // If we're syncing to Appwrite, queue the update to apply after sync completes
     if (this._isSyncing()) {
-      console.debug('[GameService] handleSessionUpdate - skipped (syncing)');
+      console.debug('[GameService] handleSessionUpdate - queued (syncing)');
+      this._pendingSessionUpdate = session;
       return;
     }
 
@@ -256,6 +279,50 @@ export class GameService {
       });
     } catch (error) {
       console.error('[GameService] Failed to handle session update:', error);
+    }
+  }
+
+  /**
+   * Handle reconnection after a disconnection.
+   * Fetches the complete session state from API and re-subscribes to realtime updates.
+   *
+   * Called when a disconnection is detected (e.g., realtime connection lost).
+   * Uses the stored activeSessionId to know which session to reconnect to.
+   *
+   * @param sessionId - The session ID to reconnect to (optional, uses stored ID if not provided)
+   */
+  async handleReconnection(sessionId?: string): Promise<void> {
+    const targetSessionId = sessionId ?? this.activeSessionId;
+    if (!targetSessionId) {
+      console.debug('[GameService] handleReconnection - no session ID to reconnect to');
+      return;
+    }
+
+    try {
+      console.debug('[GameService] handleReconnection - fetching session state', { sessionId: targetSessionId });
+
+      // Fetch complete session state via API
+      const session = await this.ketalSessionService.getSession(targetSessionId);
+      if (!session) {
+        console.debug('[GameService] handleReconnection - session not found');
+        return;
+      }
+
+      // Update local game state from the fetched session
+      const game = mapSessionToGame(session);
+      this._game.set(game);
+
+      // Re-subscribe to realtime updates
+      this.subscribeToSessionUpdates(targetSessionId);
+
+      console.debug('[GameService] handleReconnection - successfully reconnected', {
+        sessionId: targetSessionId,
+        status: game.status,
+        phase: game.phase,
+        turn: game.turn,
+      });
+    } catch (error) {
+      console.error('[GameService] handleReconnection - failed:', error);
     }
   }
 
@@ -421,6 +488,9 @@ export class GameService {
   resetGame(): void {
     // Unsubscribe from realtime updates when resetting the game
     this.unsubscribeFromSession();
+    // Clear session ID — game is truly ending
+    this.activeSessionId = null;
+    this._pendingSessionUpdate = null;
 
     this.updateGame((game) => {
       game.givingCards = [];
