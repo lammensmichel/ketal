@@ -34,6 +34,23 @@
   "Assign_All_Sips": "Elke gebruiker met de getrokken kaart moet het icoon <i class=\"fa fa-glass\"></i> gebruiken om slokjes te geven.",
   "Assign_All_Given_Sips": "Geef eerst alle slokjes",
   "Summary_Mode_Selection": "Samenvatting aan het einde van het spel activeren",
+  "legal": {
+    "healthWarning": "Alcoholmisbruik is gevaarlijk voor uw gezondheid. Drink met mate.",
+    "terms": {
+      "title": "Gebruiksvoorwaarden",
+      "ageRestrictionTitle": "Leeftijdsbeperking",
+      "ageRestrictionText": "U moet minimaal 18 jaar oud zijn om deze applicatie te gebruiken. Door een account aan te maken, bevestigt u dat u de wettelijke leeftijd hebt om alcohol te drinken in uw land van verblijf.",
+      "healthWarningTitle": "Gezondheidswaarschuwing",
+      "healthWarningText": "Alcoholmisbruik is gevaarlijk voor uw gezondheid. Drink met mate.",
+      "nonAlcoholicTitle": "Niet-alcoholisch alternatief",
+      "nonAlcoholicText": "Dit spel kan gespeeld worden met niet-alcoholische dranken. Slokjes kunnen elke drank naar keuze voorstellen.",
+      "disclaimerTitle": "Juridische disclaimer",
+      "disclaimerText": "Deze applicatie moedigt alcoholgebruik niet aan. Het is ontworpen als een gezelschapsspel en het gebruik van alcoholische dranken is volledig naar eigen goeddunken en verantwoordelijkheid van de gebruikers.",
+      "responsibilityTitle": "Verantwoordelijkheid",
+      "responsibilityText": "De makers van deze applicatie wijzen alle verantwoordelijkheid af voor het gebruik ervan. U bent zelf verantwoordelijk voor uw eigen consumptie. Rijd nooit onder invloed.",
+      "backToRegister": "Terug naar registratie"
+    }
+  },
   "auth": {
     "login": "Inloggen",
     "register": "Registreren",
@@ -49,6 +66,8 @@
     "hasAccount": "Al een account?",
     "createAccount": "Account aanmaken",
     "partOfFug": "Een spel uit het FUG-universum",
+    "ageVerificationPrefix": "Ik ben 18 jaar of ouder en ik accepteer de",
+    "ageVerificationLink": "gebruiksvoorwaarden",
     "or": "of",
     "errors": {
       "invalidEmail": "Ongeldig e-mailadres",
@@ -60,7 +79,8 @@
       "invalidCredentials": "Ongeldige e-mail of wachtwoord",
       "emailExists": "Er bestaat al een account met dit e-mailadres",
       "genericError": "Er is een fout opgetreden",
-      "tooManyAttempts": "Te veel pogingen, even geduld"
+      "tooManyAttempts": "Te veel pogingen, even geduld",
+      "ageVerificationRequired": "U moet bevestigen dat u 18 jaar of ouder bent en de voorwaarden accepteren"
     },
     "success": {
       "accountCreated": "Account succesvol aangemaakt",

@@ -40,6 +40,10 @@ export const routes: Routes = [
     path: 'game',
     loadComponent: () => import('./_components/game/game/game.component').then((m) => m.GameComponent),
   },
+  {
+    path: 'terms',
+    loadComponent: () => import('./_components/legal/terms/terms.component').then((m) => m.TermsComponent),
+  },
   { path: '', redirectTo: 'login', pathMatch: 'full' },
 ];
 

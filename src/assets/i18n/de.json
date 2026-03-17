@@ -34,6 +34,23 @@
   "Assign_All_Sips": "Jeder Benutzer mit der gezogenen Karte muss das Symbol <i class=\"fa fa-glass\"></i> verwenden, um Schlucke zu verteilen.",
   "Assign_All_Given_Sips": "Bitte verteilen Sie zuerst alle Schlucke",
   "Summary_Mode_Selection": "Zusammenfassung am Ende des Spiels aktivieren",
+  "legal": {
+    "healthWarning": "Alkoholmissbrauch ist gesundheitssch\u00e4dlich. Trinken Sie verantwortungsvoll.",
+    "terms": {
+      "title": "Nutzungsbedingungen",
+      "ageRestrictionTitle": "Altersbeschr\u00e4nkung",
+      "ageRestrictionText": "Sie m\u00fcssen mindestens 18 Jahre alt sein, um diese Anwendung zu nutzen. Mit der Erstellung eines Kontos best\u00e4tigen Sie, dass Sie in Ihrem Wohnsitzland das gesetzliche Mindestalter f\u00fcr den Alkoholkonsum erreicht haben.",
+      "healthWarningTitle": "Gesundheitswarnung",
+      "healthWarningText": "Alkoholmissbrauch ist gesundheitssch\u00e4dlich. Trinken Sie verantwortungsvoll.",
+      "nonAlcoholicTitle": "Alkoholfreie Alternative",
+      "nonAlcoholicText": "Dieses Spiel kann mit alkoholfreien Getr\u00e4nken gespielt werden. Schlucke k\u00f6nnen jedes Getr\u00e4nk Ihrer Wahl darstellen.",
+      "disclaimerTitle": "Rechtlicher Hinweis",
+      "disclaimerText": "Diese Anwendung f\u00f6rdert keinen Alkoholkonsum. Sie ist als Gesellschaftsspiel konzipiert und die Verwendung von alkoholischen Getr\u00e4nken liegt vollst\u00e4ndig im Ermessen und in der Verantwortung der Nutzer.",
+      "responsibilityTitle": "Verantwortung",
+      "responsibilityText": "Die Ersteller dieser Anwendung lehnen jede Verantwortung f\u00fcr deren Nutzung ab. Sie sind allein f\u00fcr Ihren eigenen Konsum verantwortlich. Fahren Sie niemals unter Alkoholeinfluss.",
+      "backToRegister": "Zur\u00fcck zur Registrierung"
+    }
+  },
   "auth": {
     "login": "Anmelden",
     "register": "Registrieren",
@@ -49,6 +66,8 @@
     "hasAccount": "Bereits ein Konto?",
     "createAccount": "Konto erstellen",
     "partOfFug": "Ein Spiel aus dem FUG-Universum",
+    "ageVerificationPrefix": "Ich bin 18 Jahre oder \u00e4lter und akzeptiere die",
+    "ageVerificationLink": "Nutzungsbedingungen",
     "or": "oder",
     "errors": {
       "invalidEmail": "Ungültige E-Mail-Adresse",
@@ -60,7 +79,8 @@
       "invalidCredentials": "Ungültige E-Mail oder Passwort",
       "emailExists": "Ein Konto mit dieser E-Mail existiert bereits",
       "genericError": "Ein Fehler ist aufgetreten",
-      "tooManyAttempts": "Zu viele Versuche, bitte warten"
+      "tooManyAttempts": "Zu viele Versuche, bitte warten",
+      "ageVerificationRequired": "Sie m\u00fcssen best\u00e4tigen, dass Sie 18 Jahre oder \u00e4lter sind und die Bedingungen akzeptieren"
     },
     "success": {
       "accountCreated": "Konto erfolgreich erstellt",
