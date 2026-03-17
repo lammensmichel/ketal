@@ -206,6 +206,28 @@ export class RoomService {
   }
 
   /**
+   * Find a room by its Appwrite document ID
+   */
+  async getRoomById(roomId: string): Promise<GameRoom | null> {
+    try {
+      const document = await this.appwrite.databases.getDocument(
+        this.appwrite.databaseId,
+        COLLECTION_GAME_ROOMS,
+        roomId
+      );
+
+      return this.mapDocumentToGameRoom(document);
+    } catch (error: unknown) {
+      // Return null for 404 (document not found), re-throw other errors
+      if (error instanceof Object && 'code' in error && (error as { code: number }).code === 404) {
+        return null;
+      }
+      console.warn('getRoomById failed with unexpected error:', error);
+      throw new Error(`Failed to get room: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
    * Get all rooms
    */
   async getMyRooms(): Promise<GameRoom[]> {

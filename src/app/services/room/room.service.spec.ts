@@ -10,6 +10,7 @@ describe('RoomService', () => {
   let mockDatabases: {
     createDocument: jasmine.Spy;
     deleteDocument: jasmine.Spy;
+    getDocument: jasmine.Spy;
     listDocuments: jasmine.Spy;
     updateDocument: jasmine.Spy;
   };
@@ -46,6 +47,7 @@ describe('RoomService', () => {
     mockDatabases = {
       createDocument: jasmine.createSpy('createDocument'),
       deleteDocument: jasmine.createSpy('deleteDocument'),
+      getDocument: jasmine.createSpy('getDocument'),
       listDocuments: jasmine.createSpy('listDocuments'),
       updateDocument: jasmine.createSpy('updateDocument'),
     };
@@ -308,6 +310,32 @@ describe('RoomService', () => {
       await expectAsync(service.getRoomByInviteToken('550e8400-e29b-41d4-a716-446655440000')).toBeRejectedWithError(
         'Failed to find room by invite token: Query failed'
       );
+    });
+  });
+
+  describe('getRoomById', () => {
+    it('should find a room by its document ID', async () => {
+      mockDatabases.getDocument.and.resolveTo(mockRoomDocument);
+
+      const result = await service.getRoomById('room123');
+
+      expect(mockDatabases.getDocument).toHaveBeenCalledWith('fug', 'fug_game_rooms', 'room123');
+      expect(result).toEqual(mockGameRoom);
+    });
+
+    it('should return null when room not found (404)', async () => {
+      const notFoundError = { code: 404, message: 'Document not found' };
+      mockDatabases.getDocument.and.rejectWith(notFoundError);
+
+      const result = await service.getRoomById('nonexistent');
+
+      expect(result).toBeNull();
+    });
+
+    it('should throw error for non-404 errors', async () => {
+      mockDatabases.getDocument.and.rejectWith(new Error('Server error'));
+
+      await expectAsync(service.getRoomById('room123')).toBeRejectedWithError('Failed to get room: Server error');
     });
   });
 

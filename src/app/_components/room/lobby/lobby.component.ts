@@ -1,11 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { QRCodeComponent } from 'angularx-qrcode';
-import { RoomService, GameRoom } from '../../../services/room/room.service';
+import { RoomService } from '../../../services/room/room.service';
 import { MemberService, GameMember, MemberRole } from '../../../services/member/member.service';
 import { RealtimeService, GameMember as RealtimeGameMember } from '../../../services/realtime/realtime.service';
+import { AuthService } from '../../../services/auth/auth.service';
+import { GuestService } from '../../../services/guest/guest.service';
 import { KetalSessionService, KetalPlayer } from '../../../services/ketal-session/ketal-session.service';
 
 /**
@@ -31,14 +33,20 @@ import { KetalSessionService, KetalPlayer } from '../../../services/ketal-sessio
 })
 export class LobbyComponent implements OnInit {
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly roomService = inject(RoomService);
   private readonly memberService = inject(MemberService);
   private readonly realtimeService = inject(RealtimeService);
+  private readonly authService = inject(AuthService);
+  private readonly guestService = inject(GuestService);
   private readonly ketalSessionService = inject(KetalSessionService);
   private readonly destroyRef = inject(DestroyRef);
 
   /** Subscription ID for member realtime updates */
   private memberSubscriptionId: string | null = null;
+
+  /** Guard flag to prevent concurrent member loads */
+  private isMembersLoading = false;
 
   /** Loading state for async operations */
   readonly isLoading = signal(false);
@@ -103,24 +111,108 @@ export class LobbyComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadRoomMembers();
-    this.subscribeToMemberUpdates();
+    this.initializeLobby();
     this.registerCleanup();
   }
 
   /**
-   * Load all members for the current room
+   * Initialize lobby: restore room/member state from route param if needed,
+   * then load members and subscribe to realtime updates.
    */
-  private async loadRoomMembers(): Promise<void> {
+  private async initializeLobby(): Promise<void> {
+    try {
+      this.isLoading.set(true);
+      this.error.set(null);
+
+      // If currentRoom is null (e.g. after page reload), restore from route param
+      if (!this.currentRoom()) {
+        const roomId = this.route.snapshot.paramMap.get('id');
+        if (!roomId) {
+          await this.router.navigate(['/']);
+          return;
+        }
+
+        const room = await this.roomService.getRoomById(roomId);
+        if (!room) {
+          this.error.set('lobby.errors.roomNotFound');
+          await this.router.navigate(['/']);
+          return;
+        }
+
+        this.roomService.setCurrentRoom(room);
+      }
+
+      // Recover member identity if currentMember is null
+      if (!this.currentMember()) {
+        await this.recoverMemberIdentity();
+      }
+
+      // Subscribe to realtime member updates BEFORE loading to avoid missing events
+      this.subscribeToMemberUpdates();
+
+      // Load room members
+      await this.loadRoomMembers();
+    } catch (err) {
+      this.error.set(this.getErrorMessage(err));
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  /**
+   * Recover the current user's member record in this room
+   * by matching userId or deviceId against existing members.
+   */
+  private async recoverMemberIdentity(): Promise<void> {
+    const room = this.currentRoom();
+    if (!room) {
+      return;
+    }
+
+    const currentUser = this.authService.currentUser();
+    const deviceId = this.guestService.getOrCreateDeviceId();
+
+    const existingMember = await this.memberService.getMemberByUserOrDevice(room.$id, currentUser?.$id, deviceId);
+
+    if (!existingMember) {
+      console.warn('No member found, redirecting to join');
+      this.router.navigate(['/room/join', room.code]);
+      return;
+    }
+
+    this.memberService.setCurrentMember(existingMember);
+
+    // Mark as online
+    try {
+      await this.memberService.updateMember(existingMember.$id, { isOnline: true });
+    } catch (err) {
+      console.warn('Failed to update online status (non-critical):', err);
+    }
+  }
+
+  /**
+   * Load all members for the current room
+   * @param showLoading - Whether to set isLoading signal (false for realtime-triggered reloads to avoid UI flicker)
+   */
+  private async loadRoomMembers(showLoading = true): Promise<void> {
     const room = this.currentRoom();
     if (!room) {
       return;
     }
 
     try {
+      this.isMembersLoading = true;
+      if (showLoading) {
+        this.isLoading.set(true);
+      }
       await this.memberService.getMembersByRoom(room.$id);
     } catch (err) {
       this.error.set(this.getErrorMessage(err));
+    } finally {
+      this.isMembersLoading = false;
+      if (showLoading) {
+        this.isLoading.set(false);
+      }
     }
   }
 
@@ -133,9 +225,19 @@ export class LobbyComponent implements OnInit {
       return;
     }
 
+    // Avoid duplicate subscriptions
+    if (this.memberSubscriptionId) {
+      console.warn('subscribeToMemberUpdates: subscription already active, skipping duplicate');
+      return;
+    }
+
     this.memberSubscriptionId = this.realtimeService.subscribeToMembers(room.$id, (_member: RealtimeGameMember) => {
-      // Refresh members list when any member in the room changes
-      this.loadRoomMembers();
+      // Skip if already loading to prevent UI flicker
+      if (this.isMembersLoading) {
+        return;
+      }
+      // Refresh members list without UI flicker on realtime updates
+      this.loadRoomMembers(false);
     });
   }
 
