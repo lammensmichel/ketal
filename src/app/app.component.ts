@@ -1,4 +1,4 @@
-import { Component, computed, Signal, inject } from '@angular/core';
+import { Component, computed, OnInit, Signal, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterOutlet } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -6,6 +6,8 @@ import { environment } from 'src/environments/environment';
 import { PlayerHelperService } from './_shared/_helpers/player.helper';
 import { AuthService } from './services/auth/auth.service';
 import { GameService } from './services/game/game.service';
+import { AuthService } from './services/auth/auth.service';
+import { SoloRoomService } from './services/solo-room/solo-room.service';
 import { HeaderComponent } from './_shared/_components/header/header.component';
 import { FooterComponent } from './_shared/_components/footer/footer.component';
 
@@ -16,12 +18,14 @@ import { FooterComponent } from './_shared/_components/footer/footer.component';
   standalone: true,
   imports: [FormsModule, RouterOutlet, TranslateModule, HeaderComponent, FooterComponent],
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   private readonly router = inject(Router);
   readonly authService = inject(AuthService);
   readonly gameSrv = inject(GameService);
   readonly translate = inject(TranslateService);
   readonly playerSrv = inject(PlayerHelperService);
+  private readonly authService = inject(AuthService);
+  private readonly soloRoomService = inject(SoloRoomService);
 
   readonly withSummaryMode: Signal<boolean>;
 
@@ -40,6 +44,26 @@ export class AppComponent {
       const gameSummary = this.gameSrv.summary();
       return this.playerSrv.getPlayerNumber() > 1 ? summaryMode || gameSummary : summaryMode;
     });
+  }
+
+  /**
+   * On init, check for active room + session to resume.
+   * If found, restore game state and navigate to /game.
+   */
+  async ngOnInit(): Promise<void> {
+    try {
+      await this.authService.init();
+
+      if (this.authService.isLoggedIn()) {
+        const activeSession = await this.soloRoomService.checkActiveSession();
+        if (activeSession) {
+          await this.gameSrv.handleReconnection(activeSession.$id);
+          await this.router.navigate(['/game']);
+        }
+      }
+    } catch {
+      // Auth init or session check failed, continue normally
+    }
   }
 
   onSummaryModeCheckChange(event: Event): void {

@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../../services/auth/auth.service';
 import { GameService } from '../../../services/game/game.service';
+import { SoloRoomService } from '../../../services/solo-room/solo-room.service';
 
 /**
  * LoginComponent - Authentication page for Ketal
@@ -27,6 +28,7 @@ export class LoginComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly gameService = inject(GameService);
+  private readonly soloRoomService = inject(SoloRoomService);
 
   /** Reactive form for email/password login */
   readonly loginForm = new FormGroup({
@@ -105,9 +107,10 @@ export class LoginComponent implements OnInit {
   }
 
   /**
-   * Navigate to appropriate page after login
+   * Navigate to appropriate page after login.
    * If pendingSummary flag is set, navigates to /game and shows summary.
-   * Otherwise goes to /game if a game is in progress, or /players.
+   * Checks for active KetalSession to resume, otherwise starts background
+   * solo room creation and navigates to /players.
    */
   private async navigateAfterLogin(): Promise<void> {
     if (this.authService.consumePendingSummary()) {
@@ -115,8 +118,17 @@ export class LoginComponent implements OnInit {
       this.gameService.setStatus(3);
       return;
     }
-    const route = this.gameService.isGameStarted() ? '/game' : '/players';
-    await this.router.navigate([route]);
+
+    // Check for active session to resume
+    const activeSession = await this.soloRoomService.checkActiveSession();
+    if (activeSession) {
+      await this.router.navigate(['/game']);
+      return;
+    }
+
+    // Start background solo room creation while user adds players
+    this.soloRoomService.startBackgroundRoomCreation();
+    await this.router.navigate(['/players']);
   }
 
   /**

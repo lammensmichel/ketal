@@ -5,9 +5,12 @@ import { TranslateModule } from '@ngx-translate/core';
 import { AppComponent } from './app.component';
 import { AuthService } from './services/auth/auth.service';
 import { GameService } from './services/game/game.service';
+import { AuthService } from './services/auth/auth.service';
+import { SoloRoomService } from './services/solo-room/solo-room.service';
 import { PlayerHelperService } from './_shared/_helpers/player.helper';
 import { HeaderComponent } from './_shared/_components/header/header.component';
 import { FooterComponent } from './_shared/_components/footer/footer.component';
+import { createMockAuthService, createMockSoloRoomService } from './testing/test-helpers';
 
 // Stub components to replace actual child components
 @Component({
@@ -33,9 +36,12 @@ describe('AppComponent', () => {
     withSummaryMode: ReturnType<typeof signal<boolean>>;
     summary: ReturnType<typeof signal<boolean>>;
     isNewGame: jasmine.Spy;
+    handleReconnection: jasmine.Spy;
   };
   let mockAuthService: { isAnonymous: ReturnType<typeof signal<boolean>> };
   let mockPlayerHelperService: jasmine.SpyObj<PlayerHelperService>;
+  let mockAuthService: ReturnType<typeof createMockAuthService>;
+  let mockSoloRoomService: ReturnType<typeof createMockSoloRoomService>;
   beforeEach(async () => {
     // Create writable signals for GameService mock
     const withSummaryModeSignal = signal<boolean>(false);
@@ -45,6 +51,7 @@ describe('AppComponent', () => {
       withSummaryMode: withSummaryModeSignal,
       summary: summarySignal,
       isNewGame: jasmine.createSpy('isNewGame').and.returnValue(true),
+      handleReconnection: jasmine.createSpy('handleReconnection').and.resolveTo(undefined),
     };
 
     mockAuthService = {
@@ -53,6 +60,8 @@ describe('AppComponent', () => {
 
     mockPlayerHelperService = jasmine.createSpyObj('PlayerHelperService', ['getPlayerNumber']);
     mockPlayerHelperService.getPlayerNumber.and.returnValue(0);
+    mockAuthService = createMockAuthService();
+    mockSoloRoomService = createMockSoloRoomService();
 
     await TestBed.configureTestingModule({
       imports: [AppComponent, TranslateModule.forRoot()],
@@ -61,6 +70,8 @@ describe('AppComponent', () => {
         { provide: AuthService, useValue: mockAuthService },
         { provide: GameService, useValue: mockGameService },
         { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+        { provide: AuthService, useValue: mockAuthService },
+        { provide: SoloRoomService, useValue: mockSoloRoomService },
       ],
       schemas: [NO_ERRORS_SCHEMA],
     })

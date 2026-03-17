@@ -5,6 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { FontAwesomeIconsModule } from '../../../font-awesome.module';
 import { AuthService } from '../../../services/auth/auth.service';
 import { GameService } from '../../../services/game/game.service';
+import { SoloRoomService } from '../../../services/solo-room/solo-room.service';
 import { PlayerHelperService } from '../../_helpers/player.helper';
 import { CardType } from '../../_models/card-type.model';
 import { DrinkChoiceEnum } from '../../_models/enums/drink_choice.enum';
@@ -36,6 +37,7 @@ export class FooterComponent {
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
   readonly gameSrv = inject(GameService);
+  private readonly soloRoomService = inject(SoloRoomService);
   readonly playerHelper = inject(PlayerHelperService);
 
   @Input() public withSummaryMode: boolean = false;
@@ -43,6 +45,9 @@ export class FooterComponent {
   @ViewChild('accountGateModal') accountGateModal: AccountGateModalComponent | undefined;
 
   readonly cardSlots = [0, 1, 2, 3, 4, 5];
+
+  /** Guard flag to prevent double-click on beginGame */
+  private _beginGameInProgress = false;
 
   /** Reference card for Turn 2 (the card drawn in Turn 1 for the active player) */
   getReferenceCard(): CardType | null {
@@ -169,8 +174,19 @@ export class FooterComponent {
   }
 
   async beginGame(): Promise<void> {
-    await this.gameSrv.beginGame(this.withSummaryMode);
-    this.router.navigate(['/game']);
+    if (this._beginGameInProgress) {
+      return;
+    }
+    this._beginGameInProgress = true;
+
+    try {
+      // Await background solo room creation (no-op if already ready or local mode)
+      await this.soloRoomService.awaitRoom();
+      await this.gameSrv.beginGame(this.withSummaryMode);
+      this.router.navigate(['/game']);
+    } finally {
+      this._beginGameInProgress = false;
+    }
   }
 
   private delay(ms: number): Promise<void> {
