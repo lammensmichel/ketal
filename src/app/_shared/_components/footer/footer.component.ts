@@ -1,4 +1,4 @@
-import { Component, Input, ViewChild, inject, computed } from '@angular/core';
+import { Component, Input, ViewChild, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { NgClass } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
@@ -29,6 +29,15 @@ export class FooterComponent {
   @ViewChild('notAllSipsGiven') toastComponent: ToastComponent | undefined;
 
   readonly cardSlots = [0, 1, 2, 3, 4, 5];
+
+  /** Reference card for Turn 2 (the card drawn in Turn 1 for the active player) */
+  getReferenceCard(): CardType | null {
+    const activePlayer = this.gameSrv.activePlayer();
+    if (activePlayer?.cards?.length) {
+      return activePlayer.cards[0];
+    }
+    return null;
+  }
 
   /** Check if current route is a page where game footer should be hidden */
   isHiddenPage(): boolean {

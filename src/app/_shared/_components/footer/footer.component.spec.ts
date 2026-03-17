@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { NO_ERRORS_SCHEMA, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { FooterComponent } from './footer.component';
@@ -8,6 +8,7 @@ import { PlayerHelperService } from '../../_helpers/player.helper';
 import { createMockGameService, createMockPlayerHelperService } from '../../../testing/test-helpers';
 import { Game } from '../../_models/game.model';
 import { PlayerModel } from '../../_models/player.model';
+import { CardType } from '../../_models/card-type.model';
 import { DrinkChoiceEnum } from '../../_models/enums/drink_choice.enum';
 
 describe('FooterComponent', () => {
@@ -298,6 +299,36 @@ describe('FooterComponent', () => {
       component.toastComponent = mockToast as any;
       mockToast.show();
       expect(mockToast.show).toHaveBeenCalled();
+    });
+  });
+
+  describe('getReferenceCard', () => {
+    function setActivePlayer(player: PlayerModel | undefined): void {
+      // Jasmine spy properties use getter spies; override to return a signal wrapping the player
+      const desc = Object.getOwnPropertyDescriptor(mockGameService, 'activePlayer');
+      if (desc?.get) {
+        (desc.get as jasmine.Spy).and.returnValue(signal(player));
+      }
+    }
+
+    it('should return the first card of the active player when cards exist', () => {
+      const card: CardType = { value: '4', suit: 'hearts', icon: null, sips: 0, selected: false, img: 'assets/images/cards/svg/4_of_hearts.svg', givenSips: undefined };
+      const playerWithCard: PlayerModel = { ...mockPlayer, cards: [card] };
+      setActivePlayer(playerWithCard);
+
+      expect(component.getReferenceCard()).toEqual(card);
+    });
+
+    it('should return null when active player has no cards', () => {
+      setActivePlayer({ ...mockPlayer, cards: [] });
+
+      expect(component.getReferenceCard()).toBeNull();
+    });
+
+    it('should return null when there is no active player', () => {
+      setActivePlayer(undefined);
+
+      expect(component.getReferenceCard()).toBeNull();
     });
   });
 });

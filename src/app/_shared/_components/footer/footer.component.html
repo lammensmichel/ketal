@@ -19,19 +19,31 @@
               </div>
             }
             @if (gameSrv.turn() === 2) {
-              <div class="d-flex gap-2">
-                <button
-                  title="choosePlus"
-                  class="card-container"
-                  [innerHTML]="'+'"
-                  (click)="plusOrMinus('plus')"
-                ></button>
-                <button
-                  title="chooseMinus"
-                  class="card-container"
-                  [innerHTML]="'-'"
-                  (click)="plusOrMinus('minus')"
-                ></button>
+              <div class="d-flex flex-column align-items-center gap-2">
+                <div class="d-flex gap-2">
+                  <button
+                    title="choosePlus"
+                    class="card-container prediction-btn"
+                    (click)="plusOrMinus('plus')"
+                  >
+                    <span class="prediction-arrow">&uarr;</span>
+                    <span class="prediction-label" [translate]="'game.turn2.higher'"></span>
+                  </button>
+                  <button
+                    title="chooseMinus"
+                    class="card-container prediction-btn"
+                    (click)="plusOrMinus('minus')"
+                  >
+                    <span class="prediction-arrow">&darr;</span>
+                    <span class="prediction-label" [translate]="'game.turn2.lower'"></span>
+                  </button>
+                </div>
+                @if (getReferenceCard(); as refCard) {
+                  <div class="reference-card-hint">
+                    <span [translate]="'game.turn2.referenceHint'"></span>
+                    <app-playing-card [card]="refCard"></app-playing-card>
+                  </div>
+                }
               </div>
             }
             @if (gameSrv.turn() === 3) {

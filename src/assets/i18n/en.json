@@ -140,6 +140,11 @@
       "inOut": "In or Out",
       "suit": "Exact Suit"
     },
+    "turn2": {
+      "higher": "Higher",
+      "lower": "Lower",
+      "referenceHint": "Compared to your card:"
+    },
     "progress": {
       "phase1": "Phase 1: Predictions",
       "phase2": "Phase 2: Distribution",
