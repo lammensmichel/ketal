@@ -19,5 +19,10 @@
   "Button_Create": "Créer",
   "Button_Delete": "Supprimer",
   "Button_NextCard": "Suivante",
-  "Button_Restart": "Recommencer"
+  "Button_Restart": "Recommencer",
+
+  "Label_Sip_Singular": "gorgée",
+  "Label_Sip_Plural": "gorgées",
+  "Remaining_Sips_Singular": "{{count}} gorgée",
+  "Remaining_Sips_Plural": "{{count}} gorgées"
 }

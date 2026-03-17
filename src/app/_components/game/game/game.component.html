@@ -11,7 +11,7 @@
                 'bg-success': getSwallowCnt(player) > 0,
                 'bg-danger': getSwallowCnt(player) < 0,
                 'bg-secondary': getSwallowCnt(player) == 0,
-              }">{{getSwallowCnt(player, true)}}  <i class="fa fa-glass"></i></span>
+              }">{{getSwallowCnt(player, true)}} {{ getSwallowCnt(player, true) <= 1 ? ('Label_Sip_Singular' | translate) : ('Label_Sip_Plural' | translate) }}</span>
             </label>
           </div>
           <div class="row">

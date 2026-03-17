@@ -25,32 +25,31 @@ export class GameComponent implements OnInit {
   }
 
   getSwallowCnt(player: PlayerModel, absolute: boolean = false) {
-    const { activePlayer, drinkingCards, givingCards, phase, players } = this.gameSrv.game;
-    const currentIndex = players.findIndex(player => player.id === activePlayer?.id);
-    const previousPlayer = currentIndex === 0 ? players[players.length - 1] : players[currentIndex - 1];
     const maybeAbs = absolute ? Math.abs : (v: number) => v;
-    if (phase === 1) {
-      // Should be 0 for player who is not the previous player
-      if (player.id !== previousPlayer.id) {
-        return 0;
-      }
-      return maybeAbs(-(player.cards.at(-1)?.swallow ?? 0));
-    } else {
-      if ( player.id === previousPlayer.id && drinkingCards.length === 0  &&  givingCards.length === 0) {
-        return maybeAbs(-(player.cards.at(-1)?.swallow ?? 0));
-      }
-    }
 
-    let cntNbSwallow = 0;
-    const isOdd = (drinkingCards.length + givingCards.length) % 2 === 1;
+    // Accumulate total sips from all cards assigned to this player
+    let totalSwallow = 0;
     for (const card of player.cards) {
-      const playerCardValue = this.cardSrv.getCardValue(card);
-      const lastCardValue = isOdd ? this.cardSrv.getCardValue(drinkingCards.at(-1)!) : this.cardSrv.getCardValue(givingCards.at(-1)!);
-      if (playerCardValue === lastCardValue) {
-        cntNbSwallow += drinkingCards.length * (isOdd ? -1 : 1);
+      totalSwallow += card.swallow ?? 0;
+    }
+
+    const { drinkingCards, givingCards, phase } = this.gameSrv.game;
+
+    // In phase 2, also count sips from matching cards in the current pyramid round
+    if (phase === 2 && (drinkingCards.length > 0 || givingCards.length > 0)) {
+      const isOdd = (drinkingCards.length + givingCards.length) % 2 === 1;
+      const lastCard = isOdd ? drinkingCards.at(-1) : givingCards.at(-1);
+      if (lastCard) {
+        const lastCardValue = this.cardSrv.getCardValue(lastCard);
+        for (const card of player.cards) {
+          const playerCardValue = this.cardSrv.getCardValue(card);
+          if (playerCardValue === lastCardValue) {
+            totalSwallow += (drinkingCards.length + givingCards.length) * (isOdd ? -1 : 1);
+          }
+        }
       }
     }
 
-    return maybeAbs(cntNbSwallow);
+    return maybeAbs(totalSwallow);
   }
 }

@@ -19,5 +19,10 @@
   "Button_Create": "Create",
   "Button_Delete": "Delete",
   "Button_NextCard": "Next",
-  "Button_Restart": "Restart"
+  "Button_Restart": "Restart",
+
+  "Label_Sip_Singular": "sip",
+  "Label_Sip_Plural": "sips",
+  "Remaining_Sips_Singular": "{{count}} sip",
+  "Remaining_Sips_Plural": "{{count}} sips"
 }
