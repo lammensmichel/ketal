@@ -109,8 +109,9 @@ export class LoginComponent implements OnInit {
   /**
    * Navigate to appropriate page after login.
    * If pendingSummary flag is set, navigates to /game and shows summary.
-   * Checks for active KetalSession to resume, otherwise starts background
-   * solo room creation and navigates to /players.
+   * Checks for active KetalSession to resume.
+   * Connected (non-anonymous) users go to /home.
+   * Anonymous users go to /players (local mode).
    */
   private async navigateAfterLogin(): Promise<void> {
     if (this.authService.consumePendingSummary()) {
@@ -126,7 +127,13 @@ export class LoginComponent implements OnInit {
       return;
     }
 
-    // Start background solo room creation while user adds players
+    // Connected (non-anonymous) users see the home screen
+    if (!this.authService.isAnonymous()) {
+      await this.router.navigate(['/home']);
+      return;
+    }
+
+    // Anonymous users go directly to /players (local mode)
     this.soloRoomService.startBackgroundRoomCreation();
     await this.router.navigate(['/players']);
   }

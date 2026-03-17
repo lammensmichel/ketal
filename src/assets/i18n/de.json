@@ -88,6 +88,14 @@
       "loggedIn": "Erfolgreich angemeldet"
     }
   },
+  "home": {
+    "createGame": "Spiel erstellen",
+    "joinGame": "Spiel beitreten",
+    "invitePlayers": "Spieler einladen",
+    "errors": {
+      "createFailed": "Spiel konnte nicht erstellt werden"
+    }
+  },
   "menu": {
     "connect": "Anmelden",
     "quitGame": "Spiel beenden"

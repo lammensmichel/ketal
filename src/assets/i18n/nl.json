@@ -88,6 +88,14 @@
       "loggedIn": "Succesvol ingelogd"
     }
   },
+  "home": {
+    "createGame": "Spel aanmaken",
+    "joinGame": "Spel deelnemen",
+    "invitePlayers": "Spelers uitnodigen",
+    "errors": {
+      "createFailed": "Kan spel niet aanmaken"
+    }
+  },
   "menu": {
     "connect": "Inloggen",
     "quitGame": "Spel verlaten"

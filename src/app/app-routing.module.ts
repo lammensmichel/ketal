@@ -3,6 +3,10 @@ import { RouterModule, Routes } from '@angular/router';
 
 export const routes: Routes = [
   {
+    path: 'home',
+    loadComponent: () => import('./_components/home/home.component').then((m) => m.HomeComponent),
+  },
+  {
     path: 'login',
     loadComponent: () => import('./_components/auth/login/login.component').then((m) => m.LoginComponent),
   },
@@ -12,8 +16,8 @@ export const routes: Routes = [
   },
   {
     path: 'room/create',
-    loadComponent: () =>
-      import('./_components/room/create-room/create-room.component').then((m) => m.CreateRoomComponent),
+    redirectTo: 'home',
+    pathMatch: 'full',
   },
   {
     path: 'room/join',

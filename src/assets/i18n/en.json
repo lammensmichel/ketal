@@ -89,6 +89,14 @@
       "loggedIn": "Logged in successfully"
     }
   },
+  "home": {
+    "createGame": "Create a game",
+    "joinGame": "Join a game",
+    "invitePlayers": "Invite players",
+    "errors": {
+      "createFailed": "Failed to create game"
+    }
+  },
   "room": {
     "createRoom": "Create a room",
     "roomName": "Room name",
