@@ -3,7 +3,7 @@
 
   <div class="content container d-flex gap-1 justify-content-center my-4 mt-2 mb-2">
     <div class="d-flex flex-column gap-2">
-      @if (gameSrv.isNewGame() && playerSrv.getPlayerNumber() > 1 && isPlayersPage() && !authService.isAnonymous()) {
+      @if (canShowSummary()) {
         <div class="summary-toggle">
           <label class="toggle-switch">
             <input
