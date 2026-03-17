@@ -1,50 +1,13 @@
-<header>
-  <div class="text-center my-4">
-    <div class="row position-absolute top-0 end-12">
-      <div class="col-12">
-        <app-user-menu></app-user-menu>
-      </div>
-    </div>
-    <div class="column">
-      <h1 class="display-4 font-monospace" style="font-variant: small-caps" [translate]="'Label_App_Title'"></h1>
-      <div class="lead">
-        @if (!isAuthPage()) {
-          @if (gameSrv.isNewGame()) {
-            <div>
-              <span [translate]="'Label_App_Subtitle'"></span>
-            </div>
-          }
-          @if (hasGameInProgress()) {
-            <div class="d-flex justify-content-center gap-2 flex-wrap">
-              <button type="button" class="btn btn-outline-secondary" (click)="goToMenu()">
-                <fa-icon [icon]="['fas', 'home']"></fa-icon>
-                <span class="ms-2" [translate]="'Button_GoToMenu'"></span>
-              </button>
-              <button type="button" class="btn btn-secondary" (click)="showQuitConfirmation()">
-                <fa-icon [icon]="['far', 'circle-xmark']"></fa-icon>
-                <span class="ms-2" [translate]="'Button_QuitGame'"></span>
-              </button>
-            </div>
-          }
-        }
-      </div>
-    </div>
-  </div>
-
-  <!-- Quit confirmation dialog -->
-  @if (showQuitConfirm()) {
-    <div class="quit-overlay" (click)="cancelQuit()" role="dialog" aria-modal="true">
-      <div class="quit-dialog" (click)="$event.stopPropagation()">
-        <p class="quit-dialog-message" [translate]="'Dialog_QuitConfirmMessage'"></p>
-        <div class="d-flex justify-content-center gap-2">
-          <button type="button" class="btn btn-outline-secondary" (click)="cancelQuit()">
-            <span [translate]="'Button_Cancel'"></span>
-          </button>
-          <button type="button" class="btn btn-danger" (click)="confirmQuit()">
-            <span [translate]="'Button_QuitGame'"></span>
-          </button>
-        </div>
-      </div>
-    </div>
-  }
+<header class="compact-header">
+  <h1 class="compact-header-title" [translate]="'Label_App_Title'"></h1>
+  <button
+    type="button"
+    class="btn-hamburger"
+    (click)="openSideMenu()"
+    aria-label="Open menu"
+  >
+    <fa-icon [icon]="['fas', 'bars']"></fa-icon>
+  </button>
 </header>
+
+<app-side-menu></app-side-menu>

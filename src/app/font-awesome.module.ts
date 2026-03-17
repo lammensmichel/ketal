@@ -14,6 +14,8 @@ import {
   faSignOutAlt,
   faHome,
   faPlay,
+  faBars,
+  faTimes,
 } from '@fortawesome/free-solid-svg-icons';
 
 // Regular icons
@@ -37,7 +39,9 @@ export class FontAwesomeIconsModule {
       faSignInAlt,
       faSignOutAlt,
       faHome,
-      faPlay
+      faPlay,
+      faBars,
+      faTimes
     );
 
     // Add regular icons
