@@ -1,7 +1,9 @@
-import { Component, EventEmitter, inject, Output } from '@angular/core';
+import { Component, computed, EventEmitter, inject, Output } from '@angular/core';
+import { Router } from '@angular/router';
 import { NgClass } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { FontAwesomeIconsModule } from '../../../font-awesome.module';
 import { PlayerHelperService } from 'src/app/_shared/_helpers/player.helper';
 import { PlayerModel } from 'src/app/_shared/_models/player.model';
 import { LocalService } from 'src/app/services/local/local.service';
@@ -14,14 +16,20 @@ import { PlayerListPlayerComponent } from '../player-list-player/player-list-pla
   templateUrl: './players-list.component.html',
   styleUrls: ['./players-list.component.scss'],
   standalone: true,
-  imports: [NgClass, ReactiveFormsModule, TranslateModule, PlayerListPlayerComponent],
+  imports: [NgClass, ReactiveFormsModule, TranslateModule, FontAwesomeIconsModule, PlayerListPlayerComponent],
 })
 export class PlayersListComponent {
   private readonly fb = inject(FormBuilder);
   private readonly localService = inject(LocalService);
+  private readonly router = inject(Router);
   readonly playerHelper = inject(PlayerHelperService);
   readonly gameSrv = inject(GameService);
   readonly translate = inject(TranslateService);
+
+  /** Whether a game is in progress and can be resumed */
+  readonly hasGameInProgress = computed(() => {
+    return this.gameSrv.isGameStarted() || this.gameSrv.isGameFinished();
+  });
 
   readonly playersForm: FormGroup;
   allPlayersCreated = false;
@@ -58,5 +66,10 @@ export class PlayersListComponent {
 
   get newPlayer() {
     return this.playersForm.get('newPlayer');
+  }
+
+  /** Navigate back to the game in progress */
+  resumeGame(): void {
+    this.router.navigate(['/game']);
   }
 }

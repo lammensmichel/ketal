@@ -14,11 +14,15 @@
               <span [translate]="'Label_App_Subtitle'"></span>
             </div>
           }
-          @if (gameSrv.isGameStarted()) {
-            <div>
-              <button type="button" class="btn btn-secondary ms-2" (click)="restartGame()">
+          @if (hasGameInProgress()) {
+            <div class="d-flex justify-content-center gap-2 flex-wrap">
+              <button type="button" class="btn btn-outline-secondary" (click)="goToMenu()">
+                <fa-icon [icon]="['fas', 'home']"></fa-icon>
+                <span class="ms-2" [translate]="'Button_GoToMenu'"></span>
+              </button>
+              <button type="button" class="btn btn-secondary" (click)="showQuitConfirmation()">
                 <fa-icon [icon]="['far', 'circle-xmark']"></fa-icon>
-                <span class="ms-2" [translate]="'Button_ExitGame'"></span>
+                <span class="ms-2" [translate]="'Button_QuitGame'"></span>
               </button>
             </div>
           }
@@ -26,4 +30,21 @@
       </div>
     </div>
   </div>
+
+  <!-- Quit confirmation dialog -->
+  @if (showQuitConfirm()) {
+    <div class="quit-overlay" (click)="cancelQuit()" role="dialog" aria-modal="true">
+      <div class="quit-dialog" (click)="$event.stopPropagation()">
+        <p class="quit-dialog-message" [translate]="'Dialog_QuitConfirmMessage'"></p>
+        <div class="d-flex justify-content-center gap-2">
+          <button type="button" class="btn btn-outline-secondary" (click)="cancelQuit()">
+            <span [translate]="'Button_Cancel'"></span>
+          </button>
+          <button type="button" class="btn btn-danger" (click)="confirmQuit()">
+            <span [translate]="'Button_QuitGame'"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 </header>
