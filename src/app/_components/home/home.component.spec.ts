@@ -4,7 +4,6 @@ import { TranslateModule } from '@ngx-translate/core';
 import { HomeComponent } from './home.component';
 import { RoomService } from '../../services/room/room.service';
 import { AuthService } from '../../services/auth/auth.service';
-import { SoloRoomService } from '../../services/solo-room/solo-room.service';
 import { signal } from '@angular/core';
 
 describe('HomeComponent', () => {
@@ -32,18 +31,12 @@ describe('HomeComponent', () => {
       isLoading: signal(false),
     });
 
-    const soloRoomServiceSpy = jasmine.createSpyObj('SoloRoomService', [
-      'startBackgroundRoomCreation',
-      'awaitRoom',
-    ]);
-
     await TestBed.configureTestingModule({
       imports: [HomeComponent, TranslateModule.forRoot()],
       providers: [
         { provide: Router, useValue: routerSpy },
         { provide: RoomService, useValue: roomServiceSpy },
         { provide: AuthService, useValue: authServiceSpy },
-        { provide: SoloRoomService, useValue: soloRoomServiceSpy },
       ],
     }).compileComponents();
 

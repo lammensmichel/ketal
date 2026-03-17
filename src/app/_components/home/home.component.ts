@@ -1,9 +1,8 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed, DestroyRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { RoomService } from '../../services/room/room.service';
 import { AuthService } from '../../services/auth/auth.service';
-import { SoloRoomService } from '../../services/solo-room/solo-room.service';
 
 /**
  * HomeComponent - Home screen for authenticated (non-anonymous) users.
@@ -26,8 +25,6 @@ export class HomeComponent {
   private readonly router = inject(Router);
   private readonly roomService = inject(RoomService);
   private readonly authService = inject(AuthService);
-  private readonly soloRoomService = inject(SoloRoomService);
-  private readonly destroyRef = inject(DestroyRef);
 
   /** Loading state for room creation */
   readonly isCreating = signal(false);
