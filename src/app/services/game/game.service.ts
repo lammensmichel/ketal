@@ -42,6 +42,12 @@ export class GameService {
   private sessionSubscriptionId: string | null = null;
 
   /**
+   * The session ID we are currently subscribed to.
+   * Used for reconnection to resubscribe after a disconnect.
+   */
+  private activeSessionId: string | null = null;
+
+  /**
    * Signal to prevent sync loops when receiving realtime updates.
    * When true, incoming session updates will not trigger re-sync to Appwrite.
    */
@@ -201,7 +207,11 @@ export class GameService {
     // Cleanup any existing subscription first
     this.unsubscribeFromSession();
 
+    // Store the session ID for reconnection
+    this.activeSessionId = sessionId;
+
     // Subscribe to realtime updates via RealtimeService
+    // The payload from Appwrite realtime is a raw document that matches KetalSession
     this.sessionSubscriptionId = this.realtimeService.subscribeToSession(sessionId, (updatedSession) => {
       this.handleSessionUpdate(updatedSession as unknown as KetalSession);
     });
@@ -222,6 +232,7 @@ export class GameService {
       console.debug('[GameService] Unsubscribed from session', { subscriptionId: this.sessionSubscriptionId });
       this.sessionSubscriptionId = null;
     }
+    this.activeSessionId = null;
   }
 
   /**
@@ -256,6 +267,50 @@ export class GameService {
       });
     } catch (error) {
       console.error('[GameService] Failed to handle session update:', error);
+    }
+  }
+
+  /**
+   * Handle reconnection after a disconnection.
+   * Fetches the complete session state from API and re-subscribes to realtime updates.
+   *
+   * Called when a disconnection is detected (e.g., realtime connection lost).
+   * Uses the stored activeSessionId to know which session to reconnect to.
+   *
+   * @param sessionId - The session ID to reconnect to (optional, uses stored ID if not provided)
+   */
+  async handleReconnection(sessionId?: string): Promise<void> {
+    const targetSessionId = sessionId ?? this.activeSessionId;
+    if (!targetSessionId) {
+      console.debug('[GameService] handleReconnection - no session ID to reconnect to');
+      return;
+    }
+
+    try {
+      console.debug('[GameService] handleReconnection - fetching session state', { sessionId: targetSessionId });
+
+      // Fetch complete session state via API
+      const session = await this.ketalSessionService.getSession(targetSessionId);
+      if (!session) {
+        console.debug('[GameService] handleReconnection - session not found');
+        return;
+      }
+
+      // Update local game state from the fetched session
+      const game = mapSessionToGame(session);
+      this._game.set(game);
+
+      // Re-subscribe to realtime updates
+      this.subscribeToSessionUpdates(targetSessionId);
+
+      console.debug('[GameService] handleReconnection - successfully reconnected', {
+        sessionId: targetSessionId,
+        status: game.status,
+        phase: game.phase,
+        turn: game.turn,
+      });
+    } catch (error) {
+      console.error('[GameService] handleReconnection - failed:', error);
     }
   }
 
