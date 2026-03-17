@@ -109,7 +109,12 @@ export class FooterComponent {
   }
 
   hasPlayers(): boolean {
-    return this.playerHelper?.getPlayers()?.length > 0;
+    return this.playerHelper?.getPlayers()?.length > 1;
+  }
+
+  needsMorePlayers(): boolean {
+    const count = this.playerHelper?.getPlayers()?.length ?? 0;
+    return count > 0 && count < 2;
   }
 
   async beginGame(): Promise<void> {
