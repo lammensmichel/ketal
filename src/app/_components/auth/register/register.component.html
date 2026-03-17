@@ -130,7 +130,7 @@
         />
         <label class="form-check-label" for="ageVerification">
           {{ 'auth.ageVerificationPrefix' | translate }}
-          <a routerLink="/terms" target="_blank">{{ 'auth.ageVerificationLink' | translate }}</a>
+          <a routerLink="/terms">{{ 'auth.ageVerificationLink' | translate }}</a>
         </label>
         @if (hasFieldError('ageVerification')) {
           <div class="invalid-feedback d-block">
