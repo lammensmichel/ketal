@@ -152,6 +152,11 @@
       "inOut": "Entre ou Dehors",
       "suit": "Couleur exacte"
     },
+    "turn2": {
+      "higher": "Plus haut",
+      "lower": "Plus bas",
+      "referenceHint": "Par rapport à ta carte :"
+    },
     "progress": {
       "phase1": "Phase 1: Prédictions",
       "phase2": "Phase 2: Distribution",

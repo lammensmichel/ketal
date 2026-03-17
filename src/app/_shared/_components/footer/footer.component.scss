@@ -53,3 +53,46 @@
 .card-custom-mr{
   //margin-right: 0.1em;
 }
+
+.prediction-btn {
+  flex-direction: column;
+  gap: 4px;
+  min-width: 100px;
+  min-height: 60px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+
+  &:hover {
+    background-color: #f0f0f0;
+  }
+
+  &:active {
+    transform: scale(0.95);
+    background-color: #e0e0e0;
+  }
+
+  @media (max-width: 768px) {
+    min-width: 80px;
+    min-height: 48px;
+  }
+}
+
+.prediction-arrow {
+  font-size: 1.5rem;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.prediction-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.reference-card-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #555;
+}
