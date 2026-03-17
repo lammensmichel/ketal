@@ -32,6 +32,11 @@ export class AppComponent {
     return AUTH_ROUTES.some((route) => path.startsWith(route));
   }
 
+  /** Check if current route is the players page (where local game UI should be visible) */
+  isPlayersPage(): boolean {
+    return window.location.pathname === '/players';
+  }
+
   constructor() {
     const defaultLang = this.translate.getBrowserLang() ?? environment.defaultLanguage;
     this.translate.setDefaultLang(defaultLang);

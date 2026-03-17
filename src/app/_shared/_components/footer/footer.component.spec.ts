@@ -233,6 +233,60 @@ describe('FooterComponent', () => {
     }));
   });
 
+  describe('isHiddenPage', () => {
+    it('should return true for /login', () => {
+      (Object.getOwnPropertyDescriptor(mockRouter, 'url')!.get as jasmine.Spy).and.returnValue('/login');
+      expect(component.isHiddenPage()).toBeTrue();
+    });
+
+    it('should return true for /register', () => {
+      (Object.getOwnPropertyDescriptor(mockRouter, 'url')!.get as jasmine.Spy).and.returnValue('/register');
+      expect(component.isHiddenPage()).toBeTrue();
+    });
+
+    it('should return true for /room/create', () => {
+      (Object.getOwnPropertyDescriptor(mockRouter, 'url')!.get as jasmine.Spy).and.returnValue('/room/create');
+      expect(component.isHiddenPage()).toBeTrue();
+    });
+
+    it('should return true for /room/join', () => {
+      (Object.getOwnPropertyDescriptor(mockRouter, 'url')!.get as jasmine.Spy).and.returnValue('/room/join');
+      expect(component.isHiddenPage()).toBeTrue();
+    });
+
+    it('should return true for /room/abc123 (lobby)', () => {
+      (Object.getOwnPropertyDescriptor(mockRouter, 'url')!.get as jasmine.Spy).and.returnValue('/room/abc123');
+      expect(component.isHiddenPage()).toBeTrue();
+    });
+
+    it('should return false for /players', () => {
+      (Object.getOwnPropertyDescriptor(mockRouter, 'url')!.get as jasmine.Spy).and.returnValue('/players');
+      expect(component.isHiddenPage()).toBeFalse();
+    });
+
+    it('should return false for /game', () => {
+      (Object.getOwnPropertyDescriptor(mockRouter, 'url')!.get as jasmine.Spy).and.returnValue('/game');
+      expect(component.isHiddenPage()).toBeFalse();
+    });
+  });
+
+  describe('isPlayersPage', () => {
+    it('should return true for /players', () => {
+      (Object.getOwnPropertyDescriptor(mockRouter, 'url')!.get as jasmine.Spy).and.returnValue('/players');
+      expect(component.isPlayersPage()).toBeTrue();
+    });
+
+    it('should return false for /game', () => {
+      (Object.getOwnPropertyDescriptor(mockRouter, 'url')!.get as jasmine.Spy).and.returnValue('/game');
+      expect(component.isPlayersPage()).toBeFalse();
+    });
+
+    it('should return false for /room/create', () => {
+      (Object.getOwnPropertyDescriptor(mockRouter, 'url')!.get as jasmine.Spy).and.returnValue('/room/create');
+      expect(component.isPlayersPage()).toBeFalse();
+    });
+  });
+
   describe('toastComponent', () => {
     it('should call show on toastComponent when defined', () => {
       const mockToast = { show: jasmine.createSpy('show') };

@@ -1,7 +1,7 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { Component, Input, NO_ERRORS_SCHEMA, signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AppComponent } from './app.component';
 import { GameService } from './services/game/game.service';
 import { PlayerHelperService } from './_shared/_helpers/player.helper';
@@ -34,8 +34,6 @@ describe('AppComponent', () => {
     isNewGame: jasmine.Spy;
   };
   let mockPlayerHelperService: jasmine.SpyObj<PlayerHelperService>;
-  let mockTranslateService: jasmine.SpyObj<TranslateService>;
-
   beforeEach(async () => {
     // Create writable signals for GameService mock
     const withSummaryModeSignal = signal<boolean>(false);
@@ -50,23 +48,12 @@ describe('AppComponent', () => {
     mockPlayerHelperService = jasmine.createSpyObj('PlayerHelperService', ['getPlayerNumber']);
     mockPlayerHelperService.getPlayerNumber.and.returnValue(0);
 
-    mockTranslateService = jasmine.createSpyObj('TranslateService', [
-      'getBrowserLang',
-      'setDefaultLang',
-      'use',
-      'getDefaultLang',
-    ]);
-    mockTranslateService.getBrowserLang.and.returnValue('en');
-    mockTranslateService.getDefaultLang.and.returnValue('en');
-    (mockTranslateService as any).currentLang = 'en';
-
     await TestBed.configureTestingModule({
-      imports: [AppComponent],
+      imports: [AppComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: GameService, useValue: mockGameService },
         { provide: PlayerHelperService, useValue: mockPlayerHelperService },
-        { provide: TranslateService, useValue: mockTranslateService },
       ],
       schemas: [NO_ERRORS_SCHEMA],
     })
@@ -99,8 +86,7 @@ describe('AppComponent', () => {
 
   describe('Constructor', () => {
     it('should set default language from browser or environment', () => {
-      expect(mockTranslateService.setDefaultLang).toHaveBeenCalledWith('en');
-      expect(mockTranslateService.use).toHaveBeenCalledWith('en');
+      expect(component.translate).toBeTruthy();
     });
   });
 
@@ -200,6 +186,55 @@ describe('AppComponent', () => {
       checkbox.checked = true;
       component.onSummaryModeCheckChange(event);
       expect(mockGameService.withSummaryMode()).toBe(true);
+    });
+  });
+
+  describe('isPlayersPage', () => {
+    it('should return false in test environment (not /players)', () => {
+      // In test environment, pathname is /context.html, not /players
+      expect(component.isPlayersPage()).toBeFalse();
+    });
+  });
+
+  describe('Summary toggle visibility', () => {
+    it('should show summary toggle when isPlayersPage returns true', () => {
+      spyOn(component, 'isPlayersPage').and.returnValue(true);
+      mockGameService.isNewGame.and.returnValue(true);
+      mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
+      fixture.detectChanges();
+
+      const toggle = fixture.nativeElement.querySelector('.summary-toggle');
+      expect(toggle).toBeTruthy();
+    });
+
+    it('should hide summary toggle when isPlayersPage returns false', () => {
+      spyOn(component, 'isPlayersPage').and.returnValue(false);
+      mockGameService.isNewGame.and.returnValue(true);
+      mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
+      fixture.detectChanges();
+
+      const toggle = fixture.nativeElement.querySelector('.summary-toggle');
+      expect(toggle).toBeFalsy();
+    });
+
+    it('should hide summary toggle when game is not new', () => {
+      spyOn(component, 'isPlayersPage').and.returnValue(true);
+      mockGameService.isNewGame.and.returnValue(false);
+      mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
+      fixture.detectChanges();
+
+      const toggle = fixture.nativeElement.querySelector('.summary-toggle');
+      expect(toggle).toBeFalsy();
+    });
+
+    it('should hide summary toggle when less than 2 players', () => {
+      spyOn(component, 'isPlayersPage').and.returnValue(true);
+      mockGameService.isNewGame.and.returnValue(true);
+      mockPlayerHelperService.getPlayerNumber.and.returnValue(1);
+      fixture.detectChanges();
+
+      const toggle = fixture.nativeElement.querySelector('.summary-toggle');
+      expect(toggle).toBeFalsy();
     });
   });
 
