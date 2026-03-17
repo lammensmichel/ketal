@@ -174,6 +174,13 @@ export class GameService {
       console.error('[GameService] Failed to sync to Appwrite:', error);
     } finally {
       this._isSyncing.set(false);
+
+      // Apply any pending session update that arrived during sync
+      if (this._pendingSessionUpdate) {
+        const pending = this._pendingSessionUpdate;
+        this._pendingSessionUpdate = null;
+        this.handleSessionUpdate(pending);
+      }
     }
   }
 
@@ -232,7 +239,8 @@ export class GameService {
       console.debug('[GameService] Unsubscribed from session', { subscriptionId: this.sessionSubscriptionId });
       this.sessionSubscriptionId = null;
     }
-    this.activeSessionId = null;
+    // Note: activeSessionId is NOT cleared here to allow reconnection.
+    // It is only cleared in resetGame() when the game truly ends.
   }
 
   /**
@@ -245,10 +253,14 @@ export class GameService {
    *
    * @param session - The updated KetalSession from Appwrite
    */
+  /** Pending session update received while syncing */
+  private _pendingSessionUpdate: KetalSession | null = null;
+
   handleSessionUpdate(session: KetalSession): void {
-    // Skip if we're in the middle of syncing to Appwrite (prevent loops)
+    // If we're syncing to Appwrite, queue the update to apply after sync completes
     if (this._isSyncing()) {
-      console.debug('[GameService] handleSessionUpdate - skipped (syncing)');
+      console.debug('[GameService] handleSessionUpdate - queued (syncing)');
+      this._pendingSessionUpdate = session;
       return;
     }
 
@@ -476,6 +488,9 @@ export class GameService {
   resetGame(): void {
     // Unsubscribe from realtime updates when resetting the game
     this.unsubscribeFromSession();
+    // Clear session ID — game is truly ending
+    this.activeSessionId = null;
+    this._pendingSessionUpdate = null;
 
     this.updateGame((game) => {
       game.givingCards = [];
