@@ -47,6 +47,14 @@
       </div>
     }
 
+    <!-- Connection Status Indicator -->
+    <div class="connection-status" [class.connected]="isConnected()" [class.disconnected]="!isConnected()">
+      <span class="connection-dot"></span>
+      <span class="connection-label">
+        {{ (isConnected() ? 'lobby.connected' : 'lobby.disconnected') | translate }}
+      </span>
+    </div>
+
     <!-- Members Section -->
     <div class="members-section">
       <div class="members-header">
