@@ -183,28 +183,33 @@ describe('PlayerCardComponent', () => {
     });
   });
 
-  describe('getSipCount', () => {
+  describe('sipCount', () => {
     it('should return sip count from playerSrv', () => {
       mockPlayerHelperService.getSipCnt.and.returnValue(5);
+      component.player = mockPlayer;
       fixture.detectChanges();
 
-      const result = component.getSipCount(mockPlayer);
+      const result = component.sipCount();
 
       expect(result).toBe(5);
       expect(mockPlayerHelperService.getSipCnt).toHaveBeenCalledWith(mockGameService.game(), mockPlayer, false);
     });
 
     it('should return 0 when player is falsy', () => {
-      const result = component.getSipCount(null as any);
+      component.player = null as any;
+      // Skip detectChanges to avoid template errors with null player
+
+      const result = component.sipCount();
 
       expect(result).toBe(0);
     });
 
-    it('should call getSipCnt with absolute flag when passed', () => {
+    it('should return absolute sip count via sipCountAbsolute', () => {
       mockPlayerHelperService.getSipCnt.and.returnValue(10);
+      component.player = mockPlayer;
       fixture.detectChanges();
 
-      const result = component.getSipCount(mockPlayer, true);
+      const result = component.sipCountAbsolute();
 
       expect(result).toBe(10);
       expect(mockPlayerHelperService.getSipCnt).toHaveBeenCalledWith(mockGameService.game(), mockPlayer, true);

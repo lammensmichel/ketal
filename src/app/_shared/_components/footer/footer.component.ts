@@ -11,7 +11,7 @@ import { ToastComponent } from '../toast/toast.component';
 import { PlayingCardComponent } from '../playing-card/playing-card.component';
 
 /** Routes where the game footer should be hidden */
-const AUTH_ROUTES = ['/login', '/register', '/forgot-password'];
+const HIDDEN_ROUTES = ['/login', '/register', '/forgot-password', '/room'];
 
 @Component({
   selector: 'app-footer',
@@ -30,9 +30,14 @@ export class FooterComponent {
 
   readonly cardSlots = [0, 1, 2, 3, 4, 5];
 
-  /** Check if current route is an auth page where footer should be hidden */
-  isAuthPage(): boolean {
-    return AUTH_ROUTES.some((route) => this.router.url.startsWith(route));
+  /** Check if current route is a page where game footer should be hidden */
+  isHiddenPage(): boolean {
+    return HIDDEN_ROUTES.some((route) => this.router.url.startsWith(route));
+  }
+
+  /** Check if current route is the players page (where local game start UI should be visible) */
+  isPlayersPage(): boolean {
+    return this.router.url.split('?')[0] === '/players';
   }
 
   chooseColor(color: string) {
