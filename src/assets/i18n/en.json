@@ -115,13 +115,16 @@
     "leave": "Leave",
     "minPlayersRequired": "Minimum 2 players required to start the game",
     "toggleRole": "Toggle role",
+    "connected": "Connected in real-time",
+    "disconnected": "Disconnected - waiting for connection...",
     "role": {
       "host": "Host",
       "player": "Player",
       "spectator": "Spectator"
     },
     "errors": {
-      "generic": "An error occurred"
+      "generic": "An error occurred",
+      "roomNotFound": "Room not found"
     }
   },
   "userMenu": {

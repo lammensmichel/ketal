@@ -10,6 +10,12 @@ import { AuthService } from '../../../services/auth/auth.service';
 import { GuestService } from '../../../services/guest/guest.service';
 import { KetalSessionService, KetalPlayer } from '../../../services/ketal-session/ketal-session.service';
 
+/** Maximum number of subscription retry attempts */
+const MAX_SUBSCRIPTION_RETRIES = 3;
+
+/** Delay between retry attempts in milliseconds */
+const SUBSCRIPTION_RETRY_DELAY_MS = 2000;
+
 /**
  * LobbyComponent - Room lobby for waiting players before game start
  *
@@ -48,8 +54,17 @@ export class LobbyComponent implements OnInit {
   /** Guard flag to prevent concurrent member loads */
   private isMembersLoading = false;
 
+  /** Current retry attempt count for realtime subscription */
+  private subscriptionRetryCount = 0;
+
+  /** Timer ID for retry timeout, cleared on destroy */
+  private retryTimerId: ReturnType<typeof setTimeout> | null = null;
+
   /** Loading state for async operations */
   readonly isLoading = signal(false);
+
+  /** Whether realtime WebSocket is connected */
+  readonly isConnected = this.realtimeService.isConnected;
 
   /** Error message signal */
   readonly error = signal<string | null>(null);
@@ -217,7 +232,8 @@ export class LobbyComponent implements OnInit {
   }
 
   /**
-   * Subscribe to realtime member updates for the current room
+   * Subscribe to realtime member updates for the current room.
+   * Includes retry logic for transient subscription failures.
    */
   private subscribeToMemberUpdates(): void {
     const room = this.currentRoom();
@@ -231,14 +247,43 @@ export class LobbyComponent implements OnInit {
       return;
     }
 
-    this.memberSubscriptionId = this.realtimeService.subscribeToMembers(room.$id, (_member: RealtimeGameMember) => {
-      // Skip if already loading to prevent UI flicker
-      if (this.isMembersLoading) {
-        return;
-      }
-      // Refresh members list without UI flicker on realtime updates
-      this.loadRoomMembers(false);
-    });
+    try {
+      this.memberSubscriptionId = this.realtimeService.subscribeToMembers(room.$id, (_member: RealtimeGameMember) => {
+        // Skip if already loading to prevent UI flicker
+        if (this.isMembersLoading) {
+          return;
+        }
+        // Reset retry counter on successful event reception
+        this.subscriptionRetryCount = 0;
+        // Refresh members list without UI flicker on realtime updates
+        this.loadRoomMembers(false);
+      });
+      // Reset retry counter on successful subscription creation
+      this.subscriptionRetryCount = 0;
+    } catch (err) {
+      console.warn('Realtime subscription failed:', err);
+      this.retrySubscription();
+    }
+  }
+
+  /**
+   * Retry realtime subscription with linear backoff
+   */
+  private retrySubscription(): void {
+    if (this.subscriptionRetryCount >= MAX_SUBSCRIPTION_RETRIES) {
+      console.warn(`Realtime subscription failed after ${MAX_SUBSCRIPTION_RETRIES} attempts`);
+      return;
+    }
+
+    this.subscriptionRetryCount++;
+    const delay = SUBSCRIPTION_RETRY_DELAY_MS * this.subscriptionRetryCount;
+
+    this.retryTimerId = setTimeout(() => {
+      this.retryTimerId = null;
+      // Clear failed subscription state before retrying
+      this.memberSubscriptionId = null;
+      this.subscribeToMemberUpdates();
+    }, delay);
   }
 
   /**
@@ -246,6 +291,10 @@ export class LobbyComponent implements OnInit {
    */
   private registerCleanup(): void {
     this.destroyRef.onDestroy(() => {
+      if (this.retryTimerId) {
+        clearTimeout(this.retryTimerId);
+        this.retryTimerId = null;
+      }
       if (this.memberSubscriptionId) {
         this.realtimeService.unsubscribe(this.memberSubscriptionId);
         this.memberSubscriptionId = null;

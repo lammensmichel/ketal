@@ -119,13 +119,16 @@
     "showQr": "QR Code",
     "hideQr": "Masquer",
     "scanToJoin": "Scannez pour rejoindre",
+    "connected": "Connecté en temps réel",
+    "disconnected": "Déconnecté - en attente de connexion...",
     "role": {
       "host": "Hôte",
       "player": "Joueur",
       "spectator": "Spectateur"
     },
     "errors": {
-      "generic": "Une erreur est survenue"
+      "generic": "Une erreur est survenue",
+      "roomNotFound": "Room introuvable"
     }
   },
   "userMenu": {
