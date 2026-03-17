@@ -176,27 +176,19 @@ export class AuthService {
    */
   async logout(): Promise<void> {
     this._isLoading.set(true);
+    // Cleanup game state — each step is isolated so one failure doesn't skip the rest
+    try { this.gameService.resetGame(); } catch { /* non-critical */ }
+    try { this.roomService.setCurrentRoom(null); } catch { /* non-critical */ }
+    try { this.memberService.clearMembers(); } catch { /* non-critical */ }
+    try { this.ketalSessionService.setCurrentSession(null); } catch { /* non-critical */ }
+    try { this.realtimeService.unsubscribeAll(); } catch { /* non-critical */ }
     try {
-      // 1. Reset game state (unsubscribes from realtime session updates internally)
-      this.gameService.resetGame();
-
-      // 2. Clear room state
-      this.roomService.setCurrentRoom(null);
-
-      // 3. Clear member state
-      this.memberService.clearMembers();
-
-      // 4. Clear ketal session state
-      this.ketalSessionService.setCurrentSession(null);
-
-      // 5. Unsubscribe from all remaining realtime subscriptions
-      this.realtimeService.unsubscribeAll();
-
-      // 6. Clear localStorage game data
       this.localService.removeData('game');
       this.localService.removeData('players');
+    } catch { /* non-critical */ }
 
-      // 7. Delete the Appwrite session
+    // Delete the Appwrite session
+    try {
       await this.appwrite.account.deleteSession('current');
     } catch {
       // Session might already be invalid, ignore errors
