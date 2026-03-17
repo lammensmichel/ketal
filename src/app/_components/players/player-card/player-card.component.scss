@@ -7,9 +7,11 @@
 }
 
 ::ng-deep .card-group .card-container {
+  width: 55px;
+  min-height: auto;
+
   @media (max-width: 768px) {
-    width: auto;
-    flex: 1 1 0;
+    width: 40px;
   }
 }
 
