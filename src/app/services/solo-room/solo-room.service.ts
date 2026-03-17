@@ -47,19 +47,17 @@ export class SoloRoomService {
     this._localModeFallback.set(false);
     this._isCreating.set(true);
 
-    this._roomPromise = this.roomService.createSoloRoom().catch((error) => {
-      console.warn('[SoloRoomService] Background room creation failed, falling back to local mode:', error);
-      this._localModeFallback.set(true);
-      this._isCreating.set(false);
-      throw error;
-    });
-
-    this._roomPromise
-      .then(() => {
+    this._roomPromise = this.roomService.createSoloRoom()
+      .then((room) => {
         this._isCreating.set(false);
+        return room;
       })
-      .catch(() => {
-        // Error already handled above
+      .catch((error) => {
+        console.warn('[SoloRoomService] Background room creation failed, falling back to local mode:', error);
+        this._localModeFallback.set(true);
+        this._isCreating.set(false);
+        this._roomPromise = null; // Allow retry
+        throw error;
       });
   }
 

@@ -68,7 +68,20 @@ export class AuthService {
    * If no valid session exists or Appwrite is unavailable, the user will remain null.
    * Uses a timeout to prevent blocking when backend is unreachable.
    */
+  /** Cached init promise to ensure idempotent calls */
+  private _initPromise: Promise<void> | null = null;
+
   async init(): Promise<void> {
+    // Return cached promise if already initializing/initialized (idempotent)
+    if (this._initPromise) {
+      return this._initPromise;
+    }
+
+    this._initPromise = this._doInit();
+    return this._initPromise;
+  }
+
+  private async _doInit(): Promise<void> {
     this._isLoading.set(true);
     try {
       // Add timeout to prevent blocking when Appwrite is unavailable
