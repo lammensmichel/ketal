@@ -41,11 +41,6 @@ export class PlayerCardComponent implements OnInit {
     return this.player ? this.playerSrv.getSipCnt(this.gameSrv.game(), this.player, true) : 0;
   });
 
-  /** Translation key for singular/plural sip label */
-  readonly sipLabelKey = computed(() => {
-    return this.sipCountAbsolute() <= 1 ? 'Label_Sip' : 'Label_Sips';
-  });
-
   ngOnInit(): void {
     this.gameSrv.openSipGiveModalEvent$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((player) => {
       if (this.player.id === player.id) {
