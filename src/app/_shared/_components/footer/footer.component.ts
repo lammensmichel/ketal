@@ -37,7 +37,7 @@ export class FooterComponent {
 
   /** Check if current route is the players page (where local game start UI should be visible) */
   isPlayersPage(): boolean {
-    return this.router.url === '/players';
+    return this.router.url.split('?')[0] === '/players';
   }
 
   chooseColor(color: string) {

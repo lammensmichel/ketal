@@ -285,6 +285,11 @@ describe('FooterComponent', () => {
       (Object.getOwnPropertyDescriptor(mockRouter, 'url')!.get as jasmine.Spy).and.returnValue('/room/create');
       expect(component.isPlayersPage()).toBeFalse();
     });
+
+    it('should return true for /players with query params', () => {
+      (Object.getOwnPropertyDescriptor(mockRouter, 'url')!.get as jasmine.Spy).and.returnValue('/players?returnUrl=/game');
+      expect(component.isPlayersPage()).toBeTrue();
+    });
   });
 
   describe('toastComponent', () => {

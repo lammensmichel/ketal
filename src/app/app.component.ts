@@ -8,9 +8,6 @@ import { GameService } from './services/game/game.service';
 import { HeaderComponent } from './_shared/_components/header/header.component';
 import { FooterComponent } from './_shared/_components/footer/footer.component';
 
-/** Routes where game-related UI should be hidden */
-const AUTH_ROUTES = ['/login', '/register', '/forgot-password'];
-
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -26,15 +23,9 @@ export class AppComponent {
 
   readonly withSummaryMode: Signal<boolean>;
 
-  /** Check if current route is an auth page */
-  isAuthPage(): boolean {
-    const path = window.location.pathname;
-    return AUTH_ROUTES.some((route) => path.startsWith(route));
-  }
-
   /** Check if current route is the players page (where local game UI should be visible) */
   isPlayersPage(): boolean {
-    return window.location.pathname === '/players';
+    return this.router.url.split('?')[0] === '/players';
   }
 
   constructor() {

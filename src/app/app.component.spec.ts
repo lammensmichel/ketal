@@ -1,7 +1,7 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { Component, Input, NO_ERRORS_SCHEMA, signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { AppComponent } from './app.component';
 import { GameService } from './services/game/game.service';
 import { PlayerHelperService } from './_shared/_helpers/player.helper';
