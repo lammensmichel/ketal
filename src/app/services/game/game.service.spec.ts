@@ -98,6 +98,7 @@ describe('GameService', () => {
   let mockMemberService: ReturnType<typeof createMockMemberService>;
 
   beforeEach(() => {
+    localStorage.removeItem('ketal_summary_mode');
     mockLocalService = createMockLocalService();
     mockCardService = createMockCardService();
     mockPlayerHelperService = createMockPlayerHelperService();
@@ -565,8 +566,62 @@ describe('GameService', () => {
     });
 
     describe('withSummaryMode', () => {
-      it('should return signal with initial value false', () => {
-        expect(service.withSummaryMode()).toBe(false);
+      afterEach(() => {
+        localStorage.removeItem('ketal_summary_mode');
+      });
+
+      it('should return false when no value in localStorage', () => {
+        localStorage.removeItem('ketal_summary_mode');
+
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          ],
+        });
+        const newService = TestBed.inject(GameService);
+
+        expect(newService.withSummaryMode()).toBe(false);
+      });
+
+      it('should return true when localStorage has "true"', () => {
+        localStorage.setItem('ketal_summary_mode', 'true');
+
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          ],
+        });
+        const newService = TestBed.inject(GameService);
+
+        expect(newService.withSummaryMode()).toBe(true);
+      });
+
+      it('should persist value to localStorage when set to true', () => {
+        localStorage.removeItem('ketal_summary_mode');
+
+        service.withSummaryMode.set(true);
+        TestBed.flushEffects();
+
+        expect(localStorage.getItem('ketal_summary_mode')).toBe('true');
+      });
+
+      it('should persist value to localStorage when set to false', () => {
+        localStorage.setItem('ketal_summary_mode', 'true');
+
+        service.withSummaryMode.set(false);
+        TestBed.flushEffects();
+
+        expect(localStorage.getItem('ketal_summary_mode')).toBe('false');
       });
 
       it('should update value when set is called', () => {
@@ -1487,6 +1542,16 @@ describe('GameService', () => {
       testService.resetGame();
 
       expect(testService.game().status).toBe(0);
+    });
+
+    it('should not reset withSummaryMode preference', () => {
+      const mockGame = createMockGame({ status: 2 });
+      const testService = createServiceWithGame(mockGame);
+
+      testService.withSummaryMode.set(true);
+      testService.resetGame();
+
+      expect(testService.withSummaryMode()).toBe(true);
     });
 
     it('should reset givingCards and drinkingCards to empty arrays', () => {
