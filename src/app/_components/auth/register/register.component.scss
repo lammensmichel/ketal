@@ -70,14 +70,19 @@
 
     .btn-outline-secondary {
       border-left: none;
-      background-color: #f8f9fa;
+      background-color: transparent;
+      border-color: #dee2e6;
+      color: #6c757d;
+      z-index: 3;
 
       &:hover {
-        background-color: #e9ecef;
+        background-color: #f8f9fa;
+        color: #495057;
       }
 
       &:focus {
         box-shadow: none;
+        background-color: transparent;
       }
     }
   }
