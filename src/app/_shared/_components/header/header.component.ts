@@ -1,4 +1,4 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, signal } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs/operators';
@@ -21,6 +21,9 @@ export class HeaderComponent {
   private readonly router = inject(Router);
   readonly gameSrv = inject(GameService);
 
+  /** Whether the quit confirmation dialog is visible */
+  readonly showQuitConfirm = signal(false);
+
   /** Current URL path as a signal */
   private readonly currentPath = toSignal(
     this.router.events.pipe(
@@ -37,6 +40,40 @@ export class HeaderComponent {
     return AUTH_ROUTES.some((route) => path.startsWith(route));
   });
 
+  /** Whether we are currently on the game page */
+  readonly isGamePage = computed(() => {
+    const path = this.currentPath();
+    return path.startsWith('/game');
+  });
+
+  /** Whether a game is in progress (started or finished but not reset) */
+  readonly hasGameInProgress = computed(() => {
+    return this.gameSrv.isGameStarted() || this.gameSrv.isGameFinished();
+  });
+
+  /** Navigate to menu without resetting the game */
+  goToMenu(): void {
+    this.router.navigate(['/players']);
+  }
+
+  /** Show quit confirmation dialog */
+  showQuitConfirmation(): void {
+    this.showQuitConfirm.set(true);
+  }
+
+  /** Cancel quit and dismiss confirmation dialog */
+  cancelQuit(): void {
+    this.showQuitConfirm.set(false);
+  }
+
+  /** Confirm quit: reset game and navigate to players */
+  confirmQuit(): void {
+    this.showQuitConfirm.set(false);
+    this.gameSrv.resetGame();
+    this.router.navigate(['/players']);
+  }
+
+  /** @deprecated Use goToMenu() or showQuitConfirmation() instead */
   restartGame(): void {
     this.gameSrv.resetGame();
     this.router.navigate(['/players']);

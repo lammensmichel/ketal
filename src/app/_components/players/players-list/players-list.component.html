@@ -1,4 +1,10 @@
 <div class="container">
+  @if (hasGameInProgress()) {
+    <div class="resume-banner mb-3" (click)="resumeGame()">
+      <fa-icon [icon]="['fas', 'play']"></fa-icon>
+      <span class="ms-2" [translate]="'Button_ResumeGame'"></span>
+    </div>
+  }
   @if (!allPlayersCreated && this.gameSrv.isNewGame()) {
     <form [formGroup]="playersForm" (ngSubmit)="addPlayer()" class="mb-1">
       <div class="input-group mb-1">
