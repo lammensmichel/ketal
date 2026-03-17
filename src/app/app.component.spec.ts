@@ -208,41 +208,64 @@ describe('AppComponent', () => {
     });
   });
 
-  describe('Summary toggle visibility', () => {
-    it('should show summary toggle when isPlayersPage returns true', () => {
+  describe('canShowSummary', () => {
+    it('should return true when on players page, logged in, and not anonymous', () => {
       spyOn(component, 'isPlayersPage').and.returnValue(true);
-      mockGameService.isNewGame.and.returnValue(true);
-      mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
+      mockAuthService.isLoggedIn.set(true);
+      mockAuthService.isAnonymous.set(false);
+
+      expect(component.canShowSummary()).toBeTrue();
+    });
+
+    it('should return false when not on players page', () => {
+      spyOn(component, 'isPlayersPage').and.returnValue(false);
+      mockAuthService.isLoggedIn.set(true);
+      mockAuthService.isAnonymous.set(false);
+
+      expect(component.canShowSummary()).toBeFalse();
+    });
+
+    it('should return false when not logged in', () => {
+      spyOn(component, 'isPlayersPage').and.returnValue(true);
+      mockAuthService.isLoggedIn.set(false);
+      mockAuthService.isAnonymous.set(false);
+
+      expect(component.canShowSummary()).toBeFalse();
+    });
+
+    it('should return false when user is anonymous', () => {
+      spyOn(component, 'isPlayersPage').and.returnValue(true);
+      mockAuthService.isLoggedIn.set(true);
+      mockAuthService.isAnonymous.set(true);
+
+      expect(component.canShowSummary()).toBeFalse();
+    });
+
+    it('should return true regardless of player count (0 players)', () => {
+      spyOn(component, 'isPlayersPage').and.returnValue(true);
+      mockAuthService.isLoggedIn.set(true);
+      mockAuthService.isAnonymous.set(false);
+      mockPlayerHelperService.getPlayerNumber.and.returnValue(0);
+
+      expect(component.canShowSummary()).toBeTrue();
+    });
+  });
+
+  describe('Summary toggle visibility', () => {
+    it('should show summary toggle when canShowSummary returns true', () => {
+      spyOn(component, 'isPlayersPage').and.returnValue(true);
+      mockAuthService.isLoggedIn.set(true);
+      mockAuthService.isAnonymous.set(false);
       fixture.detectChanges();
 
       const toggle = fixture.nativeElement.querySelector('.summary-toggle');
       expect(toggle).toBeTruthy();
     });
 
-    it('should hide summary toggle when isPlayersPage returns false', () => {
+    it('should hide summary toggle when not on players page', () => {
       spyOn(component, 'isPlayersPage').and.returnValue(false);
-      mockGameService.isNewGame.and.returnValue(true);
-      mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
-      fixture.detectChanges();
-
-      const toggle = fixture.nativeElement.querySelector('.summary-toggle');
-      expect(toggle).toBeFalsy();
-    });
-
-    it('should hide summary toggle when game is not new', () => {
-      spyOn(component, 'isPlayersPage').and.returnValue(true);
-      mockGameService.isNewGame.and.returnValue(false);
-      mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
-      fixture.detectChanges();
-
-      const toggle = fixture.nativeElement.querySelector('.summary-toggle');
-      expect(toggle).toBeFalsy();
-    });
-
-    it('should hide summary toggle when less than 2 players', () => {
-      spyOn(component, 'isPlayersPage').and.returnValue(true);
-      mockGameService.isNewGame.and.returnValue(true);
-      mockPlayerHelperService.getPlayerNumber.and.returnValue(1);
+      mockAuthService.isLoggedIn.set(true);
+      mockAuthService.isAnonymous.set(false);
       fixture.detectChanges();
 
       const toggle = fixture.nativeElement.querySelector('.summary-toggle');
@@ -251,8 +274,7 @@ describe('AppComponent', () => {
 
     it('should hide summary toggle when user is anonymous', () => {
       spyOn(component, 'isPlayersPage').and.returnValue(true);
-      mockGameService.isNewGame.and.returnValue(true);
-      mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
+      mockAuthService.isLoggedIn.set(true);
       mockAuthService.isAnonymous.set(true);
       fixture.detectChanges();
 
@@ -260,11 +282,11 @@ describe('AppComponent', () => {
       expect(toggle).toBeFalsy();
     });
 
-    it('should show summary toggle when user is not anonymous', () => {
+    it('should show summary toggle with 0 players for connected user', () => {
       spyOn(component, 'isPlayersPage').and.returnValue(true);
-      mockGameService.isNewGame.and.returnValue(true);
-      mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
+      mockAuthService.isLoggedIn.set(true);
       mockAuthService.isAnonymous.set(false);
+      mockPlayerHelperService.getPlayerNumber.and.returnValue(0);
       fixture.detectChanges();
 
       const toggle = fixture.nativeElement.querySelector('.summary-toggle');

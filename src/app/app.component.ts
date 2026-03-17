@@ -32,6 +32,17 @@ export class AppComponent implements OnInit {
     return this.router.url.split('?')[0] === '/players';
   }
 
+  /**
+   * Determines if the summary checkbox should be visible.
+   * Visible for connected (non-anonymous) users on the /players page.
+   * Designed to be extended later with subscription checks.
+   */
+  readonly canShowSummary = computed(() => {
+    return this.isPlayersPage()
+      && this.authService.isLoggedIn()
+      && !this.authService.isAnonymous();
+  });
+
   constructor() {
     const defaultLang = this.translate.getBrowserLang() ?? environment.defaultLanguage;
     this.translate.setDefaultLang(defaultLang);
