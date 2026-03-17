@@ -41,6 +41,13 @@ export class PlayerCardComponent implements OnInit {
     return this.player ? this.playerSrv.getSipCnt(this.gameSrv.game(), this.player, true) : 0;
   });
 
+  /** Per-turn sip indicator for Phase 1 - resets when active player changes */
+  readonly lastTurnSips = computed(() => {
+    // Read the signal to establish dependency
+    this.gameSrv.lastTurnSips();
+    return this.player ? this.gameSrv.getLastTurnSipsForPlayer(this.player.id) : 0;
+  });
+
   ngOnInit(): void {
     this.gameSrv.openSipGiveModalEvent$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((player) => {
       if (this.player.id === player.id) {
