@@ -131,6 +131,13 @@
     "language": "Language",
     "guest": "Guest"
   },
+  "accountGate": {
+    "title": "View your game summary",
+    "description": "Create a free account to access the summary and keep your stats!",
+    "createAccount": "Create my account",
+    "login": "I already have an account",
+    "later": "Later"
+  },
   "game": {
     "phase1": "Phase 1: Predictions",
     "phase2": "Phase 2: Distribution",

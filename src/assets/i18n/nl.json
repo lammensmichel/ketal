@@ -75,6 +75,13 @@
     "language": "Taal",
     "guest": "Gast"
   },
+  "accountGate": {
+    "title": "Bekijk je spelsamenvatting",
+    "description": "Maak een gratis account aan om de samenvatting te bekijken en je stats te bewaren!",
+    "createAccount": "Account aanmaken",
+    "login": "Ik heb al een account",
+    "later": "Later"
+  },
   "game": {
     "phase1": "Fase 1: Voorspellingen",
     "phase2": "Fase 2: Verdeling",

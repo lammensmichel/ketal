@@ -135,6 +135,13 @@
     "language": "Langue",
     "guest": "Invité"
   },
+  "accountGate": {
+    "title": "Voir ton résumé de partie",
+    "description": "Crée un compte gratuit pour accéder au résumé et garder tes stats !",
+    "createAccount": "Créer mon compte",
+    "login": "J'ai déjà un compte",
+    "later": "Plus tard"
+  },
   "game": {
     "phase1": "Phase 1: Prédictions",
     "phase2": "Phase 2: Distribution",

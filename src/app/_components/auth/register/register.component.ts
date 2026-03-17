@@ -102,9 +102,15 @@ export class RegisterComponent {
 
   /**
    * Navigate to appropriate page after registration
-   * Goes to /game if a game is in progress, otherwise /players
+   * If pendingSummary flag is set, navigates to /game and shows summary.
+   * Otherwise goes to /game if a game is in progress, or /players.
    */
   private async navigateAfterRegistration(): Promise<void> {
+    if (this.authService.consumePendingSummary()) {
+      await this.router.navigate(['/game']);
+      this.gameService.setStatus(3);
+      return;
+    }
     const route = this.gameService.isGameStarted() ? '/game' : '/players';
     await this.router.navigate([route]);
   }

@@ -300,6 +300,35 @@ describe('AuthService', () => {
     });
   });
 
+  describe('consumePendingSummary', () => {
+    afterEach(() => {
+      localStorage.removeItem('pendingSummary');
+    });
+
+    it('should return true and clear flag when pendingSummary is set', () => {
+      localStorage.setItem('pendingSummary', 'true');
+
+      const result = service.consumePendingSummary();
+
+      expect(result).toBeTrue();
+      expect(localStorage.getItem('pendingSummary')).toBeNull();
+    });
+
+    it('should return false when pendingSummary is not set', () => {
+      const result = service.consumePendingSummary();
+
+      expect(result).toBeFalse();
+    });
+
+    it('should return false when pendingSummary has a non-true value', () => {
+      localStorage.setItem('pendingSummary', 'false');
+
+      const result = service.consumePendingSummary();
+
+      expect(result).toBeFalse();
+    });
+  });
+
   describe('isAnonymous computed signal', () => {
     it('should return true for anonymous user (empty email)', async () => {
       mockAccount.createAnonymousSession.and.resolveTo({});
