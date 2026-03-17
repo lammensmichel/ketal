@@ -1,6 +1,12 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { ID, Models, OAuthProvider } from 'appwrite';
 import { AppwriteService } from '../appwrite/appwrite.service';
+import { GameService } from '../game/game.service';
+import { RoomService } from '../room/room.service';
+import { MemberService } from '../member/member.service';
+import { KetalSessionService } from '../ketal-session/ketal-session.service';
+import { RealtimeService } from '../realtime/realtime.service';
+import { LocalService } from '../local/local.service';
 
 /**
  * AuthService - Authentication service for Appwrite
@@ -29,6 +35,12 @@ import { AppwriteService } from '../appwrite/appwrite.service';
 })
 export class AuthService {
   private readonly appwrite = inject(AppwriteService);
+  private readonly gameService = inject(GameService);
+  private readonly roomService = inject(RoomService);
+  private readonly memberService = inject(MemberService);
+  private readonly ketalSessionService = inject(KetalSessionService);
+  private readonly realtimeService = inject(RealtimeService);
+  private readonly localService = inject(LocalService);
 
   /** Signal holding the current user, null if not authenticated */
   private readonly _currentUser = signal<Models.User<Models.Preferences> | null>(null);
@@ -157,11 +169,25 @@ export class AuthService {
   /**
    * Logout the current user
    *
-   * Deletes the current session and clears the user state.
+   * Clears all game state (GameService, room, session, members, realtime
+   * subscriptions, localStorage game data), then deletes the Appwrite session
+   * and resets the user signal.
    * Safe to call even if no session exists.
    */
   async logout(): Promise<void> {
     this._isLoading.set(true);
+    // Cleanup game state — each step is isolated so one failure doesn't skip the rest
+    try { this.gameService.resetGame(); } catch { /* non-critical */ }
+    try { this.roomService.setCurrentRoom(null); } catch { /* non-critical */ }
+    try { this.memberService.clearMembers(); } catch { /* non-critical */ }
+    try { this.ketalSessionService.setCurrentSession(null); } catch { /* non-critical */ }
+    try { this.realtimeService.unsubscribeAll(); } catch { /* non-critical */ }
+    try {
+      this.localService.removeData('game');
+      this.localService.removeData('players');
+    } catch { /* non-critical */ }
+
+    // Delete the Appwrite session
     try {
       await this.appwrite.account.deleteSession('current');
     } catch {
