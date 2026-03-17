@@ -46,6 +46,9 @@ export class FooterComponent {
 
   readonly cardSlots = [0, 1, 2, 3, 4, 5];
 
+  /** Guard flag to prevent double-click on beginGame */
+  private _beginGameInProgress = false;
+
   /** Reference card for Turn 2 (the card drawn in Turn 1 for the active player) */
   getReferenceCard(): CardType | null {
     const activePlayer = this.gameSrv.activePlayer();
@@ -171,10 +174,19 @@ export class FooterComponent {
   }
 
   async beginGame(): Promise<void> {
-    // Await background solo room creation (no-op if already ready or local mode)
-    await this.soloRoomService.awaitRoom();
-    await this.gameSrv.beginGame(this.withSummaryMode);
-    this.router.navigate(['/game']);
+    if (this._beginGameInProgress) {
+      return;
+    }
+    this._beginGameInProgress = true;
+
+    try {
+      // Await background solo room creation (no-op if already ready or local mode)
+      await this.soloRoomService.awaitRoom();
+      await this.gameSrv.beginGame(this.withSummaryMode);
+      this.router.navigate(['/game']);
+    } finally {
+      this._beginGameInProgress = false;
+    }
   }
 
   private delay(ms: number): Promise<void> {

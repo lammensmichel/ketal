@@ -19,7 +19,7 @@ export class SoloRoomService {
   private readonly ketalSessionService = inject(KetalSessionService);
 
   /** Promise for the background solo room creation */
-  private _roomPromise: Promise<GameRoom> | null = null;
+  private _roomPromise: Promise<GameRoom | null> | null = null;
 
   /** Signal indicating if room creation failed (triggers local mode fallback) */
   private readonly _localModeFallback = signal(false);
@@ -57,7 +57,7 @@ export class SoloRoomService {
         this._localModeFallback.set(true);
         this._isCreating.set(false);
         this._roomPromise = null; // Allow retry
-        throw error;
+        return null; // Swallow error to avoid unhandled promise rejection
       });
   }
 

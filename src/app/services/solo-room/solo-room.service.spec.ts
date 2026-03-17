@@ -113,6 +113,8 @@ describe('SoloRoomService', () => {
         .and.rejectWith(new Error('Network error'));
 
       service.startBackgroundRoomCreation();
+
+      // awaitRoom returns null because localModeFallback is set after failure
       const result = await service.awaitRoom();
 
       expect(result).toBeNull();
@@ -140,12 +142,8 @@ describe('SoloRoomService', () => {
 
       service.startBackgroundRoomCreation();
 
-      // Wait for promise to settle
-      try {
-        await service.awaitRoom();
-      } catch {
-        // Expected
-      }
+      // Wait for promise to settle (no longer throws since error is swallowed)
+      await service.awaitRoom();
 
       // Now the fallback should be set
       const result = await service.awaitRoom();
