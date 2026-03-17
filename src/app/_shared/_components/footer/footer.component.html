@@ -185,6 +185,12 @@
         ></button>
       </div>
     }
+    @if (needsMorePlayers() && gameSrv.isNewGame() && isPlayersPage()) {
+      <div class="mb-2 text-center white-background">
+        <hr class="mb-2" />
+        <small class="text-muted" [translate]="'Label_MinimumPlayers'"></small>
+      </div>
+    }
   </div>
   }
 </div>
