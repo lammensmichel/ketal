@@ -93,6 +93,7 @@ export function createMockGameService(): jasmine.SpyObj<GameService> & {
       'addPlayerSip',
       'updatePlayerGivenSipsFromCard',
       'openSipGiveModal',
+      'getLastTurnSipsForPlayer',
     ],
     {
       withSummaryMode: mockWithSummaryMode,
@@ -108,8 +109,10 @@ export function createMockGameService(): jasmine.SpyObj<GameService> & {
       gameMode: signal('local'),
       isRoomMode: signal(false),
       openSipGiveModalEvent$: NEVER,
+      lastTurnSips: signal<Record<string, number>>({}),
     }
   );
+  mock.getLastTurnSipsForPlayer.and.returnValue(0);
   mock.isNewGame.and.returnValue(true);
   mock.isGameStarted.and.returnValue(false);
   mock.isGameFinished.and.returnValue(false);

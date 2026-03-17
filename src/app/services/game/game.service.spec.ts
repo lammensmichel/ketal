@@ -1329,6 +1329,86 @@ describe('GameService', () => {
 
       expect(testService.game().phase).toBe(2);
     });
+
+    it('should set lastTurnSips for the active player after picking a card', () => {
+      const player1 = createMockPlayer({
+        id: 'player-1',
+        cards: [],
+        choice: { color: 'red', plus_or_minus: '', in_out: '', suit: '' },
+      });
+      const player2 = createMockPlayer({
+        id: 'player-2',
+        cards: [],
+        choice: { color: '', plus_or_minus: '', in_out: '', suit: '' },
+      });
+      const mockGame = createMockGame({
+        players: [player1, player2],
+        activePlayer: player1,
+        turn: 1,
+      });
+      const testService = createServiceWithGame(mockGame);
+
+      const newCard = createMockCard({ value: '5', suit: 'hearts' });
+      mockCardDeckHelperService.getRandomCard.and.returnValue(newCard);
+      mockPlayerHelperService.getPlayerChoice.and.returnValue(ColorsEnum.Red);
+      mockCardService.isBlackCard.and.returnValue(true);
+      mockCardService.isRedCard.and.returnValue(false);
+
+      testService.pickCard();
+
+      // Player 1 predicted red but got black => 1 sip
+      expect(testService.getLastTurnSipsForPlayer('player-1')).toBe(1);
+      expect(testService.getLastTurnSipsForPlayer('player-2')).toBe(0);
+    });
+
+    it('should clear lastTurnSips when a new round starts (last player picks)', () => {
+      const player = createMockPlayer({
+        id: 'player-1',
+        cards: [],
+        choice: { color: 'red', plus_or_minus: '', in_out: '', suit: '' },
+      });
+      const mockGame = createMockGame({
+        players: [player],
+        activePlayer: player,
+        turn: 1,
+      });
+      const testService = createServiceWithGame(mockGame);
+
+      const newCard = createMockCard({ value: '5', suit: 'hearts' });
+      mockCardDeckHelperService.getRandomCard.and.returnValue(newCard);
+      mockPlayerHelperService.getPlayerChoice.and.returnValue(ColorsEnum.Red);
+      mockCardService.isBlackCard.and.returnValue(true);
+      mockCardService.isRedCard.and.returnValue(false);
+
+      testService.pickCard();
+
+      // Last player picked => new round starts => lastTurnSips cleared
+      expect(testService.getLastTurnSipsForPlayer('player-1')).toBe(0);
+    });
+
+    it('should clear lastTurnSips when entering Phase 2', () => {
+      const player = createMockPlayer({
+        id: 'player-1',
+        cards: [createMockCard(), createMockCard(), createMockCard()],
+        choice: { color: 'red', plus_or_minus: 'plus', in_out: 'in', suit: 'hearts' },
+      });
+      const mockGame = createMockGame({
+        players: [player],
+        activePlayer: player,
+        turn: 4,
+        phase: 1,
+      });
+      const testService = createServiceWithGame(mockGame);
+
+      const newCard = createMockCard();
+      mockCardDeckHelperService.getRandomCard.and.returnValue(newCard);
+      mockPlayerHelperService.getPlayerChoice.and.returnValue('hearts');
+
+      testService.pickCard();
+
+      expect(testService.game().phase).toBe(2);
+      expect(testService.getLastTurnSipsForPlayer('player-1')).toBe(0);
+    });
   });
 
   // ==========================================================================
@@ -1620,6 +1700,15 @@ describe('GameService', () => {
       testService.resetGame();
 
       expect(mockPlayerHelperService.savePlayerToStorage).toHaveBeenCalled();
+    });
+
+    it('should clear lastTurnSips on reset', () => {
+      const mockGame = createMockGame({ status: 2 });
+      const testService = createServiceWithGame(mockGame);
+
+      testService.resetGame();
+
+      expect(testService.getLastTurnSipsForPlayer('player-1')).toBe(0);
     });
   });
 

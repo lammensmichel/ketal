@@ -80,6 +80,15 @@ export class GameService {
   readonly givingCards = computed(() => this._game()?.givingCards ?? []);
   readonly summary = computed(() => this._game()?.summary ?? false);
 
+  /**
+   * Per-turn sip indicator for Phase 1.
+   * Tracks the sips from the most recently dealt card per player.
+   * Resets when the active player changes (next player's turn starts).
+   * Map key = player ID, value = sips from the last dealt card.
+   */
+  private readonly _lastTurnSips = signal<Record<string, number>>({});
+  readonly lastTurnSips = this._lastTurnSips.asReadonly();
+
   /** localStorage key for summary mode preference */
   private static readonly SUMMARY_MODE_KEY = 'ketal_summary_mode';
 
@@ -491,6 +500,8 @@ export class GameService {
     // Clear session ID — game is truly ending
     this.activeSessionId = null;
     this._pendingSessionUpdate = null;
+    // Clear per-turn sip indicator
+    this._lastTurnSips.set({});
 
     this.updateGame((game) => {
       game.givingCards = [];
@@ -689,6 +700,13 @@ export class GameService {
 
     const currentCard = this.cardDeckHelperService.getRandomCard();
     this.assignSipsForFirstTurn(currentCard, game.activePlayer.id);
+
+    // Track per-turn sips for the current player before advancing
+    this._lastTurnSips.update((sips) => ({
+      ...sips,
+      [game.activePlayer!.id]: currentCard.sips ?? 0,
+    }));
+
     this.addCardToPlayer(currentCard, game.activePlayer.id);
 
     this.updateGame((g) => {
@@ -700,8 +718,12 @@ export class GameService {
         if (g.turn > 4) {
           g.phase = 2;
           g.activePlayer = undefined;
+          // Clear per-turn sips when entering Phase 2
+          this._lastTurnSips.set({});
         } else {
           g.activePlayer = g.players[0];
+          // Clear per-turn sips when a new round starts
+          this._lastTurnSips.set({});
         }
       } else {
         g.activePlayer = g.players[currentIndex + 1];
@@ -925,6 +947,14 @@ export class GameService {
   private mapPlayersToKetalPlayers(): KetalPlayer[] {
     const players: PlayerModel[] = JSON.parse(this.localSrv.getData('players') as string);
     return players.map((player, index) => mapPlayerModelToKetalPlayer(player, index));
+  }
+
+  /**
+   * Get the per-turn sip count for a player from the most recently dealt card.
+   * Returns 0 if no sips were assigned this turn or the turn has advanced.
+   */
+  getLastTurnSipsForPlayer(playerId: string): number {
+    return this._lastTurnSips()[playerId] ?? 0;
   }
 
   openSipGiveModal(player: PlayerModel): void {
