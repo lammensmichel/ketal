@@ -4,6 +4,7 @@ import { Router, RouterOutlet } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { environment } from 'src/environments/environment';
 import { PlayerHelperService } from './_shared/_helpers/player.helper';
+import { AuthService } from './services/auth/auth.service';
 import { GameService } from './services/game/game.service';
 import { HeaderComponent } from './_shared/_components/header/header.component';
 import { FooterComponent } from './_shared/_components/footer/footer.component';
@@ -17,6 +18,7 @@ import { FooterComponent } from './_shared/_components/footer/footer.component';
 })
 export class AppComponent {
   private readonly router = inject(Router);
+  readonly authService = inject(AuthService);
   readonly gameSrv = inject(GameService);
   readonly translate = inject(TranslateService);
   readonly playerSrv = inject(PlayerHelperService);
