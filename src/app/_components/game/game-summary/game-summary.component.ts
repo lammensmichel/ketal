@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { GameService } from '../../../services/game/game.service';
@@ -23,6 +24,7 @@ export interface PlayerSummary {
 })
 export class GameSummaryComponent {
   private readonly gameSrv = inject(GameService);
+  private readonly router = inject(Router);
 
   readonly playersSorted = computed<PlayerSummary[]>(() => {
     const players = this.gameSrv.players();
@@ -82,5 +84,6 @@ export class GameSummaryComponent {
 
   exit(): void {
     this.gameSrv.resetGame();
+    this.router.navigate(['/']);
   }
 }

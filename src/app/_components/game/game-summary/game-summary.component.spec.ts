@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { GameSummaryComponent } from './game-summary.component';
 import { GameService } from '../../../services/game/game.service';
@@ -21,13 +22,19 @@ describe('GameSummaryComponent', () => {
   let component: GameSummaryComponent;
   let fixture: ComponentFixture<GameSummaryComponent>;
   let mockGameService: ReturnType<typeof createMockGameService>;
+  let mockRouter: jasmine.SpyObj<Router>;
 
   beforeEach(async () => {
     mockGameService = createMockGameService();
+    mockRouter = jasmine.createSpyObj('Router', ['navigate']);
+    mockRouter.navigate.and.resolveTo(true);
 
     await TestBed.configureTestingModule({
       imports: [TranslateModule.forRoot(), FontAwesomeIconsModule, GameSummaryComponent],
-      providers: [{ provide: GameService, useValue: mockGameService }],
+      providers: [
+        { provide: GameService, useValue: mockGameService },
+        { provide: Router, useValue: mockRouter },
+      ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 
@@ -208,9 +215,10 @@ describe('GameSummaryComponent', () => {
   });
 
   describe('exit action', () => {
-    it('should call resetGame on exit', () => {
+    it('should call resetGame and navigate to home on exit', () => {
       component.exit();
       expect(mockGameService.resetGame).toHaveBeenCalled();
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/']);
     });
   });
 
