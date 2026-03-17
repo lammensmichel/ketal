@@ -11,9 +11,22 @@
         <button title="chooseBlack" class="card-container black-choice" (click)="chooseColor('black')">
         </button>
       </div>
-      <div *ngIf="activeTurn === 2 " class="d-flex flex-row gap-2 justify-content-center ">
-        <button title="choosePlus" class="card-container" [innerHTML]="'+'" (click)="plusOrMinus('plus')"></button>
-        <button title="chooseMinus" class="card-container" [innerHTML]="'-'" (click)="plusOrMinus('minus')"></button>
+      <div *ngIf="activeTurn === 2 " class="d-flex flex-column align-items-center gap-1">
+        <div *ngIf="getActivePlayerLastCard() as refCard" class="text-center reference-card-hint">
+          <span [translate]="'Label_ComparedTo'"></span>
+          <span> {{ refCard.value }}</span>
+          <span [innerHTML]="getSuitSymbol(refCard.suit)"></span>
+        </div>
+        <div class="d-flex flex-row gap-2 justify-content-center">
+          <button title="choosePlus" class="card-container prediction-btn" (click)="plusOrMinus('plus')">
+            <span class="prediction-arrow">&uarr;</span>
+            <span class="prediction-label" [translate]="'Button_Higher'"></span>
+          </button>
+          <button title="chooseMinus" class="card-container prediction-btn" (click)="plusOrMinus('minus')">
+            <span class="prediction-arrow">&darr;</span>
+            <span class="prediction-label" [translate]="'Button_Lower'"></span>
+          </button>
+        </div>
       </div>
       <div *ngIf="activeTurn === 3 " class="d-flex flex-row gap-2 justify-content-center ">
         <button title="chooseIn" class="card-container small-font" [innerHTML]="'IN'" (click)="inOut('in')"></button>

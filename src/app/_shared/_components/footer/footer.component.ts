@@ -42,6 +42,23 @@ export class FooterComponent implements OnInit, OnDestroy {
 
   }
 
+  getActivePlayerLastCard(): CardType | undefined {
+    if (this.game?.activePlayer && this.game.activePlayer.cards.length > 0) {
+      return this.game.activePlayer.cards[this.game.activePlayer.cards.length - 1];
+    }
+    return undefined;
+  }
+
+  getSuitSymbol(suit: string | null): string {
+    switch (suit) {
+      case SuitsEnum.Hearts: return '&hearts;';
+      case SuitsEnum.Diams: return '&diams;';
+      case SuitsEnum.Spades: return '&spades;';
+      case SuitsEnum.Clubs: return '&clubs;';
+      default: return '';
+    }
+  }
+
   getLowerCardVal(firstVal: number, secondVal: number): number {
     return firstVal > secondVal ? secondVal : firstVal;
   }

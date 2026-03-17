@@ -41,3 +41,56 @@
  .black-choice {
   background: black;
 }
+
+.prediction-btn {
+  flex-direction: column;
+  gap: 4px;
+  min-width: 100px;
+  min-height: 60px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+
+  &:hover {
+    background-color: #e8e8e8;
+  }
+
+  &:active {
+    background-color: #d0d0d0;
+    transform: scale(0.96);
+  }
+
+  @media (max-width: 768px) {
+    min-width: 80px;
+    min-height: 48px;
+  }
+}
+
+.prediction-arrow {
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 1;
+
+  @media (max-width: 768px) {
+    font-size: 16px;
+  }
+}
+
+.prediction-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  @media (max-width: 768px) {
+    font-size: 10px;
+  }
+}
+
+.reference-card-hint {
+  font-size: 14px;
+  color: #666;
+
+  span:last-child {
+    font-size: 16px;
+  }
+}

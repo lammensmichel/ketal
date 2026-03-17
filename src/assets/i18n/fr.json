@@ -19,5 +19,9 @@
   "Button_Create": "Créer",
   "Button_Delete": "Supprimer",
   "Button_NextCard": "Suivante",
-  "Button_Restart": "Recommencer"
+  "Button_Restart": "Recommencer",
+
+  "Button_Higher": "Plus haut",
+  "Button_Lower": "Plus bas",
+  "Label_ComparedTo": "Par rapport à ton"
 }
