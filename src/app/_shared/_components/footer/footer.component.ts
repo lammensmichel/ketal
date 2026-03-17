@@ -5,6 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { FontAwesomeIconsModule } from '../../../font-awesome.module';
 import { AuthService } from '../../../services/auth/auth.service';
 import { GameService } from '../../../services/game/game.service';
+import { SoloRoomService } from '../../../services/solo-room/solo-room.service';
 import { PlayerHelperService } from '../../_helpers/player.helper';
 import { CardType } from '../../_models/card-type.model';
 import { DrinkChoiceEnum } from '../../_models/enums/drink_choice.enum';
@@ -36,6 +37,7 @@ export class FooterComponent {
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
   readonly gameSrv = inject(GameService);
+  private readonly soloRoomService = inject(SoloRoomService);
   readonly playerHelper = inject(PlayerHelperService);
 
   @Input() public withSummaryMode: boolean = false;
@@ -169,6 +171,8 @@ export class FooterComponent {
   }
 
   async beginGame(): Promise<void> {
+    // Await background solo room creation (no-op if already ready or local mode)
+    await this.soloRoomService.awaitRoom();
     await this.gameSrv.beginGame(this.withSummaryMode);
     this.router.navigate(['/game']);
   }

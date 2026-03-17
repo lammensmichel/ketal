@@ -16,6 +16,7 @@ import { LocalService } from '../local/local.service';
 import { MemberService } from '../member/member.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import { RoomService } from '../room/room.service';
+import { SoloRoomService } from '../solo-room/solo-room.service';
 import { mapGameToSessionUpdate, mapPlayerModelToKetalPlayer, mapSessionToGame } from './game-mappers';
 
 /** Game mode type: local (localStorage) or room (Appwrite) */
@@ -33,6 +34,7 @@ export class GameService {
   private readonly ketalSessionService = inject(KetalSessionService);
   private readonly memberService = inject(MemberService);
   private readonly realtimeService = inject(RealtimeService);
+  private readonly soloRoomService = inject(SoloRoomService);
   private readonly destroyRef = inject(DestroyRef);
 
   /**
@@ -491,6 +493,10 @@ export class GameService {
     // Clear session ID — game is truly ending
     this.activeSessionId = null;
     this._pendingSessionUpdate = null;
+
+    // Clean up solo room state and leave room
+    this.soloRoomService.reset();
+    this.roomService.leaveRoom();
 
     this.updateGame((game) => {
       game.givingCards = [];

@@ -16,7 +16,7 @@ export type RoomStatus = 'idle' | 'playing';
 /**
  * Room mode enum for type safety
  */
-export type RoomMode = 'local' | 'multiplayer';
+export type RoomMode = 'local' | 'multiplayer' | 'solo';
 
 /**
  * GameRoom interface representing a game room document in Appwrite
@@ -85,6 +85,16 @@ export class RoomService {
 
   /** Public readonly signal for current room state */
   readonly currentRoom = this._currentRoom.asReadonly();
+
+  /**
+   * Create a solo room for backend-first game sessions.
+   * Auto-generates a name, uses 'solo' mode, no invite needed.
+   * Called in background after login while user adds player names.
+   */
+  async createSoloRoom(): Promise<GameRoom> {
+    const name = `Solo-${Date.now()}`;
+    return this.createRoom(name, 'solo', 10);
+  }
 
   /**
    * Create a new game room

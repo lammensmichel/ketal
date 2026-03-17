@@ -10,6 +10,7 @@ import { RoomService, GameRoom } from '../services/room/room.service';
 import { KetalSessionService, KetalSession } from '../services/ketal-session/ketal-session.service';
 import { MemberService, GameMember } from '../services/member/member.service';
 import { RealtimeService } from '../services/realtime/realtime.service';
+import { SoloRoomService } from '../services/solo-room/solo-room.service';
 import { Game } from '../_shared/_models/game.model';
 import { PlayerModel } from '../_shared/_models/player.model';
 import { CardType } from '../_shared/_models/card-type.model';
@@ -28,7 +29,7 @@ export function createMockAuthService(): jasmine.SpyObj<AuthService> & {
 
   const mock = jasmine.createSpyObj(
     'AuthService',
-    ['init', 'signUp', 'loginWithEmail', 'signInWithGoogle', 'logout', 'createAnonymousSession', 'getOrCreateSession'],
+    ['init', 'signUp', 'loginWithEmail', 'signInWithGoogle', 'logout', 'createAnonymousSession', 'getOrCreateSession', 'consumePendingSummary'],
     {
       currentUser: signal(null),
       isLoggedIn: mockIsLoggedIn,
@@ -42,6 +43,7 @@ export function createMockAuthService(): jasmine.SpyObj<AuthService> & {
   mock.loginWithEmail.and.resolveTo(undefined);
   mock.logout.and.resolveTo(undefined);
   mock.createAnonymousSession.and.resolveTo(undefined);
+  mock.consumePendingSummary.and.returnValue(false);
 
   return mock as jasmine.SpyObj<AuthService> & {
     isLoggedIn: WritableSignal<boolean>;
@@ -192,6 +194,7 @@ export function createMockRoomService(): jasmine.SpyObj<RoomService> & {
     'RoomService',
     [
       'createRoom',
+      'createSoloRoom',
       'joinRoom',
       'leaveRoom',
       'deleteRoom',
@@ -209,6 +212,7 @@ export function createMockRoomService(): jasmine.SpyObj<RoomService> & {
 
   // Setup default return values
   mock.createRoom.and.resolveTo(null);
+  mock.createSoloRoom.and.resolveTo(null);
   mock.joinRoom.and.resolveTo(null);
   mock.leaveRoom.and.resolveTo(undefined);
   mock.deleteRoom.and.resolveTo(undefined);
@@ -360,4 +364,32 @@ export function createMockRealtimeService(): jasmine.SpyObj<RealtimeService> {
   mock.getActiveSubscriptionIds.and.returnValue([]);
 
   return mock;
+}
+
+/**
+ * Creates a mock SoloRoomService for testing
+ */
+export function createMockSoloRoomService(): jasmine.SpyObj<SoloRoomService> & {
+  localModeFallback: WritableSignal<boolean>;
+  isCreating: WritableSignal<boolean>;
+} {
+  const mockLocalModeFallback = signal<boolean>(false);
+  const mockIsCreating = signal<boolean>(false);
+
+  const mock = jasmine.createSpyObj(
+    'SoloRoomService',
+    ['startBackgroundRoomCreation', 'awaitRoom', 'checkActiveSession', 'reset'],
+    {
+      localModeFallback: mockLocalModeFallback,
+      isCreating: mockIsCreating,
+    }
+  );
+
+  mock.awaitRoom.and.resolveTo(null);
+  mock.checkActiveSession.and.resolveTo(null);
+
+  return mock as jasmine.SpyObj<SoloRoomService> & {
+    localModeFallback: WritableSignal<boolean>;
+    isCreating: WritableSignal<boolean>;
+  };
 }

@@ -28,7 +28,7 @@ export interface GameRoom {
   currentSessionId: string | null;
   status: 'idle' | 'playing';
   hostMemberId: string;
-  mode: 'local' | 'multiplayer';
+  mode: 'local' | 'multiplayer' | 'solo';
   maxPlayers: number;
   gamesPlayed: number;
 }

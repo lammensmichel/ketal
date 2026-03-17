@@ -10,7 +10,9 @@ import {
   createMockAuthService,
   createMockGameService,
   createMockPlayerHelperService,
+  createMockSoloRoomService,
 } from '../../../testing/test-helpers';
+import { SoloRoomService } from '../../../services/solo-room/solo-room.service';
 import { Game } from '../../_models/game.model';
 import { PlayerModel } from '../../_models/player.model';
 import { CardType } from '../../_models/card-type.model';
@@ -21,6 +23,7 @@ describe('FooterComponent', () => {
   let fixture: ComponentFixture<FooterComponent>;
   let mockGameService: ReturnType<typeof createMockGameService>;
   let mockAuthService: ReturnType<typeof createMockAuthService>;
+  let mockSoloRoomService: ReturnType<typeof createMockSoloRoomService>;
   let mockPlayerHelperService: jasmine.SpyObj<PlayerHelperService>;
   let mockRouter: jasmine.SpyObj<Router>;
 
@@ -48,6 +51,7 @@ describe('FooterComponent', () => {
   beforeEach(async () => {
     mockGameService = createMockGameService();
     mockAuthService = createMockAuthService();
+    mockSoloRoomService = createMockSoloRoomService();
     mockPlayerHelperService = createMockPlayerHelperService();
     mockRouter = jasmine.createSpyObj('Router', ['navigate'], { url: '/game' });
 
@@ -66,6 +70,7 @@ describe('FooterComponent', () => {
       providers: [
         { provide: AuthService, useValue: mockAuthService },
         { provide: GameService, useValue: mockGameService },
+        { provide: SoloRoomService, useValue: mockSoloRoomService },
         { provide: PlayerHelperService, useValue: mockPlayerHelperService },
         { provide: Router, useValue: mockRouter },
       ],

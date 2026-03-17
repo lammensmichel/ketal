@@ -16,10 +16,12 @@ import {
   createMockKetalSessionService,
   createMockMemberService,
   createMockRealtimeService,
+  createMockSoloRoomService,
   createMockGameRoom,
   createMockKetalSession,
 } from '../../testing/test-helpers';
 import { RealtimeService } from '../realtime/realtime.service';
+import { SoloRoomService } from '../solo-room/solo-room.service';
 import { Game } from '../../_shared/_models/game.model';
 import { PlayerModel } from '../../_shared/_models/player.model';
 import { CardType } from '../../_shared/_models/card-type.model';
@@ -99,6 +101,7 @@ describe('GameService', () => {
   let mockKetalSessionService: ReturnType<typeof createMockKetalSessionService>;
   let mockMemberService: ReturnType<typeof createMockMemberService>;
   let mockRealtimeService: ReturnType<typeof createMockRealtimeService>;
+  let mockSoloRoomService: ReturnType<typeof createMockSoloRoomService>;
 
   beforeEach(() => {
     localStorage.removeItem('ketal_summary_mode');
@@ -110,6 +113,7 @@ describe('GameService', () => {
     mockKetalSessionService = createMockKetalSessionService();
     mockMemberService = createMockMemberService();
     mockRealtimeService = createMockRealtimeService();
+    mockSoloRoomService = createMockSoloRoomService();
 
     TestBed.configureTestingModule({
       providers: [
@@ -122,6 +126,7 @@ describe('GameService', () => {
         { provide: KetalSessionService, useValue: mockKetalSessionService },
         { provide: MemberService, useValue: mockMemberService },
         { provide: RealtimeService, useValue: mockRealtimeService },
+        { provide: SoloRoomService, useValue: mockSoloRoomService },
       ],
     });
     service = TestBed.inject(GameService);
@@ -148,6 +153,11 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          { provide: RoomService, useValue: mockRoomService },
+          { provide: KetalSessionService, useValue: mockKetalSessionService },
+          { provide: MemberService, useValue: mockMemberService },
+          { provide: RealtimeService, useValue: mockRealtimeService },
+          { provide: SoloRoomService, useValue: mockSoloRoomService },
         ],
       });
       const newService = TestBed.inject(GameService);
@@ -168,6 +178,11 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          { provide: RoomService, useValue: mockRoomService },
+          { provide: KetalSessionService, useValue: mockKetalSessionService },
+          { provide: MemberService, useValue: mockMemberService },
+          { provide: RealtimeService, useValue: mockRealtimeService },
+          { provide: SoloRoomService, useValue: mockSoloRoomService },
         ],
       });
       const newService = TestBed.inject(GameService);
@@ -662,6 +677,11 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          { provide: RoomService, useValue: mockRoomService },
+          { provide: KetalSessionService, useValue: mockKetalSessionService },
+          { provide: MemberService, useValue: mockMemberService },
+          { provide: RealtimeService, useValue: mockRealtimeService },
+          { provide: SoloRoomService, useValue: mockSoloRoomService },
         ],
       });
       return TestBed.inject(GameService);
@@ -1048,6 +1068,11 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          { provide: RoomService, useValue: mockRoomService },
+          { provide: KetalSessionService, useValue: mockKetalSessionService },
+          { provide: MemberService, useValue: mockMemberService },
+          { provide: RealtimeService, useValue: mockRealtimeService },
+          { provide: SoloRoomService, useValue: mockSoloRoomService },
         ],
       });
       return TestBed.inject(GameService);
@@ -1091,6 +1116,11 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          { provide: RoomService, useValue: mockRoomService },
+          { provide: KetalSessionService, useValue: mockKetalSessionService },
+          { provide: MemberService, useValue: mockMemberService },
+          { provide: RealtimeService, useValue: mockRealtimeService },
+          { provide: SoloRoomService, useValue: mockSoloRoomService },
         ],
       });
       return TestBed.inject(GameService);
@@ -1194,6 +1224,11 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          { provide: RoomService, useValue: mockRoomService },
+          { provide: KetalSessionService, useValue: mockKetalSessionService },
+          { provide: MemberService, useValue: mockMemberService },
+          { provide: RealtimeService, useValue: mockRealtimeService },
+          { provide: SoloRoomService, useValue: mockSoloRoomService },
         ],
       });
       return TestBed.inject(GameService);
@@ -1346,6 +1381,11 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          { provide: RoomService, useValue: mockRoomService },
+          { provide: KetalSessionService, useValue: mockKetalSessionService },
+          { provide: MemberService, useValue: mockMemberService },
+          { provide: RealtimeService, useValue: mockRealtimeService },
+          { provide: SoloRoomService, useValue: mockSoloRoomService },
         ],
       });
       return TestBed.inject(GameService);
@@ -1535,6 +1575,11 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          { provide: RoomService, useValue: mockRoomService },
+          { provide: KetalSessionService, useValue: mockKetalSessionService },
+          { provide: MemberService, useValue: mockMemberService },
+          { provide: RealtimeService, useValue: mockRealtimeService },
+          { provide: SoloRoomService, useValue: mockSoloRoomService },
         ],
       });
       return TestBed.inject(GameService);
@@ -1667,6 +1712,11 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          { provide: RoomService, useValue: mockRoomService },
+          { provide: KetalSessionService, useValue: mockKetalSessionService },
+          { provide: MemberService, useValue: mockMemberService },
+          { provide: RealtimeService, useValue: mockRealtimeService },
+          { provide: SoloRoomService, useValue: mockSoloRoomService },
         ],
       });
       return TestBed.inject(GameService);
@@ -2611,6 +2661,7 @@ describe('GameService', () => {
           { provide: KetalSessionService, useValue: mockKetalSessionService },
           { provide: MemberService, useValue: mockMemberService },
           { provide: RealtimeService, useValue: mockRealtimeService },
+          { provide: SoloRoomService, useValue: mockSoloRoomService },
         ],
       });
       return TestBed.inject(GameService);
