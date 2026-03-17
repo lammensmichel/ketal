@@ -145,6 +145,17 @@
     "login": "J'ai déjà un compte",
     "later": "Plus tard"
   },
+  "summary": {
+    "title": "Résumé de la partie",
+    "player": "Joueur",
+    "sipsDrunk": "Bues",
+    "sipsGiven": "Données",
+    "total": "Total",
+    "winner": "Le plus sobre",
+    "loser": "Le plus arrosé",
+    "replay": "Rejouer",
+    "exit": "Quitter"
+  },
   "game": {
     "phase1": "Phase 1: Prédictions",
     "phase2": "Phase 2: Distribution",

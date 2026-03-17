@@ -1,1 +1,70 @@
-<app-players-list></app-players-list>
+<div class="game-summary container py-3">
+  <h2 class="text-center mb-3">
+    <fa-icon icon="trophy" class="text-warning me-2"></fa-icon>
+    {{ 'summary.title' | translate }}
+  </h2>
+
+  @if (winner(); as winner) {
+    <div class="highlight-card winner-card mb-2 p-3 text-center">
+      <fa-icon icon="medal" class="icon-lg text-success"></fa-icon>
+      <div class="mt-1">
+        <span class="fw-bold">{{ winner.name }}</span>
+        <span class="d-block small text-muted">{{ 'summary.winner' | translate }} - {{ winner.totalSips }} {{ 'Label_Sips' | translate }}</span>
+      </div>
+    </div>
+  }
+
+  @if (loser(); as loser) {
+    <div class="highlight-card loser-card mb-3 p-3 text-center">
+      <fa-icon icon="wine-glass" class="icon-lg text-danger"></fa-icon>
+      <div class="mt-1">
+        <span class="fw-bold">{{ loser.name }}</span>
+        <span class="d-block small text-muted">{{ 'summary.loser' | translate }} - {{ loser.totalSips }} {{ 'Label_Sips' | translate }}</span>
+      </div>
+    </div>
+  }
+
+  <div class="table-responsive">
+    <table class="table table-sm table-hover align-middle mb-3">
+      <thead>
+        <tr>
+          <th class="text-start">#</th>
+          <th class="text-start">{{ 'summary.player' | translate }}</th>
+          <th class="text-end">{{ 'summary.sipsDrunk' | translate }}</th>
+          <th class="text-end">{{ 'summary.sipsGiven' | translate }}</th>
+          <th class="text-end fw-bold">{{ 'summary.total' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (player of playersSorted(); track player.name; let i = $index) {
+          <tr [class.table-success]="player.isWinner" [class.table-danger]="player.isLoser">
+            <td class="text-start">{{ i + 1 }}</td>
+            <td class="text-start">
+              @if (player.isWinner) {
+                <fa-icon icon="medal" class="text-success me-1"></fa-icon>
+              }
+              @if (player.isLoser) {
+                <fa-icon icon="wine-glass" class="text-danger me-1"></fa-icon>
+              }
+              {{ player.name }}
+            </td>
+            <td class="text-end">{{ player.sipsDrunk }}</td>
+            <td class="text-end">{{ player.sipsGiven }}</td>
+            <td class="text-end fw-bold">{{ player.totalSips }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="d-flex justify-content-center gap-3 mt-3">
+    <button class="btn btn-outline-primary" (click)="replay()">
+      <fa-icon icon="redo" class="me-1"></fa-icon>
+      {{ 'summary.replay' | translate }}
+    </button>
+    <button class="btn btn-outline-secondary" (click)="exit()">
+      <fa-icon icon="door-open" class="me-1"></fa-icon>
+      {{ 'summary.exit' | translate }}
+    </button>
+  </div>
+</div>

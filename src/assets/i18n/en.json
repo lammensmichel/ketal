@@ -141,6 +141,17 @@
     "login": "I already have an account",
     "later": "Later"
   },
+  "summary": {
+    "title": "Game Summary",
+    "player": "Player",
+    "sipsDrunk": "Drunk",
+    "sipsGiven": "Given",
+    "total": "Total",
+    "winner": "Most sober",
+    "loser": "Most drunk",
+    "replay": "Replay",
+    "exit": "Exit"
+  },
   "game": {
     "phase1": "Phase 1: Predictions",
     "phase2": "Phase 2: Distribution",

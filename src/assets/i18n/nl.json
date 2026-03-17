@@ -82,6 +82,17 @@
     "login": "Ik heb al een account",
     "later": "Later"
   },
+  "summary": {
+    "title": "Spelresultaat",
+    "player": "Speler",
+    "sipsDrunk": "Gedronken",
+    "sipsGiven": "Gegeven",
+    "total": "Totaal",
+    "winner": "Meest nuchter",
+    "loser": "Meest dronken",
+    "replay": "Opnieuw spelen",
+    "exit": "Stoppen"
+  },
   "game": {
     "phase1": "Fase 1: Voorspellingen",
     "phase2": "Fase 2: Verdeling",
