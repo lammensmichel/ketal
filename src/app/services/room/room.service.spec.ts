@@ -1,0 +1,591 @@
+import { TestBed } from '@angular/core/testing';
+import { RoomService, GameRoom, RoomMode, RoomStatus } from './room.service';
+import { AppwriteService } from '../appwrite/appwrite.service';
+import { RealtimeService } from '../realtime/realtime.service';
+
+describe('RoomService', () => {
+  let service: RoomService;
+  let mockAppwriteService: jasmine.SpyObj<AppwriteService>;
+  let mockRealtimeService: jasmine.SpyObj<RealtimeService>;
+  let mockDatabases: {
+    createDocument: jasmine.Spy;
+    deleteDocument: jasmine.Spy;
+    getDocument: jasmine.Spy;
+    listDocuments: jasmine.Spy;
+    updateDocument: jasmine.Spy;
+  };
+
+  const mockRoomDocument: Record<string, unknown> = {
+    $id: 'room123',
+    name: 'Test Room',
+    code: 'ABC123',
+    inviteToken: '550e8400-e29b-41d4-a716-446655440000',
+    currentGameId: null,
+    currentSessionId: null,
+    status: 'idle' as RoomStatus,
+    hostMemberId: 'member123',
+    mode: 'multiplayer' as RoomMode,
+    maxPlayers: 10,
+    gamesPlayed: 0,
+  };
+
+  const mockGameRoom: GameRoom = {
+    $id: 'room123',
+    name: 'Test Room',
+    code: 'ABC123',
+    inviteToken: '550e8400-e29b-41d4-a716-446655440000',
+    currentGameId: null,
+    currentSessionId: null,
+    status: 'idle',
+    hostMemberId: 'member123',
+    mode: 'multiplayer',
+    maxPlayers: 10,
+    gamesPlayed: 0,
+  };
+
+  beforeEach(() => {
+    mockDatabases = {
+      createDocument: jasmine.createSpy('createDocument'),
+      deleteDocument: jasmine.createSpy('deleteDocument'),
+      getDocument: jasmine.createSpy('getDocument'),
+      listDocuments: jasmine.createSpy('listDocuments'),
+      updateDocument: jasmine.createSpy('updateDocument'),
+    };
+
+    mockAppwriteService = jasmine.createSpyObj('AppwriteService', [], {
+      databases: mockDatabases,
+      databaseId: 'fug',
+    });
+
+    mockRealtimeService = jasmine.createSpyObj('RealtimeService', ['subscribeToRoom', 'unsubscribe']);
+
+    TestBed.configureTestingModule({
+      providers: [
+        RoomService,
+        { provide: AppwriteService, useValue: mockAppwriteService },
+        { provide: RealtimeService, useValue: mockRealtimeService },
+      ],
+    });
+
+    service = TestBed.inject(RoomService);
+  });
+
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
+
+  describe('signals', () => {
+    it('should have currentRoom signal initialized to null', () => {
+      expect(service.currentRoom()).toBeNull();
+    });
+  });
+
+  describe('createRoom', () => {
+    it('should create a room with default values', async () => {
+      mockDatabases.createDocument.and.resolveTo(mockRoomDocument);
+
+      const result = await service.createRoom('Test Room');
+
+      expect(mockDatabases.createDocument).toHaveBeenCalledWith(
+        'fug',
+        'fug_game_rooms',
+        jasmine.any(String),
+        jasmine.objectContaining({
+          name: 'Test Room',
+          code: jasmine.any(String),
+          inviteToken: jasmine.any(String),
+          currentGameId: null,
+          currentSessionId: null,
+          status: 'idle',
+          hostMemberId: '',
+          mode: 'multiplayer',
+          maxPlayers: 10,
+          gamesPlayed: 0,
+        })
+      );
+      expect(result.$id).toBe('room123');
+      expect(result.name).toBe('Test Room');
+    });
+
+    it('should create a room with custom mode and maxPlayers', async () => {
+      mockDatabases.createDocument.and.resolveTo({
+        ...mockRoomDocument,
+        mode: 'local',
+        maxPlayers: 6,
+      });
+
+      const result = await service.createRoom('Local Room', 'local', 6);
+
+      expect(mockDatabases.createDocument).toHaveBeenCalledWith(
+        'fug',
+        'fug_game_rooms',
+        jasmine.any(String),
+        jasmine.objectContaining({
+          name: 'Local Room',
+          mode: 'local',
+          maxPlayers: 6,
+        })
+      );
+      expect(result.mode).toBe('local');
+      expect(result.maxPlayers).toBe(6);
+    });
+
+    it('should set currentRoom signal after creating room', async () => {
+      mockDatabases.createDocument.and.resolveTo(mockRoomDocument);
+
+      await service.createRoom('Test Room');
+
+      expect(service.currentRoom()).toEqual(mockGameRoom);
+    });
+
+    it('should throw error when creation fails', async () => {
+      mockDatabases.createDocument.and.rejectWith(new Error('Database error'));
+
+      await expectAsync(service.createRoom('Test Room')).toBeRejectedWithError('Failed to create room: Database error');
+    });
+
+    it('should generate a 6-character room code', async () => {
+      mockDatabases.createDocument.and.resolveTo(mockRoomDocument);
+
+      await service.createRoom('Test Room');
+
+      const callArgs = mockDatabases.createDocument.calls.mostRecent().args;
+      const roomData = callArgs[3] as { code: string };
+      expect(roomData.code.length).toBe(6);
+      expect(roomData.code).toMatch(/^[A-Z0-9]+$/);
+    });
+
+    it('should generate a UUID invite token', async () => {
+      mockDatabases.createDocument.and.resolveTo(mockRoomDocument);
+
+      await service.createRoom('Test Room');
+
+      const callArgs = mockDatabases.createDocument.calls.mostRecent().args;
+      const roomData = callArgs[3] as { inviteToken: string };
+      // UUID v4 format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
+      expect(roomData.inviteToken).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+    });
+  });
+
+  describe('deleteRoom', () => {
+    it('should delete a room by id', async () => {
+      mockDatabases.deleteDocument.and.resolveTo({});
+
+      await service.deleteRoom('room123');
+
+      expect(mockDatabases.deleteDocument).toHaveBeenCalledWith('fug', 'fug_game_rooms', 'room123');
+    });
+
+    it('should clear currentRoom signal if deleting current room', async () => {
+      mockDatabases.createDocument.and.resolveTo(mockRoomDocument);
+      mockDatabases.deleteDocument.and.resolveTo({});
+
+      await service.createRoom('Test Room');
+      expect(service.currentRoom()).not.toBeNull();
+
+      await service.deleteRoom('room123');
+
+      expect(service.currentRoom()).toBeNull();
+    });
+
+    it('should not clear currentRoom if deleting a different room', async () => {
+      mockDatabases.createDocument.and.resolveTo(mockRoomDocument);
+      mockDatabases.deleteDocument.and.resolveTo({});
+
+      await service.createRoom('Test Room');
+      await service.deleteRoom('different-room-id');
+
+      expect(service.currentRoom()).toEqual(mockGameRoom);
+    });
+
+    it('should throw error when deletion fails', async () => {
+      mockDatabases.deleteDocument.and.rejectWith(new Error('Not found'));
+
+      await expectAsync(service.deleteRoom('room123')).toBeRejectedWithError('Failed to delete room: Not found');
+    });
+  });
+
+  describe('getRoomByCode', () => {
+    it('should find a room by its code', async () => {
+      mockDatabases.listDocuments.and.resolveTo({
+        documents: [mockRoomDocument],
+      });
+
+      const result = await service.getRoomByCode('ABC123');
+
+      expect(mockDatabases.listDocuments).toHaveBeenCalledWith('fug', 'fug_game_rooms', jasmine.any(Array));
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      expect(queries.some((q) => q.includes('"code"') && q.includes('"ABC123"'))).toBeTrue();
+      expect(result).toEqual(mockGameRoom);
+    });
+
+    it('should normalize the code to uppercase', async () => {
+      mockDatabases.listDocuments.and.resolveTo({
+        documents: [mockRoomDocument],
+      });
+
+      await service.getRoomByCode('abc123');
+
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      expect(queries.some((q) => q.includes('"ABC123"'))).toBeTrue();
+    });
+
+    it('should trim whitespace from code', async () => {
+      mockDatabases.listDocuments.and.resolveTo({
+        documents: [mockRoomDocument],
+      });
+
+      await service.getRoomByCode('  ABC123  ');
+
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      expect(queries.some((q) => q.includes('"ABC123"'))).toBeTrue();
+    });
+
+    it('should return null for invalid code length', async () => {
+      const result = await service.getRoomByCode('ABC');
+
+      expect(mockDatabases.listDocuments).not.toHaveBeenCalled();
+      expect(result).toBeNull();
+    });
+
+    it('should return null when room not found', async () => {
+      mockDatabases.listDocuments.and.resolveTo({
+        documents: [],
+      });
+
+      const result = await service.getRoomByCode('NOTFND');
+
+      expect(result).toBeNull();
+    });
+
+    it('should throw error on database failure', async () => {
+      mockDatabases.listDocuments.and.rejectWith(new Error('Query failed'));
+
+      await expectAsync(service.getRoomByCode('ABC123')).toBeRejectedWithError(
+        'Failed to find room by code: Query failed'
+      );
+    });
+  });
+
+  describe('getRoomByInviteToken', () => {
+    it('should find a room by its invite token', async () => {
+      mockDatabases.listDocuments.and.resolveTo({
+        documents: [mockRoomDocument],
+      });
+
+      const result = await service.getRoomByInviteToken('550e8400-e29b-41d4-a716-446655440000');
+
+      expect(mockDatabases.listDocuments).toHaveBeenCalledWith('fug', 'fug_game_rooms', jasmine.any(Array));
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      expect(
+        queries.some((q) => q.includes('"inviteToken"') && q.includes('"550e8400-e29b-41d4-a716-446655440000"'))
+      ).toBeTrue();
+      expect(result).toEqual(mockGameRoom);
+    });
+
+    it('should normalize token to lowercase and trim', async () => {
+      mockDatabases.listDocuments.and.resolveTo({
+        documents: [mockRoomDocument],
+      });
+
+      await service.getRoomByInviteToken('  550E8400-E29B-41D4-A716-446655440000  ');
+
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      expect(queries.some((q) => q.includes('"550e8400-e29b-41d4-a716-446655440000"'))).toBeTrue();
+    });
+
+    it('should return null when token not found', async () => {
+      mockDatabases.listDocuments.and.resolveTo({
+        documents: [],
+      });
+
+      const result = await service.getRoomByInviteToken('nonexistent-token');
+
+      expect(result).toBeNull();
+    });
+
+    it('should throw error on database failure', async () => {
+      mockDatabases.listDocuments.and.rejectWith(new Error('Query failed'));
+
+      await expectAsync(service.getRoomByInviteToken('550e8400-e29b-41d4-a716-446655440000')).toBeRejectedWithError(
+        'Failed to find room by invite token: Query failed'
+      );
+    });
+  });
+
+  describe('getRoomById', () => {
+    it('should find a room by its document ID', async () => {
+      mockDatabases.getDocument.and.resolveTo(mockRoomDocument);
+
+      const result = await service.getRoomById('room123');
+
+      expect(mockDatabases.getDocument).toHaveBeenCalledWith('fug', 'fug_game_rooms', 'room123');
+      expect(result).toEqual(mockGameRoom);
+    });
+
+    it('should return null when room not found (404)', async () => {
+      const notFoundError = { code: 404, message: 'Document not found' };
+      mockDatabases.getDocument.and.rejectWith(notFoundError);
+
+      const result = await service.getRoomById('nonexistent');
+
+      expect(result).toBeNull();
+    });
+
+    it('should throw error for non-404 errors', async () => {
+      mockDatabases.getDocument.and.rejectWith(new Error('Server error'));
+
+      await expectAsync(service.getRoomById('room123')).toBeRejectedWithError('Failed to get room: Server error');
+    });
+  });
+
+  describe('getMyRooms', () => {
+    it('should return all rooms sorted by creation date', async () => {
+      const mockRoomDocument2 = { ...mockRoomDocument, $id: 'room456', name: 'Room 2' };
+      mockDatabases.listDocuments.and.resolveTo({
+        documents: [mockRoomDocument, mockRoomDocument2],
+      });
+
+      const result = await service.getMyRooms();
+
+      expect(mockDatabases.listDocuments).toHaveBeenCalledWith('fug', 'fug_game_rooms', jasmine.any(Array));
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      expect(queries.some((q) => q.includes('orderDesc') && q.includes('$createdAt'))).toBeTrue();
+      expect(queries.some((q) => q.includes('limit') && q.includes('100'))).toBeTrue();
+      expect(result.length).toBe(2);
+      expect(result[0].$id).toBe('room123');
+      expect(result[1].$id).toBe('room456');
+    });
+
+    it('should return empty array when no rooms exist', async () => {
+      mockDatabases.listDocuments.and.resolveTo({
+        documents: [],
+      });
+
+      const result = await service.getMyRooms();
+
+      expect(result).toEqual([]);
+    });
+
+    it('should throw error on database failure', async () => {
+      mockDatabases.listDocuments.and.rejectWith(new Error('Database error'));
+
+      await expectAsync(service.getMyRooms()).toBeRejectedWithError('Failed to get rooms: Database error');
+    });
+  });
+
+  describe('updateRoom', () => {
+    it('should update room properties', async () => {
+      const updatedDocument = { ...mockRoomDocument, name: 'Updated Room', status: 'playing' };
+      mockDatabases.updateDocument.and.resolveTo(updatedDocument);
+
+      const result = await service.updateRoom('room123', {
+        name: 'Updated Room',
+        status: 'playing',
+      });
+
+      expect(mockDatabases.updateDocument).toHaveBeenCalledWith('fug', 'fug_game_rooms', 'room123', {
+        name: 'Updated Room',
+        status: 'playing',
+      });
+      expect(result.name).toBe('Updated Room');
+      expect(result.status).toBe('playing');
+    });
+
+    it('should update currentRoom signal if updating current room', async () => {
+      mockDatabases.createDocument.and.resolveTo(mockRoomDocument);
+      const updatedDocument = { ...mockRoomDocument, name: 'Updated Room' };
+      mockDatabases.updateDocument.and.resolveTo(updatedDocument);
+
+      await service.createRoom('Test Room');
+      await service.updateRoom('room123', { name: 'Updated Room' });
+
+      expect(service.currentRoom()?.name).toBe('Updated Room');
+    });
+
+    it('should not update currentRoom if updating different room', async () => {
+      mockDatabases.createDocument.and.resolveTo(mockRoomDocument);
+      const updatedDocument = { ...mockRoomDocument, $id: 'other-room', name: 'Updated Room' };
+      mockDatabases.updateDocument.and.resolveTo(updatedDocument);
+
+      await service.createRoom('Test Room');
+      await service.updateRoom('other-room', { name: 'Updated Room' });
+
+      expect(service.currentRoom()?.name).toBe('Test Room');
+    });
+
+    it('should throw error on update failure', async () => {
+      mockDatabases.updateDocument.and.rejectWith(new Error('Update failed'));
+
+      await expectAsync(service.updateRoom('room123', { name: 'Updated Room' })).toBeRejectedWithError(
+        'Failed to update room: Update failed'
+      );
+    });
+
+    it('should update currentGameId and currentSessionId', async () => {
+      const updatedDocument = {
+        ...mockRoomDocument,
+        currentGameId: 'game123',
+        currentSessionId: 'session123',
+      };
+      mockDatabases.updateDocument.and.resolveTo(updatedDocument);
+
+      const result = await service.updateRoom('room123', {
+        currentGameId: 'game123',
+        currentSessionId: 'session123',
+      });
+
+      expect(result.currentGameId).toBe('game123');
+      expect(result.currentSessionId).toBe('session123');
+    });
+  });
+
+  describe('subscribeToRoom', () => {
+    it('should subscribe to room updates via RealtimeService', () => {
+      const callback = jasmine.createSpy('callback');
+      mockRealtimeService.subscribeToRoom.and.returnValue('sub_123');
+
+      const subscriptionId = service.subscribeToRoom('room123', callback);
+
+      expect(mockRealtimeService.subscribeToRoom).toHaveBeenCalledWith('room123', callback);
+      expect(subscriptionId).toBe('sub_123');
+    });
+
+    it('should return subscription id for unsubscribing', () => {
+      const callback = jasmine.createSpy('callback');
+      mockRealtimeService.subscribeToRoom.and.returnValue('sub_456');
+
+      const subscriptionId = service.subscribeToRoom('room123', callback);
+
+      expect(subscriptionId).toBe('sub_456');
+    });
+
+    it('should update currentRoom when receiving room updates', () => {
+      let capturedCallback: ((room: GameRoom) => void) | undefined;
+      mockRealtimeService.subscribeToRoom.and.callFake((_roomId: string, callback: (room: GameRoom) => void) => {
+        capturedCallback = callback;
+        return 'sub_789';
+      });
+
+      const callback = jasmine.createSpy('callback');
+      service.subscribeToRoom('room123', callback);
+
+      const updatedRoom: GameRoom = { ...mockGameRoom, status: 'playing' };
+      if (capturedCallback) {
+        capturedCallback(updatedRoom);
+      }
+
+      expect(callback).toHaveBeenCalledWith(updatedRoom);
+    });
+  });
+
+  describe('joinRoom', () => {
+    it('should set currentRoom when room is found', async () => {
+      mockDatabases.listDocuments.and.resolveTo({
+        documents: [mockRoomDocument],
+      });
+
+      const result = await service.joinRoom('ABC123');
+
+      expect(service.currentRoom()).toEqual(mockGameRoom);
+      expect(result).toEqual(mockGameRoom);
+    });
+
+    it('should throw error when room is not found', async () => {
+      mockDatabases.listDocuments.and.resolveTo({
+        documents: [],
+      });
+
+      await expectAsync(service.joinRoom('NOTFND')).toBeRejectedWithError(
+        'Room not found. Please check the code and try again.'
+      );
+    });
+  });
+
+  describe('leaveRoom', () => {
+    it('should clear currentRoom signal', async () => {
+      mockDatabases.createDocument.and.resolveTo(mockRoomDocument);
+
+      await service.createRoom('Test Room');
+      expect(service.currentRoom()).not.toBeNull();
+
+      await service.leaveRoom();
+
+      expect(service.currentRoom()).toBeNull();
+    });
+  });
+
+  describe('setCurrentRoom', () => {
+    it('should set currentRoom to provided room', () => {
+      service.setCurrentRoom(mockGameRoom);
+
+      expect(service.currentRoom()).toEqual(mockGameRoom);
+    });
+
+    it('should set currentRoom to null', () => {
+      service.setCurrentRoom(mockGameRoom);
+      service.setCurrentRoom(null);
+
+      expect(service.currentRoom()).toBeNull();
+    });
+  });
+
+  describe('mapDocumentToGameRoom', () => {
+    it('should map all fields correctly', async () => {
+      const fullDocument: Record<string, unknown> = {
+        $id: 'room789',
+        name: 'Full Room',
+        code: 'XYZ789',
+        inviteToken: 'token-123',
+        currentGameId: 'game456',
+        currentSessionId: 'session789',
+        status: 'playing',
+        hostMemberId: 'host123',
+        mode: 'local',
+        maxPlayers: 8,
+        gamesPlayed: 5,
+      };
+      mockDatabases.listDocuments.and.resolveTo({
+        documents: [fullDocument],
+      });
+
+      const result = await service.getRoomByCode('XYZ789');
+
+      expect(result).toEqual({
+        $id: 'room789',
+        name: 'Full Room',
+        code: 'XYZ789',
+        inviteToken: 'token-123',
+        currentGameId: 'game456',
+        currentSessionId: 'session789',
+        status: 'playing',
+        hostMemberId: 'host123',
+        mode: 'local',
+        maxPlayers: 8,
+        gamesPlayed: 5,
+      });
+    });
+
+    it('should handle missing optional fields with defaults', async () => {
+      const minimalDocument: Record<string, unknown> = {
+        $id: 'room789',
+        name: 'Minimal Room',
+        code: 'MIN123',
+        inviteToken: 'token-min',
+        hostMemberId: 'host123',
+      };
+      mockDatabases.listDocuments.and.resolveTo({
+        documents: [minimalDocument],
+      });
+
+      const result = await service.getRoomByCode('MIN123');
+
+      expect(result?.currentGameId).toBeNull();
+      expect(result?.currentSessionId).toBeNull();
+      expect(result?.status).toBe('idle');
+      expect(result?.mode).toBe('multiplayer');
+      expect(result?.maxPlayers).toBe(10);
+      expect(result?.gamesPlayed).toBe(0);
+    });
+  });
+});

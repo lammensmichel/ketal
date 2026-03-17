@@ -1,23 +1,160 @@
 {
-  "Label_App_¨Title": "Ketal",
+  "Label_App_Title": "Ketal",
   "Label_App_Subtitle": "Grosse Guinze Generator",
-
-  "Label_YouDrink":"Tu bois",
-  "Label_YouGive":"Tu donnes",
+  "Label_YouDrink": "Tu bois",
+  "Label_YouGive": "Tu donnes",
+  "Label_Give": "donne",
   "Label_PlaceHolder_PlayerName": "Nom du buveur",
   "Label_ListOfChannels": "Liste des Salons",
   "Label_Join": "Rejoindre",
   "Label_CreateNewChannels": "Créer un Nouveau Salon",
   "Label_ChannelsName": "Nom du Salon",
   "Label_ChannelsDescription": "Description du Salon",
-
   "Label_Error_NameRequired": "Le nom du buveur est requis.",
   "Label_Error_TooMuchPlayer": "Le nombre maximum de joueurs est atteint.",
-
   "Button_Add": "Ajouter",
   "Button_BeginGame": "Débuter la Grosse Guinze",
+  "Button_ExitGame": "Arrêter la partie en cours",
+  "Button_QuitGame": "Nouvelle partie",
+  "Button_GoToMenu": "Menu",
+  "Button_ResumeGame": "Partie en cours - Reprendre",
+  "Button_Cancel": "Annuler",
+  "Dialog_QuitConfirmMessage": "Réinitialiser la partie ? Toutes les données seront perdues.",
   "Button_Create": "Créer",
   "Button_Delete": "Supprimer",
   "Button_NextCard": "Suivante",
-  "Button_Restart": "Recommencer"
+  "Button_Restart": "Recommencer",
+  "Button_Display_Summary": "Afficher le résumé",
+  "Button_In": "Entre",
+  "Button_Out": "Extérieur",
+  "Remaining_Sips": "gorgées",
+  "Label_Sip": "gorgée",
+  "Label_Sips": "gorgées",
+  "Warning": "Attention",
+  "Assign_All_Sips": "Chaque utilisateur possédant la carte tirée doit utiliser l'icône <i class=\"fa fa-glass\"></i>  afin d'assigner ses gorgées.",
+  "Assign_All_Given_Sips": "Donnes toutes les gorgées d'abbord",
+  "Summary_Mode_Selection": "Activer le résumé en fin de partie",
+  "auth": {
+    "login": "Se connecter",
+    "register": "S'inscrire",
+    "logout": "Se déconnecter",
+    "email": "Email",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "fullName": "Nom complet",
+    "forgotPassword": "Mot de passe oublié?",
+    "continueWithGoogle": "Continuer avec Google",
+    "playAsGuest": "Jouer en tant qu'invité",
+    "noAccount": "Pas encore de compte?",
+    "hasAccount": "Déjà un compte?",
+    "createAccount": "Créer mon compte",
+    "partOfFug": "Un jeu de l'univers FUG",
+    "or": "ou",
+    "errors": {
+      "invalidEmail": "Adresse email invalide",
+      "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères",
+      "passwordMismatch": "Les mots de passe ne correspondent pas",
+      "emailRequired": "Veuillez entrer votre email",
+      "passwordRequired": "Veuillez entrer votre mot de passe",
+      "nameRequired": "Veuillez entrer votre nom",
+      "invalidCredentials": "Email ou mot de passe incorrect",
+      "emailExists": "Un compte existe déjà avec cet email",
+      "genericError": "Une erreur est survenue",
+      "tooManyAttempts": "Trop de tentatives, veuillez patienter"
+    },
+    "success": {
+      "accountCreated": "Compte créé avec succès",
+      "passwordRecoverySent": "Email de récupération envoyé",
+      "loggedIn": "Connexion réussie"
+    }
+  },
+  "room": {
+    "createRoom": "Créer une room",
+    "roomName": "Nom de la room",
+    "roomNamePlaceholder": "Entrez le nom de la room",
+    "createRoomButton": "Créer la room",
+    "code": "Code",
+    "copyLink": "Copier le lien",
+    "enterRoom": "Entrer dans la room",
+    "linkCopied": "Lien copié!",
+    "scanToJoin": "Scannez pour rejoindre",
+    "joinTitle": "Rejoindre une room",
+    "displayName": "Votre pseudo",
+    "displayNamePlaceholder": "Entrez votre pseudo",
+    "join": "Rejoindre",
+    "backToHome": "Retour a l'accueil",
+    "errors": {
+      "nameRequired": "Le nom de la room est requis",
+      "nameTooShort": "Le nom doit contenir au moins 3 caractères",
+      "genericError": "Une erreur est survenue",
+      "copyFailed": "Impossible de copier le lien",
+      "codeRequired": "Le code de la room est requis",
+      "codeLength": "Le code doit contenir 6 caractères",
+      "codeInvalid": "Le code ne doit contenir que des lettres et chiffres",
+      "displayNameRequired": "Le pseudo est requis",
+      "displayNameTooShort": "Le pseudo doit contenir au moins 2 caractères",
+      "displayNameTooLong": "Le pseudo ne peut pas dépasser 30 caractères",
+      "notFound": "Room introuvable. Vérifiez le code et réessayez."
+    },
+    "stats": {
+      "title": "Statistiques de la room",
+      "player": "Joueur",
+      "sipsGiven": "Gorgées données",
+      "sipsTaken": "Gorgées bues",
+      "total": "TOTAL",
+      "gamesPlayed": "Parties jouées:",
+      "noMembers": "Aucun membre dans la room"
+    }
+  },
+  "lobby": {
+    "code": "Code",
+    "copyCode": "Cliquer pour copier le code",
+    "players": "Joueurs",
+    "noPlayers": "En attente de joueurs...",
+    "startGame": "Lancer la partie",
+    "leave": "Quitter",
+    "minPlayersRequired": "Minimum 2 joueurs requis pour lancer la partie",
+    "toggleRole": "Changer le rôle",
+    "showQr": "QR Code",
+    "hideQr": "Masquer",
+    "scanToJoin": "Scannez pour rejoindre",
+    "role": {
+      "host": "Hôte",
+      "player": "Joueur",
+      "spectator": "Spectateur"
+    },
+    "errors": {
+      "generic": "Une erreur est survenue"
+    }
+  },
+  "userMenu": {
+    "login": "Se connecter",
+    "logout": "Se déconnecter",
+    "myProfile": "Mon profil",
+    "language": "Langue",
+    "guest": "Invité"
+  },
+  "game": {
+    "phase1": "Phase 1: Prédictions",
+    "phase2": "Phase 2: Distribution",
+    "turn": "Tour",
+    "turnLabels": {
+      "color": "Couleur",
+      "plusMinus": "Plus ou Moins",
+      "inOut": "Entre ou Dehors",
+      "suit": "Couleur exacte"
+    },
+    "progress": {
+      "phase1": "Phase 1: Prédictions",
+      "phase2": "Phase 2: Distribution",
+      "drinking": "Boire",
+      "giving": "Donner",
+      "turn": {
+        "color": "Couleur",
+        "plusMinus": "Plus/Moins",
+        "inOut": "Entre/Dehors",
+        "suit": "Couleur exacte"
+      }
+    }
+  }
 }

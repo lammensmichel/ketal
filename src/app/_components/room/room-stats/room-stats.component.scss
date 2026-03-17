@@ -1,0 +1,161 @@
+.room-stats-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.stats-title {
+  margin-bottom: 1rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.stats-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--bs-body-bg, #fff);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  thead {
+    background-color: var(--bs-primary, #0d6efd);
+    color: var(--bs-white, #fff);
+
+    th {
+      padding: 0.75rem 1rem;
+      font-weight: 600;
+      white-space: nowrap;
+      user-select: none;
+
+      &.sortable {
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+
+        &:hover {
+          background-color: var(--bs-primary-dark, #0b5ed7);
+        }
+
+        &.active {
+          background-color: var(--bs-primary-dark, #0b5ed7);
+        }
+      }
+
+      .sort-icon {
+        display: inline-block;
+        width: 1rem;
+        margin-left: 0.25rem;
+        vertical-align: middle;
+
+        &::after {
+          content: '';
+          display: inline-block;
+        }
+      }
+
+      &.sort-asc .sort-icon::after {
+        content: '\2191'; // Up arrow
+      }
+
+      &.sort-desc .sort-icon::after {
+        content: '\2193'; // Down arrow
+      }
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+      transition: background-color 0.15s ease;
+
+      &:hover {
+        background-color: var(--bs-tertiary-bg, #f8f9fa);
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    td {
+      padding: 0.75rem 1rem;
+    }
+
+    .player-name {
+      font-weight: 500;
+    }
+
+    .empty-message {
+      color: var(--bs-secondary, #6c757d);
+      font-style: italic;
+      padding: 1.5rem 1rem;
+    }
+  }
+
+  tfoot {
+    .totals-row {
+      background-color: var(--bs-light, #f8f9fa);
+      border-top: 2px solid var(--bs-border-color, #dee2e6);
+
+      td {
+        padding: 0.75rem 1rem;
+      }
+
+      .totals-label {
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+    }
+  }
+}
+
+.text-center {
+  text-align: center;
+}
+
+.games-played {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--bs-light, #f8f9fa);
+  border-radius: 0.5rem;
+  font-size: 1rem;
+
+  span {
+    margin-right: 0.5rem;
+  }
+
+  strong {
+    color: var(--bs-primary, #0d6efd);
+    font-size: 1.25rem;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 576px) {
+  .room-stats-container {
+    padding: 0.5rem;
+  }
+
+  .stats-table {
+    thead th,
+    tbody td,
+    tfoot td {
+      padding: 0.5rem;
+      font-size: 0.9rem;
+    }
+  }
+
+  .games-played {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+}

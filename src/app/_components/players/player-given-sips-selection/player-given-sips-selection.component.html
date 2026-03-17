@@ -1,0 +1,42 @@
+<div id="playerSipsSelectionModal" class="modal">
+  <div class="modal-content">
+    <span class="input-group-text">
+      <span> <img alt="avatar" class="img-thumbnail" src="{{ givenPlayer.avatarSrc }}" /></span>
+      <span> {{ givenPlayer.name }}</span>
+      <span [translate]="'Label_Give'"> </span>
+      <span> {{ sipsToGive }}</span>
+      <span [translate]="'Remaining_Sips'"> </span>
+    </span>
+
+    <div class="list-group">
+      @for (player of players; track player.id) {
+        <div class="list-group-item">
+          {{ player.name }}
+          <div class="input-group">
+            <div class="d-flex justify-content-center">
+              <input type="number" class="form-control" [value]="tempSips[player.id]" readonly />
+              <button class="btn btn-outline-secondary" type="button" (click)="decrease(player)">
+                <fa-icon [icon]="['fas', 'minus']"></fa-icon>
+              </button>
+              <button class="btn btn-outline-secondary" type="button" (click)="increase(player)">
+                <fa-icon [icon]="['fas', 'plus']"></fa-icon>
+              </button>
+              @if (sipsToGive > 0) {
+                <button class="btn btn-outline-secondary" type="button" (click)="increase(player, sipsToGive)">
+                  {{ sipsToGive }}
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="button-container">
+      <button class="btn btn-secondary" (click)="closeModal()">Close</button>
+      <button class="btn btn-success" (click)="save()">Save</button>
+    </div>
+  </div>
+</div>
+
+<app-toast #assignAllSips [titleMessage]="'Warning'" [bodyMessage]="'Assign_All_Given_Sips'"></app-toast>

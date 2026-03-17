@@ -1,0 +1,92 @@
+<div class="join-room-container">
+  <div class="join-room-card">
+    <!-- Header -->
+    <div class="header">
+      <h1 class="title">{{ 'room.joinTitle' | translate }}</h1>
+    </div>
+
+    <!-- Error Alert -->
+    @if (error(); as errorKey) {
+      <div class="alert alert-danger" role="alert">
+        {{ errorKey | translate }}
+      </div>
+    }
+
+    <!-- Join Form -->
+    <form [formGroup]="joinForm" (ngSubmit)="onSubmit()" class="join-form">
+      <!-- Room Code Field -->
+      <div class="form-group">
+        <label for="roomCode" class="form-label">{{ 'room.code' | translate }}</label>
+        <div class="code-input-container">
+          <input
+            type="text"
+            id="roomCode"
+            class="form-control code-input"
+            formControlName="code"
+            [class.is-invalid]="hasFieldError('code')"
+            [placeholder]="'ABC123'"
+            maxlength="6"
+            autocomplete="off"
+            autocapitalize="characters"
+            spellcheck="false"
+            (input)="onCodeInput($event)"
+          />
+        </div>
+        @if (hasFieldError('code')) {
+          <div class="invalid-feedback d-block">
+            {{ getFieldError('code') | translate }}
+          </div>
+        }
+      </div>
+
+      <!-- Display Name Field -->
+      <div class="form-group">
+        <label for="displayName" class="form-label">{{ 'room.displayName' | translate }}</label>
+        <div class="input-group">
+          <span class="input-group-text">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0Zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4Zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10Z"/>
+            </svg>
+          </span>
+          <input
+            type="text"
+            id="displayName"
+            class="form-control"
+            formControlName="displayName"
+            [class.is-invalid]="hasFieldError('displayName')"
+            [placeholder]="'room.displayNamePlaceholder' | translate"
+            autocomplete="nickname"
+            maxlength="30"
+          />
+        </div>
+        @if (hasFieldError('displayName')) {
+          <div class="invalid-feedback d-block">
+            {{ getFieldError('displayName') | translate }}
+          </div>
+        }
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        type="submit"
+        class="btn btn-primary btn-join"
+        [disabled]="isLoading()"
+      >
+        @if (isLoading()) {
+          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+        }
+        {{ 'room.join' | translate }}
+      </button>
+    </form>
+
+    <!-- Back Link -->
+    <div class="back-link">
+      <a routerLink="/" class="link-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="me-1">
+          <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+        </svg>
+        {{ 'room.backToHome' | translate }}
+      </a>
+    </div>
+  </div>
+</div>

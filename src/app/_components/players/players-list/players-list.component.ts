@@ -1,31 +1,34 @@
-import { Component, EventEmitter, Output } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { TranslateService } from '@ngx-translate/core';
+import { Component, EventEmitter, inject, Output } from '@angular/core';
+import { NgClass } from '@angular/common';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { PlayerHelperService } from 'src/app/_shared/_helpers/player.helper';
 import { PlayerModel } from 'src/app/_shared/_models/player.model';
 import { LocalService } from 'src/app/services/local/local.service';
-import { String } from 'typescript-string-operations';
+import { isNullOrWhiteSpace } from 'src/app/_shared/_helpers/string.helper';
+import { GameService } from '../../../services/game/game.service';
+import { PlayerListPlayerComponent } from '../player-list-player/player-list-player.component';
 
 @Component({
   selector: 'app-players-list',
   templateUrl: './players-list.component.html',
   styleUrls: ['./players-list.component.scss'],
+  standalone: true,
+  imports: [NgClass, ReactiveFormsModule, TranslateModule, PlayerListPlayerComponent],
 })
 export class PlayersListComponent {
+  private readonly fb = inject(FormBuilder);
+  private readonly localService = inject(LocalService);
+  readonly playerHelper = inject(PlayerHelperService);
+  readonly gameSrv = inject(GameService);
+  readonly translate = inject(TranslateService);
 
-  public playersForm: FormGroup;
-  public allPlayersCreated: boolean = false;
-  @Output() public onBeginGame: EventEmitter<void> = new EventEmitter<void>();
+  readonly playersForm: FormGroup;
+  allPlayersCreated = false;
+  @Output() readonly beginGame = new EventEmitter<void>();
 
-  constructor(
-    private fb: FormBuilder,
-    public playerHelper: PlayerHelperService,
-    public localService: LocalService,
-    public translate: TranslateService,
-  ) {
-    const localPlayer = JSON.parse(
-      this.localService.getData('players') as string
-    );
+  constructor() {
+    const localPlayer = JSON.parse(this.localService.getData('players') as string);
     if (localPlayer) {
       this.playerHelper.players = localPlayer;
     }
@@ -35,30 +38,18 @@ export class PlayersListComponent {
   }
 
   public addPlayer() {
-    if(!this.playerHelper.isMaxPlayerNumberNotReached() ) {
+    if (!this.playerHelper.isMaxPlayerNumberNotReached()) {
       return;
     }
 
-    if (this.playersForm.valid && !String.isNullOrWhiteSpace(this.playersForm.controls['newPlayer'].value)) {
+    if (this.playersForm.valid && !isNullOrWhiteSpace(this.playersForm.controls['newPlayer'].value)) {
       this.playerHelper.addPlayer(this.playersForm.value.newPlayer);
-      this.localService.saveData(
-        'players',
-        JSON.stringify(this.playerHelper.players)
-      );
       this.playersForm.reset();
     }
   }
 
   public getPlayers(): PlayerModel[] {
-    return this.playerHelper.players;
-  }
-
-  public beginGame(): void {
-    this.onBeginGame.emit();
-  }
-
-  public hasPlayers(): boolean {
-    return this.playerHelper?.players?.length > 0;
+    return this.gameSrv.isNewGame() ? this.playerHelper.getPlayers() : this.gameSrv.players();
   }
 
   public getNewPlayerInputPlaceholder(): string {
@@ -68,4 +59,5 @@ export class PlayersListComponent {
   get newPlayer() {
     return this.playersForm.get('newPlayer');
   }
+
 }

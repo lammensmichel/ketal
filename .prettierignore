@@ -1,0 +1,23 @@
+# Build outputs
+dist/
+build/
+coverage/
+
+# Dependencies
+node_modules/
+nodejs/node_modules/
+
+# Angular cache
+.angular/
+
+# IDE
+.idea/
+.vscode/
+
+# Misc
+*.log
+*.lock
+package-lock.json
+
+# Assets that should not be formatted
+src/assets/

@@ -1,10 +1,25 @@
-<app-header></app-header>
+<div class="main-container">
+  <app-header></app-header>
 
-<div class="container d-flex gap-1 justify-content-center w-100">
-    <!-- Display the player choices -->
-    <app-players-list *ngIf="!this.gameSrv.game"></app-players-list>
-    <!-- Guinze -->
-    <app-game class="flex-grow-1" *ngIf="this.gameSrv.game"></app-game>
+  <div class="content container d-flex gap-1 justify-content-center my-4 mt-2 mb-2">
+    <div class="d-flex flex-column gap-2">
+      @if (gameSrv.isNewGame() && playerSrv.getPlayerNumber() > 1 && isPlayersPage()) {
+        <div class="summary-toggle">
+          <label class="toggle-switch">
+            <input
+              type="checkbox"
+              [checked]="withSummaryMode()"
+              (change)="onSummaryModeCheckChange($event)"
+            />
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="toggle-label" [translate]="'Summary_Mode_Selection'"></span>
+        </div>
+      }
+      <!-- Router outlet for lazy loaded modules -->
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+
+  <app-footer [withSummaryMode]="withSummaryMode()"></app-footer>
 </div>
-
-<app-footer></app-footer>

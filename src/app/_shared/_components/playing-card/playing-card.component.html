@@ -1,12 +1,9 @@
 <div
-  class="card-container d-flex flex-column justify-content-around h-100"
+  class="card-container d-flex flex-column justify-content-center"
   [ngClass]="{
-        'emphasis' : card?.selected,
-        'left-overlap' : leftOverlap,
-    }"
+    emphasis: card?.selected,
+    'left-overlap': leftOverlap,
+  }"
 >
-  <img
-    [src]="card?.img ?? 'assets/images/cards/svg/blue_back.svg'"
-    alt="{{card?.value}} {{card?.suit}}"
-  />
+  <img [src]="card?.img ?? 'assets/images/cards/svg/blue_back.svg'" alt="{{ card?.value }} {{ card?.suit }}" />
 </div>

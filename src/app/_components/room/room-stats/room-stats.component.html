@@ -1,0 +1,72 @@
+<div class="room-stats-container">
+  <h3 class="stats-title" [translate]="'room.stats.title'"></h3>
+
+  <div class="stats-table-wrapper">
+    <table class="stats-table">
+      <thead>
+        <tr>
+          <th
+            class="sortable"
+            [class.active]="isActiveSort('name')"
+            [class]="getSortIndicator('name')"
+            (click)="sortBy('name')"
+          >
+            <span [translate]="'room.stats.player'"></span>
+            <span class="sort-icon"></span>
+          </th>
+          <th
+            class="sortable text-center"
+            [class.active]="isActiveSort('sipsGiven')"
+            [class]="getSortIndicator('sipsGiven')"
+            (click)="sortBy('sipsGiven')"
+          >
+            <span [translate]="'room.stats.sipsGiven'"></span>
+            <span class="sort-icon"></span>
+          </th>
+          <th
+            class="sortable text-center"
+            [class.active]="isActiveSort('sipsTaken')"
+            [class]="getSortIndicator('sipsTaken')"
+            (click)="sortBy('sipsTaken')"
+          >
+            <span [translate]="'room.stats.sipsTaken'"></span>
+            <span class="sort-icon"></span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (member of sortedMembers(); track member.$id) {
+          <tr>
+            <td class="player-name">{{ member.displayName }}</td>
+            <td class="text-center">{{ member.totalSipsGiven }}</td>
+            <td class="text-center">{{ member.totalSipsTaken }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="3" class="text-center empty-message">
+              <span [translate]="'room.stats.noMembers'"></span>
+            </td>
+          </tr>
+        }
+      </tbody>
+      <tfoot>
+        <tr class="totals-row">
+          <td class="totals-label">
+            <strong [translate]="'room.stats.total'"></strong>
+          </td>
+          <td class="text-center">
+            <strong>{{ totalSipsGiven() }}</strong>
+          </td>
+          <td class="text-center">
+            <strong>{{ totalSipsTaken() }}</strong>
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div class="games-played">
+    <span [translate]="'room.stats.gamesPlayed'"></span>
+    <strong>{{ totalGamesPlayed() }}</strong>
+  </div>
+</div>

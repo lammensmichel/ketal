@@ -1,12 +1,14 @@
-import {PlayerModel} from "./player.model";
-import {CardType} from "./card-type.model";
+import { PlayerModel } from './player.model';
+import { CardType } from './card-type.model';
 
 export interface Game {
-    players: PlayerModel[] ;
-    turn: number;
-    maxTurnCount: number;
-    phase: number;
-    drinkingCards: CardType[];
-    givingCards: CardType[];
-    activePlayer: PlayerModel | undefined
+  players: PlayerModel[];
+  turn: number;
+  maxTurnCount: number;
+  phase: number;
+  drinkingCards: CardType[];
+  givingCards: CardType[];
+  activePlayer: PlayerModel | undefined;
+  status: number;
+  summary: boolean;
 }

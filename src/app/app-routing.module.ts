@@ -1,13 +1,50 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { PlayersListComponent } from 'src/app/_components/players/players-list/players-list.component';
 
-const appRoutes: Routes = [
-  { path: 'players', component: PlayersListComponent },
+export const routes: Routes = [
+  {
+    path: 'login',
+    loadComponent: () => import('./_components/auth/login/login.component').then((m) => m.LoginComponent),
+  },
+  {
+    path: 'register',
+    loadComponent: () => import('./_components/auth/register/register.component').then((m) => m.RegisterComponent),
+  },
+  {
+    path: 'room/create',
+    loadComponent: () =>
+      import('./_components/room/create-room/create-room.component').then((m) => m.CreateRoomComponent),
+  },
+  {
+    path: 'room/join',
+    loadComponent: () => import('./_components/room/join-room/join-room.component').then((m) => m.JoinRoomComponent),
+  },
+  {
+    path: 'room/join/:code',
+    loadComponent: () => import('./_components/room/join-room/join-room.component').then((m) => m.JoinRoomComponent),
+  },
+  {
+    path: 'room/:id',
+    loadComponent: () => import('./_components/room/lobby/lobby.component').then((m) => m.LobbyComponent),
+  },
+  {
+    path: 'room/:id/stats',
+    loadComponent: () => import('./_components/room/room-stats/room-stats.component').then((m) => m.RoomStatsComponent),
+  },
+  {
+    path: 'players',
+    loadComponent: () =>
+      import('./_components/players/players-list/players-list.component').then((m) => m.PlayersListComponent),
+  },
+  {
+    path: 'game',
+    loadComponent: () => import('./_components/game/game/game.component').then((m) => m.GameComponent),
+  },
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(appRoutes)],
+  imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule],
 })
 export class AppRoutingModule {}

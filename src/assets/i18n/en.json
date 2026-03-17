@@ -1,23 +1,156 @@
 {
-  "Label_App_¨Title": "Ketal",
+  "Label_App_Title": "Ketal",
   "Label_App_Subtitle": "Grosse Guinze Generator",
-
-  "Label_YouDrink":"You drink",
-  "Label_YouGive":"You give",
+  "Label_YouDrink": "You drink",
+  "Label_YouGive": "You give",
+  "Label_Give": "gives",
   "Label_PlaceHolder_PlayerName": "Name of drinker",
   "Label_ListOfChannels": "List of channels",
   "Label_Join": "Join",
   "Label_CreateNewChannels": "Create a new channel",
   "Label_ChannelsName": "Channel name",
   "Label_ChannelsDescription": "Channel description",
-
   "Label_Error_NameRequired": "The name of the drinker is required.",
   "Label_Error_TooMuchPlayer": "The maximum number of players has been reached.",
-
+  "Button_In": "In",
+  "Button_Out": "Out",
   "Button_Add": "Add",
   "Button_BeginGame": "Starting the Grosse Guinze",
+  "Button_ExitGame": "Exit game",
+  "Button_QuitGame": "New game",
+  "Button_GoToMenu": "Menu",
+  "Button_ResumeGame": "Game in progress - Resume",
+  "Button_Cancel": "Cancel",
+  "Dialog_QuitConfirmMessage": "Reset the game? All data will be lost.",
   "Button_Create": "Create",
   "Button_Delete": "Delete",
   "Button_NextCard": "Next",
-  "Button_Restart": "Restart"
+  "Button_Restart": "Restart",
+  "Button_Display_Summary": "Display summary",
+  "Remaining_Sips": "sips",
+  "Label_Sip": "sip",
+  "Label_Sips": "sips",
+  "Warning": "Warning",
+  "Assign_All_Sips": "Each user that owned the drawed card have to use the icon <i class=\"fa fa-glass\"></i> to give sips",
+  "Assign_All_Given_Sips": " Please assign all sips before saving",
+  "Summary_Mode_Selection": "Activate summary at ending of the game",
+  "auth": {
+    "login": "Log in",
+    "register": "Sign up",
+    "logout": "Log out",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "fullName": "Full name",
+    "forgotPassword": "Forgot password?",
+    "continueWithGoogle": "Continue with Google",
+    "playAsGuest": "Play as guest",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "createAccount": "Create my account",
+    "partOfFug": "A game from the FUG universe",
+    "or": "or",
+    "errors": {
+      "invalidEmail": "Invalid email address",
+      "passwordTooShort": "Password must be at least 8 characters",
+      "passwordMismatch": "Passwords do not match",
+      "emailRequired": "Please enter your email",
+      "passwordRequired": "Please enter your password",
+      "nameRequired": "Please enter your name",
+      "invalidCredentials": "Invalid email or password",
+      "emailExists": "An account already exists with this email",
+      "genericError": "An error occurred",
+      "tooManyAttempts": "Too many attempts, please wait"
+    },
+    "success": {
+      "accountCreated": "Account created successfully",
+      "passwordRecoverySent": "Recovery email sent",
+      "loggedIn": "Logged in successfully"
+    }
+  },
+  "room": {
+    "createRoom": "Create a room",
+    "roomName": "Room name",
+    "roomNamePlaceholder": "Enter room name",
+    "createRoomButton": "Create room",
+    "code": "Code",
+    "copyLink": "Copy link",
+    "enterRoom": "Enter room",
+    "linkCopied": "Link copied!",
+    "joinTitle": "Join a room",
+    "displayName": "Your nickname",
+    "displayNamePlaceholder": "Enter your nickname",
+    "join": "Join",
+    "backToHome": "Back to home",
+    "errors": {
+      "nameRequired": "Room name is required",
+      "nameTooShort": "Name must be at least 3 characters",
+      "genericError": "An error occurred",
+      "copyFailed": "Failed to copy link",
+      "codeRequired": "Room code is required",
+      "codeLength": "Code must be 6 characters",
+      "codeInvalid": "Code must only contain letters and numbers",
+      "displayNameRequired": "Nickname is required",
+      "displayNameTooShort": "Nickname must be at least 2 characters",
+      "displayNameTooLong": "Nickname cannot exceed 30 characters",
+      "notFound": "Room not found. Please check the code and try again."
+    },
+    "stats": {
+      "title": "Room Statistics",
+      "player": "Player",
+      "sipsGiven": "Sips Given",
+      "sipsTaken": "Sips Taken",
+      "total": "TOTAL",
+      "gamesPlayed": "Games played:",
+      "noMembers": "No members in the room"
+    }
+  },
+  "lobby": {
+    "code": "Code",
+    "copyCode": "Click to copy code",
+    "players": "Players",
+    "noPlayers": "Waiting for players...",
+    "startGame": "Start Game",
+    "leave": "Leave",
+    "minPlayersRequired": "Minimum 2 players required to start the game",
+    "toggleRole": "Toggle role",
+    "role": {
+      "host": "Host",
+      "player": "Player",
+      "spectator": "Spectator"
+    },
+    "errors": {
+      "generic": "An error occurred"
+    }
+  },
+  "userMenu": {
+    "login": "Log in",
+    "logout": "Log out",
+    "myProfile": "My profile",
+    "language": "Language",
+    "guest": "Guest"
+  },
+  "game": {
+    "phase1": "Phase 1: Predictions",
+    "phase2": "Phase 2: Distribution",
+    "turn": "Turn",
+    "turnLabels": {
+      "color": "Color",
+      "plusMinus": "Higher or Lower",
+      "inOut": "In or Out",
+      "suit": "Exact Suit"
+    },
+    "progress": {
+      "phase1": "Phase 1: Predictions",
+      "phase2": "Phase 2: Distribution",
+      "drinking": "Drink",
+      "giving": "Give",
+      "turn": {
+        "color": "Color",
+        "plusMinus": "Higher/Lower",
+        "inOut": "In/Out",
+        "suit": "Exact Suit"
+      }
+    }
+  }
 }

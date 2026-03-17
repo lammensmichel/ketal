@@ -1,0 +1,101 @@
+{
+  "Label_App_Title": "Ketal",
+  "Label_App_Subtitle": "Grosse Guinze Generator",
+  "Label_YouDrink": "Je drinkt",
+  "Label_YouGive": "Je geeft",
+  "Label_Give": "geeft",
+  "Label_PlaceHolder_PlayerName": "Naam van de drinker",
+  "Label_ListOfChannels": "Lijst van kanalen",
+  "Label_Join": "Deelnemen",
+  "Label_CreateNewChannels": "Nieuw kanaal maken",
+  "Label_ChannelsName": "Kanaalnaam",
+  "Label_ChannelsDescription": "Kanaalbeschrijving",
+  "Label_Error_NameRequired": "De naam van de drinker is vereist.",
+  "Label_Error_TooMuchPlayer": "Het maximale aantal spelers is bereikt.",
+  "Button_Add": "Toevoegen",
+  "Button_BeginGame": "Start de Grosse Guinze",
+  "Button_ExitGame": "Spel verlaten",
+  "Button_QuitGame": "Nieuw spel",
+  "Button_GoToMenu": "Menu",
+  "Button_ResumeGame": "Spel bezig - Hervatten",
+  "Button_Cancel": "Annuleren",
+  "Dialog_QuitConfirmMessage": "Spel resetten? Alle gegevens gaan verloren.",
+  "Button_Create": "Maken",
+  "Button_Delete": "Verwijderen",
+  "Button_NextCard": "Volgende",
+  "Button_Restart": "Herstarten",
+  "Button_Display_Summary": "Samenvatting tonen",
+  "Button_In": "Binnen",
+  "Button_Out": "Buiten",
+  "Remaining_Sips": "slokjes",
+  "Label_Sip": "slok",
+  "Label_Sips": "slokken",
+  "Warning": "Waarschuwing",
+  "Assign_All_Sips": "Elke gebruiker met de getrokken kaart moet het icoon <i class=\"fa fa-glass\"></i> gebruiken om slokjes te geven.",
+  "Assign_All_Given_Sips": "Geef eerst alle slokjes",
+  "Summary_Mode_Selection": "Samenvatting aan het einde van het spel activeren",
+  "auth": {
+    "login": "Inloggen",
+    "register": "Registreren",
+    "logout": "Uitloggen",
+    "email": "E-mail",
+    "password": "Wachtwoord",
+    "confirmPassword": "Wachtwoord bevestigen",
+    "fullName": "Volledige naam",
+    "forgotPassword": "Wachtwoord vergeten?",
+    "continueWithGoogle": "Doorgaan met Google",
+    "playAsGuest": "Spelen als gast",
+    "noAccount": "Nog geen account?",
+    "hasAccount": "Al een account?",
+    "createAccount": "Account aanmaken",
+    "partOfFug": "Een spel uit het FUG-universum",
+    "or": "of",
+    "errors": {
+      "invalidEmail": "Ongeldig e-mailadres",
+      "passwordTooShort": "Wachtwoord moet minimaal 8 tekens bevatten",
+      "passwordMismatch": "Wachtwoorden komen niet overeen",
+      "emailRequired": "Voer uw e-mailadres in",
+      "passwordRequired": "Voer uw wachtwoord in",
+      "nameRequired": "Voer uw naam in",
+      "invalidCredentials": "Ongeldige e-mail of wachtwoord",
+      "emailExists": "Er bestaat al een account met dit e-mailadres",
+      "genericError": "Er is een fout opgetreden",
+      "tooManyAttempts": "Te veel pogingen, even geduld"
+    },
+    "success": {
+      "accountCreated": "Account succesvol aangemaakt",
+      "passwordRecoverySent": "Herstel-e-mail verzonden",
+      "loggedIn": "Succesvol ingelogd"
+    }
+  },
+  "userMenu": {
+    "login": "Inloggen",
+    "logout": "Uitloggen",
+    "myProfile": "Mijn profiel",
+    "language": "Taal",
+    "guest": "Gast"
+  },
+  "game": {
+    "phase1": "Fase 1: Voorspellingen",
+    "phase2": "Fase 2: Verdeling",
+    "turn": "Beurt",
+    "turnLabels": {
+      "color": "Kleur",
+      "plusMinus": "Hoger of Lager",
+      "inOut": "Binnen of Buiten",
+      "suit": "Exacte Kleur"
+    },
+    "progress": {
+      "phase1": "Fase 1: Voorspellingen",
+      "phase2": "Fase 2: Verdeling",
+      "drinking": "Drinken",
+      "giving": "Geven",
+      "turn": {
+        "color": "Kleur",
+        "plusMinus": "Hoger/Lager",
+        "inOut": "Binnen/Buiten",
+        "suit": "Exacte Kleur"
+      }
+    }
+  }
+}
