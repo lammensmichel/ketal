@@ -206,6 +206,23 @@ export class RoomService {
   }
 
   /**
+   * Find a room by its Appwrite document ID
+   */
+  async getRoomById(roomId: string): Promise<GameRoom | null> {
+    try {
+      const document = await this.appwrite.databases.getDocument(
+        this.appwrite.databaseId,
+        COLLECTION_GAME_ROOMS,
+        roomId
+      );
+
+      return this.mapDocumentToGameRoom(document);
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Get all rooms
    */
   async getMyRooms(): Promise<GameRoom[]> {
