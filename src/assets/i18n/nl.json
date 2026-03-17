@@ -68,6 +68,10 @@
       "loggedIn": "Succesvol ingelogd"
     }
   },
+  "menu": {
+    "connect": "Inloggen",
+    "quitGame": "Spel verlaten"
+  },
   "userMenu": {
     "login": "Inloggen",
     "logout": "Uitloggen",

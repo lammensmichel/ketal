@@ -25,13 +25,25 @@
       <div class="side-menu-divider"></div>
     }
 
-    <!-- Auth actions -->
-    @if (isLoggedIn()) {
+    <!-- Auth actions: different options for anonymous vs connected users -->
+    @if (isLoggedIn() && isAnonymous()) {
+      <!-- Anonymous (guest) user: show Connect and Quit -->
+      <button type="button" class="side-menu-item" (click)="connectToAccount()" [disabled]="isLoading()">
+        <fa-icon [icon]="['fas', 'sign-in-alt']" class="side-menu-icon"></fa-icon>
+        <span [translate]="'menu.connect'"></span>
+      </button>
+      <button type="button" class="side-menu-item side-menu-item--danger" (click)="quitGame()" [disabled]="isLoading()">
+        <fa-icon [icon]="['fas', 'door-open']" class="side-menu-icon"></fa-icon>
+        <span [translate]="'menu.quitGame'"></span>
+      </button>
+    } @else if (isLoggedIn()) {
+      <!-- Connected user (email/Google): show Logout -->
       <button type="button" class="side-menu-item side-menu-item--danger" (click)="logout()" [disabled]="isLoading()">
         <fa-icon [icon]="['fas', 'sign-out-alt']" class="side-menu-icon"></fa-icon>
         <span [translate]="'userMenu.logout'"></span>
       </button>
     } @else if (!isAuthPage()) {
+      <!-- Not logged in and not on auth page: show Login -->
       <button type="button" class="side-menu-item" (click)="navigateToLogin()">
         <fa-icon [icon]="['fas', 'sign-in-alt']" class="side-menu-icon"></fa-icon>
         <span [translate]="'userMenu.login'"></span>

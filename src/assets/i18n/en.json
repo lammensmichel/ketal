@@ -127,6 +127,10 @@
       "roomNotFound": "Room not found"
     }
   },
+  "menu": {
+    "connect": "Log in",
+    "quitGame": "Quit game"
+  },
   "userMenu": {
     "login": "Log in",
     "logout": "Log out",

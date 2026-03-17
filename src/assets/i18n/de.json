@@ -68,6 +68,10 @@
       "loggedIn": "Erfolgreich angemeldet"
     }
   },
+  "menu": {
+    "connect": "Anmelden",
+    "quitGame": "Spiel beenden"
+  },
   "userMenu": {
     "login": "Anmelden",
     "logout": "Abmelden",
