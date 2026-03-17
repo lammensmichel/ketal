@@ -3,6 +3,7 @@ import { Component, Input, NO_ERRORS_SCHEMA, signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { AppComponent } from './app.component';
+import { AuthService } from './services/auth/auth.service';
 import { GameService } from './services/game/game.service';
 import { PlayerHelperService } from './_shared/_helpers/player.helper';
 import { HeaderComponent } from './_shared/_components/header/header.component';
@@ -33,6 +34,7 @@ describe('AppComponent', () => {
     summary: ReturnType<typeof signal<boolean>>;
     isNewGame: jasmine.Spy;
   };
+  let mockAuthService: { isAnonymous: ReturnType<typeof signal<boolean>> };
   let mockPlayerHelperService: jasmine.SpyObj<PlayerHelperService>;
   beforeEach(async () => {
     // Create writable signals for GameService mock
@@ -45,6 +47,10 @@ describe('AppComponent', () => {
       isNewGame: jasmine.createSpy('isNewGame').and.returnValue(true),
     };
 
+    mockAuthService = {
+      isAnonymous: signal<boolean>(false),
+    };
+
     mockPlayerHelperService = jasmine.createSpyObj('PlayerHelperService', ['getPlayerNumber']);
     mockPlayerHelperService.getPlayerNumber.and.returnValue(0);
 
@@ -52,6 +58,7 @@ describe('AppComponent', () => {
       imports: [AppComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
+        { provide: AuthService, useValue: mockAuthService },
         { provide: GameService, useValue: mockGameService },
         { provide: PlayerHelperService, useValue: mockPlayerHelperService },
       ],
@@ -78,6 +85,7 @@ describe('AppComponent', () => {
     });
 
     it('should inject required services', () => {
+      expect(component.authService).toBeTruthy();
       expect(component.gameSrv).toBeTruthy();
       expect(component.translate).toBeTruthy();
       expect(component.playerSrv).toBeTruthy();
@@ -235,6 +243,28 @@ describe('AppComponent', () => {
 
       const toggle = fixture.nativeElement.querySelector('.summary-toggle');
       expect(toggle).toBeFalsy();
+    });
+
+    it('should hide summary toggle when user is anonymous', () => {
+      spyOn(component, 'isPlayersPage').and.returnValue(true);
+      mockGameService.isNewGame.and.returnValue(true);
+      mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
+      mockAuthService.isAnonymous.set(true);
+      fixture.detectChanges();
+
+      const toggle = fixture.nativeElement.querySelector('.summary-toggle');
+      expect(toggle).toBeFalsy();
+    });
+
+    it('should show summary toggle when user is not anonymous', () => {
+      spyOn(component, 'isPlayersPage').and.returnValue(true);
+      mockGameService.isNewGame.and.returnValue(true);
+      mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
+      mockAuthService.isAnonymous.set(false);
+      fixture.detectChanges();
+
+      const toggle = fixture.nativeElement.querySelector('.summary-toggle');
+      expect(toggle).toBeTruthy();
     });
   });
 
