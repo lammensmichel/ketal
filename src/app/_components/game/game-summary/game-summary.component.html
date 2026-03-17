@@ -36,7 +36,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (player of playersSorted(); track player.name; let i = $index) {
+        @for (player of playersSorted(); track $index; let i = $index) {
           <tr [class.table-success]="player.isWinner" [class.table-danger]="player.isLoser">
             <td class="text-start">{{ i + 1 }}</td>
             <td class="text-start">
