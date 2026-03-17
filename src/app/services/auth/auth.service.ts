@@ -1,6 +1,12 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { ID, Models, OAuthProvider } from 'appwrite';
 import { AppwriteService } from '../appwrite/appwrite.service';
+import { GameService } from '../game/game.service';
+import { RoomService } from '../room/room.service';
+import { MemberService } from '../member/member.service';
+import { KetalSessionService } from '../ketal-session/ketal-session.service';
+import { RealtimeService } from '../realtime/realtime.service';
+import { LocalService } from '../local/local.service';
 
 /**
  * AuthService - Authentication service for Appwrite
@@ -29,6 +35,12 @@ import { AppwriteService } from '../appwrite/appwrite.service';
 })
 export class AuthService {
   private readonly appwrite = inject(AppwriteService);
+  private readonly gameService = inject(GameService);
+  private readonly roomService = inject(RoomService);
+  private readonly memberService = inject(MemberService);
+  private readonly ketalSessionService = inject(KetalSessionService);
+  private readonly realtimeService = inject(RealtimeService);
+  private readonly localService = inject(LocalService);
 
   /** Signal holding the current user, null if not authenticated */
   private readonly _currentUser = signal<Models.User<Models.Preferences> | null>(null);
@@ -157,12 +169,34 @@ export class AuthService {
   /**
    * Logout the current user
    *
-   * Deletes the current session and clears the user state.
+   * Clears all game state (GameService, room, session, members, realtime
+   * subscriptions, localStorage game data), then deletes the Appwrite session
+   * and resets the user signal.
    * Safe to call even if no session exists.
    */
   async logout(): Promise<void> {
     this._isLoading.set(true);
     try {
+      // 1. Reset game state (unsubscribes from realtime session updates internally)
+      this.gameService.resetGame();
+
+      // 2. Clear room state
+      this.roomService.setCurrentRoom(null);
+
+      // 3. Clear member state
+      this.memberService.clearMembers();
+
+      // 4. Clear ketal session state
+      this.ketalSessionService.setCurrentSession(null);
+
+      // 5. Unsubscribe from all remaining realtime subscriptions
+      this.realtimeService.unsubscribeAll();
+
+      // 6. Clear localStorage game data
+      this.localService.removeData('game');
+      this.localService.removeData('players');
+
+      // 7. Delete the Appwrite session
       await this.appwrite.account.deleteSession('current');
     } catch {
       // Session might already be invalid, ignore errors
