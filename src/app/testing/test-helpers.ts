@@ -1,5 +1,6 @@
 import { NEVER, Subject } from 'rxjs';
 import { signal, WritableSignal } from '@angular/core';
+import { AuthService } from '../services/auth/auth.service';
 import { GameService } from '../services/game/game.service';
 import { PlayerHelperService } from '../_shared/_helpers/player.helper';
 import { CardDeckHelperService } from '../_shared/_helpers/card-deck.helper';
@@ -11,6 +12,42 @@ import { MemberService, GameMember } from '../services/member/member.service';
 import { Game } from '../_shared/_models/game.model';
 import { PlayerModel } from '../_shared/_models/player.model';
 import { CardType } from '../_shared/_models/card-type.model';
+
+/**
+ * Creates a mock AuthService for testing
+ */
+export function createMockAuthService(): jasmine.SpyObj<AuthService> & {
+  isLoggedIn: WritableSignal<boolean>;
+  isAnonymous: WritableSignal<boolean>;
+  isLoading: WritableSignal<boolean>;
+} {
+  const mockIsLoggedIn = signal<boolean>(false);
+  const mockIsAnonymous = signal<boolean>(false);
+  const mockIsLoading = signal<boolean>(false);
+
+  const mock = jasmine.createSpyObj(
+    'AuthService',
+    ['init', 'signUp', 'loginWithEmail', 'signInWithGoogle', 'logout', 'createAnonymousSession', 'getOrCreateSession'],
+    {
+      currentUser: signal(null),
+      isLoggedIn: mockIsLoggedIn,
+      isAnonymous: mockIsAnonymous,
+      isLoading: mockIsLoading,
+    }
+  );
+
+  mock.init.and.resolveTo(undefined);
+  mock.signUp.and.resolveTo(undefined);
+  mock.loginWithEmail.and.resolveTo(undefined);
+  mock.logout.and.resolveTo(undefined);
+  mock.createAnonymousSession.and.resolveTo(undefined);
+
+  return mock as jasmine.SpyObj<AuthService> & {
+    isLoggedIn: WritableSignal<boolean>;
+    isAnonymous: WritableSignal<boolean>;
+    isLoading: WritableSignal<boolean>;
+  };
+}
 
 /**
  * Creates a mock GameService for testing
@@ -67,6 +104,8 @@ export function createMockGameService(): jasmine.SpyObj<GameService> & {
       drinkingCards: mockDrinkingCards,
       givingCards: mockGivingCards,
       summary: signal(false),
+      gameMode: signal('local'),
+      isRoomMode: signal(false),
       openSipGiveModalEvent$: NEVER,
     }
   );

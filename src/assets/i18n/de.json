@@ -75,6 +75,13 @@
     "language": "Sprache",
     "guest": "Gast"
   },
+  "accountGate": {
+    "title": "Spielzusammenfassung ansehen",
+    "description": "Erstelle ein kostenloses Konto, um die Zusammenfassung anzusehen und deine Statistiken zu speichern!",
+    "createAccount": "Konto erstellen",
+    "login": "Ich habe bereits ein Konto",
+    "later": "Später"
+  },
   "game": {
     "phase1": "Phase 1: Vorhersagen",
     "phase2": "Phase 2: Verteilung",

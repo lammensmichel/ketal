@@ -1,191 +1,209 @@
 <div class="mt-2">
   @if (!isHiddenPage()) {
-  <div class="white-background">
-    @if (gameSrv.isGameStarted() && [1, 2, 3, 4].includes(gameSrv.turn())) {
-      <div class="mt-2 mb-2 space-below white-background">
-        <hr class="" />
-        <div class="d-flex flex-column gap-1">
-          @if (gameSrv.activePlayer(); as activePlayer) {
-            <div class="text-center d-flex align-items-center justify-content-center gap-1">
-              <img title="avatarSrc" class="img-thumbnail" width="32" height="32" src="{{ activePlayer.avatarSrc }}" />
-              <span class="fs-2">{{ activePlayer.name }}</span>
+    <div class="white-background">
+      @if (gameSrv.isGameStarted() && [1, 2, 3, 4].includes(gameSrv.turn())) {
+        <div class="mt-2 mb-2 space-below white-background">
+          <hr class="" />
+          <div class="d-flex flex-column gap-1">
+            @if (gameSrv.activePlayer(); as activePlayer) {
+              <div class="text-center d-flex align-items-center justify-content-center gap-1">
+                <img
+                  title="avatarSrc"
+                  class="img-thumbnail"
+                  width="32"
+                  height="32"
+                  src="{{ activePlayer.avatarSrc }}"
+                />
+                <span class="fs-2">{{ activePlayer.name }}</span>
+              </div>
+            }
+            <div class="space-below d-flex justify-content-center flex-row">
+              @if (gameSrv.turn() === 1) {
+                <div class="d-flex gap-2">
+                  <button title="chooseRed" class="red-choice card-container" (click)="chooseColor('red')"></button>
+                  <button
+                    title="chooseBlack"
+                    class="card-container black-choice"
+                    (click)="chooseColor('black')"
+                  ></button>
+                </div>
+              }
+              @if (gameSrv.turn() === 2) {
+                <div class="d-flex gap-2">
+                  <button
+                    title="choosePlus"
+                    class="card-container"
+                    [innerHTML]="'+'"
+                    (click)="plusOrMinus('plus')"
+                  ></button>
+                  <button
+                    title="chooseMinus"
+                    class="card-container"
+                    [innerHTML]="'-'"
+                    (click)="plusOrMinus('minus')"
+                  ></button>
+                </div>
+              }
+              @if (gameSrv.turn() === 3) {
+                <div class="d-flex gap-2">
+                  <button
+                    title="chooseIn"
+                    class="card-container small-font w-auto vertical-text-button"
+                    [translate]="'Button_In'"
+                    (click)="inOut('in')"
+                  >
+                    @for (card of gameSrv.activePlayer()?.cards; track $index; let i = $index) {
+                      <div class="d-flex flex-column">
+                        <div class="d-flex flex-row card-custom-mr">
+                          <app-playing-card [ngClass]="{ 'card-custom-mr': i === 0 }" [card]="card"></app-playing-card>
+                          @if (i === 0) {
+                            <div class="d-flex flex-row fs-2 align-items-center">
+                              <span class="fs-2">
+                                <fa-icon [icon]="['fas', 'caret-right']"></fa-icon>
+                                <fa-icon [icon]="['fas', 'caret-left']"></fa-icon
+                              ></span>
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </button>
+                  <button
+                    title="chooseOut"
+                    class="card-container small-font w-auto vertical-text-button"
+                    [translate]="'Button_Out'"
+                    (click)="inOut('out')"
+                  >
+                    @for (card of gameSrv.activePlayer()?.cards; track $index; let i = $index) {
+                      <div class="d-flex flex-column">
+                        <div class="d-flex flex-row card-custom-mr align-items-center">
+                          @if (i === 0) {
+                            <span class="fs-2"><fa-icon [icon]="['fas', 'caret-left']"></fa-icon></span>
+                          }
+                          <app-playing-card [ngClass]="{ 'card-custom-mr': i === 0 }" [card]="card"></app-playing-card>
+                          @if (i === 1) {
+                            <span class="fs-2"><fa-icon [icon]="['fas', 'caret-right']"></fa-icon></span>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </button>
+                </div>
+              }
+              @if (gameSrv.turn() === 4) {
+                <div class="d-flex gap-2">
+                  <button
+                    title="chooseHearts"
+                    class="card-container red-color"
+                    [innerHTML]="'&hearts;'"
+                    (click)="chooseSuit('hearts')"
+                  ></button>
+                  <button
+                    title="chooseDiams"
+                    class="card-container"
+                    [innerHTML]="'&diams;'"
+                    (click)="chooseSuit('diams')"
+                  ></button>
+                  <button
+                    title="chooseSpades"
+                    class="card-container"
+                    [innerHTML]="'&spades;'"
+                    (click)="chooseSuit('spades')"
+                  ></button>
+                  <button
+                    title="chooseClubs"
+                    class="card-container"
+                    [innerHTML]="'&clubs;'"
+                    (click)="chooseSuit('clubs')"
+                  ></button>
+                </div>
+              }
             </div>
-          }
-          <div class="space-below d-flex justify-content-center flex-row">
-            @if (gameSrv.turn() === 1) {
-              <div class="d-flex gap-2">
-                <button title="chooseRed" class="red-choice card-container" (click)="chooseColor('red')"></button>
-                <button title="chooseBlack" class="card-container black-choice" (click)="chooseColor('black')"></button>
-              </div>
-            }
-            @if (gameSrv.turn() === 2) {
-              <div class="d-flex gap-2">
-                <button
-                  title="choosePlus"
-                  class="card-container"
-                  [innerHTML]="'+'"
-                  (click)="plusOrMinus('plus')"
-                ></button>
-                <button
-                  title="chooseMinus"
-                  class="card-container"
-                  [innerHTML]="'-'"
-                  (click)="plusOrMinus('minus')"
-                ></button>
-              </div>
-            }
-            @if (gameSrv.turn() === 3) {
-              <div class="d-flex gap-2">
-                <button
-                  title="chooseIn"
-                  class="card-container small-font w-auto vertical-text-button"
-                  [translate]="'Button_In'"
-                  (click)="inOut('in')"
-                >
-                  @for (card of gameSrv.activePlayer()?.cards; track $index; let i = $index) {
-                    <div class="d-flex flex-column">
-                      <div class="d-flex flex-row card-custom-mr">
-                        <app-playing-card [ngClass]="{ 'card-custom-mr': i === 0 }" [card]="card"></app-playing-card>
-                        @if (i === 0) {
-                          <div class="d-flex flex-row fs-2 align-items-center">
-                            <span class="fs-2">
-                              <fa-icon [icon]="['fas', 'caret-right']"></fa-icon>
-                              <fa-icon [icon]="['fas', 'caret-left']"></fa-icon
-                            ></span>
-                          </div>
-                        }
+          </div>
+        </div>
+      }
+      @if (gameSrv.phase() === 2) {
+        <div class="mt-2 mb-2 white-background">
+          <hr class="" />
+          <div class="d-flex flex-column gap-1">
+            @if (gameSrv.isGameStarted() || gameSrv.isGameFinished()) {
+              <div class="d-flex flex-row justify-content-center gap-1">
+                <div>
+                  <span [translate]="'Label_YouDrink'"></span>
+                  <div class="d-flex flex-row gap-0">
+                    @for (i of cardSlots; track i) {
+                      <div>
+                        <app-playing-card
+                          [card]="gameSrv.drinkingCards()[i]"
+                          [leftOverlap]="i !== 0"
+                        ></app-playing-card>
                       </div>
-                    </div>
-                  }
-                </button>
-                <button
-                  title="chooseOut"
-                  class="card-container small-font w-auto vertical-text-button"
-                  [translate]="'Button_Out'"
-                  (click)="inOut('out')"
-                >
-                  @for (card of gameSrv.activePlayer()?.cards; track $index; let i = $index) {
-                    <div class="d-flex flex-column">
-                      <div class="d-flex flex-row card-custom-mr align-items-center">
-                        @if (i === 0) {
-                          <span class="fs-2"><fa-icon [icon]="['fas', 'caret-left']"></fa-icon></span>
-                        }
-                        <app-playing-card [ngClass]="{ 'card-custom-mr': i === 0 }" [card]="card"></app-playing-card>
-                        @if (i === 1) {
-                          <span class="fs-2"><fa-icon [icon]="['fas', 'caret-right']"></fa-icon></span>
-                        }
+                    }
+                  </div>
+                </div>
+                <div>
+                  <span [translate]="'Label_YouGive'"></span>
+                  <div class="d-flex flex-row gap-0">
+                    @for (i of cardSlots; track i) {
+                      <div>
+                        <app-playing-card [card]="gameSrv.givingCards()[i]" [leftOverlap]="i !== 0"></app-playing-card>
                       </div>
-                    </div>
-                  }
-                </button>
+                    }
+                  </div>
+                </div>
               </div>
             }
-            @if (gameSrv.turn() === 4) {
-              <div class="d-flex gap-2">
+            @if (gameSrv.givingCards().length < 6) {
+              <div class="text-center">
                 <button
-                  title="chooseHearts"
-                  class="card-container red-color"
-                  [innerHTML]="'&hearts;'"
-                  (click)="chooseSuit('hearts')"
+                  type="button"
+                  class="btn btn-secondary ms-2 space-below"
+                  (click)="onDisplayCard()"
+                  [translate]="
+                    gameSrv.drinkingCards().length <= gameSrv.givingCards().length ? 'Label_YouDrink' : 'Label_YouGive'
+                  "
                 ></button>
+              </div>
+            }
+            @if (!gameSrv.isNewGame() && gameSrv.givingCards().length === 6) {
+              <div class="text-center">
                 <button
-                  title="chooseDiams"
-                  class="card-container"
-                  [innerHTML]="'&diams;'"
-                  (click)="chooseSuit('diams')"
+                  type="button"
+                  class="btn btn-secondary ms-2 space-below"
+                  (click)="restartGame()"
+                  [translate]="'Button_Restart'"
                 ></button>
-                <button
-                  title="chooseSpades"
-                  class="card-container"
-                  [innerHTML]="'&spades;'"
-                  (click)="chooseSuit('spades')"
-                ></button>
-                <button
-                  title="chooseClubs"
-                  class="card-container"
-                  [innerHTML]="'&clubs;'"
-                  (click)="chooseSuit('clubs')"
-                ></button>
+                @if (gameSrv.isGameFinished() && gameSrv.isSummaryActivated() && !gameSrv.isSummaryMode()) {
+                  <button
+                    type="button"
+                    class="btn btn-secondary ms-2 space-below"
+                    (click)="displaySummary()"
+                    [translate]="'Button_Display_Summary'"
+                  ></button>
+                }
               </div>
             }
           </div>
         </div>
-      </div>
-    }
-    @if (gameSrv.phase() === 2) {
-      <div class="mt-2 mb-2 white-background">
-        <hr class="" />
-        <div class="d-flex flex-column gap-1">
-          @if (gameSrv.isGameStarted() || gameSrv.isGameFinished()) {
-            <div class="d-flex flex-row justify-content-center gap-1">
-              <div>
-                <span [translate]="'Label_YouDrink'"></span>
-                <div class="d-flex flex-row gap-0">
-                  @for (i of cardSlots; track i) {
-                    <div>
-                      <app-playing-card [card]="gameSrv.drinkingCards()[i]" [leftOverlap]="i !== 0"></app-playing-card>
-                    </div>
-                  }
-                </div>
-              </div>
-              <div>
-                <span [translate]="'Label_YouGive'"></span>
-                <div class="d-flex flex-row gap-0">
-                  @for (i of cardSlots; track i) {
-                    <div>
-                      <app-playing-card [card]="gameSrv.givingCards()[i]" [leftOverlap]="i !== 0"></app-playing-card>
-                    </div>
-                  }
-                </div>
-              </div>
-            </div>
-          }
-          @if (gameSrv.givingCards().length < 6) {
-            <div class="text-center">
-              <button
-                type="button"
-                class="btn btn-secondary ms-2 space-below"
-                (click)="onDisplayCard()"
-                [translate]="
-                  gameSrv.drinkingCards().length <= gameSrv.givingCards().length ? 'Label_YouDrink' : 'Label_YouGive'
-                "
-              ></button>
-            </div>
-          }
-          @if (!gameSrv.isNewGame() && gameSrv.givingCards().length === 6) {
-            <div class="text-center">
-              <button
-                type="button"
-                class="btn btn-secondary ms-2 space-below"
-                (click)="restartGame()"
-                [translate]="'Button_Restart'"
-              ></button>
-              @if (gameSrv.isGameFinished() && gameSrv.isSummaryActivated() && !gameSrv.isSummaryMode()) {
-                <button
-                  type="button"
-                  class="btn btn-secondary ms-2 space-below"
-                  (click)="displaySummary()"
-                  [translate]="'Button_Display_Summary'"
-                ></button>
-              }
-            </div>
-          }
+      }
+      <!-- Button to start game-->
+      @if (hasPlayers() && gameSrv.isNewGame() && isPlayersPage()) {
+        <div class="mb-2 text-center white-background">
+          <hr class="mb-2" />
+          <button
+            type="button"
+            class="btn btn-secondary ms-2 space-below"
+            (click)="beginGame()"
+            [translate]="'Button_BeginGame'"
+          ></button>
         </div>
-      </div>
-    }
-    <!-- Button to start game-->
-    @if (hasPlayers() && gameSrv.isNewGame() && isPlayersPage()) {
-      <div class="mb-2 text-center white-background">
-        <hr class="mb-2" />
-        <button
-          type="button"
-          class="btn btn-secondary ms-2 space-below"
-          (click)="beginGame()"
-          [translate]="'Button_BeginGame'"
-        ></button>
-      </div>
-    }
-  </div>
+      }
+    </div>
   }
 </div>
 <app-toast #notAllSipsGiven [titleMessage]="'Warning'" [bodyMessage]="'Assign_All_Sips'"></app-toast>
+<app-account-gate-modal
+  #accountGateModal
+  (createAccount)="onGateCreateAccount()"
+  (login)="onGateLogin()"
+></app-account-gate-modal>

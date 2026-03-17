@@ -3,30 +3,44 @@ import { Router } from '@angular/router';
 import { NgClass } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { FontAwesomeIconsModule } from '../../../font-awesome.module';
+import { AuthService } from '../../../services/auth/auth.service';
 import { GameService } from '../../../services/game/game.service';
 import { PlayerHelperService } from '../../_helpers/player.helper';
 import { CardType } from '../../_models/card-type.model';
 import { DrinkChoiceEnum } from '../../_models/enums/drink_choice.enum';
 import { ToastComponent } from '../toast/toast.component';
 import { PlayingCardComponent } from '../playing-card/playing-card.component';
+import { AccountGateModalComponent } from '../../../_components/auth/account-gate-modal/account-gate-modal.component';
 
 /** Routes where the game footer should be hidden */
 const HIDDEN_ROUTES = ['/login', '/register', '/forgot-password', '/room'];
+
+/** Key used to store pending summary flag in localStorage */
+const PENDING_SUMMARY_KEY = 'pendingSummary';
 
 @Component({
   selector: 'app-footer',
   templateUrl: './footer.component.html',
   styleUrls: ['./footer.component.scss'],
   standalone: true,
-  imports: [NgClass, TranslateModule, FontAwesomeIconsModule, ToastComponent, PlayingCardComponent],
+  imports: [
+    NgClass,
+    TranslateModule,
+    FontAwesomeIconsModule,
+    ToastComponent,
+    PlayingCardComponent,
+    AccountGateModalComponent,
+  ],
 })
 export class FooterComponent {
   private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
   readonly gameSrv = inject(GameService);
   readonly playerHelper = inject(PlayerHelperService);
 
   @Input() public withSummaryMode: boolean = false;
   @ViewChild('notAllSipsGiven') toastComponent: ToastComponent | undefined;
+  @ViewChild('accountGateModal') accountGateModal: AccountGateModalComponent | undefined;
 
   readonly cardSlots = [0, 1, 2, 3, 4, 5];
 
@@ -65,8 +79,36 @@ export class FooterComponent {
 
   async displaySummary(): Promise<void> {
     if (await this.ensureAllSipsGiven()) {
-      this.gameSrv.setStatus(3);
+      if (this.canAccessSummary()) {
+        this.gameSrv.setStatus(3);
+      } else {
+        this.accountGateModal?.show();
+      }
     }
+  }
+
+  /**
+   * Check if the current user can access the game summary.
+   * In local mode (no backend), summary is always accessible.
+   * In room mode, requires a non-anonymous authenticated user.
+   *
+   * Designed for extensibility: can be replaced with subscription check later.
+   */
+  canAccessSummary(): boolean {
+    if (this.gameSrv.gameMode() === 'local') {
+      return true;
+    }
+    return this.authService.isLoggedIn() && !this.authService.isAnonymous();
+  }
+
+  onGateCreateAccount(): void {
+    localStorage.setItem(PENDING_SUMMARY_KEY, 'true');
+    this.router.navigate(['/register']);
+  }
+
+  onGateLogin(): void {
+    localStorage.setItem(PENDING_SUMMARY_KEY, 'true');
+    this.router.navigate(['/login']);
   }
 
   private async ensureAllSipsGiven(): Promise<boolean> {

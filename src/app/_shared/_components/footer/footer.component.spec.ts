@@ -3,9 +3,14 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { FooterComponent } from './footer.component';
+import { AuthService } from '../../../services/auth/auth.service';
 import { GameService } from '../../../services/game/game.service';
 import { PlayerHelperService } from '../../_helpers/player.helper';
-import { createMockGameService, createMockPlayerHelperService } from '../../../testing/test-helpers';
+import {
+  createMockAuthService,
+  createMockGameService,
+  createMockPlayerHelperService,
+} from '../../../testing/test-helpers';
 import { Game } from '../../_models/game.model';
 import { PlayerModel } from '../../_models/player.model';
 import { DrinkChoiceEnum } from '../../_models/enums/drink_choice.enum';
@@ -14,6 +19,7 @@ describe('FooterComponent', () => {
   let component: FooterComponent;
   let fixture: ComponentFixture<FooterComponent>;
   let mockGameService: ReturnType<typeof createMockGameService>;
+  let mockAuthService: ReturnType<typeof createMockAuthService>;
   let mockPlayerHelperService: jasmine.SpyObj<PlayerHelperService>;
   let mockRouter: jasmine.SpyObj<Router>;
 
@@ -40,6 +46,7 @@ describe('FooterComponent', () => {
 
   beforeEach(async () => {
     mockGameService = createMockGameService();
+    mockAuthService = createMockAuthService();
     mockPlayerHelperService = createMockPlayerHelperService();
     mockRouter = jasmine.createSpyObj('Router', ['navigate'], { url: '/game' });
 
@@ -56,6 +63,7 @@ describe('FooterComponent', () => {
     await TestBed.configureTestingModule({
       imports: [TranslateModule.forRoot(), FooterComponent],
       providers: [
+        { provide: AuthService, useValue: mockAuthService },
         { provide: GameService, useValue: mockGameService },
         { provide: PlayerHelperService, useValue: mockPlayerHelperService },
         { provide: Router, useValue: mockRouter },
@@ -65,6 +73,10 @@ describe('FooterComponent', () => {
 
     fixture = TestBed.createComponent(FooterComponent);
     component = fixture.componentInstance;
+  });
+
+  afterEach(() => {
+    localStorage.removeItem('pendingSummary');
   });
 
   it('should create', () => {
@@ -216,8 +228,10 @@ describe('FooterComponent', () => {
   });
 
   describe('displaySummary', () => {
-    it('should call setStatus(3) when all sips are given', fakeAsync(() => {
+    it('should call setStatus(3) when all sips are given and user can access summary', fakeAsync(() => {
       (mockGameService as any).isNotAllSipsGiven.and.returnValue(false);
+      // Local mode = summary always accessible
+      // gameMode is signal('local') by default - no change needed
       component.displaySummary();
       tick();
       expect(mockGameService.setStatus).toHaveBeenCalledWith(3);
@@ -231,6 +245,94 @@ describe('FooterComponent', () => {
       tick(2500);
       expect(mockToast.show).toHaveBeenCalled();
     }));
+
+    it('should show account gate modal for anonymous user in room mode', fakeAsync(() => {
+      (mockGameService as any).isNotAllSipsGiven.and.returnValue(false);
+      (mockGameService as any).gameMode.set('room');
+      mockAuthService.isLoggedIn.set(true);
+      mockAuthService.isAnonymous.set(true);
+
+      const mockModal = { show: jasmine.createSpy('show') };
+      component.accountGateModal = mockModal as any;
+
+      component.displaySummary();
+      tick();
+
+      expect(mockGameService.setStatus).not.toHaveBeenCalled();
+      expect(mockModal.show).toHaveBeenCalled();
+    }));
+
+    it('should allow summary for authenticated non-anonymous user in room mode', fakeAsync(() => {
+      (mockGameService as any).isNotAllSipsGiven.and.returnValue(false);
+      (mockGameService as any).gameMode.set('room');
+      mockAuthService.isLoggedIn.set(true);
+      mockAuthService.isAnonymous.set(false);
+
+      component.displaySummary();
+      tick();
+
+      expect(mockGameService.setStatus).toHaveBeenCalledWith(3);
+    }));
+
+    it('should show account gate modal when not logged in at all in room mode', fakeAsync(() => {
+      (mockGameService as any).isNotAllSipsGiven.and.returnValue(false);
+      (mockGameService as any).gameMode.set('room');
+      mockAuthService.isLoggedIn.set(false);
+      mockAuthService.isAnonymous.set(false);
+
+      const mockModal = { show: jasmine.createSpy('show') };
+      component.accountGateModal = mockModal as any;
+
+      component.displaySummary();
+      tick();
+
+      expect(mockGameService.setStatus).not.toHaveBeenCalled();
+      expect(mockModal.show).toHaveBeenCalled();
+    }));
+  });
+
+  describe('canAccessSummary', () => {
+    it('should return true in local mode', () => {
+      // gameMode is signal('local') by default - no change needed
+      expect(component.canAccessSummary()).toBeTrue();
+    });
+
+    it('should return true for authenticated non-anonymous user in room mode', () => {
+      (mockGameService as any).gameMode.set('room');
+      mockAuthService.isLoggedIn.set(true);
+      mockAuthService.isAnonymous.set(false);
+      expect(component.canAccessSummary()).toBeTrue();
+    });
+
+    it('should return false for anonymous user in room mode', () => {
+      (mockGameService as any).gameMode.set('room');
+      mockAuthService.isLoggedIn.set(true);
+      mockAuthService.isAnonymous.set(true);
+      expect(component.canAccessSummary()).toBeFalse();
+    });
+
+    it('should return false when not logged in in room mode', () => {
+      (mockGameService as any).gameMode.set('room');
+      mockAuthService.isLoggedIn.set(false);
+      mockAuthService.isAnonymous.set(false);
+      expect(component.canAccessSummary()).toBeFalse();
+    });
+  });
+
+  describe('onGateCreateAccount', () => {
+    it('should set pendingSummary in localStorage and navigate to /register', () => {
+      component.onGateCreateAccount();
+      expect(localStorage.getItem('pendingSummary')).toBe('true');
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/register']);
+    });
+  });
+
+  describe('onGateLogin', () => {
+    it('should set pendingSummary in localStorage and navigate to /login', () => {
+      component.onGateLogin();
+      expect(localStorage.getItem('pendingSummary')).toBe('true');
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/login']);
+    });
   });
 
   describe('isHiddenPage', () => {
@@ -287,7 +389,9 @@ describe('FooterComponent', () => {
     });
 
     it('should return true for /players with query params', () => {
-      (Object.getOwnPropertyDescriptor(mockRouter, 'url')!.get as jasmine.Spy).and.returnValue('/players?returnUrl=/game');
+      (Object.getOwnPropertyDescriptor(mockRouter, 'url')!.get as jasmine.Spy).and.returnValue(
+        '/players?returnUrl=/game'
+      );
       expect(component.isPlayersPage()).toBeTrue();
     });
   });
