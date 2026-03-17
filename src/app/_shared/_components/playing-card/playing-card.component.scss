@@ -1,7 +1,6 @@
 .card-container {
   position: relative;
   width: 70px;
-  max-width: 100%;
   min-height: 90px;
 
   &.left-overlap {
@@ -15,7 +14,6 @@
       margin-left: -20px;
     }
   }
-
 
   &.emphasis {
     box-shadow: 0 0 0.5rem 0.25rem rgba(127, 255, 212, 0.7);
