@@ -59,13 +59,18 @@
   .input-group .btn {
     border-left: none;
     border-color: #ced4da;
+    background-color: transparent;
+    color: #6c757d;
+    z-index: 3;
 
     &:hover {
       background-color: #f8f9fa;
+      color: #495057;
     }
 
     &:focus {
       box-shadow: none;
+      background-color: transparent;
     }
   }
 
