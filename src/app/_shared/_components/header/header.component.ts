@@ -1,4 +1,4 @@
-import { Component, inject, computed, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, inject, computed, effect, signal } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs/operators';
@@ -19,10 +19,23 @@ const AUTH_ROUTES = ['/login', '/register', '/forgot-password'];
 })
 export class HeaderComponent {
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
   readonly gameSrv = inject(GameService);
 
   /** Whether the quit confirmation dialog is visible */
   readonly showQuitConfirm = signal(false);
+
+  constructor() {
+    // Prevent body scroll while quit dialog is visible
+    effect(() => {
+      document.body.style.overflow = this.showQuitConfirm() ? 'hidden' : '';
+    });
+
+    // Restore scroll on destroy
+    this.destroyRef.onDestroy(() => {
+      document.body.style.overflow = '';
+    });
+  }
 
   /** Current URL path as a signal */
   private readonly currentPath = toSignal(
@@ -40,12 +53,6 @@ export class HeaderComponent {
     return AUTH_ROUTES.some((route) => path.startsWith(route));
   });
 
-  /** Whether we are currently on the game page */
-  readonly isGamePage = computed(() => {
-    const path = this.currentPath();
-    return path.startsWith('/game');
-  });
-
   /** Whether a game is in progress (started or finished but not reset) */
   readonly hasGameInProgress = computed(() => {
     return this.gameSrv.isGameStarted() || this.gameSrv.isGameFinished();
@@ -61,6 +68,14 @@ export class HeaderComponent {
     this.showQuitConfirm.set(true);
   }
 
+  /** Dismiss quit dialog on Escape key */
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    if (this.showQuitConfirm()) {
+      this.cancelQuit();
+    }
+  }
+
   /** Cancel quit and dismiss confirmation dialog */
   cancelQuit(): void {
     this.showQuitConfirm.set(false);
@@ -73,9 +88,4 @@ export class HeaderComponent {
     this.router.navigate(['/players']);
   }
 
-  /** @deprecated Use goToMenu() or showQuitConfirmation() instead */
-  restartGame(): void {
-    this.gameSrv.resetGame();
-    this.router.navigate(['/players']);
-  }
 }

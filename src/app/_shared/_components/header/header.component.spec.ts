@@ -39,14 +39,30 @@ describe('HeaderComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  describe('restartGame', () => {
-    it('should call gameSrv.resetGame()', () => {
-      component.restartGame();
-      expect(mockGameService.resetGame).toHaveBeenCalled();
+  describe('goToMenu', () => {
+    it('should navigate to /players', () => {
+      component.goToMenu();
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/players']);
+    });
+  });
+
+  describe('quit confirmation', () => {
+    it('should show quit confirmation dialog', () => {
+      component.showQuitConfirmation();
+      expect(component.showQuitConfirm()).toBeTrue();
     });
 
-    it('should navigate to /players', () => {
-      component.restartGame();
+    it('should dismiss quit confirmation on cancel', () => {
+      component.showQuitConfirmation();
+      component.cancelQuit();
+      expect(component.showQuitConfirm()).toBeFalse();
+    });
+
+    it('should reset game and navigate on confirm quit', () => {
+      component.showQuitConfirmation();
+      component.confirmQuit();
+      expect(component.showQuitConfirm()).toBeFalse();
+      expect(mockGameService.resetGame).toHaveBeenCalled();
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/players']);
     });
   });

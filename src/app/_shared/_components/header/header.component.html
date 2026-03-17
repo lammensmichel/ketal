@@ -33,7 +33,7 @@
 
   <!-- Quit confirmation dialog -->
   @if (showQuitConfirm()) {
-    <div class="quit-overlay" (click)="cancelQuit()">
+    <div class="quit-overlay" (click)="cancelQuit()" role="dialog" aria-modal="true">
       <div class="quit-dialog" (click)="$event.stopPropagation()">
         <p class="quit-dialog-message" [translate]="'Dialog_QuitConfirmMessage'"></p>
         <div class="d-flex justify-content-center gap-2">
