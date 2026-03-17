@@ -36,12 +36,16 @@ export class AppComponent implements OnInit {
    * Determines if the summary checkbox should be visible.
    * Visible for connected (non-anonymous) users on the /players page.
    * Designed to be extended later with subscription checks.
+   *
+   * Note: This is a method (not a computed signal) because isPlayersPage()
+   * depends on router.url which is not a signal. A computed would cache the
+   * result and not re-evaluate on route changes.
    */
-  readonly canShowSummary = computed(() => {
+  canShowSummary(): boolean {
     return this.isPlayersPage()
       && this.authService.isLoggedIn()
       && !this.authService.isAnonymous();
-  });
+  }
 
   constructor() {
     const defaultLang = this.translate.getBrowserLang() ?? environment.defaultLanguage;
