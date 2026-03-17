@@ -1,4 +1,4 @@
-import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
+import { computed, DestroyRef, effect, inject, Injectable, signal } from '@angular/core';
 import { Subject } from 'rxjs';
 import { CardType } from 'src/app/_shared/_models/card-type.model';
 import { Game } from 'src/app/_shared/_models/game.model';
@@ -74,14 +74,24 @@ export class GameService {
   readonly givingCards = computed(() => this._game()?.givingCards ?? []);
   readonly summary = computed(() => this._game()?.summary ?? false);
 
-  /** Signal for summary mode */
-  readonly withSummaryMode = signal<boolean>(false);
+  /** localStorage key for summary mode preference */
+  private static readonly SUMMARY_MODE_KEY = 'ketal_summary_mode';
+
+  /** Signal for summary mode - persisted in localStorage */
+  readonly withSummaryMode = signal<boolean>(
+    localStorage.getItem(GameService.SUMMARY_MODE_KEY) === 'true'
+  );
 
   /** Subject for modal events */
   private readonly openSipGiveModalEvent = new Subject<PlayerModel>();
   readonly openSipGiveModalEvent$ = this.openSipGiveModalEvent.asObservable();
 
   constructor() {
+    // Persist summary mode preference to localStorage on every change
+    effect(() => {
+      localStorage.setItem(GameService.SUMMARY_MODE_KEY, String(this.withSummaryMode()));
+    });
+
     // Register cleanup on service destruction
     this.destroyRef.onDestroy(() => {
       this.unsubscribeFromSession();

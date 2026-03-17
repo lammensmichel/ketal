@@ -33,6 +33,7 @@
   "Warning": "Warning",
   "Assign_All_Sips": "Each user that owned the drawed card have to use the icon <i class=\"fa fa-glass\"></i> to give sips",
   "Assign_All_Given_Sips": " Please assign all sips before saving",
+  "Label_MinimumPlayers": "Minimum 2 players required to start the game",
   "Summary_Mode_Selection": "Activate summary at ending of the game",
   "auth": {
     "login": "Log in",
@@ -129,6 +130,13 @@
     "myProfile": "My profile",
     "language": "Language",
     "guest": "Guest"
+  },
+  "accountGate": {
+    "title": "View your game summary",
+    "description": "Create a free account to access the summary and keep your stats!",
+    "createAccount": "Create my account",
+    "login": "I already have an account",
+    "later": "Later"
   },
   "game": {
     "phase1": "Phase 1: Predictions",

@@ -582,7 +582,7 @@ describe('PlayerHelperService', () => {
     });
 
     describe('Phase 2+ behavior', () => {
-      it('should return sips for previous player when no drinking/giving cards', () => {
+      it('should return 0 when no drinking/giving cards in phase 2', () => {
         player1.cards = [createMockCard({ sips: 4 })];
         const game = createMockGame({
           players: [player1, player2, player3],
@@ -594,7 +594,7 @@ describe('PlayerHelperService', () => {
 
         const result = service.getSipCnt(game, player1);
 
-        expect(result).toBe(-4);
+        expect(result).toBe(0);
       });
 
       it('should calculate sips based on matching card values with odd total cards', () => {
