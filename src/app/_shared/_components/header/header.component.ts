@@ -87,5 +87,4 @@ export class HeaderComponent {
     this.gameSrv.resetGame();
     this.router.navigate(['/players']);
   }
-
 }
