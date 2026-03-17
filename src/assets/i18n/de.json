@@ -82,6 +82,17 @@
     "login": "Ich habe bereits ein Konto",
     "later": "Später"
   },
+  "summary": {
+    "title": "Spielzusammenfassung",
+    "player": "Spieler",
+    "sipsDrunk": "Getrunken",
+    "sipsGiven": "Gegeben",
+    "total": "Gesamt",
+    "winner": "Am nüchternsten",
+    "loser": "Am betrunkensten",
+    "replay": "Nochmal spielen",
+    "exit": "Beenden"
+  },
   "game": {
     "phase1": "Phase 1: Vorhersagen",
     "phase2": "Phase 2: Verteilung",

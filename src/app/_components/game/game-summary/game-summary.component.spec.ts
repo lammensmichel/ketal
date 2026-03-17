@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { NO_ERRORS_SCHEMA, signal } from '@angular/core';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { TranslateModule } from '@ngx-translate/core';
-import { GameSummaryComponent, PlayerSummary } from './game-summary.component';
+import { GameSummaryComponent } from './game-summary.component';
 import { GameService } from '../../../services/game/game.service';
 import { createMockGameService } from '../../../testing/test-helpers';
 import { PlayerModel } from '../../../_shared/_models/player.model';

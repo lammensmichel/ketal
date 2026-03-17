@@ -1,0 +1,81 @@
+.game-summary {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.highlight-card {
+  border-radius: 0.75rem;
+  border: 2px solid;
+}
+
+.winner-card {
+  border-color: #28a745;
+  background-color: rgba(40, 167, 69, 0.08);
+}
+
+.loser-card {
+  border-color: #dc3545;
+  background-color: rgba(220, 53, 69, 0.08);
+}
+
+.icon-lg {
+  font-size: 1.5rem;
+}
+
+.table {
+  font-size: 0.95rem;
+}
+
+// Mobile-first responsive adjustments
+@media (max-width: 575.98px) {
+  .game-summary {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .table {
+    font-size: 0.85rem;
+  }
+
+  .highlight-card {
+    padding: 0.75rem !important;
+  }
+
+  .d-flex.gap-3 {
+    flex-direction: column;
+    gap: 0.5rem !important;
+  }
+
+  .d-flex.gap-3 .btn {
+    width: 100%;
+  }
+}
+
+// Tablet
+@media (min-width: 576px) and (max-width: 991.98px) {
+  .game-summary {
+    max-width: 500px;
+  }
+}
+
+// Laptop/Desktop
+@media (min-width: 992px) {
+  .game-summary {
+    max-width: 600px;
+  }
+}
+
+// TV
+@media (min-width: 1400px) {
+  .game-summary {
+    max-width: 700px;
+  }
+
+  .table {
+    font-size: 1.1rem;
+  }
+
+  .icon-lg {
+    font-size: 2rem;
+  }
+}

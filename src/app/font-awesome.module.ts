@@ -16,6 +16,10 @@ import {
   faPlay,
   faBars,
   faTimes,
+  faTrophy,
+  faMedal,
+  faRedo,
+  faDoorOpen,
 } from '@fortawesome/free-solid-svg-icons';
 
 // Regular icons
@@ -41,7 +45,11 @@ export class FontAwesomeIconsModule {
       faHome,
       faPlay,
       faBars,
-      faTimes
+      faTimes,
+      faTrophy,
+      faMedal,
+      faRedo,
+      faDoorOpen
     );
 
     // Add regular icons
