@@ -6,7 +6,6 @@ import { environment } from 'src/environments/environment';
 import { PlayerHelperService } from './_shared/_helpers/player.helper';
 import { AuthService } from './services/auth/auth.service';
 import { GameService } from './services/game/game.service';
-import { AuthService } from './services/auth/auth.service';
 import { SoloRoomService } from './services/solo-room/solo-room.service';
 import { HeaderComponent } from './_shared/_components/header/header.component';
 import { FooterComponent } from './_shared/_components/footer/footer.component';
@@ -24,7 +23,6 @@ export class AppComponent implements OnInit {
   readonly gameSrv = inject(GameService);
   readonly translate = inject(TranslateService);
   readonly playerSrv = inject(PlayerHelperService);
-  private readonly authService = inject(AuthService);
   private readonly soloRoomService = inject(SoloRoomService);
 
   readonly withSummaryMode: Signal<boolean>;
