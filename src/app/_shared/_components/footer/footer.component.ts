@@ -283,7 +283,11 @@ export class FooterComponent implements OnInit, OnDestroy {
   }
 
   public hasPlayers(): boolean {
-    return this.playerHelper?.players?.length > 0;
+    return this.playerHelper?.players?.length > 1;
+  }
+
+  public hasOnlyOnePlayer(): boolean {
+    return this.playerHelper?.players?.length === 1;
   }
 
   public beginGame(): void {

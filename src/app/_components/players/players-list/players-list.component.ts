@@ -58,7 +58,7 @@ export class PlayersListComponent {
   }
 
   public hasPlayers(): boolean {
-    return this.playerHelper?.players?.length > 0;
+    return this.playerHelper?.players?.length > 1;
   }
 
   public getNewPlayerInputPlaceholder(): string {

@@ -70,3 +70,7 @@
   <hr class="mb-2"/>
   <button type="button" class="btn btn-secondary ms-2" (click)="beginGame()" [translate]="'Button_BeginGame'"></button>
 </div>
+<div *ngIf="hasOnlyOnePlayer() && !game" class="fixed-bottom text-center mb-2">
+  <hr class="mb-2"/>
+  <p class="text-muted" [translate]="'Label_Error_MinimumPlayers'"></p>
+</div>

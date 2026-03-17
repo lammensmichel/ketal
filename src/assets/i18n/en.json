@@ -13,6 +13,7 @@
 
   "Label_Error_NameRequired": "The name of the drinker is required.",
   "Label_Error_TooMuchPlayer": "The maximum number of players has been reached.",
+  "Label_Error_MinimumPlayers": "You need at least 2 players to start.",
 
   "Button_Add": "Add",
   "Button_BeginGame": "Starting the Grosse Guinze",
