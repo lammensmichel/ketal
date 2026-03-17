@@ -72,6 +72,9 @@ export class AppComponent implements OnInit {
         if (activeSession) {
           await this.gameSrv.handleReconnection(activeSession.$id);
           await this.router.navigate(['/game']);
+        } else if (!this.authService.isAnonymous() && this.router.url === '/login') {
+          // Authenticated non-anonymous user with no active game: redirect to home
+          await this.router.navigate(['/home']);
         }
       }
     } catch {

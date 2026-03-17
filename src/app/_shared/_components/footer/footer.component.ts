@@ -14,7 +14,7 @@ import { PlayingCardComponent } from '../playing-card/playing-card.component';
 import { AccountGateModalComponent } from '../../../_components/auth/account-gate-modal/account-gate-modal.component';
 
 /** Routes where the game footer should be hidden */
-const HIDDEN_ROUTES = ['/login', '/register', '/forgot-password', '/room'];
+const HIDDEN_ROUTES = ['/login', '/register', '/forgot-password', '/room', '/home'];
 
 /** Key used to store pending summary flag in localStorage */
 const PENDING_SUMMARY_KEY = 'pendingSummary';

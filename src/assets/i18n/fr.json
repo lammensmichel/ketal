@@ -69,6 +69,14 @@
       "loggedIn": "Connexion réussie"
     }
   },
+  "home": {
+    "createGame": "Créer une partie",
+    "joinGame": "Rejoindre une partie",
+    "invitePlayers": "Inviter des joueurs",
+    "errors": {
+      "createFailed": "Impossible de créer la partie"
+    }
+  },
   "room": {
     "createRoom": "Créer une room",
     "roomName": "Nom de la room",
