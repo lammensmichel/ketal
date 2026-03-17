@@ -197,8 +197,27 @@
             [translate]="'Button_BeginGame'"
           ></button>
         </div>
-      }
-    </div>
+      </div>
+    }
+    <!-- Button to start game-->
+    @if (hasPlayers() && gameSrv.isNewGame() && isPlayersPage()) {
+      <div class="mb-2 text-center white-background">
+        <hr class="mb-2" />
+        <button
+          type="button"
+          class="btn btn-secondary ms-2 space-below"
+          (click)="beginGame()"
+          [translate]="'Button_BeginGame'"
+        ></button>
+      </div>
+    }
+    @if (needsMorePlayers() && gameSrv.isNewGame() && isPlayersPage()) {
+      <div class="mb-2 text-center white-background">
+        <hr class="mb-2" />
+        <small class="text-muted" [translate]="'Label_MinimumPlayers'"></small>
+      </div>
+    }
+  </div>
   }
 </div>
 <app-toast #notAllSipsGiven [titleMessage]="'Warning'" [bodyMessage]="'Assign_All_Sips'"></app-toast>

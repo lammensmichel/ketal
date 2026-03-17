@@ -179,14 +179,38 @@ describe('FooterComponent', () => {
   });
 
   describe('hasPlayers', () => {
-    it('should return true when players exist', () => {
-      mockPlayerHelperService.getPlayers.and.returnValue([mockPlayer]);
+    it('should return true when 2 or more players exist', () => {
+      const secondPlayer = { ...mockPlayer, id: '2', name: 'Player 2' };
+      mockPlayerHelperService.getPlayers.and.returnValue([mockPlayer, secondPlayer]);
       expect(component.hasPlayers()).toBeTrue();
+    });
+
+    it('should return false when only 1 player', () => {
+      mockPlayerHelperService.getPlayers.and.returnValue([mockPlayer]);
+      expect(component.hasPlayers()).toBeFalse();
     });
 
     it('should return false when no players', () => {
       mockPlayerHelperService.getPlayers.and.returnValue([]);
       expect(component.hasPlayers()).toBeFalse();
+    });
+  });
+
+  describe('needsMorePlayers', () => {
+    it('should return true when exactly 1 player exists', () => {
+      mockPlayerHelperService.getPlayers.and.returnValue([mockPlayer]);
+      expect(component.needsMorePlayers()).toBeTrue();
+    });
+
+    it('should return false when 2 or more players exist', () => {
+      const secondPlayer = { ...mockPlayer, id: '2', name: 'Player 2' };
+      mockPlayerHelperService.getPlayers.and.returnValue([mockPlayer, secondPlayer]);
+      expect(component.needsMorePlayers()).toBeFalse();
+    });
+
+    it('should return false when no players exist', () => {
+      mockPlayerHelperService.getPlayers.and.returnValue([]);
+      expect(component.needsMorePlayers()).toBeFalse();
     });
   });
 

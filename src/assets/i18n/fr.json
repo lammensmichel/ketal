@@ -33,6 +33,7 @@
   "Warning": "Attention",
   "Assign_All_Sips": "Chaque utilisateur possédant la carte tirée doit utiliser l'icône <i class=\"fa fa-glass\"></i>  afin d'assigner ses gorgées.",
   "Assign_All_Given_Sips": "Donnes toutes les gorgées d'abbord",
+  "Label_MinimumPlayers": "Minimum 2 joueurs requis pour commencer la partie",
   "Summary_Mode_Selection": "Activer le résumé en fin de partie",
   "auth": {
     "login": "Se connecter",
