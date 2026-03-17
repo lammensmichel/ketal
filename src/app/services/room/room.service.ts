@@ -217,7 +217,8 @@ export class RoomService {
       );
 
       return this.mapDocumentToGameRoom(document);
-    } catch {
+    } catch (error) {
+      console.warn('getRoomById failed:', error);
       return null;
     }
   }

@@ -45,6 +45,9 @@ export class LobbyComponent implements OnInit {
   /** Subscription ID for member realtime updates */
   private memberSubscriptionId: string | null = null;
 
+  /** Guard flag to prevent concurrent member loads */
+  private isMembersLoading = false;
+
   /** Loading state for async operations */
   readonly isLoading = signal(false);
 
@@ -144,11 +147,11 @@ export class LobbyComponent implements OnInit {
         await this.recoverMemberIdentity();
       }
 
+      // Subscribe to realtime member updates BEFORE loading to avoid missing events
+      this.subscribeToMemberUpdates();
+
       // Load room members
       await this.loadRoomMembers();
-
-      // Subscribe to realtime member updates
-      this.subscribeToMemberUpdates();
     } catch (err) {
       this.error.set(this.getErrorMessage(err));
     } finally {
@@ -171,15 +174,19 @@ export class LobbyComponent implements OnInit {
 
     const existingMember = await this.memberService.getMemberByUserOrDevice(room.$id, currentUser?.$id, deviceId);
 
-    if (existingMember) {
-      this.memberService.setCurrentMember(existingMember);
+    if (!existingMember) {
+      console.warn('No member found, redirecting to join');
+      this.router.navigate(['/room/join', room.code]);
+      return;
+    }
 
-      // Mark as online
-      try {
-        await this.memberService.updateMember(existingMember.$id, { isOnline: true });
-      } catch {
-        // Non-critical: ignore online status update failures
-      }
+    this.memberService.setCurrentMember(existingMember);
+
+    // Mark as online
+    try {
+      await this.memberService.updateMember(existingMember.$id, { isOnline: true });
+    } catch {
+      // Non-critical: ignore online status update failures
     }
   }
 
@@ -193,9 +200,12 @@ export class LobbyComponent implements OnInit {
     }
 
     try {
+      this.isMembersLoading = true;
       await this.memberService.getMembersByRoom(room.$id);
     } catch (err) {
       this.error.set(this.getErrorMessage(err));
+    } finally {
+      this.isMembersLoading = false;
     }
   }
 
@@ -214,6 +224,10 @@ export class LobbyComponent implements OnInit {
     }
 
     this.memberSubscriptionId = this.realtimeService.subscribeToMembers(room.$id, (_member: RealtimeGameMember) => {
+      // Skip if already loading to prevent UI flicker
+      if (this.isMembersLoading) {
+        return;
+      }
       // Refresh members list when any member in the room changes
       this.loadRoomMembers();
     });
