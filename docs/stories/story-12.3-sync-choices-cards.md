@@ -1,6 +1,6 @@
 # Story 12.3: Synchronize Player Choices and Cards with Appwrite
 
-**Status**: InProgress
+**Status**: Done
 **Epic**: Epic 12: GameService Appwrite Integration
 **Priority**: High
 **Depends On**: Story 12.2
@@ -33,23 +33,23 @@ Durant la phase 1 (prédictions), chaque joueur fait des choix (couleur, +/-, in
 
 ## Tasks / Subtasks
 
-- [ ] **T1** (AC: 1): Modifier `setCardChoice()` pour Appwrite
-  - [ ] Après mise à jour locale, appeler `syncPlayerToAppwrite()`
-  - [ ] Mettre à jour `KetalPlayer.choices` dans la session
+- [x] **T1** (AC: 1): Modifier `setCardChoice()` pour Appwrite
+  - [x] Après mise à jour locale, appeler `syncPlayerToAppwrite()`
+  - [x] Mettre à jour `KetalPlayer.choices` dans la session
 
-- [ ] **T2** (AC: 2): Modifier `addCardToPlayer()` pour Appwrite
-  - [ ] Sérialiser la carte ajoutée
-  - [ ] Mettre à jour `KetalPlayer.cards` dans la session
+- [x] **T2** (AC: 2): Modifier `addCardToPlayer()` pour Appwrite
+  - [x] Sérialiser la carte ajoutée
+  - [x] Mettre à jour `KetalPlayer.cards` dans la session
 
-- [ ] **T3** (AC: 3, 4): Modifier `pickCard()` pour synchroniser
-  - [ ] Après calcul du prochain joueur/tour/phase
-  - [ ] Appeler `ketalSessionService.updateSession()` avec les changements
-  - [ ] Inclure: `turn`, `phase`, `activePlayerId`, `players`
+- [x] **T3** (AC: 3, 4): Modifier `pickCard()` pour synchroniser
+  - [x] Après calcul du prochain joueur/tour/phase
+  - [x] Appeler `ketalSessionService.updateSession()` avec les changements
+  - [x] Inclure: `turn`, `phase`, `activePlayerId`, `players`
 
-- [ ] **T4** (AC: 5): Implémenter la réception des updates Realtime
-  - [ ] Dans `subscribeToSessionUpdates()`, mapper les changements vers `_game`
-  - [ ] Mettre à jour les joueurs locaux avec les données Appwrite
-  - [ ] Déclencher le rafraîchissement UI via le signal
+- [x] **T4** (AC: 5): Implémenter la réception des updates Realtime
+  - [x] Dans `subscribeToSessionUpdates()`, mapper les changements vers `_game`
+  - [x] Mettre à jour les joueurs locaux avec les données Appwrite
+  - [x] Déclencher le rafraîchissement UI via le signal
 
 ---
 
@@ -128,10 +128,10 @@ cards: string[] = [
 ## Testing
 
 ### Unit Tests
-- [ ] Test: Choix synchronisé vers Appwrite
-- [ ] Test: Carte ajoutée synchronisée
-- [ ] Test: Transition tour/phase synchronisée
-- [ ] Test: Realtime updates mappés correctement
+- [x] Test: Choix synchronisé vers Appwrite
+- [x] Test: Carte ajoutée synchronisée
+- [x] Test: Transition tour/phase synchronisée
+- [x] Test: Realtime updates mappés correctement
 
 ---
 
@@ -140,3 +140,4 @@ cards: string[] = [
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
 | 2026-01-24 | 1.0 | Story created | SM Bob |
+| 2026-03-18 | 2.0 | Implemented and merged | Dev |

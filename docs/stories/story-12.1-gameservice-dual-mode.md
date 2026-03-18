@@ -1,6 +1,6 @@
 # Story 12.1: GameService Dual-Mode Architecture
 
-**Status**: InProgress
+**Status**: Done
 **Epic**: Epic 12: GameService Appwrite Integration
 **Created**: 2026-01-24
 **Priority**: High
@@ -111,10 +111,10 @@ private saveAndNotify(game: Game): void {
 ## Testing
 
 ### Unit Tests
-- [ ] Test: Mode détection (local quand pas de room, room quand room active)
-- [ ] Test: localStorage préservé en mode local
-- [ ] Test: Appwrite appelé en mode room
-- [ ] Test: Mapping Game ↔ KetalSession correct
+- [x] Test: Mode détection (local quand pas de room, room quand room active)
+- [x] Test: localStorage préservé en mode local
+- [x] Test: Appwrite appelé en mode room
+- [x] Test: Mapping Game ↔ KetalSession correct
 
 ### Test Location
 `src/app/services/game/game.service.spec.ts`
@@ -126,6 +126,7 @@ private saveAndNotify(game: Game): void {
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
 | 2026-01-24 | 1.0 | Story created | SM Bob |
+| 2026-03-18 | 2.0 | Implemented and merged | Dev |
 
 ---
 

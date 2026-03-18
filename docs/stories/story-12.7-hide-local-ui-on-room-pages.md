@@ -1,6 +1,6 @@
 # Story 12.7: Hide local game UI on room pages
 
-**Status**: Review
+**Status**: Done
 **Epic**: Epic 12: FUG Backend Integration
 **Priority**: Medium
 **Depends On**: -
@@ -176,3 +176,4 @@ isPlayersPage(): boolean {
 |------|---------|-------------|--------|
 | 2026-03-17 | 1.0 | Story created | - |
 | 2026-03-17 | 1.1 | Implementation complete | - |
+| 2026-03-18 | 2.0 | Implemented and merged | Dev |

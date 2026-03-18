@@ -1,6 +1,6 @@
 # Story 14.1: Conditionner le résumé à la création de compte
 
-**Status**: Review
+**Status**: Done
 **Epic**: Epic 14: Account & Monetization Gate
 **Priority**: Medium
 **Depends On**: Story 14.0
@@ -168,4 +168,5 @@ canAccessSummary(): boolean {
 
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
-| 2026-03-17 | 1.0 | Story created | Claude |
+| 2026-03-17 | 1.0 | Story created | - |
+| 2026-03-18 | 2.0 | Implemented and merged | Dev |

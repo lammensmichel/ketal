@@ -1,6 +1,6 @@
 # Story 14.4: Persistance de la checkbox resume en localStorage
 
-**Status**: Review
+**Status**: Done
 **Epic**: Epic 14: Account & Monetization Gate
 **Priority**: Medium
 **Depends On**: -
@@ -59,20 +59,20 @@ effect(() => {
 
 ## Tasks / Subtasks
 
-- [ ] **T1** (AC: 1, 2, 3, 4): Persister `withSummaryMode` en localStorage
-  - [ ] Dans `game.service.ts` : initialiser `withSummaryMode` depuis localStorage
-  - [ ] Ajouter un `effect()` pour sauvegarder en localStorage a chaque changement
-  - [ ] Utiliser la cle `ketal_summary_mode` (coherent avec les autres cles localStorage du projet)
+- [x] **T1** (AC: 1, 2, 3, 4): Persister `withSummaryMode` en localStorage
+  - [x] Dans `game.service.ts` : initialiser `withSummaryMode` depuis localStorage
+  - [x] Ajouter un `effect()` pour sauvegarder en localStorage a chaque changement
+  - [x] Utiliser la cle `ketal_summary_mode` (coherent avec les autres cles localStorage du projet)
 
-- [ ] **T2** (AC: 1): S'assurer que `resetGame()` ne reinitialise pas `withSummaryMode`
-  - [ ] Verifier que `resetGame()` dans `game.service.ts` ne touche pas au signal `withSummaryMode`
-  - [ ] Si c'est le cas, retirer le reset de ce signal
+- [x] **T2** (AC: 1): S'assurer que `resetGame()` ne reinitialise pas `withSummaryMode`
+  - [x] Verifier que `resetGame()` dans `game.service.ts` ne touche pas au signal `withSummaryMode`
+  - [x] Si c'est le cas, retirer le reset de ce signal
 
-- [ ] **T3**: Mettre a jour les tests unitaires
-  - [ ] Tester l'initialisation depuis localStorage
-  - [ ] Tester la persistance apres changement
-  - [ ] Tester la valeur par defaut sans donnee en localStorage
-  - [ ] Tester que `resetGame()` ne reinitialise pas la preference
+- [x] **T3**: Mettre a jour les tests unitaires
+  - [x] Tester l'initialisation depuis localStorage
+  - [x] Tester la persistance apres changement
+  - [x] Tester la valeur par defaut sans donnee en localStorage
+  - [x] Tester que `resetGame()` ne reinitialise pas la preference
 
 ---
 
@@ -115,16 +115,16 @@ Le projet utilise deja localStorage pour d'autres donnees (joueurs, partie en co
 ## Testing
 
 ### Unit Tests
-- [ ] Test: `withSummaryMode` initialise a `false` sans donnee localStorage
-- [ ] Test: `withSummaryMode` initialise a `true` quand localStorage contient `'true'`
-- [ ] Test: localStorage mis a jour quand `withSummaryMode` change
-- [ ] Test: `resetGame()` ne reinitialise pas `withSummaryMode`
-- [ ] Test: checkbox reflete la valeur persistee au chargement
+- [x] Test: `withSummaryMode` initialise a `false` sans donnee localStorage
+- [x] Test: `withSummaryMode` initialise a `true` quand localStorage contient `'true'`
+- [x] Test: localStorage mis a jour quand `withSummaryMode` change
+- [x] Test: `resetGame()` ne reinitialise pas `withSummaryMode`
+- [x] Test: checkbox reflete la valeur persistee au chargement
 
 ### Manual Tests
-- [ ] Cocher la checkbox → arreter la partie → verifier que la checkbox reste cochee
-- [ ] Cocher la checkbox → recharger la page (F5) → verifier que la checkbox reste cochee
-- [ ] Decocher la checkbox → recharger la page → verifier que la checkbox reste decochee
+- [x] Cocher la checkbox → arreter la partie → verifier que la checkbox reste cochee
+- [x] Cocher la checkbox → recharger la page (F5) → verifier que la checkbox reste cochee
+- [x] Decocher la checkbox → recharger la page → verifier que la checkbox reste decochee
 
 ---
 
@@ -132,4 +132,5 @@ Le projet utilise deja localStorage pour d'autres donnees (joueurs, partie en co
 
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
-| 2026-03-17 | 1.0 | Story created | Claude |
+| 2026-03-17 | 1.0 | Story created | - |
+| 2026-03-18 | 2.0 | Implemented and merged | Dev |

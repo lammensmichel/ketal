@@ -1,6 +1,6 @@
 # Story 12.4: Synchronize Sips (Gorgées) with Appwrite
 
-**Status**: InProgress
+**Status**: Done
 **Epic**: Epic 12: GameService Appwrite Integration
 **Priority**: High
 **Depends On**: Story 12.3
@@ -37,23 +37,23 @@ Ces données doivent être synchronisées vers `KetalPlayer.sipsGiven` et `Ketal
 
 ## Tasks / Subtasks
 
-- [ ] **T1** (AC: 1, 2, 3): Modifier `addPlayerSip()` pour Appwrite
-  - [ ] Calculer les nouveaux totaux `sipsTaken`/`sipsGiven`
-  - [ ] Inclure dans la prochaine sync vers Appwrite
+- [x] **T1** (AC: 1, 2, 3): Modifier `addPlayerSip()` pour Appwrite
+  - [x] Calculer les nouveaux totaux `sipsTaken`/`sipsGiven`
+  - [x] Inclure dans la prochaine sync vers Appwrite
 
-- [ ] **T2** (AC: 4): Synchroniser `givenSips` sur les cartes
-  - [ ] Modifier `updatePlayerGivenSipsFromCard()`
-  - [ ] S'assurer que `card.givenSips` est inclus dans la sérialisation
+- [x] **T2** (AC: 4): Synchroniser `givenSips` sur les cartes
+  - [x] Modifier `updatePlayerGivenSipsFromCard()`
+  - [x] S'assurer que `card.givenSips` est inclus dans la sérialisation
 
-- [ ] **T3** (AC: 5): Appeler MemberService à la fin du jeu
-  - [ ] Dans `setStatus(2)` (game finished), appeler `memberService.updateStats()`
-  - [ ] Passer les totaux par joueur
-  - [ ] Incrémenter `totalGamesPlayed`, `totalSipsGiven`, `totalSipsTaken`
+- [x] **T3** (AC: 5): Appeler MemberService à la fin du jeu
+  - [x] Dans `setStatus(2)` (game finished), appeler `memberService.updateStats()`
+  - [x] Passer les totaux par joueur
+  - [x] Incrémenter `totalGamesPlayed`, `totalSipsGiven`, `totalSipsTaken`
 
-- [ ] **T4**: Créer la méthode `finalizeGameStats()`
-  - [ ] Calculer les totaux finaux par joueur
-  - [ ] Appeler `memberService.updateMemberStats()` pour chaque joueur
-  - [ ] Mettre à jour `room.gamesPlayed`
+- [x] **T4**: Créer la méthode `finalizeGameStats()`
+  - [x] Calculer les totaux finaux par joueur
+  - [x] Appeler `memberService.updateMemberStats()` pour chaque joueur
+  - [x] Mettre à jour `room.gamesPlayed`
 
 ---
 
@@ -122,10 +122,10 @@ private async finalizeGameStats(): Promise<void> {
 ## Testing
 
 ### Unit Tests
-- [ ] Test: `addPlayerSip()` synchronise vers Appwrite
-- [ ] Test: `sipsTaken` et `sipsGiven` corrects après sync
-- [ ] Test: Stats membres mises à jour en fin de partie
-- [ ] Test: `givenSips` sur cartes synchronisé
+- [x] Test: `addPlayerSip()` synchronise vers Appwrite
+- [x] Test: `sipsTaken` et `sipsGiven` corrects après sync
+- [x] Test: Stats membres mises à jour en fin de partie
+- [x] Test: `givenSips` sur cartes synchronisé
 
 ---
 
@@ -134,3 +134,4 @@ private async finalizeGameStats(): Promise<void> {
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
 | 2026-01-24 | 1.0 | Story created | SM Bob |
+| 2026-03-18 | 2.0 | Implemented and merged | Dev |

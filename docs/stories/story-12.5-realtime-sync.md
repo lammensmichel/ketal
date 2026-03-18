@@ -1,6 +1,6 @@
 # Story 12.5: Implement Realtime Synchronization for Multiplayer
 
-**Status**: InProgress
+**Status**: Done
 **Epic**: Epic 12: GameService Appwrite Integration
 **Priority**: High
 **Depends On**: Story 12.3, Story 12.4
@@ -34,27 +34,27 @@ Appwrite Realtime permet de recevoir des notifications quand les documents chang
 
 ## Tasks / Subtasks
 
-- [ ] **T1** (AC: 1, 6): Gérer l'abonnement Realtime dans GameService
-  - [ ] Créer `subscribeToSessionUpdates(sessionId: string)`
-  - [ ] Stocker l'ID d'abonnement pour cleanup
-  - [ ] Créer `unsubscribeFromSession()`
-  - [ ] Appeler unsubscribe dans `resetGame()` et lors du leave room
+- [x] **T1** (AC: 1, 6): Gérer l'abonnement Realtime dans GameService
+  - [x] Créer `subscribeToSessionUpdates(sessionId: string)`
+  - [x] Stocker l'ID d'abonnement pour cleanup
+  - [x] Créer `unsubscribeFromSession()`
+  - [x] Appeler unsubscribe dans `resetGame()` et lors du leave room
 
-- [ ] **T2** (AC: 2, 3, 4): Mapper les updates Realtime vers l'état local
-  - [ ] Créer `handleSessionUpdate(session: KetalSession)`
-  - [ ] Convertir `KetalSession` → `Game`
-  - [ ] Mettre à jour `_game` signal
-  - [ ] Gérer les updates partielles vs complètes
+- [x] **T2** (AC: 2, 3, 4): Mapper les updates Realtime vers l'état local
+  - [x] Créer `handleSessionUpdate(session: KetalSession)`
+  - [x] Convertir `KetalSession` → `Game`
+  - [x] Mettre à jour `_game` signal
+  - [x] Gérer les updates partielles vs complètes
 
-- [ ] **T3** (AC: 5): Gérer la reconnexion
-  - [ ] Si déconnexion détectée, tenter de resync
-  - [ ] Récupérer l'état complet de la session via API
-  - [ ] Ré-abonner aux updates
+- [x] **T3** (AC: 5): Gérer la reconnexion
+  - [x] Si déconnexion détectée, tenter de resync
+  - [x] Récupérer l'état complet de la session via API
+  - [x] Ré-abonner aux updates
 
-- [ ] **T4**: Éviter les conflits de sync
-  - [ ] Implémenter un flag `_isSyncing` pour éviter les boucles
-  - [ ] Ne pas re-sauvegarder les données reçues en Realtime
-  - [ ] Utiliser des timestamps ou versions si nécessaire
+- [x] **T4**: Éviter les conflits de sync
+  - [x] Implémenter un flag `_isSyncing` pour éviter les boucles
+  - [x] Ne pas re-sauvegarder les données reçues en Realtime
+  - [x] Utiliser des timestamps ou versions si nécessaire
 
 ---
 
@@ -139,14 +139,14 @@ private mapSessionToGame(session: KetalSession): Game {
 ## Testing
 
 ### Unit Tests
-- [ ] Test: Subscription créée au début du jeu en mode room
-- [ ] Test: Updates Realtime mappés correctement vers Game
-- [ ] Test: Pas de sync loop (update reçu ne déclenche pas re-save)
-- [ ] Test: Cleanup de subscription en fin de jeu
+- [x] Test: Subscription créée au début du jeu en mode room
+- [x] Test: Updates Realtime mappés correctement vers Game
+- [x] Test: Pas de sync loop (update reçu ne déclenche pas re-save)
+- [x] Test: Cleanup de subscription en fin de jeu
 
 ### Integration Tests
-- [ ] Test: Deux instances reçoivent les updates mutuellement
-- [ ] Test: Reconnexion après perte de connexion
+- [x] Test: Deux instances reçoivent les updates mutuellement
+- [x] Test: Reconnexion après perte de connexion
 
 ---
 
@@ -155,3 +155,4 @@ private mapSessionToGame(session: KetalSession): Game {
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
 | 2026-01-24 | 1.0 | Story created | SM Bob |
+| 2026-03-18 | 2.0 | Implemented and merged | Dev |

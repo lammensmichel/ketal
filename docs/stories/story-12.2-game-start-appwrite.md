@@ -1,6 +1,6 @@
 # Story 12.2: Connect Game Start to KetalSessionService
 
-**Status**: InProgress
+**Status**: Done
 **Epic**: Epic 12: GameService Appwrite Integration
 **Priority**: High
 **Depends On**: Story 12.1
@@ -33,27 +33,27 @@ Quand `beginGame()` est appelé en mode room, une session Ketal doit être cré�
 
 ## Tasks / Subtasks
 
-- [ ] **T1** (AC: 1, 5): Modifier `beginGame()` pour dual-mode
-  - [ ] Vérifier `gameMode()` au début
-  - [ ] Si 'room': appeler `startGameInRoom()`
-  - [ ] Si 'local': conserver le comportement actuel
+- [x] **T1** (AC: 1, 5): Modifier `beginGame()` pour dual-mode
+  - [x] Vérifier `gameMode()` au début
+  - [x] Si 'room': appeler `startGameInRoom()`
+  - [x] Si 'local': conserver le comportement actuel
 
-- [ ] **T2** (AC: 3): Créer le mapper PlayerModel → KetalPlayer
-  - [ ] Convertir `PlayerModel.id` → `KetalPlayer.memberId`
-  - [ ] Convertir `PlayerModel.name` → `KetalPlayer.displayName`
-  - [ ] Convertir `PlayerModel.cards` → `KetalPlayer.cards` (sérialisé)
-  - [ ] Initialiser `sipsGiven`, `sipsTaken`, `order`, `isReady`
+- [x] **T2** (AC: 3): Créer le mapper PlayerModel → KetalPlayer
+  - [x] Convertir `PlayerModel.id` → `KetalPlayer.memberId`
+  - [x] Convertir `PlayerModel.name` → `KetalPlayer.displayName`
+  - [x] Convertir `PlayerModel.cards` → `KetalPlayer.cards` (sérialisé)
+  - [x] Initialiser `sipsGiven`, `sipsTaken`, `order`, `isReady`
 
-- [ ] **T3** (AC: 1, 2, 4): Implémenter `startGameInRoom()`
-  - [ ] Récupérer `roomId` de `roomService.currentRoom()`
-  - [ ] Mapper les joueurs vers `KetalPlayer[]`
-  - [ ] Appeler `ketalSessionService.startGame(roomId, players, withSummary)`
-  - [ ] Souscrire aux updates realtime de la session
+- [x] **T3** (AC: 1, 2, 4): Implémenter `startGameInRoom()`
+  - [x] Récupérer `roomId` de `roomService.currentRoom()`
+  - [x] Mapper les joueurs vers `KetalPlayer[]`
+  - [x] Appeler `ketalSessionService.startGame(roomId, players, withSummary)`
+  - [x] Souscrire aux updates realtime de la session
 
-- [ ] **T4** (AC: 2): S'assurer que la room est mise à jour
-  - [ ] Vérifier que `KetalSessionService.startGame()` met à jour la room
-  - [ ] Room.currentSessionId = session.$id
-  - [ ] Room.status = 'playing'
+- [x] **T4** (AC: 2): S'assurer que la room est mise à jour
+  - [x] Vérifier que `KetalSessionService.startGame()` met à jour la room
+  - [x] Room.currentSessionId = session.$id
+  - [x] Room.status = 'playing'
 
 ---
 
@@ -143,10 +143,10 @@ private mapPlayersToKetalPlayers(): KetalPlayer[] {
 ## Testing
 
 ### Unit Tests
-- [ ] Test: `beginGame()` en mode local préserve le comportement
-- [ ] Test: `beginGame()` en mode room crée une KetalSession
-- [ ] Test: Mapping PlayerModel → KetalPlayer correct
-- [ ] Test: Room mise à jour avec sessionId
+- [x] Test: `beginGame()` en mode local préserve le comportement
+- [x] Test: `beginGame()` en mode room crée une KetalSession
+- [x] Test: Mapping PlayerModel → KetalPlayer correct
+- [x] Test: Room mise à jour avec sessionId
 
 ---
 
@@ -155,3 +155,4 @@ private mapPlayersToKetalPlayers(): KetalPlayer[] {
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
 | 2026-01-24 | 1.0 | Story created | SM Bob |
+| 2026-03-18 | 2.0 | Implemented and merged | Dev |
