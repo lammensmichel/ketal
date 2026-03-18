@@ -2371,6 +2371,7 @@ describe('GameService', () => {
           ],
         });
         mockKetalSessionService.startGame.and.resolveTo(mockSession);
+        mockKetalSessionService.updateSession.and.resolveTo(mockSession);
 
         TestBed.resetTestingModule();
         TestBed.configureTestingModule({
@@ -2395,6 +2396,11 @@ describe('GameService', () => {
 
         // In room mode, startGame should be called on the session service
         expect(mockKetalSessionService.startGame).toHaveBeenCalled();
+        // Session should be transitioned to playing state
+        expect(mockKetalSessionService.updateSession).toHaveBeenCalledWith(
+          'session-123',
+          jasmine.objectContaining({ status: 'playing', phase: 'dealing', turn: 1 })
+        );
         expect(consoleSpy).toHaveBeenCalledWith('[GameService] Game started in room mode', jasmine.any(Object));
       });
 
@@ -3058,6 +3064,7 @@ describe('GameService', () => {
           ],
         });
         mockKetalSessionService.startGame.and.resolveTo(mockSession);
+        mockKetalSessionService.updateSession.and.resolveTo(mockSession);
 
         const testService = createServiceWithRoomMode(null, mockRoom);
         const players = [createMockPlayer({ id: 'player-1' })];

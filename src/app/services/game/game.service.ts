@@ -901,17 +901,25 @@ export class GameService {
       // Map local players to Ketal players format
       const ketalPlayers = this.mapPlayersToKetalPlayers();
 
-      // Create session in Appwrite
+      // Create session in Appwrite (initially status=waiting, phase=setup)
       const session = await this.ketalSessionService.startGame(room.$id, ketalPlayers, withSummary);
 
+      // Transition session to playing state (status=playing, phase=dealing, turn=1)
+      const activeSession = await this.ketalSessionService.updateSession(session.$id, {
+        status: 'playing',
+        phase: 'dealing',
+        turn: 1,
+        activePlayerId: ketalPlayers.length > 0 ? ketalPlayers[0].memberId : null,
+      });
+
       // Subscribe to session updates for realtime sync (Story 12.5)
-      this.subscribeToSessionUpdates(session.$id);
+      this.subscribeToSessionUpdates(activeSession.$id);
 
       // Convert session to local Game format and update signal
-      const game = mapSessionToGame(session);
+      const game = mapSessionToGame(activeSession);
       this._game.set(game);
 
-      console.debug('[GameService] Game started in room mode', { sessionId: session.$id });
+      console.debug('[GameService] Game started in room mode', { sessionId: activeSession.$id });
     } catch (error) {
       console.error('[GameService] Failed to start game in room:', error);
       throw error; // Caught by beginGame for offline fallback
