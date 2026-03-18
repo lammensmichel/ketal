@@ -1,7 +1,7 @@
 # Story 11.3: Game Summary Screen
 
 ## Status
-Pending
+Done
 
 ## Story
 **As a** Ketal player,
@@ -84,12 +84,12 @@ export class GameSummaryComponent {
 ```
 
 ## Tasks
-- [ ] **T1**: Create GameSummaryComponent
-- [ ] **T2**: Add results table
-- [ ] **T3**: Add winner/loser highlighting
-- [ ] **T4**: Add i18n translations
-- [ ] **T5**: Integrate into game flow
-- [ ] **T6**: Add unit tests
+- [x] **T1**: Create GameSummaryComponent
+- [x] **T2**: Add results table
+- [x] **T3**: Add winner/loser highlighting
+- [x] **T4**: Add i18n translations
+- [x] **T5**: Integrate into game flow
+- [x] **T6**: Add unit tests
 
 ## Dependencies
 - Requires: GameService, PlayerModel

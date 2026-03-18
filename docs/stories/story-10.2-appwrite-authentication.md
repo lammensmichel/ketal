@@ -1,7 +1,7 @@
 # Story 10.2: Appwrite Authentication
 
 ## Status
-In Progress (Phase 1-3 Complete)
+Done
 
 ## Architecture Overview
 
@@ -244,11 +244,11 @@ const routes: Routes = [
   - [x] Implement checkSession (on app init)
 - [x] **T2**: Add Google OAuth
   - [x] Implement signInWithGoogle
-  - [ ] Configure OAuth redirect URLs (needs Appwrite console setup)
+  - [x] Configure OAuth redirect URLs (needs Appwrite console setup)
 - [x] **T3**: Add anonymous session
   - [x] Implement signInAnonymously
-- [ ] **T4**: Add password recovery
-  - [ ] Implement sendPasswordRecovery
+- [x] **T4**: Add password recovery
+  - [x] Implement sendPasswordRecovery
 
 ### Phase 2: Login Component ✅ COMPLETED
 - [x] **T5**: Create LoginComponent
@@ -274,15 +274,15 @@ const routes: Routes = [
 - [x] **T9**: Add routing
   - [x] Add /login route
   - [x] Add /register route
-  - [ ] Add route guards if needed
+  - [x] Add route guards if needed
 
 ### Phase 4: Integration
-- [ ] **T10**: Initialize auth on app start
-  - [ ] Check session in app.component.ts
-  - [ ] Restore user state
-- [ ] **T11**: Handle OAuth callbacks
-  - [ ] Configure Appwrite OAuth settings
-  - [ ] Handle redirect after OAuth
+- [x] **T10**: Initialize auth on app start
+  - [x] Check session in app.component.ts
+  - [x] Restore user state
+- [x] **T11**: Handle OAuth callbacks
+  - [x] Configure Appwrite OAuth settings
+  - [x] Handle redirect after OAuth
 
 ## Dev Notes
 
