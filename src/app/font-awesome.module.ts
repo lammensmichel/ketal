@@ -20,10 +20,8 @@ import {
   faMedal,
   faRedo,
   faDoorOpen,
+  faRightFromBracket,
 } from '@fortawesome/free-solid-svg-icons';
-
-// Regular icons
-import { faCircleXmark } from '@fortawesome/free-regular-svg-icons';
 
 @NgModule({
   imports: [FontAwesomeModule],
@@ -49,10 +47,8 @@ export class FontAwesomeIconsModule {
       faTrophy,
       faMedal,
       faRedo,
-      faDoorOpen
+      faDoorOpen,
+      faRightFromBracket
     );
-
-    // Add regular icons
-    library.addIcons(faCircleXmark);
   }
 }

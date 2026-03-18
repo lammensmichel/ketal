@@ -1,6 +1,6 @@
 # Story 14.3: Validation minimum 2 joueurs pour lancer une partie
 
-**Status**: Draft
+**Status**: Done
 **Epic**: Epic 14: Account & Monetization Gate
 **Priority**: High
 **Depends On**: -

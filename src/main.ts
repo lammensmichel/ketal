@@ -6,8 +6,7 @@ import { APP_INITIALIZER, importProvidersFrom } from '@angular/core';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
-import { faCaretRight, faCaretLeft, faMinus, faPlus, faWineGlass } from '@fortawesome/free-solid-svg-icons';
-import { faCircleXmark } from '@fortawesome/free-regular-svg-icons';
+import { faCaretRight, faCaretLeft, faMinus, faPlus, faWineGlass, faRightFromBracket } from '@fortawesome/free-solid-svg-icons';
 
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app-routing.module';
@@ -43,7 +42,7 @@ bootstrapApplication(AppComponent, {
       provide: FaIconLibrary,
       useFactory: () => {
         const library = new FaIconLibrary();
-        library.addIcons(faCaretRight, faCaretLeft, faMinus, faPlus, faWineGlass, faCircleXmark);
+        library.addIcons(faCaretRight, faCaretLeft, faMinus, faPlus, faWineGlass, faRightFromBracket);
         return library;
       },
     },
