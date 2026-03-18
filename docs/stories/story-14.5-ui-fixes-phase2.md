@@ -1,6 +1,6 @@
 # Story 14.5: UI Fixes - Phase 2 Cards & Button Labels
 
-**Status**: Draft
+**Status**: Done
 **Epic**: Epic 14: UX Polish
 **Priority**: Medium
 
@@ -36,17 +36,17 @@ Several UI inconsistencies found during manual testing:
 
 ## Tasks / Subtasks
 
-- [ ] **T1** (AC: 1): Fix card sizes in footer Phase 2
-  - [ ] Remove `max-width: 100%` from `playing-card.component.scss`
+- [x] **T1** (AC: 1): Fix card sizes in footer Phase 2
+  - [x] Remove `max-width: 100%` from `playing-card.component.scss`
 
-- [ ] **T2** (AC: 2): Fix player card sizes
-  - [ ] Replace mobile responsive override in `player-card.component.scss` with uniform fixed width
+- [x] **T2** (AC: 2): Fix player card sizes
+  - [x] Replace mobile responsive override in `player-card.component.scss` with uniform fixed width
 
-- [ ] **T3** (AC: 3, 4): Fix quit button translation and icon
-  - [ ] In `src/assets/i18n/fr.json`, change `Button_QuitGame` from "Nouvelle partie" to "Quitter"
-  - [ ] Verify EN translation is correct
-  - [ ] Check all other language files (nl, de)
-  - [ ] Change icon from `circle-xmark` to a more appropriate icon (e.g. `power-off` or `right-from-bracket`) in `header.component.html`
+- [x] **T3** (AC: 3, 4): Fix quit button translation and icon
+  - [x] In `src/assets/i18n/fr.json`, change `Button_QuitGame` from "Nouvelle partie" to "Quitter"
+  - [x] Verify EN translation is correct
+  - [x] Check all other language files (nl, de)
+  - [x] Change icon from `circle-xmark` to a more appropriate icon (e.g. `power-off` or `right-from-bracket`) in `header.component.html`
 
 ---
 
@@ -68,3 +68,4 @@ Several UI inconsistencies found during manual testing:
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
 | 2026-03-17 | 1.0 | Story created | - |
+| 2026-03-19 | 2.0 | Implemented card width + quit icon | Dev |

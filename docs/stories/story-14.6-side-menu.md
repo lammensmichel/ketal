@@ -1,6 +1,6 @@
 # Story 14.6: Side Menu (Drawer) pour gagner de la place en hauteur
 
-**Status**: Draft
+**Status**: Done
 **Epic**: Epic 14: UX Polish
 **Priority**: High
 
@@ -65,34 +65,34 @@ Quand ☰ cliqué :
 
 ## Tasks / Subtasks
 
-- [ ] **T1** (AC: 1): Refactorer le header compact
-  - [ ] Réduire le header à une seule ligne : titre à gauche, bouton hamburger à droite
-  - [ ] Supprimer les boutons "Menu" et "Nouvelle partie" du header
-  - [ ] Supprimer le composant user-menu du header
+- [x] **T1** (AC: 1): Refactorer le header compact
+  - [x] Réduire le header à une seule ligne : titre à gauche, bouton hamburger à droite
+  - [x] Supprimer les boutons "Menu" et "Nouvelle partie" du header
+  - [x] Supprimer le composant user-menu du header
 
-- [ ] **T2** (AC: 2, 4): Créer le composant SideMenuComponent
-  - [ ] Créer `src/app/_shared/_components/side-menu/side-menu.component.ts`
-  - [ ] Drawer qui slide depuis la droite avec backdrop semi-transparent
-  - [ ] Animation CSS d'ouverture/fermeture (transform translateX)
-  - [ ] Se ferme au clic sur le backdrop
-  - [ ] Se ferme au clic sur un item du menu
-  - [ ] Signal `isOpen` pour gérer l'état
+- [x] **T2** (AC: 2, 4): Créer le composant SideMenuComponent
+  - [x] Créer `src/app/_shared/_components/side-menu/side-menu.component.ts`
+  - [x] Drawer qui slide depuis la droite avec backdrop semi-transparent
+  - [x] Animation CSS d'ouverture/fermeture (transform translateX)
+  - [x] Se ferme au clic sur le backdrop
+  - [x] Se ferme au clic sur un item du menu
+  - [x] Signal `isOpen` pour gérer l'état
 
-- [ ] **T3** (AC: 3, 5): Contenu du side menu
-  - [ ] Item "Menu" (🏠) — appelle `goToMenu()`, visible si partie en cours
-  - [ ] Item "Quitter" — appelle `showQuitConfirmation()`, visible si partie en cours
-  - [ ] Séparateur
-  - [ ] Item "Se connecter" / "Se déconnecter" — selon l'état auth
-  - [ ] Sélecteur de langue (dropdown ou liste)
+- [x] **T3** (AC: 3, 5): Contenu du side menu
+  - [x] Item "Menu" — appelle `goToMenu()`, visible si partie en cours
+  - [x] Item "Quitter" — appelle `showQuitConfirmation()`, visible si partie en cours
+  - [x] Séparateur
+  - [x] Item "Se connecter" / "Se déconnecter" — selon l'état auth
+  - [x] Sélecteur de langue (dropdown ou liste)
 
-- [ ] **T4** (AC: 6): Conserver la confirmation de quit
-  - [ ] Le dialog de confirmation reste dans le header ou est déplacé dans le side menu
-  - [ ] Le flow quit → confirm → reset fonctionne identiquement
+- [x] **T4** (AC: 6): Conserver la confirmation de quit
+  - [x] Le dialog de confirmation reste dans le header ou est déplacé dans le side menu
+  - [x] Le flow quit → confirm → reset fonctionne identiquement
 
-- [ ] **T5** (AC: 7): Responsive
-  - [ ] Tester sur 375px, 768px, 1280px
-  - [ ] Le drawer ne dépasse pas 280px de large
-  - [ ] Le backdrop couvre tout l'écran
+- [x] **T5** (AC: 7): Responsive
+  - [x] Tester sur 375px, 768px, 1280px
+  - [x] Le drawer ne dépasse pas 280px de large
+  - [x] Le backdrop couvre tout l'écran
 
 ---
 
@@ -126,3 +126,4 @@ Quand ☰ cliqué :
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
 | 2026-03-17 | 1.0 | Story created | - |
+| 2026-03-19 | 2.0 | Implemented side drawer, PR #45 | Dev |

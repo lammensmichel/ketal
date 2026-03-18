@@ -1,6 +1,6 @@
 # Story 14.2: Améliorer les boutons de prédiction Phase 1
 
-**Status**: Draft
+**Status**: Done
 **Epic**: Epic 14: UX Polish
 **Priority**: Medium
 **Depends On**: -
@@ -42,19 +42,19 @@ Le tour 2 "Plus/Moins" est le plus problématique : les boutons "+" et "-" sont 
 
 ## Tasks / Subtasks
 
-- [ ] **T1** (AC: 1, 2, 4): Modifier les boutons Plus/Moins dans le footer
-  - [ ] Remplacer "+" par "Plus haut ↑" ou une flèche montante avec texte
-  - [ ] Remplacer "-" par "Plus bas ↓" ou une flèche descendante avec texte
-  - [ ] S'assurer d'un touch target minimum de 48x48px
-  - [ ] Ajouter un style hover/active feedback
+- [x] **T1** (AC: 1, 2, 4): Modifier les boutons Plus/Moins dans le footer
+  - [x] Remplacer "+" par "Plus haut ↑" ou une flèche montante avec texte
+  - [x] Remplacer "-" par "Plus bas ↓" ou une flèche descendante avec texte
+  - [x] S'assurer d'un touch target minimum de 48x48px
+  - [x] Ajouter un style hover/active feedback
 
-- [ ] **T2** (AC: 3): Afficher la carte de référence
-  - [ ] Montrer la miniature de la dernière carte du joueur actif à côté des boutons
-  - [ ] Ajouter un texte contextuel : "Par rapport à ton [valeur] de [couleur]"
+- [x] **T2** (AC: 3): Afficher la carte de référence
+  - [x] Montrer la miniature de la dernière carte du joueur actif à côté des boutons
+  - [x] Ajouter un texte contextuel : "Par rapport à ton [valeur] de [couleur]"
 
-- [ ] **T3** (AC: 5): Harmoniser le style des boutons sur les 4 tours
-  - [ ] Vérifier que tous les boutons de choix ont un style cohérent
-  - [ ] Taille, padding, border-radius uniformes
+- [x] **T3** (AC: 5): Harmoniser le style des boutons sur les 4 tours
+  - [x] Vérifier que tous les boutons de choix ont un style cohérent
+  - [x] Taille, padding, border-radius uniformes
 
 ---
 
@@ -101,3 +101,4 @@ Tour 2 actuel :         Tour 2 proposé :
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
 | 2026-03-17 | 1.0 | Story created | Claude |
+| 2026-03-19 | 2.0 | Implemented touch targets + hover states | Dev |

@@ -1,6 +1,6 @@
 # Story 14.0: Pause & retour menu sans perdre la partie
 
-**Status**: Draft
+**Status**: Done
 **Epic**: Epic 14: Account & Monetization Gate
 **Priority**: High
 **Depends On**: -
@@ -59,24 +59,24 @@ Footer (sur /players quand partie en cours):
 
 ## Tasks / Subtasks
 
-- [ ] **T1** (AC: 1, 2): Ajouter un bouton retour menu dans le header
-  - [ ] Nouvelle icône/bouton "Menu" à côté de "Arrêter la partie"
-  - [ ] Navigue vers `/players` sans appeler `resetGame()`
-  - [ ] La partie reste dans le signal `_game` et localStorage
+- [x] **T1** (AC: 1, 2): Ajouter un bouton retour menu dans le header
+  - [x] Nouvelle icône/bouton "Menu" à côté de "Arrêter la partie"
+  - [x] Navigue vers `/players` sans appeler `resetGame()`
+  - [x] La partie reste dans le signal `_game` et localStorage
 
-- [ ] **T2** (AC: 4): Ajouter une confirmation sur "Arrêter la partie"
-  - [ ] Renommer en "Quitter la partie" (plus clair)
-  - [ ] Dialog de confirmation avant `resetGame()`
-  - [ ] "Annuler" → retour au jeu
+- [x] **T2** (AC: 4): Ajouter une confirmation sur "Arrêter la partie"
+  - [x] Renommer en "Quitter la partie" (plus clair)
+  - [x] Dialog de confirmation avant `resetGame()`
+  - [x] "Annuler" → retour au jeu
 
-- [ ] **T3** (AC: 3): Bandeau "Partie en cours" sur `/players`
-  - [ ] Détecter `gameSrv.isGameStarted() || gameSrv.isGameFinished()`
-  - [ ] Afficher un bandeau en haut : "Partie en cours - Reprendre"
-  - [ ] Click → `router.navigate(['/game'])`
+- [x] **T3** (AC: 3): Bandeau "Partie en cours" sur `/players`
+  - [x] Détecter `gameSrv.isGameStarted() || gameSrv.isGameFinished()`
+  - [x] Afficher un bandeau en haut : "Partie en cours - Reprendre"
+  - [x] Click → `router.navigate(['/game'])`
 
-- [ ] **T4** (AC: 5): S'assurer que les routes auth ne suppriment pas la partie
-  - [ ] Vérifier que `navigateAfterLogin()` dans LoginComponent respecte la partie en cours
-  - [ ] Vérifier que RegisterComponent ne fait pas de `resetGame()`
+- [x] **T4** (AC: 5): S'assurer que les routes auth ne suppriment pas la partie
+  - [x] Vérifier que `navigateAfterLogin()` dans LoginComponent respecte la partie en cours
+  - [x] Vérifier que RegisterComponent ne fait pas de `resetGame()`
 
 ---
 
@@ -131,3 +131,4 @@ quitGame(): void {
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
 | 2026-03-17 | 1.0 | Story created | Claude |
+| 2026-03-19 | 2.0 | Implemented pause/resume game, PR #44 | Dev |
