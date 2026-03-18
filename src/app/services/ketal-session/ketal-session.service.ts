@@ -261,6 +261,7 @@ export class KetalSessionService {
 
       return this.currentSession()!;
     } catch (error) {
+      console.error('[KetalSessionService] startGame failed - partial docs may exist in Appwrite');
       throw new Error(`Failed to start game: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -311,7 +312,9 @@ export class KetalSessionService {
         await this.updateCardsDoc(updates.drinkingCards, updates.givingCards);
       }
 
-      return this.currentSession()!;
+      const session = this.currentSession();
+      if (!session) throw new Error('Session state is null after update');
+      return session;
     } catch (error) {
       throw new Error(`Failed to update session: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
@@ -424,6 +427,8 @@ export class KetalSessionService {
           this.notifyUpdate();
         }
       );
+    } else {
+      console.warn('[KetalSessionService] Cards subscription skipped - no cards doc available');
     }
   }
 
@@ -587,12 +592,12 @@ export class KetalSessionService {
       $id: doc['$id'] as string,
       roomId: doc['roomId'] as string,
       gameId: 'ketal',
-      gameNumber: (doc['gameNumber'] as number) || 1,
-      status: (doc['status'] as SessionStatus) || 'waiting',
-      phase: (doc['phase'] as SessionPhase) || 'setup',
-      turn: (doc['turn'] as number) || 0,
-      activePlayerId: (doc['activePlayerId'] as string) || null,
-      withSummary: (doc['withSummary'] as boolean) || false,
+      gameNumber: (doc['gameNumber'] as number) ?? 1,
+      status: (doc['status'] as SessionStatus) ?? 'waiting',
+      phase: (doc['phase'] as SessionPhase) ?? 'setup',
+      turn: (doc['turn'] as number) ?? 0,
+      activePlayerId: (doc['activePlayerId'] as string) ?? null,
+      withSummary: (doc['withSummary'] as boolean) ?? false,
     };
   }
 
@@ -601,13 +606,13 @@ export class KetalSessionService {
       $id: doc['$id'] as string,
       sessionId: doc['sessionId'] as string,
       memberId: doc['memberId'] as string,
-      displayName: (doc['displayName'] as string) || '',
-      order: (doc['order'] as number) || 1,
+      displayName: (doc['displayName'] as string) ?? '',
+      order: (doc['order'] as number) ?? 1,
       cards: typeof doc['cards'] === 'string' ? doc['cards'] : JSON.stringify(doc['cards'] ?? []),
       choices: typeof doc['choices'] === 'string' ? doc['choices'] : JSON.stringify(doc['choices'] ?? {}),
-      sipsTaken: (doc['sipsTaken'] as number) || 0,
-      sipsGiven: (doc['sipsGiven'] as number) || 0,
-      isReady: (doc['isReady'] as boolean) || false,
+      sipsTaken: (doc['sipsTaken'] as number) ?? 0,
+      sipsGiven: (doc['sipsGiven'] as number) ?? 0,
+      isReady: (doc['isReady'] as boolean) ?? false,
     };
   }
 

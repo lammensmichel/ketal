@@ -876,6 +876,7 @@ export class GameService {
       try {
         await this.startGameInRoom(withSummaryMode);
       } catch (error) {
+        console.warn('[GameService] Appwrite session may be orphaned - will need cleanup on reconnection');
         console.warn('[GameService] Room mode failed, falling back to local mode:', error);
         this.startGameLocally(withSummaryMode);
       }
