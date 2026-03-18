@@ -47,25 +47,14 @@ export interface GameMember {
 }
 
 /**
- * KetalSession model matching Appwrite ketal_sessions collection
- */
-export interface KetalSession {
-  $id: string;
-  roomId: string;
-  gameId: 'ketal';
-  gameNumber: number;
-  status: 'waiting' | 'playing' | 'finished';
-  phase: 'setup' | 'dealing' | 'pyramid' | 'bus' | 'finished';
-  activePlayerId: string;
-}
-
-/**
  * Collection IDs used in Appwrite
  */
 const COLLECTIONS = {
   GAME_ROOMS: 'fug_game_rooms',
   GAME_MEMBERS: 'fug_game_members',
   KETAL_SESSIONS: 'ketal_sessions',
+  KETAL_PLAYERS: 'ketal_players',
+  KETAL_CARDS: 'ketal_cards',
 } as const;
 
 /**
@@ -108,11 +97,19 @@ export class RealtimeService {
   }
 
   /**
+   * Subscribe to updates for a specific document in any collection
+   */
+  subscribeToDocument<T extends object>(collectionId: string, documentId: string, callback: SubscriptionCallback<T>): string {
+    const channel = this.buildDocumentChannel(collectionId, documentId);
+    return this.createSubscription<T>(channel, callback);
+  }
+
+  /**
    * Subscribe to updates for a specific Ketal session
    */
-  subscribeToSession(sessionId: string, callback: SubscriptionCallback<KetalSession>): string {
+  subscribeToSession<T extends object = Record<string, unknown>>(sessionId: string, callback: SubscriptionCallback<T>): string {
     const channel = this.buildDocumentChannel(COLLECTIONS.KETAL_SESSIONS, sessionId);
-    return this.createSubscription<KetalSession>(channel, callback);
+    return this.createSubscription<T>(channel, callback);
   }
 
   /**

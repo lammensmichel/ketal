@@ -255,6 +255,7 @@ export function createMockKetalSessionService(): jasmine.SpyObj<KetalSessionServ
   mock.updateSession.and.resolveTo(null);
   mock.endGame.and.resolveTo(undefined);
   mock.getSession.and.resolveTo(null);
+  mock.subscribeToSession.and.stub();
 
   return mock as jasmine.SpyObj<KetalSessionService> & {
     currentSession: WritableSignal<KetalSession | null>;
@@ -352,7 +353,7 @@ export function createMockMemberService(): jasmine.SpyObj<MemberService> & {
 export function createMockRealtimeService(): jasmine.SpyObj<RealtimeService> {
   const mock = jasmine.createSpyObj(
     'RealtimeService',
-    ['subscribeToRoom', 'subscribeToSession', 'subscribeToMembers', 'subscribeToCollection', 'unsubscribe', 'unsubscribeAll', 'hasSubscription', 'getActiveSubscriptionIds'],
+    ['subscribeToRoom', 'subscribeToSession', 'subscribeToDocument', 'subscribeToMembers', 'subscribeToCollection', 'unsubscribe', 'unsubscribeAll', 'hasSubscription', 'getActiveSubscriptionIds'],
     {
       isConnected: signal(true),
       activeSubscriptions: signal(0),
@@ -361,6 +362,7 @@ export function createMockRealtimeService(): jasmine.SpyObj<RealtimeService> {
 
   mock.subscribeToRoom.and.returnValue('sub_room_123');
   mock.subscribeToSession.and.returnValue('sub_session_123');
+  mock.subscribeToDocument.and.returnValue('sub_document_123');
   mock.subscribeToMembers.and.returnValue('sub_members_123');
   mock.subscribeToCollection.and.returnValue('sub_collection_123');
   mock.hasSubscription.and.returnValue(false);

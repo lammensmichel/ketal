@@ -2757,70 +2757,68 @@ describe('GameService', () => {
     }
 
     describe('subscribeToSessionUpdates', () => {
-      it('should subscribe to realtime updates via RealtimeService', () => {
+      it('should subscribe to realtime updates via KetalSessionService', () => {
         const testService = createServiceWithRoomMode(null, createMockGameRoom());
 
         testService.subscribeToSessionUpdates('session-123');
 
-        expect(mockRealtimeService.subscribeToSession).toHaveBeenCalledWith(
+        expect(mockKetalSessionService.subscribeToSession).toHaveBeenCalledWith(
           'session-123',
           jasmine.any(Function)
         );
       });
 
-      it('should store the subscription ID', () => {
-        mockRealtimeService.subscribeToSession.and.returnValue('sub_new_123');
+      it('should store the session ID for reconnection', () => {
         const testService = createServiceWithRoomMode(null, createMockGameRoom());
 
         testService.subscribeToSessionUpdates('session-123');
 
-        // Verify we can unsubscribe (which proves the ID was stored)
+        // Verify we can unsubscribe (delegates to ketalSessionService)
         testService.unsubscribeFromSession();
-        expect(mockRealtimeService.unsubscribe).toHaveBeenCalledWith('sub_new_123');
+        expect(mockKetalSessionService.unsubscribe).toHaveBeenCalled();
       });
 
       it('should cleanup existing subscription before creating new one', () => {
-        mockRealtimeService.subscribeToSession.and.returnValues('sub_first', 'sub_second');
         const testService = createServiceWithRoomMode(null, createMockGameRoom());
 
         testService.subscribeToSessionUpdates('session-1');
         testService.subscribeToSessionUpdates('session-2');
 
-        expect(mockRealtimeService.unsubscribe).toHaveBeenCalledWith('sub_first');
-        expect(mockRealtimeService.subscribeToSession).toHaveBeenCalledTimes(2);
+        // First subscribe calls unsubscribe (cleanup), then second subscribe also calls unsubscribe
+        expect(mockKetalSessionService.unsubscribe).toHaveBeenCalled();
+        expect(mockKetalSessionService.subscribeToSession).toHaveBeenCalledTimes(2);
       });
     });
 
     describe('unsubscribeFromSession', () => {
-      it('should unsubscribe via RealtimeService when subscription exists', () => {
-        mockRealtimeService.subscribeToSession.and.returnValue('sub_active');
+      it('should unsubscribe via KetalSessionService when called', () => {
+        const testService = createServiceWithRoomMode(null, createMockGameRoom());
+
+        testService.subscribeToSessionUpdates('session-123');
+        mockKetalSessionService.unsubscribe.calls.reset();
+        testService.unsubscribeFromSession();
+
+        expect(mockKetalSessionService.unsubscribe).toHaveBeenCalled();
+      });
+
+      it('should call unsubscribe even when no subscription exists', () => {
+        const testService = createServiceWithRoomMode(null, createMockGameRoom());
+
+        testService.unsubscribeFromSession();
+
+        // KetalSessionService.unsubscribe is always safe to call
+        expect(mockKetalSessionService.unsubscribe).toHaveBeenCalled();
+      });
+
+      it('should be idempotent', () => {
         const testService = createServiceWithRoomMode(null, createMockGameRoom());
 
         testService.subscribeToSessionUpdates('session-123');
         testService.unsubscribeFromSession();
-
-        expect(mockRealtimeService.unsubscribe).toHaveBeenCalledWith('sub_active');
-      });
-
-      it('should not call unsubscribe when no subscription exists', () => {
-        const testService = createServiceWithRoomMode(null, createMockGameRoom());
-
         testService.unsubscribeFromSession();
 
-        expect(mockRealtimeService.unsubscribe).not.toHaveBeenCalled();
-      });
-
-      it('should clear subscription ID after unsubscribing', () => {
-        mockRealtimeService.subscribeToSession.and.returnValue('sub_active');
-        const testService = createServiceWithRoomMode(null, createMockGameRoom());
-
-        testService.subscribeToSessionUpdates('session-123');
-        testService.unsubscribeFromSession();
-
-        // Second unsubscribe should not call unsubscribe again
-        mockRealtimeService.unsubscribe.calls.reset();
-        testService.unsubscribeFromSession();
-        expect(mockRealtimeService.unsubscribe).not.toHaveBeenCalled();
+        // Multiple calls are safe - KetalSessionService handles cleanup
+        expect(mockKetalSessionService.unsubscribe).toHaveBeenCalled();
       });
     });
 
@@ -3010,33 +3008,31 @@ describe('GameService', () => {
 
     describe('subscription cleanup', () => {
       it('should unsubscribe when resetGame is called', () => {
-        mockRealtimeService.subscribeToSession.and.returnValue('sub_active');
         const testService = createServiceWithRoomMode(createMockGame(), createMockGameRoom());
 
         testService.subscribeToSessionUpdates('session-123');
-        mockRealtimeService.unsubscribe.calls.reset();
+        mockKetalSessionService.unsubscribe.calls.reset();
 
         testService.resetGame();
 
-        expect(mockRealtimeService.unsubscribe).toHaveBeenCalledWith('sub_active');
+        expect(mockKetalSessionService.unsubscribe).toHaveBeenCalled();
       });
 
       it('should unsubscribe when game ends (status 2) in room mode', async () => {
         const mockRoom = createMockGameRoom();
         const mockSession = createMockKetalSession({ $id: 'session-123' });
         mockKetalSessionService.currentSession.set(mockSession);
-        mockRealtimeService.subscribeToSession.and.returnValue('sub_active');
 
         const testService = createServiceWithRoomMode(createMockGame(), mockRoom);
         testService.subscribeToSessionUpdates('session-123');
-        mockRealtimeService.unsubscribe.calls.reset();
+        mockKetalSessionService.unsubscribe.calls.reset();
 
         testService.setStatus(2);
 
         // Allow async finalizeGameStats to complete
         await new Promise(resolve => setTimeout(resolve, 50));
 
-        expect(mockRealtimeService.unsubscribe).toHaveBeenCalledWith('sub_active');
+        expect(mockKetalSessionService.unsubscribe).toHaveBeenCalled();
       });
 
       it('should subscribe during beginGame in room mode', async () => {
@@ -3069,7 +3065,7 @@ describe('GameService', () => {
 
         await testService.beginGame();
 
-        expect(mockRealtimeService.subscribeToSession).toHaveBeenCalledWith(
+        expect(mockKetalSessionService.subscribeToSession).toHaveBeenCalledWith(
           'session-456',
           jasmine.any(Function)
         );
@@ -3114,11 +3110,11 @@ describe('GameService', () => {
         mockKetalSessionService.getSession.and.resolveTo(mockSession);
 
         const testService = createServiceWithRoomMode(createMockGame(), mockRoom);
-        mockRealtimeService.subscribeToSession.calls.reset();
+        mockKetalSessionService.subscribeToSession.calls.reset();
 
         await testService.handleReconnection('session-123');
 
-        expect(mockRealtimeService.subscribeToSession).toHaveBeenCalledWith(
+        expect(mockKetalSessionService.subscribeToSession).toHaveBeenCalledWith(
           'session-123',
           jasmine.any(Function)
         );
@@ -3179,9 +3175,8 @@ describe('GameService', () => {
       it('should call handleSessionUpdate when realtime update is received', () => {
         let capturedCallback: ((session: any) => void) | undefined;
 
-        mockRealtimeService.subscribeToSession.and.callFake((_id: string, cb: (session: any) => void) => {
+        mockKetalSessionService.subscribeToSession.and.callFake((_id: string, cb: (session: any) => void) => {
           capturedCallback = cb;
-          return 'sub_captured';
         });
 
         const testService = createServiceWithRoomMode(createMockGame(), createMockGameRoom());
@@ -3189,7 +3184,7 @@ describe('GameService', () => {
 
         expect(capturedCallback).toBeDefined();
 
-        // Simulate realtime update
+        // Simulate realtime update via KetalSessionService callback
         const session = createMockKetalSession({
           status: 'playing',
           phase: 'pyramid',

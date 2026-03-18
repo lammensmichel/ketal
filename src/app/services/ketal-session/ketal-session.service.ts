@@ -1,13 +1,15 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { ID } from 'appwrite';
+import { ID, Query } from 'appwrite';
 import { AppwriteService } from '../appwrite/appwrite.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import { RoomService } from '../room/room.service';
 
 /**
- * Collection ID for Ketal sessions in Appwrite
+ * Collection IDs for Ketal in Appwrite
  */
 const COLLECTION_KETAL_SESSIONS = 'ketal_sessions';
+const COLLECTION_KETAL_PLAYERS = 'ketal_players';
+const COLLECTION_KETAL_CARDS = 'ketal_cards';
 
 /**
  * Player choices during the prediction phase
@@ -20,7 +22,7 @@ export interface PlayerChoices {
 }
 
 /**
- * Represents a player in a Ketal game session
+ * Represents a player in a Ketal game session (in-memory model)
  */
 export interface KetalPlayer {
   /** Member ID from the game_members collection */
@@ -52,7 +54,7 @@ export type SessionStatus = 'waiting' | 'playing' | 'finished';
 export type SessionPhase = 'setup' | 'dealing' | 'pyramid' | 'finished';
 
 /**
- * Represents a Ketal game session stored in Appwrite
+ * Represents a Ketal game session (composed from 3 Appwrite collections)
  */
 export interface KetalSession {
   /** Appwrite document ID */
@@ -87,15 +89,55 @@ export interface KetalSession {
 export type CreateKetalSessionData = Omit<KetalSession, '$id'>;
 
 /**
+ * Appwrite document for ketal_players collection
+ */
+interface KetalPlayerDoc {
+  $id: string;
+  sessionId: string;
+  memberId: string;
+  displayName: string;
+  order: number;
+  cards: string;
+  choices: string;
+  sipsTaken: number;
+  sipsGiven: number;
+  isReady: boolean;
+}
+
+/**
+ * Appwrite document for ketal_cards collection
+ */
+interface KetalCardsDoc {
+  $id: string;
+  sessionId: string;
+  drinkingCards: string;
+  givingCards: string;
+}
+
+/**
+ * Internal session data (ketal_sessions collection only)
+ */
+interface SessionData {
+  $id: string;
+  roomId: string;
+  gameId: 'ketal';
+  gameNumber: number;
+  status: SessionStatus;
+  phase: SessionPhase;
+  turn: number;
+  activePlayerId: string | null;
+  withSummary: boolean;
+}
+
+/**
  * KetalSessionService - Manages Ketal game sessions with Appwrite backend
  *
- * Provides functionality for:
- * - Creating and managing game sessions
- * - Realtime synchronization of session state
- * - Player management within sessions
- * - Game phase and turn tracking
+ * Data is split across 3 Appwrite collections:
+ * - ketal_sessions: session-level state (status, phase, turn, etc.)
+ * - ketal_players: per-player state (cards, choices, sips)
+ * - ketal_cards: card state (drinkingCards, givingCards)
  *
- * Uses Angular 19 patterns with signals for reactive state management.
+ * The service composes a unified KetalSession from these 3 sources.
  */
 @Injectable({
   providedIn: 'root',
@@ -105,84 +147,119 @@ export class KetalSessionService {
   private readonly realtime = inject(RealtimeService);
   private readonly roomService = inject(RoomService);
 
-  /** Active subscription ID for realtime updates */
-  private _subscriptionId: string | null = null;
+  /** Internal split state */
+  private readonly _sessionData = signal<SessionData | null>(null);
+  private readonly _playerDocs = signal<KetalPlayerDoc[]>([]);
+  private readonly _cardsDoc = signal<KetalCardsDoc | null>(null);
 
-  /** Signal holding the current session state */
-  private readonly _currentSession = signal<KetalSession | null>(null);
+  /** Subscription IDs for realtime */
+  private _sessionSubId: string | null = null;
+  private _playersSubId: string | null = null;
+  private _cardsSubId: string | null = null;
 
-  /** Public readonly signal for current session state */
-  readonly currentSession = this._currentSession.asReadonly();
+  /** External callback for realtime updates */
+  private _onUpdateCallback: ((session: KetalSession) => void) | null = null;
+
+  /** Composed readonly signal — merges 3 collections into a unified KetalSession */
+  readonly currentSession = computed<KetalSession | null>(() => {
+    const session = this._sessionData();
+    if (!session) return null;
+    return {
+      ...session,
+      players: this.getOrderedPlayers(),
+      drinkingCards: this.parseJsonArray(this._cardsDoc()?.drinkingCards),
+      givingCards: this.parseJsonArray(this._cardsDoc()?.givingCards),
+    };
+  });
 
   /** Computed signal indicating if a game is in progress */
-  readonly isPlaying = computed(() => this._currentSession()?.status === 'playing');
+  readonly isPlaying = computed(() => this._sessionData()?.status === 'playing');
 
   /** Computed signal for the current game phase */
-  readonly currentPhase = computed(() => this._currentSession()?.phase ?? 'setup');
+  readonly currentPhase = computed(() => this._sessionData()?.phase ?? 'setup');
 
   /** Computed signal for the list of players */
-  readonly players = computed(() => this._currentSession()?.players ?? []);
+  readonly players = computed(() => this.getOrderedPlayers());
 
   /** Computed signal for the active player ID */
-  readonly activePlayerId = computed(() => this._currentSession()?.activePlayerId);
+  readonly activePlayerId = computed(() => this._sessionData()?.activePlayerId);
 
   /**
    * Start a new game in a room
    *
-   * Creates a new Ketal session document in Appwrite, updates the room's
-   * currentSessionId, and subscribes to realtime updates.
-   *
-   * @param roomId - The ID of the room to start the game in
-   * @param players - Array of players participating in the game
-   * @param withSummary - Whether to enable summary mode at game end
-   * @returns The created session
-   * @throws Error if the session creation fails
+   * Creates documents across 3 collections: session, players, and cards.
    */
   async startGame(roomId: string, players: KetalPlayer[], withSummary: boolean): Promise<KetalSession> {
     try {
-      // Get current room to find game number
       const currentRoom = this.roomService.currentRoom();
       const gameNumber = (currentRoom?.gamesPlayed ?? 0) + 1;
 
-      // Create session data
-      const sessionData: CreateKetalSessionData = {
-        roomId,
-        gameId: 'ketal',
-        gameNumber,
-        status: 'waiting',
-        phase: 'setup',
-        turn: 0,
-        activePlayerId: players.length > 0 ? players[0].memberId : null,
-        players,
-        drinkingCards: [],
-        givingCards: [],
-        withSummary,
-      };
-
-      // Create session document in Appwrite
-      const document = await this.appwrite.databases.createDocument(
+      // 1. Create session document
+      const sessionDoc = await this.appwrite.databases.createDocument(
         this.appwrite.databaseId,
         COLLECTION_KETAL_SESSIONS,
         ID.unique(),
-        this.serializeSessionData(sessionData)
+        {
+          roomId,
+          gameId: 'ketal',
+          gameNumber,
+          status: 'waiting',
+          phase: 'setup',
+          turn: 0,
+          activePlayerId: players.length > 0 ? players[0].memberId : null,
+          withSummary,
+        }
       );
 
-      const session = this.mapDocumentToSession(document);
+      const sessionId = sessionDoc['$id'] as string;
 
-      // Update room with current session ID and increment games played
+      // 2. Create player documents
+      const playerDocPromises = players.map((player) =>
+        this.appwrite.databases.createDocument(
+          this.appwrite.databaseId,
+          COLLECTION_KETAL_PLAYERS,
+          ID.unique(),
+          {
+            sessionId,
+            memberId: player.memberId,
+            displayName: player.displayName,
+            order: player.order,
+            cards: JSON.stringify(player.cards),
+            choices: JSON.stringify(player.choices),
+            sipsTaken: player.sipsTaken,
+            sipsGiven: player.sipsGiven,
+            isReady: player.isReady,
+          }
+        )
+      );
+
+      const playerDocs = await Promise.all(playerDocPromises);
+
+      // 3. Create cards document
+      const cardsDoc = await this.appwrite.databases.createDocument(
+        this.appwrite.databaseId,
+        COLLECTION_KETAL_CARDS,
+        ID.unique(),
+        {
+          sessionId,
+          drinkingCards: JSON.stringify([]),
+          givingCards: JSON.stringify([]),
+        }
+      );
+
+      // 4. Update room with current session ID and increment games played
       await this.roomService.updateRoom(roomId, {
-        currentSessionId: session.$id,
+        currentSessionId: sessionId,
         status: 'playing',
         gamesPlayed: gameNumber,
       });
 
-      // Subscribe to realtime updates
-      this.subscribeToSession(session.$id);
+      // 5. Update internal signals
+      this._sessionData.set(this.mapRawToSessionData(sessionDoc));
+      this._playerDocs.set(playerDocs.map((doc) => this.mapRawToPlayerDoc(doc)));
+      this._cardsDoc.set(this.mapRawToCardsDoc(cardsDoc));
 
-      // Update local signal
-      this._currentSession.set(session);
-
-      return session;
+      return this.currentSession()!;
     } catch (error) {
       throw new Error(`Failed to start game: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
@@ -191,28 +268,50 @@ export class KetalSessionService {
   /**
    * Update an existing session
    *
-   * Updates the session document in Appwrite and the local signal.
-   *
-   * @param sessionId - The ID of the session to update
-   * @param updates - Partial session data to update
-   * @returns The updated session
-   * @throws Error if the update fails
+   * Splits the update across the appropriate collections.
    */
   async updateSession(sessionId: string, updates: Partial<Omit<KetalSession, '$id'>>): Promise<KetalSession> {
     try {
-      const serializedUpdates = this.serializeSessionUpdates(updates);
+      // 1. Session-level fields
+      const sessionUpdate: Record<string, unknown> = {};
+      const sessionFields: (keyof Omit<KetalSession, '$id' | 'players' | 'drinkingCards' | 'givingCards'>)[] = [
+        'roomId',
+        'gameId',
+        'gameNumber',
+        'status',
+        'phase',
+        'turn',
+        'activePlayerId',
+        'withSummary',
+      ];
 
-      const document = await this.appwrite.databases.updateDocument(
-        this.appwrite.databaseId,
-        COLLECTION_KETAL_SESSIONS,
-        sessionId,
-        serializedUpdates
-      );
+      for (const field of sessionFields) {
+        if (updates[field] !== undefined) {
+          sessionUpdate[field] = updates[field];
+        }
+      }
 
-      const session = this.mapDocumentToSession(document);
-      this._currentSession.set(session);
+      if (Object.keys(sessionUpdate).length > 0) {
+        const doc = await this.appwrite.databases.updateDocument(
+          this.appwrite.databaseId,
+          COLLECTION_KETAL_SESSIONS,
+          sessionId,
+          sessionUpdate
+        );
+        this._sessionData.set(this.mapRawToSessionData(doc));
+      }
 
-      return session;
+      // 2. Player updates
+      if (updates.players) {
+        await this.updatePlayerDocs(updates.players);
+      }
+
+      // 3. Card updates
+      if (updates.drinkingCards !== undefined || updates.givingCards !== undefined) {
+        await this.updateCardsDoc(updates.drinkingCards, updates.givingCards);
+      }
+
+      return this.currentSession()!;
     } catch (error) {
       throw new Error(`Failed to update session: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
@@ -220,26 +319,15 @@ export class KetalSessionService {
 
   /**
    * End the current game
-   *
-   * Sets the session status to 'finished', clears the room's currentSessionId,
-   * and unsubscribes from realtime updates.
-   *
-   * @param sessionId - The ID of the session to end
-   * @throws Error if ending the game fails
    */
   async endGame(sessionId: string): Promise<void> {
     try {
-      // Update session status to finished
       await this.appwrite.databases.updateDocument(this.appwrite.databaseId, COLLECTION_KETAL_SESSIONS, sessionId, {
         status: 'finished',
         phase: 'finished',
       });
 
-      // Get the room ID from current session before clearing
-      const currentSession = this._currentSession();
-      const roomId = currentSession?.roomId;
-
-      // Update room to clear current session
+      const roomId = this._sessionData()?.roomId;
       if (roomId) {
         await this.roomService.updateRoom(roomId, {
           currentSessionId: null,
@@ -247,34 +335,48 @@ export class KetalSessionService {
         });
       }
 
-      // Unsubscribe from realtime updates
       this.unsubscribe();
 
-      // Clear local session
-      this._currentSession.set(null);
+      this._sessionData.set(null);
+      this._playerDocs.set([]);
+      this._cardsDoc.set(null);
+      this._onUpdateCallback = null;
     } catch (error) {
       throw new Error(`Failed to end game: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * Fetch a session by ID
-   *
-   * @param sessionId - The ID of the session to fetch
-   * @returns The session or null if not found
-   * @throws Error if the fetch fails
+   * Fetch a session by ID (loads all 3 collections)
    */
   async getSession(sessionId: string): Promise<KetalSession | null> {
     try {
-      const document = await this.appwrite.databases.getDocument(
+      const sessionDoc = await this.appwrite.databases.getDocument(
         this.appwrite.databaseId,
         COLLECTION_KETAL_SESSIONS,
         sessionId
       );
 
-      return this.mapDocumentToSession(document);
+      const playersResponse = await this.appwrite.databases.listDocuments(
+        this.appwrite.databaseId,
+        COLLECTION_KETAL_PLAYERS,
+        [Query.equal('sessionId', sessionId), Query.orderAsc('order')]
+      );
+
+      const cardsResponse = await this.appwrite.databases.listDocuments(
+        this.appwrite.databaseId,
+        COLLECTION_KETAL_CARDS,
+        [Query.equal('sessionId', sessionId)]
+      );
+
+      this._sessionData.set(this.mapRawToSessionData(sessionDoc));
+      this._playerDocs.set(playersResponse.documents.map((d) => this.mapRawToPlayerDoc(d)));
+      this._cardsDoc.set(
+        cardsResponse.documents.length > 0 ? this.mapRawToCardsDoc(cardsResponse.documents[0]) : null
+      );
+
+      return this.currentSession();
     } catch (error) {
-      // Return null for not found (404) errors
       if (error instanceof Error && error.message.includes('not found')) {
         return null;
       }
@@ -283,165 +385,286 @@ export class KetalSessionService {
   }
 
   /**
-   * Subscribe to realtime updates for a session
-   *
-   * Uses RealtimeService to listen for changes and updates the local signal.
-   *
-   * @param sessionId - The ID of the session to subscribe to
+   * Subscribe to realtime updates for a session across all 3 collections.
+   * Composes updates and notifies via callback.
    */
-  subscribeToSession(sessionId: string): void {
-    // Unsubscribe from any existing subscription first
+  subscribeToSession(sessionId: string, onUpdate?: (session: KetalSession) => void): void {
     this.unsubscribe();
+    this._onUpdateCallback = onUpdate ?? null;
 
-    // Subscribe using RealtimeService
-    this._subscriptionId = this.realtime.subscribeToSession(sessionId, (payload) => {
-      // Map the payload to our KetalSession interface
-      const session = this.mapDocumentToSession(payload as unknown as Record<string, unknown>);
-      this._currentSession.set(session);
+    // 1. Subscribe to session document
+    this._sessionSubId = this.realtime.subscribeToDocument<Record<string, unknown>>(
+      COLLECTION_KETAL_SESSIONS,
+      sessionId,
+      (payload) => {
+        this._sessionData.set(this.mapRawToSessionData(payload));
+        this.notifyUpdate();
+      }
+    );
+
+    // 2. Subscribe to players collection (filtered by sessionId)
+    this._playersSubId = this.realtime.subscribeToCollection<Record<string, unknown>>(
+      COLLECTION_KETAL_PLAYERS,
+      (payload) => {
+        if (payload['sessionId'] === sessionId) {
+          this.handlePlayerDocUpdate(payload);
+          this.notifyUpdate();
+        }
+      }
+    );
+
+    // 3. Subscribe to cards document (if we have the doc ID)
+    const cardsDoc = this._cardsDoc();
+    if (cardsDoc) {
+      this._cardsSubId = this.realtime.subscribeToDocument<Record<string, unknown>>(
+        COLLECTION_KETAL_CARDS,
+        cardsDoc.$id,
+        (payload) => {
+          this._cardsDoc.set(this.mapRawToCardsDoc(payload));
+          this.notifyUpdate();
+        }
+      );
+    }
+  }
+
+  /**
+   * Unsubscribe from all realtime subscriptions
+   */
+  unsubscribe(): void {
+    if (this._sessionSubId) {
+      this.realtime.unsubscribe(this._sessionSubId);
+      this._sessionSubId = null;
+    }
+    if (this._playersSubId) {
+      this.realtime.unsubscribe(this._playersSubId);
+      this._playersSubId = null;
+    }
+    if (this._cardsSubId) {
+      this.realtime.unsubscribe(this._cardsSubId);
+      this._cardsSubId = null;
+    }
+    this._onUpdateCallback = null;
+  }
+
+  /**
+   * Set the current session directly (for local state updates)
+   */
+  setCurrentSession(session: KetalSession | null): void {
+    if (!session) {
+      this._sessionData.set(null);
+      this._playerDocs.set([]);
+      this._cardsDoc.set(null);
+      return;
+    }
+
+    this._sessionData.set({
+      $id: session.$id,
+      roomId: session.roomId,
+      gameId: session.gameId,
+      gameNumber: session.gameNumber,
+      status: session.status,
+      phase: session.phase,
+      turn: session.turn,
+      activePlayerId: session.activePlayerId,
+      withSummary: session.withSummary,
+    });
+
+    this._playerDocs.set(
+      session.players.map((p, i) => ({
+        $id: `local-player-${i}`,
+        sessionId: session.$id,
+        memberId: p.memberId,
+        displayName: p.displayName,
+        order: p.order,
+        cards: JSON.stringify(p.cards),
+        choices: JSON.stringify(p.choices),
+        sipsTaken: p.sipsTaken,
+        sipsGiven: p.sipsGiven,
+        isReady: p.isReady,
+      }))
+    );
+
+    this._cardsDoc.set({
+      $id: `local-cards`,
+      sessionId: session.$id,
+      drinkingCards: JSON.stringify(session.drinkingCards),
+      givingCards: JSON.stringify(session.givingCards),
     });
   }
 
-  /**
-   * Unsubscribe from the current session's realtime updates
-   */
-  unsubscribe(): void {
-    if (this._subscriptionId) {
-      this.realtime.unsubscribe(this._subscriptionId);
-      this._subscriptionId = null;
+  // ============================================================================
+  // Private: Update helpers
+  // ============================================================================
+
+  private async updatePlayerDocs(players: KetalPlayer[]): Promise<void> {
+    const currentDocs = this._playerDocs();
+
+    const updatePromises = players.map((player) => {
+      const existingDoc = currentDocs.find((d) => d.memberId === player.memberId);
+      if (!existingDoc) return Promise.resolve(null);
+
+      return this.appwrite.databases
+        .updateDocument(this.appwrite.databaseId, COLLECTION_KETAL_PLAYERS, existingDoc.$id, {
+          cards: JSON.stringify(player.cards),
+          choices: JSON.stringify(player.choices),
+          sipsTaken: player.sipsTaken,
+          sipsGiven: player.sipsGiven,
+          isReady: player.isReady,
+        })
+        .then((doc) => this.mapRawToPlayerDoc(doc));
+    });
+
+    const results = await Promise.all(updatePromises);
+
+    this._playerDocs.set(
+      currentDocs.map((doc) => {
+        const updated = results.find((r) => r && r.$id === doc.$id);
+        return updated || doc;
+      })
+    );
+  }
+
+  private async updateCardsDoc(drinkingCards?: string[], givingCards?: string[]): Promise<void> {
+    const cardsDoc = this._cardsDoc();
+    if (!cardsDoc) return;
+
+    const update: Record<string, unknown> = {};
+    if (drinkingCards !== undefined) {
+      update['drinkingCards'] = JSON.stringify(drinkingCards);
+    }
+    if (givingCards !== undefined) {
+      update['givingCards'] = JSON.stringify(givingCards);
+    }
+
+    if (Object.keys(update).length > 0) {
+      const doc = await this.appwrite.databases.updateDocument(
+        this.appwrite.databaseId,
+        COLLECTION_KETAL_CARDS,
+        cardsDoc.$id,
+        update
+      );
+      this._cardsDoc.set(this.mapRawToCardsDoc(doc));
     }
   }
 
-  /**
-   * Set the current session directly
-   *
-   * Used for updating local state without making an API call.
-   *
-   * @param session - The session to set, or null to clear
-   */
-  setCurrentSession(session: KetalSession | null): void {
-    this._currentSession.set(session);
+  // ============================================================================
+  // Private: Realtime helpers
+  // ============================================================================
+
+  private handlePlayerDocUpdate(payload: Record<string, unknown>): void {
+    const updatedDoc = this.mapRawToPlayerDoc(payload);
+    const currentDocs = this._playerDocs();
+    const index = currentDocs.findIndex((d) => d.$id === updatedDoc.$id);
+
+    if (index >= 0) {
+      const newDocs = [...currentDocs];
+      newDocs[index] = updatedDoc;
+      this._playerDocs.set(newDocs);
+    } else {
+      this._playerDocs.set([...currentDocs, updatedDoc]);
+    }
   }
 
-  /**
-   * Serialize session data for Appwrite storage
-   *
-   * Converts complex objects to JSON strings for storage.
-   */
-  private serializeSessionData(data: CreateKetalSessionData): Record<string, unknown> {
+  private notifyUpdate(): void {
+    const session = this.currentSession();
+    if (session && this._onUpdateCallback) {
+      this._onUpdateCallback(session);
+    }
+  }
+
+  // ============================================================================
+  // Private: Document mapping
+  // ============================================================================
+
+  private getOrderedPlayers(): KetalPlayer[] {
+    return [...this._playerDocs()]
+      .sort((a, b) => a.order - b.order)
+      .map((doc) => this.mapDocToKetalPlayer(doc));
+  }
+
+  private mapRawToSessionData(doc: Record<string, unknown>): SessionData {
     return {
-      roomId: data.roomId,
-      gameId: data.gameId,
-      gameNumber: data.gameNumber,
-      status: data.status,
-      phase: data.phase,
-      turn: data.turn,
-      activePlayerId: data.activePlayerId,
-      players: JSON.stringify(data.players),
-      drinkingCards: JSON.stringify(data.drinkingCards),
-      givingCards: JSON.stringify(data.givingCards),
-      withSummary: data.withSummary,
-    };
-  }
-
-  /**
-   * Serialize partial session updates for Appwrite
-   */
-  private serializeSessionUpdates(updates: Partial<Omit<KetalSession, '$id'>>): Record<string, unknown> {
-    const serialized: Record<string, unknown> = {};
-
-    if (updates.roomId !== undefined) {
-      serialized['roomId'] = updates.roomId;
-    }
-    if (updates.gameId !== undefined) {
-      serialized['gameId'] = updates.gameId;
-    }
-    if (updates.gameNumber !== undefined) {
-      serialized['gameNumber'] = updates.gameNumber;
-    }
-    if (updates.status !== undefined) {
-      serialized['status'] = updates.status;
-    }
-    if (updates.phase !== undefined) {
-      serialized['phase'] = updates.phase;
-    }
-    if (updates.turn !== undefined) {
-      serialized['turn'] = updates.turn;
-    }
-    if (updates.activePlayerId !== undefined) {
-      serialized['activePlayerId'] = updates.activePlayerId;
-    }
-    if (updates.players !== undefined) {
-      serialized['players'] = JSON.stringify(updates.players);
-    }
-    if (updates.drinkingCards !== undefined) {
-      serialized['drinkingCards'] = JSON.stringify(updates.drinkingCards);
-    }
-    if (updates.givingCards !== undefined) {
-      serialized['givingCards'] = JSON.stringify(updates.givingCards);
-    }
-    if (updates.withSummary !== undefined) {
-      serialized['withSummary'] = updates.withSummary;
-    }
-
-    return serialized;
-  }
-
-  /**
-   * Map an Appwrite document to a KetalSession interface
-   */
-  private mapDocumentToSession(document: Record<string, unknown>): KetalSession {
-    // Parse players - handle both string (from Appwrite) and array (from realtime)
-    let players: KetalPlayer[] = [];
-    const playersData = document['players'];
-    if (typeof playersData === 'string') {
-      try {
-        players = JSON.parse(playersData);
-      } catch {
-        players = [];
-      }
-    } else if (Array.isArray(playersData)) {
-      players = playersData;
-    }
-
-    // Parse drinkingCards
-    let drinkingCards: string[] = [];
-    const drinkingData = document['drinkingCards'];
-    if (typeof drinkingData === 'string') {
-      try {
-        drinkingCards = JSON.parse(drinkingData);
-      } catch {
-        drinkingCards = [];
-      }
-    } else if (Array.isArray(drinkingData)) {
-      drinkingCards = drinkingData;
-    }
-
-    // Parse givingCards
-    let givingCards: string[] = [];
-    const givingData = document['givingCards'];
-    if (typeof givingData === 'string') {
-      try {
-        givingCards = JSON.parse(givingData);
-      } catch {
-        givingCards = [];
-      }
-    } else if (Array.isArray(givingData)) {
-      givingCards = givingData;
-    }
-
-    return {
-      $id: document['$id'] as string,
-      roomId: document['roomId'] as string,
+      $id: doc['$id'] as string,
+      roomId: doc['roomId'] as string,
       gameId: 'ketal',
-      gameNumber: (document['gameNumber'] as number) || 1,
-      status: (document['status'] as SessionStatus) || 'waiting',
-      phase: (document['phase'] as SessionPhase) || 'setup',
-      turn: (document['turn'] as number) || 0,
-      activePlayerId: (document['activePlayerId'] as string) || null,
-      players,
-      drinkingCards,
-      givingCards,
-      withSummary: (document['withSummary'] as boolean) || false,
+      gameNumber: (doc['gameNumber'] as number) || 1,
+      status: (doc['status'] as SessionStatus) || 'waiting',
+      phase: (doc['phase'] as SessionPhase) || 'setup',
+      turn: (doc['turn'] as number) || 0,
+      activePlayerId: (doc['activePlayerId'] as string) || null,
+      withSummary: (doc['withSummary'] as boolean) || false,
     };
+  }
+
+  private mapRawToPlayerDoc(doc: Record<string, unknown>): KetalPlayerDoc {
+    return {
+      $id: doc['$id'] as string,
+      sessionId: doc['sessionId'] as string,
+      memberId: doc['memberId'] as string,
+      displayName: (doc['displayName'] as string) || '',
+      order: (doc['order'] as number) || 1,
+      cards: typeof doc['cards'] === 'string' ? doc['cards'] : JSON.stringify(doc['cards'] ?? []),
+      choices: typeof doc['choices'] === 'string' ? doc['choices'] : JSON.stringify(doc['choices'] ?? {}),
+      sipsTaken: (doc['sipsTaken'] as number) || 0,
+      sipsGiven: (doc['sipsGiven'] as number) || 0,
+      isReady: (doc['isReady'] as boolean) || false,
+    };
+  }
+
+  private mapRawToCardsDoc(doc: Record<string, unknown>): KetalCardsDoc {
+    return {
+      $id: doc['$id'] as string,
+      sessionId: doc['sessionId'] as string,
+      drinkingCards:
+        typeof doc['drinkingCards'] === 'string' ? doc['drinkingCards'] : JSON.stringify(doc['drinkingCards'] ?? []),
+      givingCards:
+        typeof doc['givingCards'] === 'string' ? doc['givingCards'] : JSON.stringify(doc['givingCards'] ?? []),
+    };
+  }
+
+  private mapDocToKetalPlayer(doc: KetalPlayerDoc): KetalPlayer {
+    return {
+      memberId: doc.memberId,
+      displayName: doc.displayName,
+      order: doc.order,
+      cards: this.parseJsonArray(doc.cards),
+      choices: this.parseJsonObject<PlayerChoices>(doc.choices, {
+        color: '',
+        plus_or_minus: '',
+        in_out: '',
+        suit: '',
+      }),
+      sipsTaken: doc.sipsTaken,
+      sipsGiven: doc.sipsGiven,
+      isReady: doc.isReady,
+    };
+  }
+
+  // ============================================================================
+  // Private: JSON parsing utilities
+  // ============================================================================
+
+  private parseJsonArray(data: unknown): string[] {
+    if (Array.isArray(data)) return data;
+    if (typeof data === 'string') {
+      try {
+        return JSON.parse(data);
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  }
+
+  private parseJsonObject<T>(data: unknown, defaultVal: T): T {
+    if (typeof data === 'object' && data !== null && !Array.isArray(data)) return data as T;
+    if (typeof data === 'string') {
+      try {
+        return JSON.parse(data);
+      } catch {
+        return defaultVal;
+      }
+    }
+    return defaultVal;
   }
 }

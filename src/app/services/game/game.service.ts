@@ -14,7 +14,6 @@ import { CardService } from '../card/card.service';
 import { KetalPlayer, KetalSession, KetalSessionService } from '../ketal-session/ketal-session.service';
 import { LocalService } from '../local/local.service';
 import { MemberService } from '../member/member.service';
-import { RealtimeService } from '../realtime/realtime.service';
 import { RoomService } from '../room/room.service';
 import { SoloRoomService } from '../solo-room/solo-room.service';
 import { mapGameToSessionUpdate, mapPlayerModelToKetalPlayer, mapSessionToGame } from './game-mappers';
@@ -33,15 +32,8 @@ export class GameService {
   private readonly roomService = inject(RoomService);
   private readonly ketalSessionService = inject(KetalSessionService);
   private readonly memberService = inject(MemberService);
-  private readonly realtimeService = inject(RealtimeService);
   private readonly soloRoomService = inject(SoloRoomService);
   private readonly destroyRef = inject(DestroyRef);
-
-  /**
-   * Active subscription ID for realtime session updates.
-   * Used to track and cleanup the subscription when needed.
-   */
-  private sessionSubscriptionId: string | null = null;
 
   /**
    * The session ID we are currently subscribed to.
@@ -217,7 +209,7 @@ export class GameService {
 
   /**
    * Subscribe to realtime updates for a session.
-   * When session changes are received from Appwrite, the local game state is updated.
+   * Delegates to KetalSessionService which manages subscriptions across all 3 collections.
    *
    * @param sessionId - The session ID to subscribe to
    */
@@ -228,16 +220,12 @@ export class GameService {
     // Store the session ID for reconnection
     this.activeSessionId = sessionId;
 
-    // Subscribe to realtime updates via RealtimeService
-    // The payload from Appwrite realtime is a raw document that matches KetalSession
-    this.sessionSubscriptionId = this.realtimeService.subscribeToSession(sessionId, (updatedSession) => {
-      this.handleSessionUpdate(updatedSession as unknown as KetalSession);
+    // Subscribe via KetalSessionService (handles ketal_sessions + ketal_players + ketal_cards)
+    this.ketalSessionService.subscribeToSession(sessionId, (updatedSession) => {
+      this.handleSessionUpdate(updatedSession);
     });
 
-    console.debug('[GameService] Subscribed to session updates', {
-      sessionId,
-      subscriptionId: this.sessionSubscriptionId,
-    });
+    console.debug('[GameService] Subscribed to session updates', { sessionId });
   }
 
   /**
@@ -245,11 +233,8 @@ export class GameService {
    * Called when game ends, room is left, or service is destroyed.
    */
   unsubscribeFromSession(): void {
-    if (this.sessionSubscriptionId) {
-      this.realtimeService.unsubscribe(this.sessionSubscriptionId);
-      console.debug('[GameService] Unsubscribed from session', { subscriptionId: this.sessionSubscriptionId });
-      this.sessionSubscriptionId = null;
-    }
+    this.ketalSessionService.unsubscribe();
+    console.debug('[GameService] Unsubscribed from session');
     // Note: activeSessionId is NOT cleared here to allow reconnection.
     // It is only cleared in resetGame() when the game truly ends.
   }
@@ -378,6 +363,13 @@ export class GameService {
       console.error('[GameService] syncToAppwrite - failed:', error);
     } finally {
       this._isSyncing.set(false);
+
+      // Apply any pending session update that arrived during sync
+      if (this._pendingSessionUpdate) {
+        const pending = this._pendingSessionUpdate;
+        this._pendingSessionUpdate = null;
+        this.handleSessionUpdate(pending);
+      }
     }
   }
 
@@ -881,7 +873,12 @@ export class GameService {
     this.cardDeckHelperService.constructDeck();
 
     if (this.gameMode() === 'room') {
-      await this.startGameInRoom(withSummaryMode);
+      try {
+        await this.startGameInRoom(withSummaryMode);
+      } catch (error) {
+        console.warn('[GameService] Room mode failed, falling back to local mode:', error);
+        this.startGameLocally(withSummaryMode);
+      }
     } else {
       this.startGameLocally(withSummaryMode);
     }
@@ -917,7 +914,7 @@ export class GameService {
       console.debug('[GameService] Game started in room mode', { sessionId: session.$id });
     } catch (error) {
       console.error('[GameService] Failed to start game in room:', error);
-      throw error;
+      throw error; // Caught by beginGame for offline fallback
     }
   }
 
