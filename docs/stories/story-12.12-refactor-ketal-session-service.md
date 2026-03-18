@@ -1,6 +1,6 @@
 # Story 12.12: Refactor KetalSessionService for Normalized Collections
 
-**Status**: Draft
+**Status**: Done
 **Epic**: Epic 12: GameService Appwrite Integration
 **Priority**: Critical
 **Depends on**: Story 12.11 (backend migrations must be done first)
@@ -39,44 +39,44 @@ The main impact is on `KetalSessionService` which currently does everything thro
 
 ## Tasks / Subtasks
 
-- [ ] **T1**: Update KetalSession interface and create new interfaces (AC: 1)
-  - [ ] Remove `players`, `drinkingCards`, `givingCards` from `KetalSession`
-  - [ ] Create `KetalPlayerDoc` interface (sessionId, memberId, displayName, order, cards, choices, sipsTaken, sipsGiven, isReady)
-  - [ ] Create `KetalCardsDoc` interface (sessionId, drinkingCards, givingCards, deck)
-- [ ] **T2**: Refactor KetalSessionService — split into collection-specific methods (AC: 2, 3)
-  - [ ] Add `ketal_players` collection ID constant
-  - [ ] Add `ketal_cards` collection ID constant
-  - [ ] `createSession()` — only creates session doc (no embedded players/cards)
-  - [ ] `createPlayer(sessionId, player)` — creates doc in ketal_players
-  - [ ] `createCards(sessionId)` — creates doc in ketal_cards with empty arrays
-  - [ ] `updatePlayer(playerId, data)` — granular player update
-  - [ ] `updateCards(cardsDocId, data)` — update drinking/giving cards
-  - [ ] `getPlayersBySession(sessionId)` — query ketal_players by sessionId
-  - [ ] `getCardsBySession(sessionId)` — query ketal_cards by sessionId
-  - [ ] `deleteSession(sessionId)` — cascade delete session + players + cards
-- [ ] **T3**: Update game-mappers.ts (AC: 4)
-  - [ ] `mapGameToSession()` — only maps session-level fields (status, phase, turn, activePlayerId, withSummary)
-  - [ ] `mapGameToPlayers()` — maps PlayerModel[] to KetalPlayerDoc[]
-  - [ ] `mapGameToCards()` — maps drinkingCards/givingCards
-  - [ ] `mapSessionToGame()` — reconstruct Game from session + players + cards docs
-  - [ ] `mapKetalPlayerToPlayerModel()` / `mapPlayerModelToKetalPlayer()` — keep existing logic
-- [ ] **T4**: Update GameService room-mode methods (AC: 6)
-  - [ ] `beginGame()` — create session, then create player docs, then create cards doc
-  - [ ] `syncToAppwrite()` — determine what changed and update only the relevant collection(s)
-  - [ ] `loadFromAppwrite()` — fetch session + players + cards, reconstruct game state
-- [ ] **T5**: Update RealtimeService subscriptions (AC: 5)
-  - [ ] Subscribe to `ketal_sessions` collection (session state changes)
-  - [ ] Subscribe to `ketal_players` collection filtered by sessionId (player updates)
-  - [ ] Subscribe to `ketal_cards` collection filtered by sessionId (card updates)
-  - [ ] Merge realtime events into unified game state updates
-- [ ] **T6**: Verify local mode unchanged (AC: 7)
-  - [ ] Ensure localStorage game persistence is not affected
-  - [ ] Run existing local mode tests
-- [ ] **T7**: Update tests (AC: 8)
-  - [ ] Update KetalSessionService tests for new methods
-  - [ ] Update game-mappers tests for new mapping functions
-  - [ ] Update GameService tests for multi-collection flow
-  - [ ] Ensure all existing tests pass or are adapted
+- [x] **T1**: Update KetalSession interface and create new interfaces (AC: 1)
+  - [x] Remove `players`, `drinkingCards`, `givingCards` from `KetalSession`
+  - [x] Create `KetalPlayerDoc` interface (sessionId, memberId, displayName, order, cards, choices, sipsTaken, sipsGiven, isReady)
+  - [x] Create `KetalCardsDoc` interface (sessionId, drinkingCards, givingCards, deck)
+- [x] **T2**: Refactor KetalSessionService — split into collection-specific methods (AC: 2, 3)
+  - [x] Add `ketal_players` collection ID constant
+  - [x] Add `ketal_cards` collection ID constant
+  - [x] `createSession()` — only creates session doc (no embedded players/cards)
+  - [x] `createPlayer(sessionId, player)` — creates doc in ketal_players
+  - [x] `createCards(sessionId)` — creates doc in ketal_cards with empty arrays
+  - [x] `updatePlayer(playerId, data)` — granular player update
+  - [x] `updateCards(cardsDocId, data)` — update drinking/giving cards
+  - [x] `getPlayersBySession(sessionId)` — query ketal_players by sessionId
+  - [x] `getCardsBySession(sessionId)` — query ketal_cards by sessionId
+  - [x] `deleteSession(sessionId)` — cascade delete session + players + cards
+- [x] **T3**: Update game-mappers.ts (AC: 4)
+  - [x] `mapGameToSession()` — only maps session-level fields (status, phase, turn, activePlayerId, withSummary)
+  - [x] `mapGameToPlayers()` — maps PlayerModel[] to KetalPlayerDoc[]
+  - [x] `mapGameToCards()` — maps drinkingCards/givingCards
+  - [x] `mapSessionToGame()` — reconstruct Game from session + players + cards docs
+  - [x] `mapKetalPlayerToPlayerModel()` / `mapPlayerModelToKetalPlayer()` — keep existing logic
+- [x] **T4**: Update GameService room-mode methods (AC: 6)
+  - [x] `beginGame()` — create session, then create player docs, then create cards doc
+  - [x] `syncToAppwrite()` — determine what changed and update only the relevant collection(s)
+  - [x] `loadFromAppwrite()` — fetch session + players + cards, reconstruct game state
+- [x] **T5**: Update RealtimeService subscriptions (AC: 5)
+  - [x] Subscribe to `ketal_sessions` collection (session state changes)
+  - [x] Subscribe to `ketal_players` collection filtered by sessionId (player updates)
+  - [x] Subscribe to `ketal_cards` collection filtered by sessionId (card updates)
+  - [x] Merge realtime events into unified game state updates
+- [x] **T6**: Verify local mode unchanged (AC: 7)
+  - [x] Ensure localStorage game persistence is not affected
+  - [x] Run existing local mode tests
+- [x] **T7**: Update tests (AC: 8)
+  - [x] Update KetalSessionService tests for new methods
+  - [x] Update game-mappers tests for new mapping functions
+  - [x] Update GameService tests for multi-collection flow
+  - [x] Ensure all existing tests pass or are adapted
 
 ---
 
@@ -147,3 +147,4 @@ Collection IDs are defined in the environment config or as constants. Match the 
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
 | 2026-03-17 | 1.0 | Story drafted | SM |
+| 2026-03-18 | 2.0 | Implemented: 3-collection refacto, 35 unit tests, review fixes | Dev |

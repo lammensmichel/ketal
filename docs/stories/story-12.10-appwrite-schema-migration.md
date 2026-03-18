@@ -71,3 +71,4 @@ Check `fug-backend/migrations/` for existing ketal_sessions setup and add missin
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
 | 2026-03-17 | 1.0 | Found during MCP game start test | QA |
+| 2026-03-18 | 2.0 | Resolved: schema via 12.11, offline fallback added in beginGame | Dev |

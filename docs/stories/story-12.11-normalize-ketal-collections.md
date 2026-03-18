@@ -1,6 +1,6 @@
 # Story 12.11: Normalize Ketal Collections in Backend Migrations
 
-**Status**: Draft
+**Status**: Done
 **Epic**: Epic 12: GameService Appwrite Integration
 **Priority**: Critical (blocker for 12.10 and 12.12)
 **Repo**: fug-backend
@@ -38,26 +38,26 @@ Since nothing is in production, we can **modify existing migration files directl
 
 ## Tasks / Subtasks
 
-- [ ] **T1**: Modify migration `031_ketal_sessions.js` (AC: 1, 5)
-  - [ ] Remove all dead attributes: pyramidCards, busCards, pyramidRow, pyramidCardIndex, currentCard, busRiderId, busProgress, deck
-  - [ ] Integrate attributes from migration 034: turn, drinkingCards, givingCards, withSummary
-  - [ ] Remove `players` embedded JSON (moves to ketal_players)
-  - [ ] Keep: roomId, gameId, gameNumber, status, phase, turn, activePlayerId, withSummary, startedAt, finishedAt
-- [ ] **T2**: Create migration for `ketal_players` collection (AC: 2)
-  - [ ] Attributes: sessionId (string, required), memberId (string, required), displayName (string), order (integer), cards (string/JSON), choices (string/JSON), sipsTaken (integer), sipsGiven (integer), isReady (boolean)
-  - [ ] Permissions: same pattern as ketal_sessions
-- [ ] **T3**: Create migration for `ketal_cards` collection (AC: 3)
-  - [ ] Attributes: sessionId (string, required), drinkingCards (string/JSON), givingCards (string/JSON), deck (string/JSON — optional, for future use)
-  - [ ] Permissions: same pattern as ketal_sessions
-- [ ] **T4**: Delete migration `034_ketal_sessions_missing_attributes.js` (AC: 4)
-- [ ] **T5**: Clean seed data in `033_seed_games.js` — remove `pyramidRows` from defaultSettings (AC: 6)
-- [ ] **T6**: Update/create index migration for new collections (AC: 8)
-  - [ ] Index on ketal_players: sessionId
-  - [ ] Index on ketal_cards: sessionId
-- [ ] **T7**: Wipe backend and verify clean start (AC: 7)
-  - [ ] `make clean && make dev`
-  - [ ] Verify all migrations run successfully
-  - [ ] Verify collections exist with correct attributes in Appwrite console
+- [x] **T1**: Modify migration `031_ketal_sessions.js` (AC: 1, 5)
+  - [x] Remove all dead attributes: pyramidCards, busCards, pyramidRow, pyramidCardIndex, currentCard, busRiderId, busProgress, deck
+  - [x] Integrate attributes from migration 034: turn, drinkingCards, givingCards, withSummary
+  - [x] Remove `players` embedded JSON (moves to ketal_players)
+  - [x] Keep: roomId, gameId, gameNumber, status, phase, turn, activePlayerId, withSummary, startedAt, finishedAt
+- [x] **T2**: Create migration for `ketal_players` collection (AC: 2)
+  - [x] Attributes: sessionId (string, required), memberId (string, required), displayName (string), order (integer), cards (string/JSON), choices (string/JSON), sipsTaken (integer), sipsGiven (integer), isReady (boolean)
+  - [x] Permissions: same pattern as ketal_sessions
+- [x] **T3**: Create migration for `ketal_cards` collection (AC: 3)
+  - [x] Attributes: sessionId (string, required), drinkingCards (string/JSON), givingCards (string/JSON), deck (string/JSON — optional, for future use)
+  - [x] Permissions: same pattern as ketal_sessions
+- [x] **T4**: Delete migration `034_ketal_sessions_missing_attributes.js` (AC: 4)
+- [x] **T5**: Clean seed data in `033_seed_games.js` — remove `pyramidRows` from defaultSettings (AC: 6)
+- [x] **T6**: Update/create index migration for new collections (AC: 8)
+  - [x] Index on ketal_players: sessionId
+  - [x] Index on ketal_cards: sessionId
+- [x] **T7**: Wipe backend and verify clean start (AC: 7)
+  - [x] `make clean && make dev`
+  - [x] Verify all migrations run successfully
+  - [x] Verify collections exist with correct attributes in Appwrite console
 
 ---
 
@@ -128,3 +128,4 @@ The phase value `'pyramid'` in Appwrite maps to Ketal's phase 2 (drinking/giving
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
 | 2026-03-17 | 1.0 | Story drafted | SM |
+| 2026-03-18 | 2.0 | Implemented and merged (fug-backend PR #1) | Dev |
