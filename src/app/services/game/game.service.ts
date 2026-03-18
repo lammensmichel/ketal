@@ -792,9 +792,6 @@ export class GameService {
       return;
     }
 
-    game.givingCards.forEach((card) => (card.selected = false));
-    game.drinkingCards.forEach((card) => (card.selected = false));
-
     if (this.isNotAllSipsGiven() && game.drinkingCards.length > 0) {
       return;
     }
@@ -803,13 +800,66 @@ export class GameService {
     newCard.selected = true;
 
     const sipNb = this.getSipsNumber();
-    this.selectCardOnPlayer(sipNb, newCard);
-
     newCard.sips = sipNb;
-    this.saveCardAndSips(newCard, sipNb);
 
-    if (this.givingCards().length === 6) {
-      this.setStatus(2);
+    // Determine if this is a giving card BEFORE mutating
+    const isGiving = this.drinkingCards().length > this.givingCards().length;
+
+    // Batch all Phase 2 mutations into a single updateGame call to avoid
+    // the _isSyncing flag blocking intermediate Appwrite updates (Bug A + B)
+    this.updateGame((g) => {
+      // Deselect previous cards
+      g.givingCards.forEach((card) => (card.selected = false));
+      g.drinkingCards.forEach((card) => (card.selected = false));
+
+      // Mark matching player cards as selected and assign givenSips
+      g.players.forEach((player) => {
+        player.cards.forEach((card) => {
+          card.selected = card.value === newCard.value;
+          if (card.selected && this.isSummaryActivated() && isGiving && sipNb > 0) {
+            card.givenSips = sipNb;
+          }
+        });
+      });
+
+      // Add sips to players
+      g.players.forEach((player) => {
+        let sipTurnNb = 0;
+        player.cards.forEach((c) => {
+          if (c.value === newCard.value) {
+            sipTurnNb += sipNb;
+          }
+        });
+        if (sipTurnNb > 0) {
+          if (!player.cards || player.cards.length < 4) {
+            player.sips['drunk'] += sipTurnNb;
+          } else {
+            player.sips[!isGiving ? 'drunk' : 'given'] += sipTurnNb;
+          }
+        }
+      });
+
+      // Add the card to the appropriate array
+      if (isGiving) {
+        g.givingCards.push(newCard);
+      } else {
+        g.drinkingCards.push(newCard);
+      }
+
+      // Check if game is finished (6 giving cards)
+      if (g.givingCards.length === 6) {
+        g.status = 2;
+      }
+    });
+
+    // Sync to Appwrite in room mode (includes drinkingCards/givingCards)
+    if (this.gameMode() === 'room') {
+      this.syncToAppwrite();
+    }
+
+    // Finalize game stats if finished
+    if (this.status() === 2) {
+      this.finalizeGameStats();
     }
 
     return newCard;
