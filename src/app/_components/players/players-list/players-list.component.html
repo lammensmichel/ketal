@@ -1,4 +1,10 @@
 <div class="container">
+@if (isGamePaused()) {
+  <div class="resume-banner alert alert-info d-flex justify-content-between align-items-center mb-2">
+    <span [translate]="'Label_GameInProgress'"></span>
+    <button type="button" class="btn btn-primary btn-sm" (click)="resumeGame()" [translate]="'Button_ResumeGame'"></button>
+  </div>
+}
 @if (hasRoom() && this.gameSrv.isNewGame()) {
   <div class="invite-section mb-2">
     <button

@@ -26,6 +26,7 @@
   "Button_Delete": "Delete",
   "Button_NextCard": "Next",
   "Button_Restart": "Restart",
+<<<<<<< HEAD
   "Button_Display_Summary": "Display summary",
   "Remaining_Sips": "sips",
   "Label_Sip": "sip",
@@ -211,5 +212,6 @@
         "suit": "Exact Suit"
       }
     }
-  }
+  },
+  "Label_GameInProgress": "Game in progress"
 }
