@@ -429,15 +429,26 @@ export class GameService {
     });
 
     // Sync to Appwrite in room mode (AC1: setCardChoice persists in Appwrite)
+    // Fire-and-forget: errors are caught and logged, not blocking the UI flow
     if (this.gameMode() === 'room') {
-      this.syncToAppwrite();
+      this.syncToAppwrite().catch((err) => console.error('[GameService] setCardChoice sync failed:', err));
     }
   }
 
+  /**
+   * Add a card to the drinking cards array.
+   * Note: In Phase 2, the batched displayNewCard() path is used instead.
+   * This method is kept for direct unit testing and potential Phase 1 use.
+   */
   addDrinkingCard(card: CardType): void {
     this.updateGame((game) => game.drinkingCards.push(card));
   }
 
+  /**
+   * Add a card to the giving cards array.
+   * Note: In Phase 2, the batched displayNewCard() path is used instead.
+   * This method is kept for direct unit testing and potential Phase 1 use.
+   */
   addGivingCard(card: CardType): void {
     this.updateGame((game) => game.givingCards.push(card));
   }
@@ -459,8 +470,9 @@ export class GameService {
     });
 
     // Sync to Appwrite in room mode (AC2: addCardToPlayer persists in Appwrite)
+    // Fire-and-forget: errors are caught and logged, not blocking the UI flow
     if (this.gameMode() === 'room') {
-      this.syncToAppwrite();
+      this.syncToAppwrite().catch((err) => console.error('[GameService] addCardToPlayer sync failed:', err));
     }
   }
 
@@ -730,8 +742,9 @@ export class GameService {
 
     // Sync turn/phase/activePlayer changes to Appwrite in room mode
     // (AC3, AC4: pickCard updates session with new player/turn/phase)
+    // Fire-and-forget: errors are caught and logged, not blocking the UI flow
     if (this.gameMode() === 'room') {
-      this.syncToAppwrite();
+      this.syncToAppwrite().catch((err) => console.error('[GameService] pickCard sync failed:', err));
     }
   }
 
@@ -792,9 +805,6 @@ export class GameService {
       return;
     }
 
-    game.givingCards.forEach((card) => (card.selected = false));
-    game.drinkingCards.forEach((card) => (card.selected = false));
-
     if (this.isNotAllSipsGiven() && game.drinkingCards.length > 0) {
       return;
     }
@@ -803,18 +813,81 @@ export class GameService {
     newCard.selected = true;
 
     const sipNb = this.getSipsNumber();
-    this.selectCardOnPlayer(sipNb, newCard);
-
     newCard.sips = sipNb;
-    this.saveCardAndSips(newCard, sipNb);
 
-    if (this.givingCards().length === 6) {
-      this.setStatus(2);
+    // Determine if this is a giving card BEFORE mutating the game state.
+    // This is safe because JavaScript is single-threaded: no concurrent mutation
+    // can occur between reading the lengths and entering the updateGame closure.
+    // The value must be captured here because updateGame mutates the arrays.
+    const isGiving = this.drinkingCards().length > this.givingCards().length;
+
+    // Batch all Phase 2 mutations into a single updateGame call to avoid
+    // the _isSyncing flag blocking intermediate Appwrite updates (Bug A + B)
+    this.updateGame((g) => {
+      // Deselect previous cards
+      g.givingCards.forEach((card) => (card.selected = false));
+      g.drinkingCards.forEach((card) => (card.selected = false));
+
+      // Mark matching player cards as selected and assign givenSips
+      g.players?.forEach((player) => {
+        player.cards?.forEach((card) => {
+          card.selected = card.value === newCard.value;
+          if (card.selected && this.isSummaryActivated() && isGiving && sipNb > 0) {
+            card.givenSips = sipNb;
+          }
+        });
+      });
+
+      // Add sips to players
+      g.players?.forEach((player) => {
+        player.sips ??= { drunk: 0, given: 0 };
+        let sipTurnNb = 0;
+        player.cards?.forEach((c) => {
+          if (c.value === newCard.value) {
+            sipTurnNb += sipNb;
+          }
+        });
+        if (sipTurnNb > 0) {
+          if (!player.cards || player.cards.length < 4) {
+            player.sips['drunk'] += sipTurnNb;
+          } else {
+            player.sips[!isGiving ? 'drunk' : 'given'] += sipTurnNb;
+          }
+        }
+      });
+
+      // Add the card to the appropriate array
+      if (isGiving) {
+        g.givingCards.push(newCard);
+      } else {
+        g.drinkingCards.push(newCard);
+      }
+
+      // Check if game is finished (6 giving cards)
+      if (g.givingCards.length === 6) {
+        g.status = 2;
+      }
+    });
+
+    // Sync to Appwrite in room mode (includes drinkingCards/givingCards)
+    // Fire-and-forget: errors are caught and logged, not blocking the UI flow
+    if (this.gameMode() === 'room') {
+      this.syncToAppwrite().catch((err) => console.error('[GameService] displayNewCard sync failed:', err));
+    }
+
+    // Finalize game stats if finished
+    if (this.status() === 2) {
+      this.finalizeGameStats();
     }
 
     return newCard;
   }
 
+  /**
+   * Add sips to all players whose cards match the given card value.
+   * Note: In Phase 2, the batched displayNewCard() path handles sips inline.
+   * This method is kept for direct unit testing.
+   */
   addSips(card: CardType, sipNb: number): void {
     this.players().forEach((player) => {
       let sipTurnNb = 0;
@@ -827,6 +900,11 @@ export class GameService {
     });
   }
 
+  /**
+   * Save a card and assign sips to matching players.
+   * Note: In Phase 2, the batched displayNewCard() path handles this inline.
+   * This method is kept for direct unit testing.
+   */
   saveCardAndSips(card: CardType, sipNb: number): void {
     this.addSips(card, sipNb);
     if (this.isGivingCard()) {

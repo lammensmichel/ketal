@@ -51,6 +51,16 @@ Key files to investigate:
 - `src/app/services/ketal-session/ketal-session.service.ts` — `updateCardsDoc()` method
 - `src/app/_components/game/` — game component Phase 2 template
 
+### Root Cause
+
+Both bugs shared the same root cause: `displayNewCard()` made multiple sequential `updateGame()` calls (via `selectCardOnPlayer`, `addPlayerSip`, `addDrinkingCard`/`addGivingCard`). The first call triggered `saveToAppwrite()` which set `_isSyncing = true`. All subsequent calls had their Appwrite sync skipped. When the first async save completed, the realtime callback overwrote local state with stale Appwrite data (missing the card additions from later calls).
+
+### Fix
+
+Refactored `displayNewCard()` to batch all Phase 2 mutations (deselect, player card selection, sip assignment, card array push, status update) into a single `updateGame()` call, followed by one `syncToAppwrite()` call. This ensures:
+- All state changes are applied atomically to the signal (Bug A fix)
+- The complete state including drinkingCards/givingCards is sent to Appwrite in one sync (Bug B fix)
+
 ---
 
 ## Change Log
