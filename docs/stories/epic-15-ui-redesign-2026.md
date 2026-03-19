@@ -14,7 +14,7 @@ Refonte visuelle complète de Ketal pour en faire une app mobile-first moderne d
 
 ## Stories
 
-### Story 15.1: Design System & Thème
+### Story 15.1: Design System & Thème ✅ Done
 Définir la palette de couleurs (gradients néon, tons sombres), la typographie moderne, le système de CSS variables, et le support dark/light mode comme fondation de tout le redesign.
 
 ### Story 15.2: Refonte des Player Cards
@@ -51,4 +51,5 @@ Navigation par bottom sheet, gestes swipe pour les actions, touch targets optimi
 
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
-| 2026-03-17 | 1.0 | Epic created | Claude |
+| 2026-03-17 | 1.0 | Epic created | Dev |
+| 2026-03-19 | 1.1 | Story 15.1 marked Done, stories 15.2, 15.3, 15.6, 15.7, 15.8 created | Dev |
