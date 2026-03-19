@@ -25,6 +25,7 @@
   "Button_Delete": "Supprimer",
   "Button_NextCard": "Suivante",
   "Button_Restart": "Recommencer",
+<<<<<<< HEAD
   "Button_Display_Summary": "Afficher le résumé",
   "Button_In": "Entre",
   "Button_Out": "Extérieur",
@@ -216,5 +217,6 @@
         "suit": "Couleur exacte"
       }
     }
-  }
+  },
+  "Label_GameInProgress": "Partie en cours"
 }

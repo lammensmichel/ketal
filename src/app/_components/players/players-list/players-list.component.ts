@@ -1,4 +1,5 @@
 import { Component, EventEmitter, inject, Output, signal, computed, DestroyRef } from '@angular/core';
+import { Router } from '@angular/router';
 import { NgClass } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -19,6 +20,7 @@ import { PlayerListPlayerComponent } from '../player-list-player/player-list-pla
   imports: [NgClass, ReactiveFormsModule, TranslateModule, PlayerListPlayerComponent, QRCodeComponent],
 })
 export class PlayersListComponent {
+  private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
   private readonly localService = inject(LocalService);
   private readonly destroyRef = inject(DestroyRef);
@@ -85,6 +87,14 @@ export class PlayersListComponent {
 
   public getNewPlayerInputPlaceholder(): string {
     return this.translate.instant('Label_PlaceHolder_PlayerName');
+  }
+
+  public isGamePaused(): boolean {
+    return this.gameSrv.isGameInProgress();
+  }
+
+  public resumeGame(): void {
+    this.router.navigate(['/game']);
   }
 
   get newPlayer() {

@@ -35,6 +35,9 @@ export class GameService {
   private readonly soloRoomService = inject(SoloRoomService);
   private readonly destroyRef = inject(DestroyRef);
 
+  /** Signal for pause state (Story 14.0) */
+  readonly paused = signal(false);
+
   /**
    * The session ID we are currently subscribed to.
    * Used for reconnection to resubscribe after a disconnect.
@@ -1049,5 +1052,20 @@ export class GameService {
 
   openSipGiveModal(player: PlayerModel): void {
     this.openSipGiveModalEvent.next(player);
+  }
+
+  /** Pause the game and navigate to menu (Story 14.0) */
+  pauseGame(): void {
+    this.paused.set(true);
+  }
+
+  /** Resume the paused game (Story 14.0) */
+  resumeGame(): void {
+    this.paused.set(false);
+  }
+
+  /** Check if a game is currently in progress (started or finished but not reset) */
+  isGameInProgress(): boolean {
+    return this.isGameStarted() || this.isGameFinished();
   }
 }
