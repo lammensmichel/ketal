@@ -177,7 +177,7 @@ export class GameService {
         playerCount: game.players.length,
       });
     } catch (error) {
-      console.error('[GameService] Failed to sync to Appwrite:', error);
+      console.error('[GameService] Failed to sync to Appwrite:', error instanceof Error ? error.message : JSON.stringify(error));
     } finally {
       this._isSyncing.set(false);
 
@@ -277,7 +277,7 @@ export class GameService {
         turn: game.turn,
       });
     } catch (error) {
-      console.error('[GameService] Failed to handle session update:', error);
+      console.error('[GameService] Failed to handle session update:', error instanceof Error ? error.message : JSON.stringify(error));
     }
   }
 
@@ -321,7 +321,7 @@ export class GameService {
         turn: game.turn,
       });
     } catch (error) {
-      console.error('[GameService] handleReconnection - failed:', error);
+      console.error('[GameService] handleReconnection - failed:', error instanceof Error ? error.message : JSON.stringify(error));
     }
   }
 
@@ -363,7 +363,7 @@ export class GameService {
       await this.ketalSessionService.updateSession(session.$id, updates);
       console.debug('[GameService] syncToAppwrite - synced successfully');
     } catch (error) {
-      console.error('[GameService] syncToAppwrite - failed:', error);
+      console.error('[GameService] syncToAppwrite - failed:', error instanceof Error ? error.message : JSON.stringify(error));
     } finally {
       this._isSyncing.set(false);
 
@@ -434,7 +434,7 @@ export class GameService {
     // Sync to Appwrite in room mode (AC1: setCardChoice persists in Appwrite)
     // Fire-and-forget: errors are caught and logged, not blocking the UI flow
     if (this.gameMode() === 'room') {
-      this.syncToAppwrite().catch((err) => console.error('[GameService] setCardChoice sync failed:', err));
+      this.syncToAppwrite().catch((err) => console.error('[GameService] setCardChoice sync failed:', err instanceof Error ? err.message : JSON.stringify(err)));
     }
   }
 
@@ -475,7 +475,7 @@ export class GameService {
     // Sync to Appwrite in room mode (AC2: addCardToPlayer persists in Appwrite)
     // Fire-and-forget: errors are caught and logged, not blocking the UI flow
     if (this.gameMode() === 'room') {
-      this.syncToAppwrite().catch((err) => console.error('[GameService] addCardToPlayer sync failed:', err));
+      this.syncToAppwrite().catch((err) => console.error('[GameService] addCardToPlayer sync failed:', err instanceof Error ? err.message : JSON.stringify(err)));
     }
   }
 
@@ -585,7 +585,7 @@ export class GameService {
       // Unsubscribe from realtime updates after game ends
       this.unsubscribeFromSession();
     } catch (error) {
-      console.error('[GameService] Failed to finalize game stats:', error);
+      console.error('[GameService] Failed to finalize game stats:', error instanceof Error ? error.message : JSON.stringify(error));
     }
   }
 
@@ -747,7 +747,7 @@ export class GameService {
     // (AC3, AC4: pickCard updates session with new player/turn/phase)
     // Fire-and-forget: errors are caught and logged, not blocking the UI flow
     if (this.gameMode() === 'room') {
-      this.syncToAppwrite().catch((err) => console.error('[GameService] pickCard sync failed:', err));
+      this.syncToAppwrite().catch((err) => console.error('[GameService] pickCard sync failed:', err instanceof Error ? err.message : JSON.stringify(err)));
     }
   }
 
@@ -875,7 +875,7 @@ export class GameService {
     // Sync to Appwrite in room mode (includes drinkingCards/givingCards)
     // Fire-and-forget: errors are caught and logged, not blocking the UI flow
     if (this.gameMode() === 'room') {
-      this.syncToAppwrite().catch((err) => console.error('[GameService] displayNewCard sync failed:', err));
+      this.syncToAppwrite().catch((err) => console.error('[GameService] displayNewCard sync failed:', err instanceof Error ? err.message : JSON.stringify(err)));
     }
 
     // Finalize game stats if finished
@@ -1003,7 +1003,7 @@ export class GameService {
 
       console.debug('[GameService] Game started in room mode', { sessionId: activeSession.$id });
     } catch (error) {
-      console.error('[GameService] Failed to start game in room:', error);
+      console.error('[GameService] Failed to start game in room:', error instanceof Error ? error.message : JSON.stringify(error));
       throw error; // Caught by beginGame for offline fallback
     }
   }

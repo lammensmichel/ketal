@@ -216,7 +216,7 @@ export function mapKetalPlayerToPlayerModel(ketalPlayer: KetalPlayer): PlayerMod
   playerModel.cards = deserializeCards(ketalPlayer.cards);
   playerModel.choice = choice;
   playerModel.sips = sips;
-  // Note: avatarSrc is not stored in KetalPlayer, would need to be fetched separately
+  playerModel.avatarSrc = `https://api.dicebear.com/7.x/avataaars/svg?seed=${ketalPlayer.memberId}`;
 
   return playerModel;
 }
