@@ -51,6 +51,13 @@ export class GameService {
   private readonly _isSyncing = signal(false);
 
   /**
+   * When a sync is in progress and another mutation occurs, the latest game state
+   * is queued here. After the current sync completes, a follow-up sync is triggered
+   * with the queued state so that no mutations are lost.
+   */
+  private _pendingGameSync: Game | null = null;
+
+  /**
    * Computed signal that determines the current game mode.
    * Returns 'room' if there's an active room, 'local' otherwise.
    */
@@ -140,17 +147,19 @@ export class GameService {
   // ========================
 
   /**
-   * Save game state to Appwrite via KetalSessionService
+   * Save game state to Appwrite via KetalSessionService.
    * Used in room mode for multiplayer games.
    *
-   * Maps the local Game model to KetalSession format and syncs to Appwrite.
-   * Includes player sips (sipsTaken = drunk, sipsGiven = given) and card givenSips.
+   * If a sync is already in progress, the game state is queued and a follow-up
+   * sync is triggered after the current one completes. This ensures no mutations
+   * are silently dropped while still preventing concurrent API calls.
    *
    * @param game - The game state to sync
    */
   private async saveToAppwrite(game: Game): Promise<void> {
-    // Prevent sync loops when receiving realtime updates
+    // If a sync is already in progress, queue this state for a follow-up sync
     if (this._isSyncing()) {
+      this._pendingGameSync = JSON.parse(JSON.stringify(game));
       return;
     }
 
@@ -181,11 +190,20 @@ export class GameService {
     } finally {
       this._isSyncing.set(false);
 
-      // Apply any pending session update that arrived during sync
+      // Apply any pending realtime session update that arrived during sync.
+      // Must happen before the follow-up game sync so the session update
+      // can be processed while _isSyncing is still false.
       if (this._pendingSessionUpdate) {
         const pending = this._pendingSessionUpdate;
         this._pendingSessionUpdate = null;
         this.handleSessionUpdate(pending);
+      }
+
+      // If another mutation was queued during this sync, trigger a follow-up sync
+      if (this._pendingGameSync) {
+        const pendingGame = this._pendingGameSync;
+        this._pendingGameSync = null;
+        this.saveToAppwrite(pendingGame);
       }
     }
   }
@@ -325,57 +343,6 @@ export class GameService {
     }
   }
 
-  /**
-   * Sync current game state to Appwrite
-   * Used in room mode for multiplayer synchronization
-   *
-   * Uses _isSyncing flag to prevent sync loops from realtime updates.
-   * This method can be called explicitly after game state changes.
-   */
-  private async syncToAppwrite(): Promise<void> {
-    // Only sync in room mode
-    if (this.gameMode() !== 'room') {
-      return;
-    }
-
-    // Get current session
-    const session = this.ketalSessionService.currentSession();
-    if (!session) {
-      console.debug('[GameService] syncToAppwrite - no current session');
-      return;
-    }
-
-    // Get current game state
-    const game = this._game();
-    if (!game) {
-      console.debug('[GameService] syncToAppwrite - no game state');
-      return;
-    }
-
-    // Prevent sync loops
-    this._isSyncing.set(true);
-
-    try {
-      // Map game state to session update format
-      const updates = mapGameToSessionUpdate(game);
-
-      // Update Appwrite session
-      await this.ketalSessionService.updateSession(session.$id, updates);
-      console.debug('[GameService] syncToAppwrite - synced successfully');
-    } catch (error) {
-      console.error('[GameService] syncToAppwrite - failed:', error instanceof Error ? error.message : JSON.stringify(error));
-    } finally {
-      this._isSyncing.set(false);
-
-      // Apply any pending session update that arrived during sync
-      if (this._pendingSessionUpdate) {
-        const pending = this._pendingSessionUpdate;
-        this._pendingSessionUpdate = null;
-        this.handleSessionUpdate(pending);
-      }
-    }
-  }
-
   private createEmptyGame(): Game {
     return {
       players: [],
@@ -430,12 +397,6 @@ export class GameService {
         game.activePlayer = currentPlayer;
       }
     });
-
-    // Sync to Appwrite in room mode (AC1: setCardChoice persists in Appwrite)
-    // Fire-and-forget: errors are caught and logged, not blocking the UI flow
-    if (this.gameMode() === 'room') {
-      this.syncToAppwrite().catch((err) => console.error('[GameService] setCardChoice sync failed:', err instanceof Error ? err.message : JSON.stringify(err)));
-    }
   }
 
   /**
@@ -471,12 +432,6 @@ export class GameService {
         game.activePlayer = player;
       }
     });
-
-    // Sync to Appwrite in room mode (AC2: addCardToPlayer persists in Appwrite)
-    // Fire-and-forget: errors are caught and logged, not blocking the UI flow
-    if (this.gameMode() === 'room') {
-      this.syncToAppwrite().catch((err) => console.error('[GameService] addCardToPlayer sync failed:', err instanceof Error ? err.message : JSON.stringify(err)));
-    }
   }
 
   isGameFinished(): boolean {
@@ -509,6 +464,7 @@ export class GameService {
     // Clear session ID — game is truly ending
     this.activeSessionId = null;
     this._pendingSessionUpdate = null;
+    this._pendingGameSync = null;
     // Clear per-turn sip indicator
     this._lastTurnSips.set({});
 
@@ -742,13 +698,6 @@ export class GameService {
         g.activePlayer = g.players[currentIndex + 1];
       }
     });
-
-    // Sync turn/phase/activePlayer changes to Appwrite in room mode
-    // (AC3, AC4: pickCard updates session with new player/turn/phase)
-    // Fire-and-forget: errors are caught and logged, not blocking the UI flow
-    if (this.gameMode() === 'room') {
-      this.syncToAppwrite().catch((err) => console.error('[GameService] pickCard sync failed:', err instanceof Error ? err.message : JSON.stringify(err)));
-    }
   }
 
   private allPlayersMadeChoices(): boolean {
@@ -871,12 +820,6 @@ export class GameService {
         g.status = 2;
       }
     });
-
-    // Sync to Appwrite in room mode (includes drinkingCards/givingCards)
-    // Fire-and-forget: errors are caught and logged, not blocking the UI flow
-    if (this.gameMode() === 'room') {
-      this.syncToAppwrite().catch((err) => console.error('[GameService] displayNewCard sync failed:', err instanceof Error ? err.message : JSON.stringify(err)));
-    }
 
     // Finalize game stats if finished
     if (this.status() === 2) {

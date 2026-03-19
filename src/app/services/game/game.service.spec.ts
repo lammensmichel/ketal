@@ -3007,7 +3007,7 @@ describe('GameService', () => {
         testService.handleSessionUpdate(session);
 
         // The update should NOT trigger a save to Appwrite
-        // (saveToAppwrite is only called through saveAndNotify/syncToAppwrite)
+        // (saveToAppwrite is only called through saveAndNotify)
         expect(mockKetalSessionService.updateSession).not.toHaveBeenCalled();
       });
     });
