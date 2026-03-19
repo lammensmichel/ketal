@@ -16,12 +16,13 @@
   }
 
   &.emphasis {
-    box-shadow: 0 0 0.5rem 0.25rem rgba(127, 255, 212, 0.7);
+    box-shadow: var(--shadow-glow) var(--color-accent-gold);
     z-index: 1;
   }
 
   img {
     width: 100%;
     height: auto;
+    border-radius: var(--radius-md);
   }
 }
