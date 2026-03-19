@@ -1,7 +1,7 @@
 # Story 11.1: Game Phase Indicator
 
 ## Status
-In Progress
+Done
 
 ## Story
 **As a** Ketal player,

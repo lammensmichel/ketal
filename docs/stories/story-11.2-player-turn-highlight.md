@@ -1,7 +1,7 @@
 # Story 11.2: Player Turn Highlight
 
 ## Status
-In Progress
+Done
 
 ## Story
 **As a** Ketal player,
