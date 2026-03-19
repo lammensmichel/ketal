@@ -112,7 +112,7 @@
     "displayName": "Votre pseudo",
     "displayNamePlaceholder": "Entrez votre pseudo",
     "join": "Rejoindre",
-    "backToHome": "Retour a l'accueil",
+    "backToHome": "Retour à l'accueil",
     "errors": {
       "nameRequired": "Le nom de la room est requis",
       "nameTooShort": "Le nom doit contenir au moins 3 caractères",
