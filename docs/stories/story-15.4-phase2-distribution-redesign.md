@@ -225,4 +225,4 @@ La Phase 2 doit ressembler à une vraie table de jeu de cartes à boire, avec un
 
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
-| 2026-03-17 | 1.0 | Story created | Claude |
+| 2026-03-17 | 1.0 | Story created | Dev |
