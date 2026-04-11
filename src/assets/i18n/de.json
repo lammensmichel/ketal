@@ -19,6 +19,7 @@
   "Button_GoToMenu": "Pause",
   "Button_ResumeGame": "Spiel läuft - Fortsetzen",
   "Button_Cancel": "Abbrechen",
+  "Button_Confirm": "Bestätigen",
   "Dialog_QuitConfirmMessage": "Spiel zurücksetzen? Alle Daten gehen verloren.",
   "Button_Create": "Erstellen",
   "Button_Delete": "Löschen",

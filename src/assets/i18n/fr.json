@@ -20,6 +20,7 @@
   "Button_GoToMenu": "Pause",
   "Button_ResumeGame": "Partie en cours - Reprendre",
   "Button_Cancel": "Annuler",
+  "Button_Confirm": "Confirmer",
   "Dialog_QuitConfirmMessage": "Réinitialiser la partie ? Toutes les données seront perdues.",
   "Button_Create": "Créer",
   "Button_Delete": "Supprimer",
