@@ -1,20 +1,26 @@
 <div class="game-progress">
   @if (phase() === 1) {
-    <span class="phase-label">{{ 'game.progress.phase1' | translate }}</span>
-    <div class="stepper-dots">
-      @for (step of [1, 2, 3, 4]; track step) {
-        <span class="stepper-dot" [class.completed]="isStepCompleted(step)" [class.active]="isStepActive(step)">
-          @if (isStepCompleted(step)) {
-            <span class="dot-filled"></span>
-          } @else if (isStepActive(step)) {
-            <span class="dot-active"></span>
-          } @else {
-            <span class="dot-empty"></span>
-          }
-        </span>
+    <div class="stepper">
+      @for (step of steps; track step.num) {
+        @if (step.num > 1) {
+          <div class="stepper__line" [class.stepper__line--completed]="isStepCompleted(step.num)"></div>
+        }
+        <div
+          class="stepper__step"
+          [class.stepper__step--completed]="isStepCompleted(step.num)"
+          [class.stepper__step--active]="isStepActive(step.num)"
+        >
+          <div class="stepper__icon">
+            @if (isStepCompleted(step.num)) {
+              <span class="stepper__check">✓</span>
+            } @else {
+              <span class="stepper__symbol">{{ step.icon }}</span>
+            }
+          </div>
+          <span class="stepper__label">{{ step.labelKey | translate }}</span>
+        </div>
       }
     </div>
-    <span class="turn-label">{{ currentTurnKey() | translate }}</span>
   } @else if (phase() === 2) {
     <span class="phase-label">{{ 'game.progress.phase2' | translate }}</span>
     <div class="phase2-progress">
