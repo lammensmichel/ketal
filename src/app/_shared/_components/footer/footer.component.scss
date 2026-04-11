@@ -34,6 +34,56 @@
   flex-shrink: 0;
 }
 
+// Hide player avatar/name on mobile (redundant with active player card above)
+@media (max-width: 767px) {
+  .prediction-panel__player--desktop {
+    display: none;
+  }
+  .prediction-panel {
+    padding: var(--space-2);
+    gap: var(--space-2);
+    margin-top: 0;
+    border-radius: 0;
+    border: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+  }
+  .prediction-panel--phase2 {
+    position: static;
+  }
+  .footer-wrapper {
+    max-width: none;
+  }
+  .prediction-btn {
+    min-width: 64px;
+    min-height: 56px;
+    padding: var(--space-1) var(--space-2);
+  }
+  .prediction-btn__icon {
+    font-size: 1.25rem;
+  }
+  .prediction-btn--suit {
+    min-width: 48px;
+    min-height: 48px;
+  }
+  .prediction-panel__choices-row {
+    flex-wrap: nowrap;
+  }
+  .prediction-panel__reference {
+    padding: var(--space-1) var(--space-2);
+    .prediction-panel__reference-label {
+      font-size: 0.65rem;
+    }
+    ::ng-deep .card-container {
+      width: 36px !important;
+      min-height: 50px !important;
+    }
+  }
+}
+
 .prediction-panel__avatar {
   width: 36px;
   height: 36px;
@@ -145,13 +195,13 @@
 }
 
 .prediction-btn--black {
-  background: linear-gradient(135deg, #1e293b, #0f172a);
-  border-color: #334155;
-  color: #f1f5f9;
+  background: #000;
+  border-color: #333;
+  color: #fff;
   &:hover {
-    border-color: #475569;
-    box-shadow: 0 0 16px rgba(30, 41, 59, 0.6);
-    background: linear-gradient(135deg, #334155, #1e293b);
+    border-color: #555;
+    box-shadow: 0 0 16px rgba(0, 0, 0, 0.6);
+    background: #1a1a1a;
     transform: translateY(-2px);
   }
 }

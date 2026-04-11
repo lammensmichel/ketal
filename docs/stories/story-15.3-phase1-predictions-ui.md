@@ -232,6 +232,18 @@ La phase de prédiction doit créer du suspense : boutons qui réagissent au tou
 
 ---
 
+## Already Implemented in Story 15.2
+
+The following items from this story were already implemented as part of Story 15.2 (Player Cards Redesign):
+
+- **Prediction buttons redesigned**: gradient red/black for color, arrow buttons for higher/lower, card-based buttons for in/out, suit symbol buttons
+- **Prediction panel uses dark theme** (`--color-bg-elevated`) matching player cards
+- **Reference card shown in dashed callout** for higher/lower turn
+- **Mobile: avatar hidden in prediction panel** (redundant with active player card above)
+- **Mobile: prediction panel goes edge-to-edge** without border-radius
+
+---
+
 ## Change Log
 
 | Date | Version | Description | Author |

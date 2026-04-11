@@ -222,14 +222,14 @@ describe('GameProgressComponent', () => {
       expect(container).toBeTruthy();
     });
 
-    it('should render phase indicator', () => {
-      const phaseIndicator = fixture.debugElement.query(By.css('.phase-indicator'));
-      expect(phaseIndicator).toBeTruthy();
+    it('should render phase label', () => {
+      const phaseLabel = fixture.debugElement.query(By.css('.phase-label'));
+      expect(phaseLabel).toBeTruthy();
     });
 
-    it('should render phase1-stepper in phase 1', () => {
-      const stepper = fixture.debugElement.query(By.css('.phase1-stepper'));
-      expect(stepper).toBeTruthy();
+    it('should render stepper dots in phase 1', () => {
+      const dots = fixture.debugElement.query(By.css('.stepper-dots'));
+      expect(dots).toBeTruthy();
     });
 
     it('should not render phase2-progress in phase 1', () => {
@@ -275,9 +275,9 @@ describe('GameProgressComponent', () => {
       expect(progress).toBeTruthy();
     });
 
-    it('should not render phase1-stepper in phase 2', () => {
-      const stepper = fixture.debugElement.query(By.css('.phase1-stepper'));
-      expect(stepper).toBeFalsy();
+    it('should not render stepper dots in phase 2', () => {
+      const dots = fixture.debugElement.query(By.css('.stepper-dots'));
+      expect(dots).toBeFalsy();
     });
 
     it('should render two progress rows', () => {

@@ -4,7 +4,7 @@
     @if (gameSrv.isGameStarted() && [1, 2, 3, 4].includes(gameSrv.turn())) {
       <div class="prediction-panel">
         @if (gameSrv.activePlayer(); as activePlayer) {
-          <div class="prediction-panel__player">
+          <div class="prediction-panel__player prediction-panel__player--desktop">
             <img
               class="prediction-panel__avatar"
               [src]="activePlayer.avatarSrc"

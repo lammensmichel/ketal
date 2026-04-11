@@ -39,6 +39,7 @@ export class PlayerCardComponent implements OnInit {
   @Input() player: PlayerModel = new PlayerModel();
   @Input() isActive = false;
   @Input() hasActivePlayer = false;
+  @Input() compact = false;
 
   readonly cardSlots = [0, 1, 2, 3];
 

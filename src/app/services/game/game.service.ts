@@ -680,11 +680,10 @@ export class GameService {
     const currentCard = this.cardDeckHelperService.getRandomCard();
     this.assignSipsForFirstTurn(currentCard, game.activePlayer.id);
 
-    // Track per-turn sips for the current player before advancing
-    this._lastTurnSips.update((sips) => ({
-      ...sips,
+    // Track per-turn sips: only keep the current player's result (replaces previous)
+    this._lastTurnSips.set({
       [game.activePlayer!.id]: currentCard.sips ?? 0,
-    }));
+    });
 
     this.addCardToPlayer(currentCard, game.activePlayer.id);
 
@@ -700,8 +699,7 @@ export class GameService {
           // Keep lastTurnSips visible until first Phase 2 card is drawn
         } else {
           g.activePlayer = g.players[0];
-          // Clear per-turn sips when a new round starts
-          this._lastTurnSips.set({});
+          // Keep lastTurnSips visible — last player's result stays until next player picks
         }
       } else {
         g.activePlayer = g.players[currentIndex + 1];

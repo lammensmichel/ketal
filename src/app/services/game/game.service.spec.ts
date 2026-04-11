@@ -1396,7 +1396,7 @@ describe('GameService', () => {
       expect(testService.getLastTurnSipsForPlayer('player-2')).toBe(0);
     });
 
-    it('should clear lastTurnSips when a new round starts (last player picks)', () => {
+    it('should keep lastTurnSips when a new round starts (last player result visible)', () => {
       const player = createMockPlayer({
         id: 'player-1',
         cards: [],
@@ -1417,8 +1417,8 @@ describe('GameService', () => {
 
       testService.pickCard();
 
-      // Last player picked => new round starts => lastTurnSips cleared
-      expect(testService.getLastTurnSipsForPlayer('player-1')).toBe(0);
+      // Last player's result persists until next player picks
+      expect(testService.getLastTurnSipsForPlayer('player-1')).toBe(1);
     });
 
     it('should keep lastTurnSips when entering Phase 2 and clear on first Phase 2 card', () => {

@@ -217,6 +217,73 @@
   }
 }
 
+// === Compact Mode (inactive players strip) ===
+.player-card--compact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  flex-shrink: 0;
+
+  &.player-card--inactive {
+    opacity: 0.8;
+    transform: none;
+  }
+}
+
+.player-card__avatar-wrapper--sm {
+  width: 28px;
+  height: 28px;
+}
+.player-card__avatar--sm {
+  width: 28px !important;
+  height: 28px !important;
+}
+.player-card__avatar-fallback--sm {
+  font-size: 0.6rem;
+}
+.player-card__name--sm {
+  font-size: var(--font-size-xs);
+  min-width: 40px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 1;
+}
+
+.player-card__mini-fan {
+  display: flex;
+  gap: 0;
+  flex-shrink: 0;
+  ::ng-deep .card-container {
+    width: 20px !important;
+    min-height: 28px !important;
+    &:not(:first-child) {
+      margin-left: -8px;
+    }
+  }
+}
+
+.player-card__sips--sm {
+  gap: 2px;
+  .player-card__sip-badge {
+    font-size: 0.6rem;
+    padding: 1px 3px;
+  }
+}
+
+.player-card__turn-badge--sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 4px;
+  border-radius: var(--radius-sm);
+  background: rgba(217, 119, 6, 0.15);
+  color: var(--color-accent-gold);
+  font-size: 0.6rem;
+  font-weight: var(--font-weight-semibold);
+}
+
 // === Reduced Motion ===
 @media (prefers-reduced-motion: reduce) {
   .player-card--active {
