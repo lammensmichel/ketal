@@ -4,58 +4,122 @@
   justify-content: center;
   gap: 0.5rem;
   padding: 0.4rem 0.75rem;
-  background-color: rgba(0, 0, 0, 0.1);
-  border-radius: 0.5rem;
+  background-color: var(--color-bg-elevated);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
 }
 
-.phase-label {
+// === Stepper ===
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  justify-content: center;
+}
+
+.stepper__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  flex-shrink: 0;
+}
+
+.stepper__icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-surface);
+  border: 2px solid var(--color-border);
+  transition: all var(--animation-normal) var(--ease-spring);
   font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--bs-primary, #0d6efd);
-  white-space: nowrap;
 
   @media (max-width: 767px) {
+    width: 1.8rem;
+    height: 1.8rem;
     font-size: 0.75rem;
   }
 }
 
-.stepper-dots {
-  display: flex;
-  gap: 0.4rem;
-  align-items: center;
+.stepper__symbol {
+  line-height: 1;
 }
 
-.stepper-dot {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  .dot-filled,
-  .dot-active,
-  .dot-empty {
-    display: inline-block;
-    width: 0.6rem;
-    height: 0.6rem;
-    border-radius: 50%;
-    transition: all 0.2s ease;
-  }
-  .dot-filled {
-    background-color: var(--bs-success, #198754);
-  }
-  .dot-active {
-    background-color: var(--bs-primary, #0d6efd);
-    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
-  }
-  .dot-empty {
-    background-color: var(--bs-secondary, #6c757d);
-    opacity: 0.4;
-  }
-}
-
-.turn-label {
+.stepper__check {
+  color: #fff;
+  font-weight: bold;
   font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--bs-body-color, #212529);
+  line-height: 1;
+}
+
+.stepper__label {
+  font-size: 0.65rem;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  transition: color var(--animation-normal) var(--ease-default);
+
+  @media (max-width: 767px) {
+    font-size: 0.65rem;
+  }
+}
+
+// Connecting line between steps
+.stepper__line {
+  flex: 1;
+  height: 2px;
+  min-width: 1.5rem;
+  max-width: 3rem;
+  background: var(--color-border);
+  margin: 0 0.15rem;
+  margin-bottom: 1rem; // align with icon, not label
+  border-radius: 1px;
+  transition: background var(--animation-normal) var(--ease-default);
+
+  @media (max-width: 767px) {
+    min-width: 1rem;
+    max-width: 2rem;
+    margin-bottom: 0.8rem;
+  }
+
+  &--completed {
+    background: var(--color-success);
+  }
+}
+
+// Step states
+.stepper__step--completed {
+  .stepper__icon {
+    background: var(--color-success);
+    border-color: var(--color-success);
+  }
+  .stepper__label {
+    color: var(--color-success);
+  }
+}
+
+.stepper__step--active {
+  .stepper__icon {
+    border-color: var(--color-accent-primary);
+    background: color-mix(in srgb, var(--color-accent-primary) 15%, transparent);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--color-accent-primary) 40%, transparent);
+  }
+  .stepper__label {
+    color: var(--color-accent-primary);
+    font-weight: var(--font-weight-semibold);
+  }
+}
+
+// === Phase 2 ===
+.phase-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-accent-primary);
+  white-space: nowrap;
 
   @media (max-width: 767px) {
     font-size: 0.75rem;
@@ -75,11 +139,11 @@
 
 .progress-label {
   font-size: 0.8rem;
-  color: var(--bs-body-color, #212529);
+  color: var(--color-text-secondary);
 }
 
 .progress-value {
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--bs-primary, #0d6efd);
+  color: var(--color-accent-primary);
 }

@@ -1,6 +1,7 @@
-import { Component, Input, ViewChild, inject } from '@angular/core';
+import { Component, Input, ViewChild, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
+import { NgClass } from '@angular/common';
 import { FontAwesomeIconsModule } from '../../../font-awesome.module';
 import { AuthService } from '../../../services/auth/auth.service';
 import { GameService } from '../../../services/game/game.service';
@@ -11,6 +12,9 @@ import { DrinkChoiceEnum } from '../../_models/enums/drink_choice.enum';
 import { ToastComponent } from '../toast/toast.component';
 import { PlayingCardComponent } from '../playing-card/playing-card.component';
 import { AccountGateModalComponent } from '../../../_components/auth/account-gate-modal/account-gate-modal.component';
+
+/** Animation phase for prediction flow */
+type AnimationPhase = 'idle' | 'selected' | 'revealing' | 'result' | 'transitioning';
 
 /** Routes where the game footer should be hidden */
 const HIDDEN_ROUTES = ['/login', '/register', '/forgot-password', '/room', '/home'];
@@ -23,7 +27,14 @@ const PENDING_SUMMARY_KEY = 'pendingSummary';
   templateUrl: './footer.component.html',
   styleUrls: ['./footer.component.scss'],
   standalone: true,
-  imports: [TranslateModule, FontAwesomeIconsModule, ToastComponent, PlayingCardComponent, AccountGateModalComponent],
+  imports: [
+    TranslateModule,
+    FontAwesomeIconsModule,
+    NgClass,
+    ToastComponent,
+    PlayingCardComponent,
+    AccountGateModalComponent,
+  ],
 })
 export class FooterComponent {
   private readonly router = inject(Router);
@@ -40,6 +51,23 @@ export class FooterComponent {
 
   /** Guard flag to prevent double-click on beginGame */
   private _beginGameInProgress = false;
+
+  // === Animation state for prediction flow ===
+  readonly animationPhase = signal<AnimationPhase>('idle');
+  readonly selectedChoice = signal<string | null>(null);
+  readonly revealedCard = signal<CardType | null>(null);
+  readonly predictionCorrect = signal<boolean | null>(null);
+  /** The turn number during animation (preserved while game state advances) */
+  readonly animatingTurn = signal<number>(0);
+  /** Track if we're transitioning between turns */
+  readonly turnTransitioning = signal(false);
+
+  /** Whether the prediction panel is locked during animation */
+  readonly isAnimationLocked = computed(() => this.animationPhase() !== 'idle');
+
+  /** Whether the user prefers reduced motion */
+  private readonly prefersReducedMotion =
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /** Reference card for Turn 2 (the card drawn in Turn 1 for the active player) */
   getReferenceCard(): CardType | null {
@@ -61,19 +89,85 @@ export class FooterComponent {
   }
 
   chooseColor(color: string) {
-    this.gameSrv.setChoiceAndPickCard(DrinkChoiceEnum.Color, color);
+    this.animatedChoice(DrinkChoiceEnum.Color, color);
   }
 
   plusOrMinus(selection: string) {
-    this.gameSrv.setChoiceAndPickCard(DrinkChoiceEnum.PlusOrMinus, selection);
+    this.animatedChoice(DrinkChoiceEnum.PlusOrMinus, selection);
   }
 
   inOut(selection: string) {
-    this.gameSrv.setChoiceAndPickCard(DrinkChoiceEnum.InAndOut, selection);
+    this.animatedChoice(DrinkChoiceEnum.InAndOut, selection);
   }
 
   chooseSuit(selection: string) {
-    this.gameSrv.setChoiceAndPickCard(DrinkChoiceEnum.Suit, selection);
+    this.animatedChoice(DrinkChoiceEnum.Suit, selection);
+  }
+
+  /**
+   * Orchestrates the prediction animation sequence:
+   * 1. Button selection highlight (200ms)
+   * 2. Card flip reveal (400ms)
+   * 3. Result feedback - correct/incorrect (600ms)
+   * 4. Slide transition to next turn (300ms)
+   *
+   * When prefers-reduced-motion is active, delays are minimized.
+   */
+  private animatedChoice(choiceEnum: DrinkChoiceEnum, selection: string): void {
+    if (this.isAnimationLocked()) {
+      return;
+    }
+
+    const currentTurn = this.gameSrv.turn();
+    const activePlayerId = this.gameSrv.activePlayer()?.id;
+
+    // Timing: respect prefers-reduced-motion
+    const t = this.prefersReducedMotion
+      ? { select: 0, reveal: 0, result: 100, transition: 0 }
+      : { select: 200, reveal: 400, result: 600, transition: 300 };
+
+    // Phase 1: Button selected
+    this.animatingTurn.set(currentTurn);
+    this.selectedChoice.set(selection);
+    this.animationPhase.set('selected');
+
+    setTimeout(() => {
+      // Execute the actual game logic
+      this.gameSrv.setChoiceAndPickCard(choiceEnum, selection);
+
+      // Get the drawn card and result
+      const players = this.gameSrv.players();
+      const player = players.find((p) => p.id === activePlayerId);
+      const drawnCard = player?.cards[player.cards.length - 1] ?? null;
+      const sips = activePlayerId ? (this.gameSrv.lastTurnSips()[activePlayerId] ?? 0) : 0;
+
+      this.revealedCard.set(drawnCard);
+      this.predictionCorrect.set(sips === 0);
+
+      // Phase 2: Card flip reveal
+      this.animationPhase.set('revealing');
+
+      setTimeout(() => {
+        // Phase 3: Show result
+        this.animationPhase.set('result');
+
+        setTimeout(() => {
+          // Phase 4: Slide transition
+          this.animationPhase.set('transitioning');
+          this.turnTransitioning.set(true);
+
+          setTimeout(() => {
+            // Reset all animation state
+            this.animationPhase.set('idle');
+            this.selectedChoice.set(null);
+            this.revealedCard.set(null);
+            this.predictionCorrect.set(null);
+            this.animatingTurn.set(0);
+            this.turnTransitioning.set(false);
+          }, t.transition);
+        }, t.result);
+      }, t.reveal);
+    }, t.select);
   }
 
   async restartGame(): Promise<void> {
