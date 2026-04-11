@@ -86,7 +86,7 @@ export class PlayerGivenSipsSelectionComponent {
 
   openModal(player: PlayerModel): void {
     this.givenPlayer = player;
-    this.sipsToGive = this.playerHelper.getSipCnt(this.gameSrv.game(), player);
+    this.sipsToGive = this.playerHelper.getTotalGivenSips(player);
 
     this.players.forEach((p) => {
       this.tempSips[p.id] = 0;

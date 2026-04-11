@@ -174,7 +174,7 @@ export class PlayerCardComponent implements OnInit {
       return;
     }
 
-    const hasSipsToGive = this.sipCount() > 0 && this.playerSrv.getTotalGivenSips(player) > 0;
+    const hasSipsToGive = this.sipsGiven() > 0 && this.playerSrv.getTotalGivenSips(player) > 0;
     if (hasSipsToGive) {
       this.playerGivenSipsModal?.openModal(player);
     }
