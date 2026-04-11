@@ -74,6 +74,31 @@ export class FooterComponent implements OnDestroy {
   /** Active timeout IDs for animation cleanup on destroy */
   private readonly _animationTimers: ReturnType<typeof setTimeout>[] = [];
 
+  // === Phase 2 draw pile state ===
+  /** Whether a Phase 2 card flip is in progress */
+  readonly revealingPhase2 = signal(false);
+  /** The last drawn Phase 2 card (shown in draw area during flip animation) */
+  readonly lastDrawnCard = signal<CardType | null>(null);
+  /** Whether the last drawn card was a drink card */
+  readonly lastDrawnIsDrink = signal(true);
+
+  /** Whether the next draw is a drink card (even total = drink, odd = give) */
+  readonly nextIsDrink = computed(() => {
+    const total = this.gameSrv.drinkingCards().length + this.gameSrv.givingCards().length;
+    return total % 2 === 0;
+  });
+
+  /** Number of sips for the next card */
+  readonly nextSipValue = computed(() => this.gameSrv.getSipsNumber());
+
+  /** Whether all 12 Phase 2 cards have been drawn */
+  readonly phase2Complete = computed(() => this.gameSrv.givingCards().length >= 6);
+
+  /** Remaining cards in the draw pile */
+  readonly cardsRemaining = computed(
+    () => 12 - this.gameSrv.drinkingCards().length - this.gameSrv.givingCards().length
+  );
+
   ngOnDestroy(): void {
     this._animationTimers.forEach((id) => clearTimeout(id));
     this._animationTimers.length = 0;
@@ -269,6 +294,32 @@ export class FooterComponent implements OnDestroy {
     this.toastComponent?.show();
     await this.delay(2500);
     this.openSipGiveModal(this.gameSrv.getLastCard());
+  }
+
+  /** Draw the next card from the Phase 2 pile */
+  onDrawPhase2Card(): void {
+    if (this.revealingPhase2() || this.phase2Complete()) {
+      return;
+    }
+
+    const isDrink = this.nextIsDrink();
+    this.lastDrawnIsDrink.set(isDrink);
+    this.revealingPhase2.set(true);
+
+    const flipDelay = this.prefersReducedMotion ? 50 : 500;
+
+    // Draw the card (adds to drinkingCards/givingCards)
+    const newCard = this.gameSrv.displayNewCard();
+    this.lastDrawnCard.set(newCard ?? null);
+
+    // Wait for the flip animation, then unlock
+    this._scheduleTimer(() => {
+      this.revealingPhase2.set(false);
+      this.lastDrawnCard.set(null);
+      if (newCard) {
+        this.openSipGiveModal(newCard);
+      }
+    }, flipDelay);
   }
 
   hasPlayers(): boolean {

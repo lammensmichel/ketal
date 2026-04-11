@@ -40,6 +40,7 @@
     [ngClass]="{
       'player-card--active': isActive,
       'player-card--inactive': !isActive && hasActivePlayer,
+      'player-card--match': matchHighlight(),
     }"
   >
     <!-- Header: avatar + name + sips -->
@@ -58,10 +59,20 @@
       </div>
       <span class="player-card__name">{{ player.name }}</span>
       <div class="player-card__sips" (click)="openPlayerGivenSipsModal(player)">
-        <span class="player-card__sip-badge player-card__sip-badge--drink" [class.sip-bounce]="sipBounce()">
+        <span
+          class="player-card__sip-badge player-card__sip-badge--drink"
+          [class.sip-bounce]="sipBounce()"
+          [class.sip-shake]="sipShake()"
+          [attr.data-severity]="sipSeverity()"
+        >
           {{ sipsDrunk() }} <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon>
         </span>
-        <span class="player-card__sip-badge player-card__sip-badge--give" [class.sip-bounce]="sipBounce()">
+        <span
+          class="player-card__sip-badge player-card__sip-badge--give"
+          [class.sip-bounce]="sipBounce()"
+          [class.sip-shake]="sipShake()"
+          [attr.data-severity]="sipSeverity()"
+        >
           {{ sipsGiven() }} <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon>
         </span>
       </div>

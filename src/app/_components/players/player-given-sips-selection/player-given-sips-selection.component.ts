@@ -1,5 +1,6 @@
-import { Component, ElementRef, inject, Input, ViewChild } from '@angular/core';
+import { Component, inject, Input, ViewChild } from '@angular/core';
 import { TranslateModule } from '@ngx-translate/core';
+import { NgClass } from '@angular/common';
 import { FontAwesomeIconsModule } from '../../../font-awesome.module';
 import { ToastComponent } from '../../../_shared/_components/toast/toast.component';
 import { PlayerHelperService } from '../../../_shared/_helpers/player.helper';
@@ -12,10 +13,9 @@ import { GameService } from '../../../services/game/game.service';
   templateUrl: './player-given-sips-selection.component.html',
   styleUrls: ['./player-given-sips-selection.component.scss'],
   standalone: true,
-  imports: [TranslateModule, FontAwesomeIconsModule, ToastComponent],
+  imports: [TranslateModule, NgClass, FontAwesomeIconsModule, ToastComponent],
 })
 export class PlayerGivenSipsSelectionComponent {
-  private readonly elementRef = inject(ElementRef);
   readonly gameSrv = inject(GameService);
   readonly playerHelper = inject(PlayerHelperService);
 
@@ -26,12 +26,13 @@ export class PlayerGivenSipsSelectionComponent {
   tempSips: { [key: string]: number } = {};
   sipsToGive = 0;
   givenPlayer = new PlayerModel();
+  modalOpen = false;
 
   get players(): PlayerModel[] {
     return this.gameSrv.players();
   }
 
-  increase(player: any, sips: number = 0) {
+  increase(player: PlayerModel, sips: number = 0): void {
     if (this.sipsToGive <= 0) {
       return;
     }
@@ -39,28 +40,25 @@ export class PlayerGivenSipsSelectionComponent {
     if (sips > 0) {
       this.tempSips[player.id] += sips;
       this.sipsToGive -= sips;
-      return;
     } else {
       this.tempSips[player.id]++;
       this.sipsToGive--;
     }
   }
 
-  decrease(player: any) {
+  decrease(player: PlayerModel): void {
     if (this.tempSips[player.id] > 0) {
       this.tempSips[player.id]--;
       this.sipsToGive++;
     }
   }
 
-  save() {
+  save(): void {
     if (this.sipsToGive !== 0) {
-      if (this.toastComponent) {
-        this.toastComponent.show();
-      }
+      this.toastComponent?.show();
       return;
     }
-    // Implement your save logic here
+
     this.players.forEach((player) => {
       if (this.tempSips[player.id] > 0) {
         this.gameSrv.addPlayerSip(player, this.tempSips[player.id]);
@@ -78,18 +76,12 @@ export class PlayerGivenSipsSelectionComponent {
     this.closeModal();
   }
 
-  resetSips() {
+  closeModal(): void {
+    this.modalOpen = false;
     for (const key in this.tempSips) {
       this.tempSips[key] = 0;
     }
     this.sipsToGive = 0;
-  }
-
-  closeModal() {
-    const modal = this.elementRef.nativeElement.querySelector('#playerSipsSelectionModal');
-    modal.style.display = 'none';
-
-    this.resetSips();
   }
 
   openModal(player: PlayerModel): void {
@@ -100,7 +92,6 @@ export class PlayerGivenSipsSelectionComponent {
       this.tempSips[p.id] = 0;
     });
 
-    const modal = this.elementRef.nativeElement.querySelector('#playerSipsSelectionModal');
-    modal.style.display = 'flex';
+    this.modalOpen = true;
   }
 }

@@ -1,42 +1,61 @@
-<div id="playerSipsSelectionModal" class="modal">
-  <div class="modal-content">
-    <span class="input-group-text">
-      <span> <img alt="avatar" class="img-thumbnail" src="{{ givenPlayer.avatarSrc }}" /></span>
-      <span> {{ givenPlayer.name }}</span>
-      <span [translate]="'Label_Give'"> </span>
-      <span> {{ sipsToGive }}</span>
-      <span [translate]="'Remaining_Sips'"> </span>
-    </span>
+@if (modalOpen) {
+  <div class="sip-modal-overlay" (click)="closeModal()">
+    <div class="sip-modal" (click)="$event.stopPropagation()">
+      <!-- Header: who is giving -->
+      <div class="sip-modal__header">
+        <img class="sip-modal__avatar" [src]="givenPlayer.avatarSrc" [alt]="givenPlayer.name" />
+        <div class="sip-modal__title">
+          <span class="sip-modal__name">{{ givenPlayer.name }}</span>
+          <span class="sip-modal__subtitle" [translate]="'Label_Give'"></span>
+        </div>
+      </div>
 
-    <div class="list-group">
-      @for (player of players; track player.id) {
-        <div class="list-group-item">
-          {{ player.name }}
-          <div class="input-group">
-            <div class="d-flex justify-content-center">
-              <input type="number" class="form-control" [value]="tempSips[player.id]" readonly />
-              <button class="btn btn-outline-secondary" type="button" (click)="decrease(player)">
+      <!-- Remaining sips counter -->
+      <div class="sip-modal__remaining" [ngClass]="{ 'sip-modal__remaining--done': sipsToGive === 0 }">
+        <span class="sip-modal__remaining-count">{{ sipsToGive }}</span>
+        <span class="sip-modal__remaining-label" [translate]="'Remaining_Sips'"></span>
+      </div>
+
+      <!-- Player avatar grid (quick-tap) -->
+      <div class="sip-modal__grid">
+        @for (player of players; track player.id) {
+          <div class="sip-modal__player" (click)="increase(player)">
+            <div class="sip-modal__player-avatar-wrapper">
+              <img class="sip-modal__player-avatar" [src]="player.avatarSrc" [alt]="player.name" />
+              @if (tempSips[player.id] > 0) {
+                <span class="sip-modal__player-badge">{{ tempSips[player.id] }}</span>
+              }
+            </div>
+            <span class="sip-modal__player-name">{{ player.name }}</span>
+            <div class="sip-modal__player-controls">
+              <button class="sip-modal__ctrl-btn" type="button" (click)="decrease(player); $event.stopPropagation()">
                 <fa-icon [icon]="['fas', 'minus']"></fa-icon>
               </button>
-              <button class="btn btn-outline-secondary" type="button" (click)="increase(player)">
-                <fa-icon [icon]="['fas', 'plus']"></fa-icon>
-              </button>
               @if (sipsToGive > 0) {
-                <button class="btn btn-outline-secondary" type="button" (click)="increase(player, sipsToGive)">
-                  {{ sipsToGive }}
+                <button
+                  class="sip-modal__ctrl-btn sip-modal__ctrl-btn--all"
+                  type="button"
+                  (click)="increase(player, sipsToGive); $event.stopPropagation()"
+                >
+                  +{{ sipsToGive }}
                 </button>
               }
             </div>
           </div>
-        </div>
-      }
-    </div>
+        }
+      </div>
 
-    <div class="button-container">
-      <button class="btn btn-secondary" (click)="closeModal()">Close</button>
-      <button class="btn btn-success" (click)="save()">Save</button>
+      <!-- Actions -->
+      <div class="sip-modal__actions">
+        <button
+          class="sip-modal__btn sip-modal__btn--cancel"
+          (click)="closeModal()"
+          [translate]="'Button_Cancel'"
+        ></button>
+        <button class="sip-modal__btn sip-modal__btn--confirm" (click)="save()" [translate]="'Button_Confirm'"></button>
+      </div>
     </div>
   </div>
-</div>
+}
 
 <app-toast #assignAllSips [titleMessage]="'Warning'" [bodyMessage]="'Assign_All_Given_Sips'"></app-toast>

@@ -48,6 +48,10 @@ export class PlayerCardComponent implements OnInit {
 
   /** Bounce animation trigger */
   readonly sipBounce = signal(false);
+  /** Shake animation for large sip jumps */
+  readonly sipShake = signal(false);
+  /** Match highlight when Phase 2 card matches player's hand */
+  readonly matchHighlight = signal(false);
 
   /** Player initials for avatar fallback */
   readonly initials = computed(() => {
@@ -84,6 +88,18 @@ export class PlayerCardComponent implements OnInit {
     return count > 0 ? count : 0;
   });
 
+  /** Sip severity for color-coded counter (T4) */
+  readonly sipSeverity = computed<'low' | 'medium' | 'high'>(() => {
+    const abs = this.sipCountAbsolute();
+    if (abs >= 13) {
+      return 'high';
+    }
+    if (abs >= 6) {
+      return 'medium';
+    }
+    return 'low';
+  });
+
   /** Per-turn sip indicator for Phase 1 - resets when active player changes */
   readonly lastTurnSips = computed(() => {
     this.gameSrv.lastTurnSips();
@@ -91,19 +107,47 @@ export class PlayerCardComponent implements OnInit {
   });
 
   private sipInitialized = false;
+  private prevSipCount = 0;
 
   constructor() {
-    // Trigger bounce animation when sip count changes (skip initial)
+    // Trigger bounce/shake animation when sip count changes (skip initial)
     effect(() => {
-      this.sipCountAbsolute();
+      const current = this.sipCountAbsolute();
       if (!this.sipInitialized) {
         this.sipInitialized = true;
+        this.prevSipCount = current;
         return;
       }
+
+      const delta = Math.abs(current - this.prevSipCount);
+      this.prevSipCount = current;
+
+      // Always bounce
       this.sipBounce.set(true);
-      const timer = setTimeout(() => this.sipBounce.set(false), 300);
-      // Cleanup on destroy
-      this.destroyRef.onDestroy(() => clearTimeout(timer));
+      const bounceTimer = setTimeout(() => this.sipBounce.set(false), 300);
+      this.destroyRef.onDestroy(() => clearTimeout(bounceTimer));
+
+      // Shake on large jumps (3+ sips at once)
+      if (delta >= 3) {
+        this.sipShake.set(true);
+        const shakeTimer = setTimeout(() => this.sipShake.set(false), 400);
+        this.destroyRef.onDestroy(() => clearTimeout(shakeTimer));
+      }
+    });
+
+    // Match highlight when Phase 2 card matches (T6)
+    effect(() => {
+      const matchValue = this.gameSrv.phase2LastCardValue?.();
+      if (!matchValue || !this.player?.cards) {
+        this.matchHighlight.set(false);
+        return;
+      }
+      const hasMatch = this.player.cards.some((c) => c?.value === matchValue);
+      if (hasMatch) {
+        this.matchHighlight.set(true);
+        const timer = setTimeout(() => this.matchHighlight.set(false), 2000);
+        this.destroyRef.onDestroy(() => clearTimeout(timer));
+      }
     });
   }
 

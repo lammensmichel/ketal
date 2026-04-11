@@ -278,6 +278,193 @@
   margin-bottom: 10px;
 }
 
+// === Phase 2: Draw Pile + Split Lane ===
+.draw-layout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  width: 100%;
+
+  @media (max-width: 767px) {
+    gap: var(--space-1);
+  }
+}
+
+.draw-lane {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  flex: 1;
+  min-width: 0;
+
+  &__label {
+    font-size: 0.7rem;
+    font-weight: var(--font-weight-semibold);
+    white-space: nowrap;
+
+    &--drink {
+      color: #ef4444;
+    }
+    &--give {
+      color: #22c55e;
+    }
+  }
+
+  &__cards {
+    display: flex;
+    justify-content: center;
+    min-height: 55px;
+
+    // Smaller cards in lanes
+    ::ng-deep .card-container {
+      width: 36px;
+      min-height: 50px;
+
+      @media (min-width: 768px) {
+        width: 50px;
+        min-height: 70px;
+      }
+    }
+    ::ng-deep .card-container.left-overlap {
+      margin-left: -18px;
+      @media (min-width: 768px) {
+        margin-left: -25px;
+      }
+    }
+  }
+}
+
+.draw-pile {
+  flex-shrink: 0;
+
+  &__btn {
+    position: relative;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: transform var(--animation-fast) var(--ease-spring);
+
+    &:hover:not(:disabled) {
+      transform: scale(1.05);
+    }
+    &:active:not(:disabled) {
+      transform: scale(0.95);
+    }
+    &:disabled {
+      cursor: default;
+    }
+
+    // Pulsing border based on next card type
+    &--drink {
+      .draw-pile__card--1 {
+        box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+      }
+    }
+    &--give {
+      .draw-pile__card--1 {
+        box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+      }
+    }
+  }
+
+  &__stack {
+    position: relative;
+    width: 50px;
+    height: 70px;
+
+    @media (min-width: 768px) {
+      width: 65px;
+      height: 91px;
+    }
+  }
+
+  &__card {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--radius-sm, 3px);
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: var(--radius-sm, 3px);
+    }
+
+    ::ng-deep .card-container {
+      width: 100% !important;
+      min-height: 100% !important;
+    }
+
+    &--3 {
+      top: -4px;
+      left: 2px;
+      background: var(--color-bg-surface);
+      border: 1px solid var(--color-border);
+      opacity: 0.5;
+    }
+    &--2 {
+      top: -2px;
+      left: 1px;
+      background: var(--color-bg-surface);
+      border: 1px solid var(--color-border);
+      opacity: 0.7;
+    }
+    &--1 {
+      top: 0;
+      left: 0;
+      border-radius: var(--radius-sm, 3px);
+    }
+  }
+
+  &__sip-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 22px;
+    height: 22px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: var(--font-weight-bold);
+    color: #fff;
+    z-index: 2;
+    animation: sip-pulse 1.5s ease-in-out infinite;
+
+    &--drink {
+      background: #ef4444;
+    }
+    &--give {
+      background: #22c55e;
+    }
+  }
+}
+
+@keyframes sip-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}
+
+.phase2-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+}
+
 // === Card flip 3D reveal ===
 .card-reveal {
   display: flex;

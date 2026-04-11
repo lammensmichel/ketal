@@ -231,65 +231,108 @@
       </div>
     }
 
-    <!-- Phase 2: Drinking/Giving Panel -->
+    <!-- Phase 2: Draw Pile + Split Lane -->
     @if (gameSrv.phase() === 2) {
       <div class="prediction-panel prediction-panel--phase2">
-        <div class="d-flex flex-column gap-1">
-          @if (gameSrv.isGameStarted() || gameSrv.isGameFinished()) {
-            <div class="d-flex flex-row justify-content-center gap-1">
-              <div>
-                <span class="prediction-panel__phase2-label" [translate]="'Label_YouDrink'"></span>
-                <div class="d-flex flex-row gap-0">
-                  @for (i of cardSlots; track i) {
-                    <div>
-                      <app-playing-card [card]="gameSrv.drinkingCards()[i]" [leftOverlap]="i !== 0"></app-playing-card>
-                    </div>
-                  }
-                </div>
-              </div>
-              <div>
-                <span class="prediction-panel__phase2-label" [translate]="'Label_YouGive'"></span>
-                <div class="d-flex flex-row gap-0">
-                  @for (i of cardSlots; track i) {
-                    <div>
-                      <app-playing-card [card]="gameSrv.givingCards()[i]" [leftOverlap]="i !== 0"></app-playing-card>
-                    </div>
-                  }
-                </div>
+        @if (gameSrv.isGameStarted() || gameSrv.isGameFinished()) {
+          <div class="draw-layout">
+            <!-- Left lane: drink cards (red) -->
+            <div class="draw-lane draw-lane--drink">
+              <span class="draw-lane__label draw-lane__label--drink"> 🍷 {{ gameSrv.drinkingCards().length }}/6 </span>
+              <div class="draw-lane__cards">
+                @for (card of gameSrv.drinkingCards(); track $index) {
+                  <app-playing-card
+                    [card]="card"
+                    [faceDown]="true"
+                    [flipped]="true"
+                    [glowColor]="'red'"
+                    [leftOverlap]="$index !== 0"
+                  ></app-playing-card>
+                }
               </div>
             </div>
-          }
-          @if (gameSrv.givingCards().length < 6) {
-            <div class="text-center">
-              <button
-                type="button"
-                class="btn btn-secondary ms-2 space-below"
-                (click)="onDisplayCard()"
-                [translate]="
-                  gameSrv.drinkingCards().length <= gameSrv.givingCards().length ? 'Label_YouDrink' : 'Label_YouGive'
-                "
-              ></button>
-            </div>
-          }
-          @if (!gameSrv.isNewGame() && gameSrv.givingCards().length === 6) {
-            <div class="text-center">
-              <button
-                type="button"
-                class="btn btn-secondary ms-2 space-below"
-                (click)="restartGame()"
-                [translate]="'Button_Restart'"
-              ></button>
-              @if (gameSrv.isGameFinished() && gameSrv.isSummaryActivated() && !gameSrv.isSummaryMode()) {
+
+            <!-- Center: draw pile -->
+            <div class="draw-pile">
+              @if (!phase2Complete()) {
                 <button
-                  type="button"
-                  class="btn btn-secondary ms-2 space-below"
-                  (click)="displaySummary()"
-                  [translate]="'Button_Display_Summary'"
-                ></button>
+                  class="draw-pile__btn"
+                  [disabled]="revealingPhase2()"
+                  (click)="onDrawPhase2Card()"
+                  [ngClass]="{
+                    'draw-pile__btn--drink': nextIsDrink(),
+                    'draw-pile__btn--give': !nextIsDrink(),
+                  }"
+                >
+                  <!-- Stacked card backs for depth effect -->
+                  <div class="draw-pile__stack">
+                    @if (cardsRemaining() > 2) {
+                      <div class="draw-pile__card draw-pile__card--3"></div>
+                    }
+                    @if (cardsRemaining() > 1) {
+                      <div class="draw-pile__card draw-pile__card--2"></div>
+                    }
+                    <div class="draw-pile__card draw-pile__card--1">
+                      @if (revealingPhase2() && lastDrawnCard(); as drawn) {
+                        <app-playing-card
+                          [card]="drawn"
+                          [faceDown]="true"
+                          [flipped]="true"
+                          [glowColor]="lastDrawnIsDrink() ? 'red' : 'green'"
+                        ></app-playing-card>
+                      } @else {
+                        <img src="assets/images/cards/svg/blue_back.svg" alt="draw pile" />
+                      }
+                    </div>
+                  </div>
+                  <span
+                    class="draw-pile__sip-badge"
+                    [ngClass]="{
+                      'draw-pile__sip-badge--drink': nextIsDrink(),
+                      'draw-pile__sip-badge--give': !nextIsDrink(),
+                    }"
+                  >
+                    {{ nextSipValue() }}
+                  </span>
+                </button>
+              } @else {
+                <!-- All cards drawn: show actions -->
+                <div class="phase2-actions">
+                  <button
+                    type="button"
+                    class="prediction-btn prediction-btn--start"
+                    (click)="restartGame()"
+                    [translate]="'Button_Restart'"
+                  ></button>
+                  @if (gameSrv.isGameFinished() && gameSrv.isSummaryActivated() && !gameSrv.isSummaryMode()) {
+                    <button
+                      type="button"
+                      class="prediction-btn prediction-btn--start"
+                      (click)="displaySummary()"
+                      [translate]="'Button_Display_Summary'"
+                    ></button>
+                  }
+                </div>
               }
             </div>
-          }
-        </div>
+
+            <!-- Right lane: give cards (green) -->
+            <div class="draw-lane draw-lane--give">
+              <span class="draw-lane__label draw-lane__label--give"> 🫳 {{ gameSrv.givingCards().length }}/6 </span>
+              <div class="draw-lane__cards">
+                @for (card of gameSrv.givingCards(); track $index) {
+                  <app-playing-card
+                    [card]="card"
+                    [faceDown]="true"
+                    [flipped]="true"
+                    [glowColor]="'green'"
+                    [leftOverlap]="$index !== 0"
+                  ></app-playing-card>
+                }
+              </div>
+            </div>
+          </div>
+        }
       </div>
     }
 

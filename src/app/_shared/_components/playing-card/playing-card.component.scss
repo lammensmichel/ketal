@@ -25,4 +25,88 @@
     height: auto;
     border-radius: var(--radius-sm, 3px);
   }
+
+  // Phase 2 glow colors
+  &--glow-red {
+    box-shadow:
+      0 0 10px rgba(220, 38, 38, 0.5),
+      0 0 20px rgba(220, 38, 38, 0.25);
+    border-radius: var(--radius-sm, 3px);
+  }
+
+  &--glow-green {
+    box-shadow:
+      0 0 10px rgba(34, 197, 94, 0.5),
+      0 0 20px rgba(34, 197, 94, 0.25);
+    border-radius: var(--radius-sm, 3px);
+  }
+
+  // Tappable card (next to reveal in pyramid)
+  &--tappable {
+    cursor: pointer;
+    animation: tap-pulse 1.5s ease-in-out infinite;
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+}
+
+// 3D card flip
+.card-flip {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+  transform-style: preserve-3d;
+  transition: transform 400ms var(--ease-in-out, ease-in-out);
+
+  &--flipped {
+    transform: rotateY(180deg);
+  }
+
+  &__back,
+  &__front {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    border-radius: var(--radius-sm, 3px);
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: var(--radius-sm, 3px);
+    }
+  }
+
+  &__front {
+    transform: rotateY(180deg);
+  }
+}
+
+// When faceDown mode is active, add perspective to container
+.card-container:has(.card-flip) {
+  perspective: 600px;
+}
+
+@keyframes tap-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(99, 102, 241, 0);
+  }
+}
+
+// Reduced motion
+@media (prefers-reduced-motion: reduce) {
+  .card-flip {
+    transition-duration: 0.01ms !important;
+  }
+  .card-container--tappable {
+    animation: none;
+  }
 }

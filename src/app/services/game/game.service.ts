@@ -93,6 +93,9 @@ export class GameService {
   private readonly _lastTurnSips = signal<Record<string, number>>({});
   readonly lastTurnSips = this._lastTurnSips.asReadonly();
 
+  /** Phase 2: value of the last revealed card (for match feedback in player-card) */
+  readonly phase2LastCardValue = signal<string | null>(null);
+
   /** localStorage key for summary mode preference */
   private static readonly SUMMARY_MODE_KEY = 'ketal_summary_mode';
 
@@ -778,6 +781,9 @@ export class GameService {
 
     const sipNb = this.getSipsNumber();
     newCard.sips = sipNb;
+
+    // Set Phase 2 match value for player-card feedback
+    this.phase2LastCardValue.set(newCard.value ?? null);
 
     // Determine if this is a giving card BEFORE mutating the game state.
     // This is safe because JavaScript is single-threaded: no concurrent mutation
