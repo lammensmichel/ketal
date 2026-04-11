@@ -38,6 +38,7 @@ export class PlayerGivenSipsSelectionComponent {
     }
 
     if (sips > 0) {
+      sips = Math.min(sips, this.sipsToGive);
       this.tempSips[player.id] += sips;
       this.sipsToGive -= sips;
     } else {

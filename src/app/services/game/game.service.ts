@@ -491,7 +491,7 @@ export class GameService {
       game.status = 0;
 
       game.players.forEach((player) => {
-        player.sips = { drunk: 0, given: 0 };
+        player.sips = { drunk: 0, given: 0, phase1Drunk: 0 };
         player.cards = [];
         player.choice = { color: '', plus_or_minus: '', in_out: '', suit: '' };
       });
@@ -786,8 +786,9 @@ export class GameService {
     const sipNb = this.getSipsNumber();
     newCard.sips = sipNb;
 
-    // Set Phase 2 match value for player-card feedback
+    // Set Phase 2 match value for player-card feedback, then clear after highlight window
     this.phase2LastCardValue.set(newCard.value ?? null);
+    setTimeout(() => this.phase2LastCardValue.set(null), 2100);
 
     // Determine if this is a giving card BEFORE mutating the game state.
     // This is safe because JavaScript is single-threaded: no concurrent mutation

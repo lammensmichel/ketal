@@ -118,6 +118,9 @@ export class PlayerCardComponent implements OnInit {
 
   private sipInitialized = false;
   private prevSipCount = 0;
+  private bounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private shakeTimer: ReturnType<typeof setTimeout> | null = null;
+  private matchTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     // Trigger bounce/shake animation when sip count changes (skip initial)
@@ -133,15 +136,19 @@ export class PlayerCardComponent implements OnInit {
       this.prevSipCount = current;
 
       // Always bounce
+      if (this.bounceTimer) {
+        clearTimeout(this.bounceTimer);
+      }
       this.sipBounce.set(true);
-      const bounceTimer = setTimeout(() => this.sipBounce.set(false), 300);
-      this.destroyRef.onDestroy(() => clearTimeout(bounceTimer));
+      this.bounceTimer = setTimeout(() => this.sipBounce.set(false), 300);
 
       // Shake on large jumps (3+ sips at once)
       if (delta >= 3) {
+        if (this.shakeTimer) {
+          clearTimeout(this.shakeTimer);
+        }
         this.sipShake.set(true);
-        const shakeTimer = setTimeout(() => this.sipShake.set(false), 400);
-        this.destroyRef.onDestroy(() => clearTimeout(shakeTimer));
+        this.shakeTimer = setTimeout(() => this.sipShake.set(false), 400);
       }
     });
 
@@ -154,9 +161,23 @@ export class PlayerCardComponent implements OnInit {
       }
       const hasMatch = this.player.cards.some((c) => c?.value === matchValue);
       if (hasMatch) {
+        if (this.matchTimer) {
+          clearTimeout(this.matchTimer);
+        }
         this.matchHighlight.set(true);
-        const timer = setTimeout(() => this.matchHighlight.set(false), 2000);
-        this.destroyRef.onDestroy(() => clearTimeout(timer));
+        this.matchTimer = setTimeout(() => this.matchHighlight.set(false), 2000);
+      }
+    });
+
+    this.destroyRef.onDestroy(() => {
+      if (this.bounceTimer) {
+        clearTimeout(this.bounceTimer);
+      }
+      if (this.shakeTimer) {
+        clearTimeout(this.shakeTimer);
+      }
+      if (this.matchTimer) {
+        clearTimeout(this.matchTimer);
       }
     });
   }

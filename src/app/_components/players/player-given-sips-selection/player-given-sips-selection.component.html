@@ -1,11 +1,17 @@
 @if (modalOpen) {
   <div class="sip-modal-overlay" (click)="closeModal()">
-    <div class="sip-modal" (click)="$event.stopPropagation()">
+    <div
+      class="sip-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="sip-modal-title"
+      (click)="$event.stopPropagation()"
+    >
       <!-- Header: who is giving -->
       <div class="sip-modal__header">
         <img class="sip-modal__avatar" [src]="givenPlayer.avatarSrc" [alt]="givenPlayer.name" />
         <div class="sip-modal__title">
-          <span class="sip-modal__name">{{ givenPlayer.name }}</span>
+          <span id="sip-modal-title" class="sip-modal__name">{{ givenPlayer.name }}</span>
           <span class="sip-modal__subtitle" [translate]="'Label_Give'"></span>
         </div>
       </div>

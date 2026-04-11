@@ -303,22 +303,24 @@ export class FooterComponent implements OnDestroy {
     }
 
     const isDrink = this.nextIsDrink();
-    this.lastDrawnIsDrink.set(isDrink);
-    this.revealingPhase2.set(true);
-
-    const flipDelay = this.prefersReducedMotion ? 50 : 500;
 
     // Draw the card (adds to drinkingCards/givingCards)
     const newCard = this.gameSrv.displayNewCard();
-    this.lastDrawnCard.set(newCard ?? null);
+    if (!newCard) {
+      return;
+    }
+
+    this.lastDrawnIsDrink.set(isDrink);
+    this.revealingPhase2.set(true);
+    this.lastDrawnCard.set(newCard);
+
+    const flipDelay = this.prefersReducedMotion ? 50 : 500;
 
     // Wait for the flip animation, then unlock
     this._scheduleTimer(() => {
       this.revealingPhase2.set(false);
       this.lastDrawnCard.set(null);
-      if (newCard) {
-        this.openSipGiveModal(newCard);
-      }
+      this.openSipGiveModal(newCard);
     }, flipDelay);
   }
 
