@@ -582,11 +582,10 @@ describe('PlayerHelperService', () => {
     });
 
     describe('Phase 2+ behavior', () => {
-      it('should return 0 when no drinking/giving cards in phase 2', () => {
-        player1.cards = [createMockCard({ sips: 4 })];
+      it('should return 0 when player has no sips in phase 2', () => {
+        player1.sips = { drunk: 0, given: 0 };
         const game = createMockGame({
           players: [player1, player2, player3],
-          activePlayer: player2,
           phase: 2,
           drinkingCards: [],
           givingCards: [],
@@ -597,113 +596,104 @@ describe('PlayerHelperService', () => {
         expect(result).toBe(0);
       });
 
-      it('should calculate sips based on matching card values with odd total cards', () => {
-        const drinkingCard = createMockCard({ value: '5' });
-        player1.cards = [createMockCard({ value: '5' })];
-        cardServiceSpy.getCardValue.and.callFake((card: CardType) => {
-          return card.value === '5' ? 5 : 0;
-        });
-
+      it('should return negative value for drunk sips in phase 2', () => {
+        player1.sips = { drunk: 5, given: 0 };
         const game = createMockGame({
           players: [player1, player2, player3],
-          activePlayer: player2,
           phase: 2,
-          drinkingCards: [drinkingCard],
+          drinkingCards: [],
           givingCards: [],
         });
 
         const result = service.getSipCnt(game, player1);
 
-        // Odd cards (1), so negative multiplier: 1 * -1 = -1
-        expect(result).toBe(-1);
+        expect(result).toBe(-5);
       });
 
-      it('should calculate sips based on matching card values with even total cards', () => {
-        const drinkingCard = createMockCard({ value: '7' });
-        const givingCard = createMockCard({ value: '7' });
-        player1.cards = [createMockCard({ value: '7' })];
-        cardServiceSpy.getCardValue.and.callFake((card: CardType) => {
-          return card.value === '7' ? 7 : 0;
-        });
-
+      it('should return positive value for given sips in phase 2', () => {
+        player1.sips = { drunk: 0, given: 3 };
         const game = createMockGame({
           players: [player1, player2, player3],
-          activePlayer: player2,
           phase: 2,
-          drinkingCards: [drinkingCard],
-          givingCards: [givingCard],
+          drinkingCards: [],
+          givingCards: [],
         });
 
         const result = service.getSipCnt(game, player1);
 
-        // Even cards (2), positive multiplier: 1 * 1 = 1
-        expect(result).toBe(1);
+        expect(result).toBe(3);
       });
 
-      it('should return 0 when no matching cards', () => {
-        const drinkingCard = createMockCard({ value: '5' });
-        player1.cards = [createMockCard({ value: '10' })];
-        cardServiceSpy.getCardValue.and.callFake((card: CardType) => {
-          return card.value === '5' ? 5 : 10;
-        });
-
+      it('should return net sips (given - drunk) in phase 2', () => {
+        player1.sips = { drunk: 4, given: 7 };
         const game = createMockGame({
           players: [player1, player2, player3],
-          activePlayer: player2,
           phase: 2,
-          drinkingCards: [drinkingCard],
+          drinkingCards: [],
+          givingCards: [],
+        });
+
+        const result = service.getSipCnt(game, player1);
+
+        expect(result).toBe(3);
+      });
+
+      it('should return total sips (drunk + given) when absolute is true in phase 2', () => {
+        player1.sips = { drunk: 5, given: 3 };
+        const game = createMockGame({
+          players: [player1, player2, player3],
+          phase: 2,
+          drinkingCards: [],
+          givingCards: [],
+        });
+
+        const result = service.getSipCnt(game, player1, true);
+
+        expect(result).toBe(8);
+      });
+
+      it('should subtract phase1Drunk from total drunk in phase 2', () => {
+        player1.sips = { drunk: 12, given: 0, phase1Drunk: 4 };
+        const game = createMockGame({
+          players: [player1, player2, player3],
+          phase: 2,
+          drinkingCards: [],
+          givingCards: [],
+        });
+
+        const result = service.getSipCnt(game, player1);
+
+        // Phase 2 drunk = 12 - 4 = 8, given = 0 → net = 0 - 8 = -8
+        expect(result).toBe(-8);
+      });
+
+      it('should subtract phase1Drunk in absolute mode too', () => {
+        player1.sips = { drunk: 12, given: 3, phase1Drunk: 4 };
+        const game = createMockGame({
+          players: [player1, player2, player3],
+          phase: 2,
+          drinkingCards: [],
+          givingCards: [],
+        });
+
+        const result = service.getSipCnt(game, player1, true);
+
+        // Phase 2 drunk = 12 - 4 = 8, given = 3 → absolute = 8 + 3 = 11
+        expect(result).toBe(11);
+      });
+
+      it('should handle undefined sips gracefully in phase 2', () => {
+        player1.sips = undefined as any;
+        const game = createMockGame({
+          players: [player1, player2, player3],
+          phase: 2,
+          drinkingCards: [],
           givingCards: [],
         });
 
         const result = service.getSipCnt(game, player1);
 
         expect(result).toBe(0);
-      });
-
-      it('should multiply sips by number of drinking cards', () => {
-        const drinkingCards = [
-          createMockCard({ value: '5' }),
-          createMockCard({ value: '6' }),
-          createMockCard({ value: '5' }),
-        ];
-        player1.cards = [createMockCard({ value: '5' }), createMockCard({ value: '5' })];
-        cardServiceSpy.getCardValue.and.callFake((card: CardType) => {
-          return card.value === '5' ? 5 : 6;
-        });
-
-        const game = createMockGame({
-          players: [player1, player2, player3],
-          activePlayer: player2,
-          phase: 2,
-          drinkingCards: drinkingCards,
-          givingCards: [],
-        });
-
-        const result = service.getSipCnt(game, player1);
-
-        // Odd (3), check last drinking card which is '5', player has 2 matching cards
-        // 2 * 3 * -1 = -6
-        expect(result).toBe(-6);
-      });
-
-      it('should return absolute value when absolute is true in phase 2', () => {
-        const drinkingCard = createMockCard({ value: '5' });
-        player1.cards = [createMockCard({ value: '5' })];
-        cardServiceSpy.getCardValue.and.callFake((card: CardType) => {
-          return card.value === '5' ? 5 : 0;
-        });
-
-        const game = createMockGame({
-          players: [player1, player2, player3],
-          activePlayer: player2,
-          phase: 2,
-          drinkingCards: [drinkingCard],
-          givingCards: [],
-        });
-
-        const result = service.getSipCnt(game, player1, true);
-
-        expect(result).toBe(1);
       });
     });
   });

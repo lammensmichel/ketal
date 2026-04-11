@@ -699,6 +699,10 @@ export class GameService {
         if (g.turn > 4) {
           g.phase = 2;
           g.activePlayer = undefined;
+          // Snapshot Phase 1 sips so Phase 2 display shows only Phase 2 sips
+          g.players.forEach((p) => {
+            p.sips['phase1Drunk'] = p.sips['drunk'] || 0;
+          });
           // Keep lastTurnSips visible until first Phase 2 card is drawn
         } else {
           g.activePlayer = g.players[0];

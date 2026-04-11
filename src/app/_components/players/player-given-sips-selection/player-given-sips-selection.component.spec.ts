@@ -250,15 +250,14 @@ describe('PlayerGivenSipsSelectionComponent', () => {
     });
   });
 
-  describe('resetSips() method', () => {
+  describe('closeModal() resets sips', () => {
     beforeEach(() => {
-      // Initialize tempSips for players
       component.players.forEach((p) => {
         component.tempSips[p.id] = 0;
       });
     });
 
-    it('should reset all tempSips to 0', () => {
+    it('should reset all tempSips to 0 on close', () => {
       const player1 = component.players[0];
       const player2 = component.players[1];
       const player3 = component.players[2];
@@ -267,16 +266,16 @@ describe('PlayerGivenSipsSelectionComponent', () => {
       component.tempSips[player3.id] = 2;
       component.sipsToGive = 10;
 
-      component.resetSips();
+      component.closeModal();
 
       expect(component.tempSips[player1.id]).toBe(0);
       expect(component.tempSips[player2.id]).toBe(0);
       expect(component.tempSips[player3.id]).toBe(0);
     });
 
-    it('should reset sipsToGive to 0', () => {
+    it('should reset sipsToGive to 0 on close', () => {
       component.sipsToGive = 15;
-      component.resetSips();
+      component.closeModal();
 
       expect(component.sipsToGive).toBe(0);
     });

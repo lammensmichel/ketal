@@ -76,14 +76,24 @@ export class PlayerCardComponent implements OnInit {
     return this.player ? this.playerSrv.getSipCnt(this.gameSrv.game(), this.player, true) : 0;
   });
 
-  /** Sips to drink (absolute) */
+  /** Sips to drink (absolute) — in Phase 2, shows only Phase 2 sips */
   readonly sipsDrunk = computed(() => {
+    const game = this.gameSrv.game();
+    if (game.phase === 2 && this.player?.sips) {
+      const total = this.player.sips['drunk'] ?? 0;
+      const phase1 = this.player.sips['phase1Drunk'] ?? 0;
+      return total - phase1;
+    }
     const count = this.sipCount();
     return count < 0 ? Math.abs(count) : 0;
   });
 
-  /** Sips to give */
+  /** Sips to give — in Phase 2, shows only Phase 2 sips */
   readonly sipsGiven = computed(() => {
+    const game = this.gameSrv.game();
+    if (game.phase === 2 && this.player?.sips) {
+      return this.player.sips['given'] ?? 0;
+    }
     const count = this.sipCount();
     return count > 0 ? count : 0;
   });
