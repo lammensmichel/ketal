@@ -1,6 +1,5 @@
 import { Component, Input, ViewChild, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { NgClass } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { FontAwesomeIconsModule } from '../../../font-awesome.module';
 import { AuthService } from '../../../services/auth/auth.service';
@@ -24,14 +23,7 @@ const PENDING_SUMMARY_KEY = 'pendingSummary';
   templateUrl: './footer.component.html',
   styleUrls: ['./footer.component.scss'],
   standalone: true,
-  imports: [
-    NgClass,
-    TranslateModule,
-    FontAwesomeIconsModule,
-    ToastComponent,
-    PlayingCardComponent,
-    AccountGateModalComponent,
-  ],
+  imports: [TranslateModule, FontAwesomeIconsModule, ToastComponent, PlayingCardComponent, AccountGateModalComponent],
 })
 export class FooterComponent {
   private readonly router = inject(Router);

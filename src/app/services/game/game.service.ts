@@ -97,9 +97,7 @@ export class GameService {
   private static readonly SUMMARY_MODE_KEY = 'ketal_summary_mode';
 
   /** Signal for summary mode - persisted in localStorage */
-  readonly withSummaryMode = signal<boolean>(
-    localStorage.getItem(GameService.SUMMARY_MODE_KEY) === 'true'
-  );
+  readonly withSummaryMode = signal<boolean>(localStorage.getItem(GameService.SUMMARY_MODE_KEY) === 'true');
 
   /** Subject for modal events */
   private readonly openSipGiveModalEvent = new Subject<PlayerModel>();
@@ -186,7 +184,10 @@ export class GameService {
         playerCount: game.players.length,
       });
     } catch (error) {
-      console.error('[GameService] Failed to sync to Appwrite:', error instanceof Error ? error.message : JSON.stringify(error));
+      console.error(
+        '[GameService] Failed to sync to Appwrite:',
+        error instanceof Error ? error.message : JSON.stringify(error)
+      );
     } finally {
       this._isSyncing.set(false);
 
@@ -295,7 +296,10 @@ export class GameService {
         turn: game.turn,
       });
     } catch (error) {
-      console.error('[GameService] Failed to handle session update:', error instanceof Error ? error.message : JSON.stringify(error));
+      console.error(
+        '[GameService] Failed to handle session update:',
+        error instanceof Error ? error.message : JSON.stringify(error)
+      );
     }
   }
 
@@ -339,7 +343,10 @@ export class GameService {
         turn: game.turn,
       });
     } catch (error) {
-      console.error('[GameService] handleReconnection - failed:', error instanceof Error ? error.message : JSON.stringify(error));
+      console.error(
+        '[GameService] handleReconnection - failed:',
+        error instanceof Error ? error.message : JSON.stringify(error)
+      );
     }
   }
 
@@ -541,7 +548,10 @@ export class GameService {
       // Unsubscribe from realtime updates after game ends
       this.unsubscribeFromSession();
     } catch (error) {
-      console.error('[GameService] Failed to finalize game stats:', error instanceof Error ? error.message : JSON.stringify(error));
+      console.error(
+        '[GameService] Failed to finalize game stats:',
+        error instanceof Error ? error.message : JSON.stringify(error)
+      );
     }
   }
 
@@ -687,8 +697,7 @@ export class GameService {
         if (g.turn > 4) {
           g.phase = 2;
           g.activePlayer = undefined;
-          // Clear per-turn sips when entering Phase 2
-          this._lastTurnSips.set({});
+          // Keep lastTurnSips visible until first Phase 2 card is drawn
         } else {
           g.activePlayer = g.players[0];
           // Clear per-turn sips when a new round starts
@@ -759,6 +768,11 @@ export class GameService {
 
     if (this.isNotAllSipsGiven() && game.drinkingCards.length > 0) {
       return;
+    }
+
+    // Clear Phase 1 per-turn sip indicators on first Phase 2 card draw
+    if (Object.keys(this._lastTurnSips()).length > 0) {
+      this._lastTurnSips.set({});
     }
 
     const newCard = this.cardDeckHelperService.getRandomCard();
@@ -946,7 +960,10 @@ export class GameService {
 
       console.debug('[GameService] Game started in room mode', { sessionId: activeSession.$id });
     } catch (error) {
-      console.error('[GameService] Failed to start game in room:', error instanceof Error ? error.message : JSON.stringify(error));
+      console.error(
+        '[GameService] Failed to start game in room:',
+        error instanceof Error ? error.message : JSON.stringify(error)
+      );
       throw error; // Caught by beginGame for offline fallback
     }
   }
@@ -958,7 +975,18 @@ export class GameService {
    * @param withSummaryMode - Whether to enable summary mode at game end
    */
   private startGameLocally(withSummaryMode: boolean): void {
-    const players: PlayerModel[] = JSON.parse(this.localSrv.getData('players') as string);
+    const raw = this.localSrv.getData('players');
+    let players: PlayerModel[] = raw ? JSON.parse(raw as string) : [];
+
+    // Fallback to in-memory players from PlayerHelperService
+    if (!players || players.length === 0) {
+      players = this.playerHelper.getPlayers();
+    }
+
+    if (!players || players.length === 0) {
+      console.error('[GameService] Cannot start local game: no players found');
+      return;
+    }
 
     const newGame: Game = {
       players: players,
@@ -981,7 +1009,11 @@ export class GameService {
    * @returns Array of KetalPlayer objects
    */
   private mapPlayersToKetalPlayers(): KetalPlayer[] {
-    const players: PlayerModel[] = JSON.parse(this.localSrv.getData('players') as string);
+    const raw = this.localSrv.getData('players');
+    let players: PlayerModel[] = raw ? JSON.parse(raw as string) : [];
+    if (!players || players.length === 0) {
+      players = this.playerHelper.getPlayers();
+    }
     return players.map((player, index) => mapPlayerModelToKetalPlayer(player, index));
   }
 

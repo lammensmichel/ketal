@@ -1,4 +1,15 @@
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, Input, OnInit, ViewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  Input,
+  OnInit,
+  signal,
+  ViewChild,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgClass } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
@@ -31,6 +42,25 @@ export class PlayerCardComponent implements OnInit {
 
   readonly cardSlots = [0, 1, 2, 3];
 
+  /** Avatar load error flag */
+  avatarError = false;
+
+  /** Bounce animation trigger */
+  readonly sipBounce = signal(false);
+
+  /** Player initials for avatar fallback */
+  readonly initials = computed(() => {
+    if (!this.player?.name) {
+      return '?';
+    }
+    return this.player.name
+      .split(' ')
+      .map((w) => w[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  });
+
   /** Cached sip count (signed) - recomputed via game signal */
   readonly sipCount = computed(() => {
     return this.player ? this.playerSrv.getSipCnt(this.gameSrv.game(), this.player, false) : 0;
@@ -41,12 +71,32 @@ export class PlayerCardComponent implements OnInit {
     return this.player ? this.playerSrv.getSipCnt(this.gameSrv.game(), this.player, true) : 0;
   });
 
+  /** Sips to drink (absolute) */
+  readonly sipsDrunk = computed(() => {
+    const count = this.sipCount();
+    return count < 0 ? Math.abs(count) : 0;
+  });
+
+  /** Sips to give */
+  readonly sipsGiven = computed(() => {
+    const count = this.sipCount();
+    return count > 0 ? count : 0;
+  });
+
   /** Per-turn sip indicator for Phase 1 - resets when active player changes */
   readonly lastTurnSips = computed(() => {
-    // Read the signal to establish dependency
     this.gameSrv.lastTurnSips();
     return this.player ? this.gameSrv.getLastTurnSipsForPlayer(this.player.id) : 0;
   });
+
+  constructor() {
+    // Trigger bounce animation when sip count changes
+    effect(() => {
+      this.sipCountAbsolute();
+      this.sipBounce.set(true);
+      setTimeout(() => this.sipBounce.set(false), 300);
+    });
+  }
 
   ngOnInit(): void {
     this.gameSrv.openSipGiveModalEvent$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((player) => {

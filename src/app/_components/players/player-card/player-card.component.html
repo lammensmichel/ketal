@@ -1,45 +1,45 @@
 <div
-  class="card"
+  class="player-card"
   [ngClass]="{
     'player-card--active': isActive,
-    'player-card--inactive': !isActive && hasActivePlayer
+    'player-card--inactive': !isActive && hasActivePlayer,
   }"
 >
-  <div class="card-body p-2 container">
-    <div class="row mb-1">
-      <label for="avatar" class="d-flex flex-wrap justify-content-around flex-fill align-items-center">
-        <img alt="avatar" class="img-thumbnail" width="40" height="40" src="{{ player.avatarSrc }}" />
-        <span class="ms-1 fs-5 flex-fill">{{ player.name }}</span>
-        <span
-          (click)="openPlayerGivenSipsModal(player)"
-          class="badge"
-          [ngClass]="{
-            'bg-success': sipCount() > 0,
-            'bg-danger': sipCount() < 0,
-            'bg-secondary': sipCount() === 0,
-          }"
-          >{{ sipCountAbsolute() }} <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon
-        ></span>
-      </label>
+  <!-- Header: avatar + name + sips -->
+  <div class="player-card__header">
+    <div class="player-card__avatar-wrapper">
+      <img alt="{{ player.name }}" class="player-card__avatar" [src]="player.avatarSrc" (error)="avatarError = true" />
+      @if (avatarError) {
+        <span class="player-card__avatar-fallback">{{ initials() }}</span>
+      }
     </div>
-    <div class="row">
-      <div
-        class="card-group d-flex flex-nowrap justify-content-center gap-1"
-      >
-        @for (i of cardSlots; track i) {
-          <div>
-            <app-playing-card [card]="player.cards[i]"></app-playing-card>
-          </div>
-        }
-      </div>
-      @if (lastTurnSips() > 0) {
-        <div class="text-center mt-1">
-          <span class="badge bg-warning text-dark per-turn-sips">
-            +{{ lastTurnSips() }} <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon>
-          </span>
+    <span class="player-card__name">{{ player.name }}</span>
+    <div class="player-card__sips" (click)="openPlayerGivenSipsModal(player)">
+      <span class="player-card__sip-badge player-card__sip-badge--drink" [class.sip-bounce]="sipBounce()">
+        {{ sipsDrunk() }} <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon>
+      </span>
+      <span class="player-card__sip-badge player-card__sip-badge--give" [class.sip-bounce]="sipBounce()">
+        {{ sipsGiven() }} <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon>
+      </span>
+    </div>
+  </div>
+
+  <!-- Cards: fan layout -->
+  <div class="player-card__cards">
+    <div class="card-fan">
+      @for (i of cardSlots; track i) {
+        <div class="fan-card" [style.--fan-index]="i">
+          <app-playing-card [card]="player.cards[i]"></app-playing-card>
         </div>
       }
     </div>
+    @if (lastTurnSips() > 0) {
+      <div class="player-card__turn-sips">
+        <span class="player-card__turn-badge">
+          +{{ lastTurnSips() }} <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon>
+        </span>
+      </div>
+    }
   </div>
 </div>
 

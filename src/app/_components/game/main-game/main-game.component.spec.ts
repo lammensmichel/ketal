@@ -112,15 +112,15 @@ describe('MainGameComponent', () => {
       expect(playerCards.length).toBe(2);
     });
 
-    it('should render player cards in correct bootstrap grid layout', () => {
+    it('should render player cards in players grid layout', () => {
       isGameStartedSpy.and.returnValue(true);
       fixture.detectChanges();
 
-      const rowDiv = fixture.nativeElement.querySelector('.row.gap-1.justify-content-evenly');
-      expect(rowDiv).toBeTruthy();
+      const gridDiv = fixture.nativeElement.querySelector('.players-grid');
+      expect(gridDiv).toBeTruthy();
 
-      const playerDivs = fixture.nativeElement.querySelectorAll('.col-md-6.player.p-0');
-      expect(playerDivs.length).toBe(2);
+      const playerCards = gridDiv.querySelectorAll('app-player-card');
+      expect(playerCards.length).toBe(2);
     });
 
     it('should render game summary when in summary mode', () => {

@@ -1,33 +1,244 @@
-.player {
-  max-width: calc(50% - 0.125rem) !important; // 0.125rem = 0.5 * gap-1
+// === Player Card Container ===
+.player-card {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  transition: all var(--animation-normal) var(--ease-default);
 }
 
-::ng-deep .card-body > .row {
-  --bs-gutter-x: 0;
-}
-
-::ng-deep .card-group .card-container {
-  width: 55px;
-  min-height: auto;
-}
-
+// === Active / Inactive States ===
 .player-card--active {
-  box-shadow: 0 0 15px rgba(var(--bs-primary-rgb), 0.5);
-  transform: scale(1.02);
-  transition: all 0.3s ease;
+  border-color: var(--color-accent-primary);
+  animation: active-glow 2s ease-in-out infinite;
 }
 
 .player-card--inactive {
-  opacity: 0.7;
-  transition: all 0.3s ease;
+  opacity: 0.85;
+  transform: scale(0.97);
+
+  .player-card__name {
+    color: var(--color-text-secondary);
+  }
+
+  // Keep sip badges fully visible even when inactive
+  .player-card__sip-badge {
+    opacity: 1;
+    font-size: var(--font-size-sm);
+  }
 }
 
-.per-turn-sips {
-  font-size: 0.75rem;
-  animation: fadeIn 0.3s ease-in;
+@keyframes active-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(99, 102, 241, 0.7);
+  }
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+// === Header: Avatar + Name + Sips ===
+.player-card__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.player-card__avatar-wrapper {
+  position: relative;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+}
+
+.player-card__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--color-accent-primary);
+  object-fit: cover;
+}
+
+.player-card__avatar-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: var(--color-bg-surface);
+  border: 2px solid var(--color-accent-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+.player-card__name {
+  flex: 1;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// === Sip Badges ===
+.player-card__sips {
+  display: flex;
+  gap: var(--space-1);
+  cursor: pointer;
+}
+
+.player-card__sip-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  transition: transform var(--animation-fast) var(--ease-bounce);
+
+  &--drink {
+    background: var(--color-drink-bg);
+    color: var(--color-drink);
+  }
+
+  &--give {
+    background: var(--color-give-bg);
+    color: var(--color-give);
+  }
+}
+
+.sip-bounce {
+  animation: sip-bounce-anim var(--animation-normal) var(--ease-bounce);
+}
+
+@keyframes sip-bounce-anim {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+// === Card Fan Layout ===
+.player-card__cards {
+  position: relative;
+}
+
+.card-fan {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-2) 0;
+}
+
+.fan-card {
+  transition: transform var(--animation-normal) var(--ease-spring);
+
+  &:nth-child(1) {
+    transform: rotate(-12deg);
+    z-index: 1;
+  }
+  &:nth-child(2) {
+    transform: rotate(-4deg);
+    margin-left: -10px;
+    z-index: 2;
+  }
+  &:nth-child(3) {
+    transform: rotate(4deg);
+    margin-left: -10px;
+    z-index: 3;
+  }
+  &:nth-child(4) {
+    transform: rotate(12deg);
+    margin-left: -10px;
+    z-index: 4;
+  }
+
+  &:hover {
+    transform: translateY(-6px) rotate(0deg);
+    z-index: 10;
+  }
+}
+
+::ng-deep .card-fan .card-container {
+  width: 48px;
+  min-height: auto;
+}
+
+// === Per-turn sips ===
+.player-card__turn-sips {
+  text-align: center;
+  margin-top: var(--space-1);
+}
+
+.player-card__turn-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(217, 119, 6, 0.15);
+  color: var(--color-accent-gold);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  animation: fadeSlideIn var(--animation-normal) var(--ease-default);
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// === Responsive ===
+@media (min-width: 768px) {
+  ::ng-deep .card-fan .card-container {
+    width: 52px;
+  }
+}
+
+@media (min-width: 1024px) {
+  ::ng-deep .card-fan .card-container {
+    width: 56px;
+  }
+}
+
+// === Reduced Motion ===
+@media (prefers-reduced-motion: reduce) {
+  .player-card--active {
+    animation: none;
+    box-shadow: 0 0 12px rgba(99, 102, 241, 0.5);
+  }
+  .sip-bounce {
+    animation: none;
+  }
+  .fan-card {
+    &:nth-child(1),
+    &:nth-child(2),
+    &:nth-child(3),
+    &:nth-child(4) {
+      transform: none;
+      margin-left: 0;
+    }
+    &:hover {
+      transform: none;
+    }
+  }
+  .player-card__turn-badge {
+    animation: none;
+  }
 }

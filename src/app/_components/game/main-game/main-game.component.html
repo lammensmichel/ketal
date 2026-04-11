@@ -3,15 +3,13 @@
     <!-- Game Progress Indicator -->
     <app-game-progress></app-game-progress>
 
-    <div class="row gap-1 justify-content-evenly">
+    <div class="players-grid">
       @for (player of gameSrv.players(); track player.id) {
-        <div class="col-md-6 player p-0">
-          <app-player-card
-            [player]="player"
-            [isActive]="player.id === gameSrv.activePlayer()?.id"
-            [hasActivePlayer]="!!gameSrv.activePlayer()"
-          ></app-player-card>
-        </div>
+        <app-player-card
+          [player]="player"
+          [isActive]="player.id === gameSrv.activePlayer()?.id"
+          [hasActivePlayer]="!!gameSrv.activePlayer()"
+        ></app-player-card>
       }
     </div>
   </div>

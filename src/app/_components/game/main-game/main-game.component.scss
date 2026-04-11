@@ -1,6 +1,12 @@
-.player {
-  max-width: calc(50% - 0.125rem) !important; // 0.125rem = 0.5 * gap-1
+.players-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  max-width: 900px;
+  margin: 0 auto;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
-
-
-
