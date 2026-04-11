@@ -208,6 +208,20 @@
       "lower": "Plus bas",
       "referenceHint": "Par rapport à ta carte :"
     },
+    "turn3": {
+      "in": "Entre",
+      "out": "Dehors"
+    },
+    "turn4": {
+      "hearts": "Cœur",
+      "diamonds": "Carreau",
+      "spades": "Pique",
+      "clubs": "Trèfle"
+    },
+    "prediction": {
+      "correct": "Prédiction correcte",
+      "incorrect": "Prédiction incorrecte"
+    },
     "progress": {
       "phase1": "Phase 1: Prédictions",
       "phase2": "Phase 2: Distribution",

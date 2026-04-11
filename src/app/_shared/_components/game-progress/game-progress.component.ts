@@ -28,22 +28,13 @@ export class GameProgressComponent {
   /** Total cards in phase 2 (drinking + giving) */
   readonly totalPhase2Cards = computed(() => this.drinkingCardsCount() + this.givingCardsCount());
 
-  /** Phase 1 turn labels translation keys */
-  readonly phase1TurnKeys = [
-    'game.progress.turn.color',
-    'game.progress.turn.plusMinus',
-    'game.progress.turn.inOut',
-    'game.progress.turn.suit',
+  /** Step definitions with icons and label keys */
+  readonly steps = [
+    { num: 1, icon: '🔴', labelKey: 'game.progress.turn.color' },
+    { num: 2, icon: '↕', labelKey: 'game.progress.turn.plusMinus' },
+    { num: 3, icon: '↔', labelKey: 'game.progress.turn.inOut' },
+    { num: 4, icon: '♠', labelKey: 'game.progress.turn.suit' },
   ];
-
-  /** Get translation key for current turn label */
-  readonly currentTurnKey = computed(() => {
-    const currentTurn = this.turn();
-    if (currentTurn >= 1 && currentTurn <= 4) {
-      return this.phase1TurnKeys[currentTurn - 1];
-    }
-    return '';
-  });
 
   /** Check if a step is completed in phase 1 */
   isStepCompleted(step: number): boolean {

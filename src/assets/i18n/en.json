@@ -204,6 +204,20 @@
       "lower": "Lower",
       "referenceHint": "Compared to your card:"
     },
+    "turn3": {
+      "in": "In",
+      "out": "Out"
+    },
+    "turn4": {
+      "hearts": "Hearts",
+      "diamonds": "Diamonds",
+      "spades": "Spades",
+      "clubs": "Clubs"
+    },
+    "prediction": {
+      "correct": "Prediction correct",
+      "incorrect": "Prediction incorrect"
+    },
     "progress": {
       "phase1": "Phase 1: Predictions",
       "phase2": "Phase 2: Distribution",

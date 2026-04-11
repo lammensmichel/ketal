@@ -40,7 +40,7 @@
     display: none;
   }
   .prediction-panel {
-    padding: var(--space-2);
+    padding: var(--space-3) var(--space-2) var(--space-2);
     gap: var(--space-2);
     margin-top: 0;
     border-radius: 0;
@@ -59,14 +59,17 @@
   }
   .prediction-btn {
     min-width: 64px;
-    min-height: 56px;
+    min-height: 48px;
     padding: var(--space-1) var(--space-2);
   }
   .prediction-btn__icon {
     font-size: 1.25rem;
   }
   .prediction-btn--suit {
-    min-width: 48px;
+    min-width: 56px;
+    min-height: 56px;
+  }
+  .prediction-btn--inout {
     min-height: 48px;
   }
   .prediction-panel__choices-row {
@@ -124,21 +127,44 @@
   color: var(--color-text-primary);
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: all 0.15s ease;
-  &:hover {
+  transition: all var(--animation-normal) var(--ease-spring);
+  &:hover:not(:disabled),
+  &:active:not(:disabled),
+  &--selected,
+  &--not-selected {
+    will-change: transform, opacity, box-shadow;
+  }
+  &:hover:not(:disabled) {
     border-color: var(--color-accent-primary);
     background: color-mix(in srgb, var(--color-accent-primary) 10%, transparent);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent-primary) 20%, transparent);
   }
-  &:active {
-    transform: scale(0.96);
+  &:active:not(:disabled) {
+    transform: scale(0.95);
     box-shadow: none;
+  }
+  &:disabled {
+    cursor: default;
   }
   @media (max-width: 767px) {
     min-width: 68px;
     min-height: 60px;
     padding: var(--space-2);
+  }
+
+  // Selection animation states
+  &--selected {
+    transform: scale(1.05);
+    border-color: var(--color-accent-primary);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--color-accent-primary) 40%, transparent);
+    z-index: 1;
+  }
+  &--not-selected {
+    opacity: 0.5;
+    transform: scale(0.95);
+    pointer-events: none;
+    border-color: rgba(255, 255, 255, 0.3);
   }
 }
 
@@ -204,6 +230,12 @@
     background: #1a1a1a;
     transform: translateY(-2px);
   }
+  &.prediction-btn--not-selected {
+    opacity: 1;
+    background: #444;
+    border-color: #666;
+    color: rgba(255, 255, 255, 0.5);
+  }
 }
 
 .prediction-btn--suit {
@@ -246,6 +278,161 @@
   margin-bottom: 10px;
 }
 
+// === Card flip 3D reveal ===
+.card-reveal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1000px;
+  margin-left: var(--space-3);
+
+  &__flip {
+    position: relative;
+    width: 70px;
+    height: 98px;
+    transform-style: preserve-3d;
+    transition: transform 400ms var(--ease-in-out);
+    will-change: transform;
+
+    &--revealed {
+      transform: rotateY(180deg);
+    }
+
+    @media (max-width: 767px) {
+      width: 50px;
+      height: 70px;
+    }
+  }
+
+  &__back,
+  &__front {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+
+  &__back {
+    background: linear-gradient(135deg, var(--color-bg-elevated) 0%, var(--color-accent-primary) 100%);
+    border: 2px solid var(--color-border);
+  }
+
+  &__front {
+    transform: rotateY(180deg);
+    background: var(--color-bg-surface);
+    border: 2px solid var(--color-border);
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: var(--radius-sm);
+    }
+  }
+
+  // Result feedback
+  &--correct {
+    .card-reveal__front {
+      border-color: var(--color-success);
+      box-shadow: 0 0 16px color-mix(in srgb, var(--color-success) 50%, transparent);
+    }
+  }
+
+  &--incorrect {
+    .card-reveal__front {
+      border-color: var(--color-error);
+      box-shadow: 0 0 16px color-mix(in srgb, var(--color-error) 50%, transparent);
+    }
+  }
+
+  &--shake {
+    animation: shake 400ms var(--ease-default);
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+// === Turn transition animations ===
+.prediction-panel__choices {
+  position: relative;
+
+  // Only clip overflow during slide transitions, not during selection/reveal
+  &.turn-slide-out,
+  &.turn-slide-in {
+    overflow: hidden;
+  }
+}
+
+.turn-slide-out {
+  animation: slideOut var(--animation-normal) var(--ease-in-out) forwards;
+}
+
+.turn-slide-in {
+  animation: slideIn var(--animation-normal) var(--ease-in-out) forwards;
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-30%);
+    opacity: 0;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(30%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+// Red/black selected variants
+.prediction-btn--red.prediction-btn--selected {
+  box-shadow: 0 0 24px rgba(220, 38, 38, 0.5);
+  border-color: #ef4444;
+}
+
+.prediction-btn--black.prediction-btn--selected {
+  box-shadow: 0 0 24px color-mix(in srgb, var(--color-accent-primary) 50%, transparent);
+  border-color: var(--color-accent-primary);
+}
+
+// Suit button selected glow colors
+.prediction-btn--suit.prediction-btn--selected {
+  .prediction-btn__suit-icon--red {
+    text-shadow: 0 0 12px rgba(220, 38, 38, 0.6);
+  }
+  .prediction-btn__suit-icon:not(.prediction-btn__suit-icon--red) {
+    text-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+  }
+}
+
 .quit-confirm-overlay {
   position: fixed;
   top: 0;
@@ -266,4 +453,16 @@
   width: 90%;
   text-align: center;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+// === Reduced motion support ===
+@media (prefers-reduced-motion: reduce) {
+  .prediction-btn,
+  .card-reveal__flip,
+  .stepper__icon,
+  .stepper__label,
+  .stepper__line {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
