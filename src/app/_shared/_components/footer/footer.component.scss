@@ -128,7 +128,12 @@
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: all var(--animation-normal) var(--ease-spring);
-  will-change: transform, opacity, box-shadow;
+  &:hover:not(:disabled),
+  &:active:not(:disabled),
+  &--selected,
+  &--not-selected {
+    will-change: transform, opacity, box-shadow;
+  }
   &:hover:not(:disabled) {
     border-color: var(--color-accent-primary);
     background: color-mix(in srgb, var(--color-accent-primary) 10%, transparent);
@@ -448,4 +453,16 @@
   width: 90%;
   text-align: center;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+// === Reduced motion support ===
+@media (prefers-reduced-motion: reduce) {
+  .prediction-btn,
+  .card-reveal__flip,
+  .stepper__icon,
+  .stepper__label,
+  .stepper__line {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }

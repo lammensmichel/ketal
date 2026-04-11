@@ -1,4 +1,4 @@
-import { Component, Input, ViewChild, inject, signal, computed } from '@angular/core';
+import { Component, Input, ViewChild, OnDestroy, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { NgClass } from '@angular/common';
@@ -36,7 +36,7 @@ const PENDING_SUMMARY_KEY = 'pendingSummary';
     AccountGateModalComponent,
   ],
 })
-export class FooterComponent {
+export class FooterComponent implements OnDestroy {
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
   readonly gameSrv = inject(GameService);
@@ -57,17 +57,27 @@ export class FooterComponent {
   readonly selectedChoice = signal<string | null>(null);
   readonly revealedCard = signal<CardType | null>(null);
   readonly predictionCorrect = signal<boolean | null>(null);
-  /** The turn number during animation (preserved while game state advances) */
-  readonly animatingTurn = signal<number>(0);
+  /** The turn number during animation (null when not animating) */
+  readonly animatingTurn = signal<number | null>(null);
   /** Track if we're transitioning between turns */
   readonly turnTransitioning = signal(false);
 
   /** Whether the prediction panel is locked during animation */
   readonly isAnimationLocked = computed(() => this.animationPhase() !== 'idle');
+  /** Convenience computed for incorrect prediction check in template */
+  readonly predictionIncorrect = computed(() => this.predictionCorrect() === false);
 
   /** Whether the user prefers reduced motion */
   private readonly prefersReducedMotion =
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /** Active timeout IDs for animation cleanup on destroy */
+  private readonly _animationTimers: ReturnType<typeof setTimeout>[] = [];
+
+  ngOnDestroy(): void {
+    this._animationTimers.forEach((id) => clearTimeout(id));
+    this._animationTimers.length = 0;
+  }
 
   /** Reference card for Turn 2 (the card drawn in Turn 1 for the active player) */
   getReferenceCard(): CardType | null {
@@ -131,43 +141,54 @@ export class FooterComponent {
     this.selectedChoice.set(selection);
     this.animationPhase.set('selected');
 
-    setTimeout(() => {
+    this._scheduleTimer(() => {
       // Execute the actual game logic
       this.gameSrv.setChoiceAndPickCard(choiceEnum, selection);
 
-      // Get the drawn card and result
+      // Get the drawn card and result (read sips from card directly to avoid race condition)
       const players = this.gameSrv.players();
       const player = players.find((p) => p.id === activePlayerId);
       const drawnCard = player?.cards[player.cards.length - 1] ?? null;
-      const sips = activePlayerId ? (this.gameSrv.lastTurnSips()[activePlayerId] ?? 0) : 0;
 
       this.revealedCard.set(drawnCard);
-      this.predictionCorrect.set(sips === 0);
+      this.predictionCorrect.set((drawnCard?.sips ?? 0) === 0);
 
       // Phase 2: Card flip reveal
       this.animationPhase.set('revealing');
 
-      setTimeout(() => {
+      this._scheduleTimer(() => {
         // Phase 3: Show result
         this.animationPhase.set('result');
 
-        setTimeout(() => {
+        this._scheduleTimer(() => {
           // Phase 4: Slide transition
           this.animationPhase.set('transitioning');
           this.turnTransitioning.set(true);
 
-          setTimeout(() => {
+          this._scheduleTimer(() => {
             // Reset all animation state
             this.animationPhase.set('idle');
             this.selectedChoice.set(null);
             this.revealedCard.set(null);
             this.predictionCorrect.set(null);
-            this.animatingTurn.set(0);
+            this.animatingTurn.set(null);
             this.turnTransitioning.set(false);
           }, t.transition);
         }, t.result);
       }, t.reveal);
     }, t.select);
+  }
+
+  /** Schedule a timer and track it for cleanup on destroy */
+  private _scheduleTimer(fn: () => void, ms: number): void {
+    const id = setTimeout(() => {
+      const idx = this._animationTimers.indexOf(id);
+      if (idx !== -1) {
+        this._animationTimers.splice(idx, 1);
+      }
+      fn();
+    }, ms);
+    this._animationTimers.push(id);
   }
 
   async restartGame(): Promise<void> {
