@@ -199,6 +199,10 @@
       "inOut": "Entre ou Dehors",
       "suit": "Couleur exacte"
     },
+    "turn1": {
+      "red": "Rouge",
+      "black": "Noir"
+    },
     "turn2": {
       "higher": "Plus haut",
       "lower": "Plus bas",

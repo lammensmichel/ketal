@@ -90,12 +90,20 @@ export class PlayerCardComponent implements OnInit {
     return this.player ? this.gameSrv.getLastTurnSipsForPlayer(this.player.id) : 0;
   });
 
+  private sipInitialized = false;
+
   constructor() {
-    // Trigger bounce animation when sip count changes
+    // Trigger bounce animation when sip count changes (skip initial)
     effect(() => {
       this.sipCountAbsolute();
+      if (!this.sipInitialized) {
+        this.sipInitialized = true;
+        return;
+      }
       this.sipBounce.set(true);
-      setTimeout(() => this.sipBounce.set(false), 300);
+      const timer = setTimeout(() => this.sipBounce.set(false), 300);
+      // Cleanup on destroy
+      this.destroyRef.onDestroy(() => clearTimeout(timer));
     });
   }
 

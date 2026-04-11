@@ -1,4 +1,4 @@
-import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { GameService } from './game.service';
 import { LocalService } from '../local/local.service';
 import { CardService } from '../card/card.service';
@@ -1437,13 +1437,13 @@ describe('GameService', () => {
 
       const newCard = createMockCard();
       mockCardDeckHelperService.getRandomCard.and.returnValue(newCard);
-      mockPlayerHelperService.getPlayerChoice.and.returnValue('hearts');
+      mockPlayerHelperService.getPlayerChoice.and.returnValue('spades');
 
       testService.pickCard();
 
-      // lastTurnSips should persist after Phase 2 transition
+      // lastTurnSips should persist after Phase 2 transition (wrong suit = 4 sips)
       expect(testService.game().phase).toBe(2);
-      expect(testService.getLastTurnSipsForPlayer('player-1')).toBeGreaterThanOrEqual(0);
+      expect(testService.getLastTurnSipsForPlayer('player-1')).toBe(4);
 
       // Clear on first Phase 2 card draw
       testService.displayNewCard();

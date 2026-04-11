@@ -195,6 +195,10 @@
       "inOut": "In or Out",
       "suit": "Exact Suit"
     },
+    "turn1": {
+      "red": "Red",
+      "black": "Black"
+    },
     "turn2": {
       "higher": "Higher",
       "lower": "Lower",

@@ -7,6 +7,7 @@
         [alt]="player.name"
         class="player-card__avatar player-card__avatar--sm"
         (error)="avatarError = true"
+        (load)="avatarError = false"
       />
       @if (avatarError) {
         <span class="player-card__avatar-fallback player-card__avatar-fallback--sm">{{ initials() }}</span>
@@ -49,6 +50,7 @@
           class="player-card__avatar"
           [src]="player.avatarSrc"
           (error)="avatarError = true"
+          (load)="avatarError = false"
         />
         @if (avatarError) {
           <span class="player-card__avatar-fallback">{{ initials() }}</span>
@@ -69,7 +71,7 @@
     <div class="player-card__cards">
       <div class="card-fan">
         @for (i of cardSlots; track i) {
-          <div class="fan-card" [style.--fan-index]="i">
+          <div class="fan-card">
             <app-playing-card [card]="player.cards[i]"></app-playing-card>
           </div>
         }

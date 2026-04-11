@@ -21,11 +21,11 @@
             <div class="prediction-panel__choices-row">
               <button title="chooseRed" class="prediction-btn prediction-btn--red" (click)="chooseColor('red')">
                 <span class="prediction-btn__icon">&hearts;</span>
-                <span class="prediction-btn__label">Rouge</span>
+                <span class="prediction-btn__label" [translate]="'game.turn1.red'"></span>
               </button>
               <button title="chooseBlack" class="prediction-btn prediction-btn--black" (click)="chooseColor('black')">
                 <span class="prediction-btn__icon">&spades;</span>
-                <span class="prediction-btn__label">Noir</span>
+                <span class="prediction-btn__label" [translate]="'game.turn1.black'"></span>
               </button>
             </div>
           }

@@ -23,6 +23,6 @@
   img {
     width: 100%;
     height: auto;
-    border-radius: 3px;
+    border-radius: var(--radius-sm, 3px);
   }
 }

@@ -31,10 +31,10 @@
 @keyframes active-glow {
   0%,
   100% {
-    box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--color-accent-primary) 40%, transparent);
   }
   50% {
-    box-shadow: 0 0 24px rgba(99, 102, 241, 0.7);
+    box-shadow: 0 0 24px color-mix(in srgb, var(--color-accent-primary) 70%, transparent);
   }
 }
 
@@ -288,7 +288,7 @@
 @media (prefers-reduced-motion: reduce) {
   .player-card--active {
     animation: none;
-    box-shadow: 0 0 12px rgba(99, 102, 241, 0.5);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--color-accent-primary) 50%, transparent);
   }
   .sip-bounce {
     animation: none;
