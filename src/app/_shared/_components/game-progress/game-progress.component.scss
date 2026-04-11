@@ -1,97 +1,85 @@
 .game-progress {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  padding: 1rem;
-  margin-bottom: 1rem;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
   background-color: rgba(0, 0, 0, 0.1);
   border-radius: 0.5rem;
 }
 
-.phase-indicator {
-  margin-bottom: 0.75rem;
+.phase-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--bs-primary, #0d6efd);
+  white-space: nowrap;
 
-  .phase-label {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--bs-primary, #0d6efd);
+  @media (max-width: 767px) {
+    font-size: 0.75rem;
   }
 }
 
-// Phase 1 Stepper
-.phase1-stepper {
+.stepper-dots {
   display: flex;
-  flex-direction: column;
+  gap: 0.4rem;
   align-items: center;
-  gap: 0.5rem;
+}
 
-  .stepper-dots {
-    display: flex;
-    gap: 0.75rem;
-    align-items: center;
+.stepper-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  .dot-filled,
+  .dot-active,
+  .dot-empty {
+    display: inline-block;
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    transition: all 0.2s ease;
   }
-
-  .stepper-dot {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.5rem;
-    height: 1.5rem;
-
-    .dot-filled,
-    .dot-active,
-    .dot-empty {
-      display: inline-block;
-      width: 1rem;
-      height: 1rem;
-      border-radius: 50%;
-      transition: all 0.2s ease;
-    }
-
-    .dot-filled {
-      background-color: var(--bs-success, #198754);
-    }
-
-    .dot-active {
-      background-color: var(--bs-primary, #0d6efd);
-      box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
-    }
-
-    .dot-empty {
-      background-color: var(--bs-secondary, #6c757d);
-      opacity: 0.4;
-    }
+  .dot-filled {
+    background-color: var(--bs-success, #198754);
   }
-
-  .turn-label {
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--bs-body-color, #212529);
+  .dot-active {
+    background-color: var(--bs-primary, #0d6efd);
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+  }
+  .dot-empty {
+    background-color: var(--bs-secondary, #6c757d);
+    opacity: 0.4;
   }
 }
 
-// Phase 2 Progress
+.turn-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--bs-body-color, #212529);
+
+  @media (max-width: 767px) {
+    font-size: 0.75rem;
+  }
+}
+
 .phase2-progress {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  min-width: 150px;
+  gap: 1rem;
+}
 
-  .progress-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
+.progress-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
 
-    .progress-label {
-      font-size: 0.9rem;
-      color: var(--bs-body-color, #212529);
-    }
+.progress-label {
+  font-size: 0.8rem;
+  color: var(--bs-body-color, #212529);
+}
 
-    .progress-value {
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--bs-primary, #0d6efd);
-    }
-  }
+.progress-value {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--bs-primary, #0d6efd);
 }

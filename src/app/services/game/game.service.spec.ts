@@ -1396,7 +1396,7 @@ describe('GameService', () => {
       expect(testService.getLastTurnSipsForPlayer('player-2')).toBe(0);
     });
 
-    it('should clear lastTurnSips when a new round starts (last player picks)', () => {
+    it('should keep lastTurnSips when a new round starts (last player result visible)', () => {
       const player = createMockPlayer({
         id: 'player-1',
         cards: [],
@@ -1417,11 +1417,11 @@ describe('GameService', () => {
 
       testService.pickCard();
 
-      // Last player picked => new round starts => lastTurnSips cleared
-      expect(testService.getLastTurnSipsForPlayer('player-1')).toBe(0);
+      // Last player's result persists until next player picks
+      expect(testService.getLastTurnSipsForPlayer('player-1')).toBe(1);
     });
 
-    it('should clear lastTurnSips when entering Phase 2', () => {
+    it('should keep lastTurnSips when entering Phase 2 and clear on first Phase 2 card', () => {
       const player = createMockPlayer({
         id: 'player-1',
         cards: [createMockCard(), createMockCard(), createMockCard()],
@@ -1437,11 +1437,16 @@ describe('GameService', () => {
 
       const newCard = createMockCard();
       mockCardDeckHelperService.getRandomCard.and.returnValue(newCard);
-      mockPlayerHelperService.getPlayerChoice.and.returnValue('hearts');
+      mockPlayerHelperService.getPlayerChoice.and.returnValue('spades');
 
       testService.pickCard();
 
+      // lastTurnSips should persist after Phase 2 transition (wrong suit = 4 sips)
       expect(testService.game().phase).toBe(2);
+      expect(testService.getLastTurnSipsForPlayer('player-1')).toBe(4);
+
+      // Clear on first Phase 2 card draw
+      testService.displayNewCard();
       expect(testService.getLastTurnSipsForPlayer('player-1')).toBe(0);
     });
   });
@@ -2768,10 +2773,7 @@ describe('GameService', () => {
 
         testService.subscribeToSessionUpdates('session-123');
 
-        expect(mockKetalSessionService.subscribeToSession).toHaveBeenCalledWith(
-          'session-123',
-          jasmine.any(Function)
-        );
+        expect(mockKetalSessionService.subscribeToSession).toHaveBeenCalledWith('session-123', jasmine.any(Function));
       });
 
       it('should store the session ID for reconnection', () => {
@@ -2982,10 +2984,7 @@ describe('GameService', () => {
 
         testService.handleSessionUpdate(invalidSession);
 
-        expect(consoleSpy).toHaveBeenCalledWith(
-          '[GameService] Failed to handle session update:',
-          jasmine.anything()
-        );
+        expect(consoleSpy).toHaveBeenCalledWith('[GameService] Failed to handle session update:', jasmine.anything());
       });
     });
 
@@ -3036,7 +3035,7 @@ describe('GameService', () => {
         testService.setStatus(2);
 
         // Allow async finalizeGameStats to complete
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
 
         expect(mockKetalSessionService.unsubscribe).toHaveBeenCalled();
       });
@@ -3072,10 +3071,7 @@ describe('GameService', () => {
 
         await testService.beginGame();
 
-        expect(mockKetalSessionService.subscribeToSession).toHaveBeenCalledWith(
-          'session-456',
-          jasmine.any(Function)
-        );
+        expect(mockKetalSessionService.subscribeToSession).toHaveBeenCalledWith('session-456', jasmine.any(Function));
       });
     });
 
@@ -3121,10 +3117,7 @@ describe('GameService', () => {
 
         await testService.handleReconnection('session-123');
 
-        expect(mockKetalSessionService.subscribeToSession).toHaveBeenCalledWith(
-          'session-123',
-          jasmine.any(Function)
-        );
+        expect(mockKetalSessionService.subscribeToSession).toHaveBeenCalledWith('session-123', jasmine.any(Function));
       });
 
       it('should use stored activeSessionId when no sessionId provided', async () => {
@@ -3171,10 +3164,7 @@ describe('GameService', () => {
 
         await testService.handleReconnection('session-123');
 
-        expect(consoleSpy).toHaveBeenCalledWith(
-          '[GameService] handleReconnection - failed:',
-          jasmine.anything()
-        );
+        expect(consoleSpy).toHaveBeenCalledWith('[GameService] handleReconnection - failed:', jasmine.anything());
       });
     });
 

@@ -271,6 +271,18 @@ button, a, [role="button"], .clickable {
 
 ---
 
+## Already Implemented in Story 15.2
+
+The following items from this story were already implemented as part of Story 15.2 (Player Cards Redesign):
+
+- **Mobile layout splits active vs inactive players**: compact strip for inactive (avatar+name+mini-cards+sips), full card for active player
+- **Desktop uses classic 2-column grid** via CSS media query switch (mobile-layout/desktop-layout)
+- **Game progress indicator compacted** to single horizontal line on all screens
+- **Prediction panel responsive**: column layout on mobile, row on desktop
+- **Player card compact mode** with `@Input() compact` flag
+
+---
+
 ## Change Log
 
 | Date | Version | Description | Author |

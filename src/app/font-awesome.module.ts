@@ -21,6 +21,8 @@ import {
   faRedo,
   faDoorOpen,
   faRightFromBracket,
+  faPause,
+  faRotateRight,
 } from '@fortawesome/free-solid-svg-icons';
 
 @NgModule({
@@ -48,7 +50,9 @@ export class FontAwesomeIconsModule {
       faMedal,
       faRedo,
       faDoorOpen,
-      faRightFromBracket
+      faRightFromBracket,
+      faPause,
+      faRotateRight
     );
   }
 }

@@ -112,15 +112,15 @@ describe('MainGameComponent', () => {
       expect(playerCards.length).toBe(2);
     });
 
-    it('should render player cards in correct bootstrap grid layout', () => {
+    it('should render player cards in players grid layout', () => {
       isGameStartedSpy.and.returnValue(true);
       fixture.detectChanges();
 
-      const rowDiv = fixture.nativeElement.querySelector('.row.gap-1.justify-content-evenly');
-      expect(rowDiv).toBeTruthy();
+      const gridDiv = fixture.nativeElement.querySelector('.players-grid');
+      expect(gridDiv).toBeTruthy();
 
-      const playerDivs = fixture.nativeElement.querySelectorAll('.col-md-6.player.p-0');
-      expect(playerDivs.length).toBe(2);
+      const playerCards = gridDiv.querySelectorAll('app-player-card');
+      expect(playerCards.length).toBe(2);
     });
 
     it('should render game summary when in summary mode', () => {
@@ -239,33 +239,32 @@ describe('MainGameComponent', () => {
       activePlayerSignal.set(mockPlayers[0]);
       fixture.detectChanges();
 
-      const playerCards = fixture.nativeElement.querySelectorAll('app-player-card');
-      expect(playerCards.length).toBe(2);
-      // With NO_ERRORS_SCHEMA, we verify the binding is set up correctly
-      // The actual attribute binding verification happens in integration tests
+      // Desktop layout renders all players; mobile layout renders active + compact inactive
+      const desktopCards = fixture.nativeElement.querySelectorAll('.desktop-layout app-player-card');
+      expect(desktopCards.length).toBe(2);
     });
 
     it('should pass isActive=false to non-active player cards', () => {
       activePlayerSignal.set(mockPlayers[0]);
       fixture.detectChanges();
 
-      const playerCards = fixture.nativeElement.querySelectorAll('app-player-card');
-      expect(playerCards.length).toBe(2);
+      const desktopCards = fixture.nativeElement.querySelectorAll('.desktop-layout app-player-card');
+      expect(desktopCards.length).toBe(2);
     });
 
     it('should pass hasActivePlayer=true when there is an active player', () => {
       activePlayerSignal.set(mockPlayers[0]);
       fixture.detectChanges();
 
-      const playerCards = fixture.nativeElement.querySelectorAll('app-player-card');
-      expect(playerCards.length).toBe(2);
+      const desktopCards = fixture.nativeElement.querySelectorAll('.desktop-layout app-player-card');
+      expect(desktopCards.length).toBe(2);
     });
 
     it('should pass hasActivePlayer=false when there is no active player', () => {
       activePlayerSignal.set(undefined);
       fixture.detectChanges();
 
-      const playerCards = fixture.nativeElement.querySelectorAll('app-player-card');
+      const playerCards = fixture.nativeElement.querySelectorAll('.players-grid app-player-card');
       expect(playerCards.length).toBe(2);
     });
 
@@ -277,8 +276,8 @@ describe('MainGameComponent', () => {
       activePlayerSignal.set(mockPlayers[1]);
       fixture.detectChanges();
 
-      const playerCards = fixture.nativeElement.querySelectorAll('app-player-card');
-      expect(playerCards.length).toBe(2);
+      const desktopCards = fixture.nativeElement.querySelectorAll('.desktop-layout app-player-card');
+      expect(desktopCards.length).toBe(2);
     });
   });
 });

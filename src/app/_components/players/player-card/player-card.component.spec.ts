@@ -20,7 +20,7 @@ describe('PlayerCardComponent', () => {
     id: '1',
     name: 'Test Player',
     cards: [],
-    avatarSrc: '',
+    avatarSrc: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
     choice: { color: '', plus_or_minus: '', in_out: '', suit: '' },
     sips: { drunk: 0, given: 0 },
   };
@@ -51,13 +51,11 @@ describe('PlayerCardComponent', () => {
     mockGameService = createMockGameService();
     mockPlayerHelperService = createMockPlayerHelperService();
 
-    // Override openSipGiveModalEvent$ with our Subject
     Object.defineProperty(mockGameService, 'openSipGiveModalEvent$', {
       get: () => sipGiveModalSubject.asObservable(),
       configurable: true,
     });
 
-    // Set game state via signal
     mockGameService.game.set(mockGame);
 
     await TestBed.configureTestingModule({
@@ -75,7 +73,6 @@ describe('PlayerCardComponent', () => {
   });
 
   afterEach(() => {
-    // Ensure component is destroyed before completing subject
     if (fixture) {
       fixture.destroy();
     }
@@ -125,7 +122,7 @@ describe('PlayerCardComponent', () => {
       component.isActive = true;
       fixture.detectChanges();
 
-      const cardElement = fixture.nativeElement.querySelector('.card');
+      const cardElement = fixture.nativeElement.querySelector('.player-card');
       expect(cardElement.classList.contains('player-card--active')).toBe(true);
       expect(cardElement.classList.contains('player-card--inactive')).toBe(false);
     });
@@ -135,7 +132,7 @@ describe('PlayerCardComponent', () => {
       component.hasActivePlayer = true;
       fixture.detectChanges();
 
-      const cardElement = fixture.nativeElement.querySelector('.card');
+      const cardElement = fixture.nativeElement.querySelector('.player-card');
       expect(cardElement.classList.contains('player-card--inactive')).toBe(true);
       expect(cardElement.classList.contains('player-card--active')).toBe(false);
     });
@@ -145,9 +142,26 @@ describe('PlayerCardComponent', () => {
       component.hasActivePlayer = false;
       fixture.detectChanges();
 
-      const cardElement = fixture.nativeElement.querySelector('.card');
+      const cardElement = fixture.nativeElement.querySelector('.player-card');
       expect(cardElement.classList.contains('player-card--active')).toBe(false);
       expect(cardElement.classList.contains('player-card--inactive')).toBe(false);
+    });
+  });
+
+  describe('initials', () => {
+    it('should compute initials from player name', () => {
+      component.player = { ...mockPlayer, name: 'Jean Dupont' };
+      expect(component.initials()).toBe('JD');
+    });
+
+    it('should return single initial for single name', () => {
+      component.player = { ...mockPlayer, name: 'Jean' };
+      expect(component.initials()).toBe('J');
+    });
+
+    it('should return ? for empty name', () => {
+      component.player = { ...mockPlayer, name: '' };
+      expect(component.initials()).toBe('?');
     });
   });
 
@@ -197,7 +211,6 @@ describe('PlayerCardComponent', () => {
 
     it('should return 0 when player is falsy', () => {
       component.player = null as any;
-      // Skip detectChanges to avoid template errors with null player
 
       const result = component.sipCount();
 
@@ -213,6 +226,26 @@ describe('PlayerCardComponent', () => {
 
       expect(result).toBe(10);
       expect(mockPlayerHelperService.getSipCnt).toHaveBeenCalledWith(mockGameService.game(), mockPlayer, true);
+    });
+  });
+
+  describe('sipsDrunk and sipsGiven', () => {
+    it('should compute sipsDrunk from negative sipCount', () => {
+      mockPlayerHelperService.getSipCnt.and.returnValue(-3);
+      component.player = mockPlayer;
+      fixture.detectChanges();
+
+      expect(component.sipsDrunk()).toBe(3);
+      expect(component.sipsGiven()).toBe(0);
+    });
+
+    it('should compute sipsGiven from positive sipCount', () => {
+      mockPlayerHelperService.getSipCnt.and.returnValue(5);
+      component.player = mockPlayer;
+      fixture.detectChanges();
+
+      expect(component.sipsDrunk()).toBe(0);
+      expect(component.sipsGiven()).toBe(5);
     });
   });
 
@@ -270,7 +303,7 @@ describe('PlayerCardComponent', () => {
       mockGameService.getLastTurnSipsForPlayer.and.returnValue(0);
       fixture.detectChanges();
 
-      const perTurnBadge = fixture.nativeElement.querySelector('.per-turn-sips');
+      const perTurnBadge = fixture.nativeElement.querySelector('.player-card__turn-badge');
       expect(perTurnBadge).toBeNull();
     });
 
@@ -278,7 +311,7 @@ describe('PlayerCardComponent', () => {
       mockGameService.getLastTurnSipsForPlayer.and.returnValue(2);
       fixture.detectChanges();
 
-      const perTurnBadge = fixture.nativeElement.querySelector('.per-turn-sips');
+      const perTurnBadge = fixture.nativeElement.querySelector('.player-card__turn-badge');
       expect(perTurnBadge).toBeTruthy();
       expect(perTurnBadge.textContent).toContain('+2');
     });

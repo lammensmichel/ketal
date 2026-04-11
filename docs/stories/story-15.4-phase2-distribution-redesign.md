@@ -221,6 +221,17 @@ La Phase 2 doit ressembler à une vraie table de jeu de cartes à boire, avec un
 
 ---
 
+## User Feedback (from Story 15.2)
+
+Notes from UX testing during story 15.2 implementation:
+
+- **Garder les cartes visibles** : l'utilisateur veut toujours voir les cartes des joueurs en Phase 2, pas un mode "sips-only" sans cartes
+- **3e compteur bleu** : ajouter un indicateur "gorgées données" (bleu) en plus du rouge (à boire) et vert (à donner). Sans le mode résumé/modale, le compteur vert "à donner" est là mais on ne peut pas choisir à qui
+- **Layout mobile Phase 2** : avec 5 joueurs, il faut scroller pour tous les voir. Proposer une grille compacte ou un bandeau similaire à Phase 1
+- **Highlight joueurs affectés** : quand une carte pyramide est tirée et matche, mettre en évidence les joueurs concernés (glow doré pour "donne", rouge pour "boit")
+
+---
+
 ## Change Log
 
 | Date | Version | Description | Author |
