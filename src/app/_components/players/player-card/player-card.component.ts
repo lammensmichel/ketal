@@ -188,6 +188,15 @@ export class PlayerCardComponent implements OnInit {
         this.openPlayerGivenSipsModal(player);
       }
     });
+
+    // On component mount (incl. after page refresh), if this player has pending
+    // givenSips to distribute, auto-open the modal so the user isn't stuck.
+    // Deferred to next tick so @ViewChild (playerGivenSipsModal) is resolved.
+    setTimeout(() => {
+      if (this.player && this.playerSrv.getTotalGivenSips(this.player) > 0) {
+        this.openPlayerGivenSipsModal(this.player);
+      }
+    }, 0);
   }
 
   openPlayerGivenSipsModal(player: PlayerModel): void {
