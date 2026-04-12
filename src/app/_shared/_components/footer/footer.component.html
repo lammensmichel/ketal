@@ -232,9 +232,10 @@
       </div>
     }
 
-    <!-- Phase 2: Draw Pile + Split Lane (hidden while a Phase 1 animation is still running) -->
-    @if (gameSrv.phase() === 2 && !isAnimationLocked()) {
-      <div class="prediction-panel prediction-panel--phase2">
+    <!-- Phase 2: Draw Pile + Split Lane (visually hidden while a Phase 1 animation is
+         still running so the draw pile state is preserved across the transition) -->
+    @if (gameSrv.phase() === 2) {
+      <div class="prediction-panel prediction-panel--phase2" [class.prediction-panel--locked]="isAnimationLocked()">
         @if (gameSrv.isGameStarted() || gameSrv.isGameFinished()) {
           <div class="draw-layout">
             <!-- Left lane: drink cards (red) -->

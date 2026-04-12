@@ -38,6 +38,13 @@ export class PlayerCardComponent implements OnInit {
   @ViewChild(PlayerGivenSipsSelectionComponent)
   private playerGivenSipsModal: PlayerGivenSipsSelectionComponent | undefined;
 
+  /** NOTE on reactivity: `player` is a plain `@Input` (not an `input()` signal), yet
+   * the computeds below read `this.player.sips` / `this.player.cards`. Re-evaluation
+   * relies on `gameSrv.game()` ticking whenever player data changes — which is
+   * always the case because mutations flow through `GameService.updateGame()` which
+   * calls `_game.set(...)`. Any change to `player` identity or contents therefore
+   * happens alongside a game-signal emission. Do not introduce code paths that
+   * mutate `player` without going through `updateGame` or the badges will go stale. */
   @Input() player: PlayerModel = new PlayerModel();
   @Input() isActive = false;
   @Input() hasActivePlayer = false;
@@ -214,6 +221,10 @@ export class PlayerCardComponent implements OnInit {
 
     // On component mount (incl. after page refresh), if this player has pending
     // givenSips to distribute, auto-open the modal so the user isn't stuck.
+    // Anonymous users don't use summary/give flows — skip the timer entirely.
+    if (!this.authService.isLoggedIn() || this.authService.isAnonymous()) {
+      return;
+    }
     // Deferred to next tick so @ViewChild (playerGivenSipsModal) is resolved.
     setTimeout(() => {
       if (this.player && this.playerSrv.getTotalGivenSips(this.player) > 0) {

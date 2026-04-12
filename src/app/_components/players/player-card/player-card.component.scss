@@ -266,11 +266,12 @@
   font-weight: var(--font-weight-semibold);
   animation: fadeSlideIn var(--animation-normal) var(--ease-default);
 
-  // Give variant: bright pink/magenta — distinct from the green cumulative badge
-  // and from the amber drink per-draw, with enough contrast on the dark-blue card.
+  // Give variant: pink/magenta — distinct from the cumulative green badge and
+  // from the amber drink per-draw. Uses design tokens so light/dark themes
+  // each pick the hue that meets contrast against their card surface.
   &--give {
-    background: rgba(236, 72, 153, 0.2);
-    color: #f472b6;
+    background: var(--color-give-event-bg);
+    color: var(--color-give-event);
     margin-left: 4px;
   }
 }

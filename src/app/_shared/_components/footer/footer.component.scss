@@ -30,6 +30,14 @@
   }
 }
 
+// Hide the Phase 2 panel visually while a Phase 1 animation is still running,
+// but keep it in the DOM so the draw pile / lane counts don't unmount-remount
+// on every transition (preserves pile-count animation state).
+.prediction-panel--locked {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .prediction-panel__player {
   display: flex;
   align-items: center;

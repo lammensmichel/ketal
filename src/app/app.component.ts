@@ -70,6 +70,10 @@ export class AppComponent implements OnInit {
     try {
       await this.authService.init();
 
+      if (this.authService.isAnonymous()) {
+        this.gameSrv.clearPersistedSummary();
+      }
+
       if (this.authService.isLoggedIn()) {
         const activeSession = await this.soloRoomService.checkActiveSession();
         if (activeSession) {
