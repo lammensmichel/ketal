@@ -89,6 +89,16 @@
     margin-top: 2px;
   }
 
+  // Hint text (tap affordance)
+  &__hint {
+    text-align: center;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    margin: 0 0 var(--space-3);
+    font-style: italic;
+    opacity: 0.8;
+  }
+
   // Player avatar grid
   &__grid {
     display: flex;
@@ -108,10 +118,29 @@
     border-radius: var(--radius-lg);
     transition: background var(--animation-fast) var(--ease-default);
     min-width: 72px;
+    // Reset button defaults
+    background: transparent;
+    border: none;
+    color: inherit;
+    font: inherit;
 
-    &:active {
+    &:active:not(:disabled) {
       background: color-mix(in srgb, var(--color-accent-primary) 15%, transparent);
       transform: scale(0.95);
+    }
+
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--color-accent-primary) 8%, transparent);
+
+      .sip-modal__player-cue {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.6;
     }
   }
 
@@ -143,6 +172,29 @@
     align-items: center;
     justify-content: center;
     animation: badge-pop 200ms var(--ease-bounce);
+    z-index: 2;
+  }
+
+  // Subtle "+1" cue overlaid on the avatar to signal tap-to-give affordance
+  &__player-cue {
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%) translateY(4px) scale(0.9);
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--color-accent-primary) 90%, transparent);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.02em;
+    pointer-events: none;
+    opacity: 0.75;
+    transition:
+      opacity var(--animation-fast) var(--ease-default),
+      transform var(--animation-fast) var(--ease-default);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    animation: cue-pulse 2s ease-in-out infinite;
   }
 
   &__player-name {
@@ -260,6 +312,18 @@
   }
 }
 
+@keyframes cue-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-2px) scale(1.05);
+  }
+}
+
 // Toast override for modal context
 .toast {
   position: fixed;
@@ -278,6 +342,9 @@
     animation: none;
   }
   .sip-modal__player-badge {
+    animation: none;
+  }
+  .sip-modal__player-cue {
     animation: none;
   }
 }

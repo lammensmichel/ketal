@@ -22,32 +22,53 @@
         <span class="sip-modal__remaining-label" [translate]="'Remaining_Sips'"></span>
       </div>
 
+      <!-- Hint: tap-to-give affordance -->
+      @if (sipsToGive > 0) {
+        <p class="sip-modal__hint" [translate]="'Sip_Modal_Hint'"></p>
+      }
+
       <!-- Player avatar grid (quick-tap) -->
       <div class="sip-modal__grid">
         @for (player of players; track player.id) {
-          <div class="sip-modal__player" (click)="increase(player)">
+          <button
+            class="sip-modal__player"
+            type="button"
+            [attr.aria-label]="'+1 ' + player.name"
+            [disabled]="sipsToGive <= 0"
+            (click)="increase(player)"
+          >
             <div class="sip-modal__player-avatar-wrapper">
               <img class="sip-modal__player-avatar" [src]="player.avatarSrc" [alt]="player.name" />
               @if (tempSips[player.id] > 0) {
                 <span class="sip-modal__player-badge">{{ tempSips[player.id] }}</span>
               }
+              @if (sipsToGive > 0) {
+                <span class="sip-modal__player-cue" aria-hidden="true">+1</span>
+              }
             </div>
             <span class="sip-modal__player-name">{{ player.name }}</span>
             <div class="sip-modal__player-controls">
-              <button class="sip-modal__ctrl-btn" type="button" (click)="decrease(player); $event.stopPropagation()">
+              <button
+                class="sip-modal__ctrl-btn"
+                type="button"
+                [attr.aria-label]="'-1 ' + player.name"
+                [disabled]="tempSips[player.id] <= 0"
+                (click)="decrease(player); $event.stopPropagation()"
+              >
                 <fa-icon [icon]="['fas', 'minus']"></fa-icon>
               </button>
-              @if (sipsToGive > 0) {
+              @if (sipsToGive > 1) {
                 <button
                   class="sip-modal__ctrl-btn sip-modal__ctrl-btn--all"
                   type="button"
+                  [attr.aria-label]="'+' + sipsToGive + ' ' + player.name"
                   (click)="increase(player, sipsToGive); $event.stopPropagation()"
                 >
                   +{{ sipsToGive }}
                 </button>
               }
             </div>
-          </div>
+          </button>
         }
       </div>
 

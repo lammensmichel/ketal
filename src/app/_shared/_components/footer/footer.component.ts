@@ -1,4 +1,4 @@
-import { Component, Input, ViewChild, OnDestroy, inject, signal, computed } from '@angular/core';
+import { Component, Input, ViewChild, OnDestroy, OnInit, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { NgClass } from '@angular/common';
@@ -36,7 +36,7 @@ const PENDING_SUMMARY_KEY = 'pendingSummary';
     AccountGateModalComponent,
   ],
 })
-export class FooterComponent implements OnDestroy {
+export class FooterComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
   readonly gameSrv = inject(GameService);
@@ -98,6 +98,18 @@ export class FooterComponent implements OnDestroy {
   readonly cardsRemaining = computed(
     () => 12 - this.gameSrv.drinkingCards().length - this.gameSrv.givingCards().length
   );
+
+  ngOnInit(): void {
+    // If we land in Phase 2 with unassigned sips (e.g. after a page refresh
+    // mid-distribution), auto-reopen the give modal so the user isn't stuck.
+    if (this.gameSrv.isNotAllSipsGiven()) {
+      // Defer to next tick so all child components (player-card) have subscribed
+      // to openSipGiveModalEvent$ before we emit.
+      setTimeout(() => {
+        this.openSipGiveModal(this.gameSrv.getLastCard());
+      }, 0);
+    }
+  }
 
   ngOnDestroy(): void {
     this._animationTimers.forEach((id) => clearTimeout(id));
