@@ -8,6 +8,7 @@ import { GameService } from '../../../services/game/game.service';
 import { SoloRoomService } from '../../../services/solo-room/solo-room.service';
 import { PlayerHelperService } from '../../_helpers/player.helper';
 import { CardType } from '../../_models/card-type.model';
+import { PlayerModel } from '../../_models/player.model';
 import { DrinkChoiceEnum } from '../../_models/enums/drink_choice.enum';
 import { ToastComponent } from '../toast/toast.component';
 import { PlayingCardComponent } from '../playing-card/playing-card.component';
@@ -59,6 +60,17 @@ export class FooterComponent implements OnDestroy {
   readonly predictionCorrect = signal<boolean | null>(null);
   /** The turn number during animation (null when not animating) */
   readonly animatingTurn = signal<number | null>(null);
+  /** The ID of the player who triggered the animation — frozen for the animation duration
+   * so the UI keeps showing that player's data even after `gameSrv.activePlayer()` advances. */
+  readonly animatingPlayerId = signal<string | null>(null);
+  /** Player to display in the prediction panel: frozen during animation, else the current active player. */
+  readonly displayPlayer = computed<PlayerModel | null>(() => {
+    const id = this.animatingPlayerId();
+    if (id) {
+      return this.gameSrv.players().find((p) => p.id === id) ?? this.gameSrv.activePlayer() ?? null;
+    }
+    return this.gameSrv.activePlayer() ?? null;
+  });
   /** Track if we're transitioning between turns */
   readonly turnTransitioning = signal(false);
 
@@ -106,7 +118,7 @@ export class FooterComponent implements OnDestroy {
 
   /** Reference card for Turn 2 (the card drawn in Turn 1 for the active player) */
   getReferenceCard(): CardType | null {
-    const activePlayer = this.gameSrv.activePlayer();
+    const activePlayer = this.displayPlayer();
     if (activePlayer?.cards?.length) {
       return activePlayer.cards[0];
     }
@@ -163,6 +175,7 @@ export class FooterComponent implements OnDestroy {
 
     // Phase 1: Button selected
     this.animatingTurn.set(currentTurn);
+    this.animatingPlayerId.set(activePlayerId ?? null);
     this.selectedChoice.set(selection);
     this.animationPhase.set('selected');
 
@@ -197,6 +210,7 @@ export class FooterComponent implements OnDestroy {
             this.revealedCard.set(null);
             this.predictionCorrect.set(null);
             this.animatingTurn.set(null);
+            this.animatingPlayerId.set(null);
             this.turnTransitioning.set(false);
           }, t.transition);
         }, t.result);

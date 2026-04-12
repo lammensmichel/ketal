@@ -92,6 +92,11 @@ export class GameService {
    */
   private readonly _lastTurnSips = signal<Record<string, number>>({});
   readonly lastTurnSips = this._lastTurnSips.asReadonly();
+  /** Per-draw give sips per player (Phase 2 give card matches) so the UI can show
+   * a short-lived "you must give N sips this turn" badge even when summary is off
+   * and no modal/pending counter is available. Cleared on each next card draw. */
+  private readonly _lastTurnGiven = signal<Record<string, number>>({});
+  readonly lastTurnGiven = this._lastTurnGiven.asReadonly();
 
   /** Phase 2: value of the last revealed card (for match feedback in player-card) */
   readonly phase2LastCardValue = signal<string | null>(null);
@@ -648,6 +653,15 @@ export class GameService {
       } else {
         currPlayer.sips[drink ? 'drunk' : 'given'] += sipNbr;
       }
+
+      // In Phase 2, a drink event (received via give-modal distribution) must
+      // show on the red per-event badge for the receiving player. Accumulate so
+      // multi-player modal saves don't overwrite each other.
+      if (drink && game.phase === 2 && (currPlayer.cards?.length ?? 0) >= 4) {
+        const map = { ...this._lastTurnSips() };
+        map[currPlayer.id] = (map[currPlayer.id] ?? 0) + sipNbr;
+        this._lastTurnSips.set(map);
+      }
     });
   }
 
@@ -775,10 +789,11 @@ export class GameService {
       return;
     }
 
-    // Clear Phase 1 per-turn sip indicators on first Phase 2 card draw
-    if (Object.keys(this._lastTurnSips()).length > 0) {
-      this._lastTurnSips.set({});
-    }
+    // Reset per-event indicators on every Phase 2 card draw; for a drink card we
+    // populate drink matches below, for a give card we populate give matches so the
+    // giver gets a "+N to give this turn" badge even when no modal/pending counter exists.
+    this._lastTurnSips.set({});
+    this._lastTurnGiven.set({});
 
     const newCard = this.cardDeckHelperService.getRandomCard();
     newCard.selected = true;
@@ -813,7 +828,9 @@ export class GameService {
         });
       });
 
-      // Add sips to players
+      // Add sips to players and track per-draw amounts for badge display
+      const turnSipsMap: Record<string, number> = {};
+      const turnGivenMap: Record<string, number> = {};
       g.players?.forEach((player) => {
         player.sips ??= { drunk: 0, given: 0 };
         let sipTurnNb = 0;
@@ -828,8 +845,17 @@ export class GameService {
           } else {
             player.sips[!isGiving ? 'drunk' : 'given'] += sipTurnNb;
           }
+          // Drink card → matched players drink this event; Give card → matched players
+          // must give this event (each tracked for their own badge).
+          if (isGiving) {
+            turnGivenMap[player.id] = sipTurnNb;
+          } else {
+            turnSipsMap[player.id] = sipTurnNb;
+          }
         }
       });
+      this._lastTurnSips.set(turnSipsMap);
+      this._lastTurnGiven.set(turnGivenMap);
 
       // Add the card to the appropriate array
       if (isGiving) {
@@ -1032,6 +1058,11 @@ export class GameService {
    */
   getLastTurnSipsForPlayer(playerId: string): number {
     return this._lastTurnSips()[playerId] ?? 0;
+  }
+
+  /** Get the per-draw give sips for a player (Phase 2 give card match). */
+  getLastTurnGivenForPlayer(playerId: string): number {
+    return this._lastTurnGiven()[playerId] ?? 0;
   }
 
   openSipGiveModal(player: PlayerModel): void {

@@ -111,6 +111,25 @@
     background: var(--color-give-bg);
     color: var(--color-give);
   }
+
+  // Secondary "pending" give badge — outline variant so the solid one keeps the
+  // historical total while this one highlights sips still to dispatch.
+  &--give-pending {
+    background: transparent;
+    color: var(--color-give);
+    border: 1px dashed var(--color-give);
+    animation: sip-pulse-pending 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes sip-pulse-pending {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
 }
 
 .sip-bounce {
@@ -246,6 +265,14 @@
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   animation: fadeSlideIn var(--animation-normal) var(--ease-default);
+
+  // Give variant: bright pink/magenta — distinct from the green cumulative badge
+  // and from the amber drink per-draw, with enough contrast on the dark-blue card.
+  &--give {
+    background: rgba(236, 72, 153, 0.2);
+    color: #f472b6;
+    margin-left: 4px;
+  }
 }
 
 @keyframes fadeSlideIn {

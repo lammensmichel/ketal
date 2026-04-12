@@ -19,6 +19,7 @@ import { PlayerModel } from '../../../_shared/_models/player.model';
 import { GameService } from '../../../services/game/game.service';
 import { PlayerGivenSipsSelectionComponent } from '../player-given-sips-selection/player-given-sips-selection.component';
 import { PlayingCardComponent } from '../../../_shared/_components/playing-card/playing-card.component';
+import { AuthService } from '../../../services/auth/auth.service';
 
 @Component({
   selector: 'app-player-card',
@@ -31,7 +32,8 @@ import { PlayingCardComponent } from '../../../_shared/_components/playing-card/
 export class PlayerCardComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly playerSrv = inject(PlayerHelperService);
-  private readonly gameSrv = inject(GameService);
+  readonly gameSrv = inject(GameService);
+  private readonly authService = inject(AuthService);
 
   @ViewChild(PlayerGivenSipsSelectionComponent)
   private playerGivenSipsModal: PlayerGivenSipsSelectionComponent | undefined;
@@ -76,7 +78,8 @@ export class PlayerCardComponent implements OnInit {
     return this.player ? this.playerSrv.getSipCnt(this.gameSrv.game(), this.player, true) : 0;
   });
 
-  /** Sips to drink (absolute) — in Phase 2, shows only Phase 2 sips */
+  /** Cumulative sips drunk in Phase 2 (mirrors Phase 1 red-badge semantics).
+   * Per-event amount is carried by the orange `lastTurnSips` badge instead. */
   readonly sipsDrunk = computed(() => {
     const game = this.gameSrv.game();
     if (game.phase === 2 && this.player?.sips) {
@@ -88,7 +91,8 @@ export class PlayerCardComponent implements OnInit {
     return count < 0 ? Math.abs(count) : 0;
   });
 
-  /** Sips to give — in Phase 2, shows only Phase 2 sips */
+  /** Cumulative sips to give in Phase 2 (historical). Pending still-to-dispatch is
+   * surfaced separately via `sipsGivenPending`. */
   readonly sipsGiven = computed(() => {
     const game = this.gameSrv.game();
     if (game.phase === 2 && this.player?.sips) {
@@ -96,6 +100,16 @@ export class PlayerCardComponent implements OnInit {
     }
     const count = this.sipCount();
     return count > 0 ? count : 0;
+  });
+
+  /** Pending sips not yet distributed via the give modal. Only meaningful when summary
+   * mode is active (otherwise `card.givenSips` is never assigned, so this stays 0). */
+  readonly sipsGivenPending = computed(() => {
+    const game = this.gameSrv.game();
+    if (game.phase === 2 && this.player) {
+      return this.playerSrv.getTotalGivenSips(this.player);
+    }
+    return 0;
   });
 
   /** Sip severity for color-coded counter (T4) */
@@ -110,10 +124,19 @@ export class PlayerCardComponent implements OnInit {
     return 'low';
   });
 
-  /** Per-turn sip indicator for Phase 1 - resets when active player changes */
+  /** Per-turn drink indicator (Phase 1 & Phase 2 drink events). Resets when
+   * the active player changes (Phase 1) or next card is drawn (Phase 2). */
   readonly lastTurnSips = computed(() => {
     this.gameSrv.lastTurnSips();
     return this.player ? this.gameSrv.getLastTurnSipsForPlayer(this.player.id) : 0;
+  });
+
+  /** Per-turn give indicator (Phase 2 give events only). Works with or without
+   * summary mode — shows how many sips this player must give this draw. Clears
+   * on next card draw. */
+  readonly lastTurnGiven = computed(() => {
+    this.gameSrv.lastTurnGiven();
+    return this.player ? this.gameSrv.getLastTurnGivenForPlayer(this.player.id) : 0;
   });
 
   private sipInitialized = false;
@@ -204,8 +227,13 @@ export class PlayerCardComponent implements OnInit {
       return;
     }
 
-    const hasSipsToGive = this.sipsGiven() > 0 && this.playerSrv.getTotalGivenSips(player) > 0;
-    if (hasSipsToGive) {
+    // Anonymous / logged-out users have no summary UI and must not receive give modals
+    // (game state might still carry summary=true from a previous logged-in session).
+    if (!this.authService.isLoggedIn() || this.authService.isAnonymous()) {
+      return;
+    }
+
+    if (this.playerSrv.getTotalGivenSips(player) > 0) {
       this.playerGivenSipsModal?.openModal(player);
     }
   }

@@ -22,6 +22,9 @@
 
 .prediction-panel--phase2 {
   flex-direction: column;
+  // Cards stacked in lanes can extend past the lane's flex share on narrow viewports;
+  // clip here so they stay inside the rounded band instead of bleeding out the sides.
+  overflow: hidden;
   @media (min-width: 768px) {
     flex-direction: column;
   }
@@ -317,6 +320,7 @@
     display: flex;
     justify-content: center;
     min-height: 55px;
+    max-width: 100%;
 
     // Smaller cards in lanes
     ::ng-deep .card-container {
@@ -463,6 +467,14 @@
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-2) 0;
+
+  // Smaller action buttons here so the flanking card lanes keep usable width.
+  .prediction-btn--start {
+    min-width: 0;
+    padding: var(--space-1) var(--space-2);
+    font-size: var(--font-size-sm);
+    white-space: nowrap;
+  }
 }
 
 // === Card flip 3D reveal ===

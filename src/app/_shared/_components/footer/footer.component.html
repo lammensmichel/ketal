@@ -3,7 +3,7 @@
     <!-- Phase 1: Prediction Panel -->
     @if (gameSrv.isGameStarted() && ([1, 2, 3, 4].includes(gameSrv.turn()) || isAnimationLocked())) {
       <div class="prediction-panel" [ngClass]="{ 'prediction-panel--animating': isAnimationLocked() }">
-        @if (gameSrv.activePlayer(); as activePlayer) {
+        @if (displayPlayer(); as activePlayer) {
           <div class="prediction-panel__player prediction-panel__player--desktop">
             <img
               class="prediction-panel__avatar"
@@ -94,6 +94,7 @@
             </div>
           }
           @if (displayTurn === 3) {
+            @let inOutRefCards = displayPlayer()?.cards?.slice(0, 2) ?? [];
             <div class="prediction-panel__choices-row">
               <button
                 [attr.aria-label]="'game.turn3.in' | translate"
@@ -105,7 +106,7 @@
                 [disabled]="isAnimationLocked()"
                 (click)="inOut('in')"
               >
-                @for (card of gameSrv.activePlayer()?.cards; track $index; let i = $index) {
+                @for (card of inOutRefCards; track $index; let i = $index) {
                   <div class="inout-card-wrapper">
                     <app-playing-card [card]="card"></app-playing-card>
                     @if (i === 0) {
@@ -127,7 +128,7 @@
                 [disabled]="isAnimationLocked()"
                 (click)="inOut('out')"
               >
-                @for (card of gameSrv.activePlayer()?.cards; track $index; let i = $index) {
+                @for (card of inOutRefCards; track $index; let i = $index) {
                   <div class="inout-card-wrapper">
                     @if (i === 0) {
                       <span class="inout-caret"><fa-icon [icon]="['fas', 'caret-left']"></fa-icon></span>
@@ -231,8 +232,8 @@
       </div>
     }
 
-    <!-- Phase 2: Draw Pile + Split Lane -->
-    @if (gameSrv.phase() === 2) {
+    <!-- Phase 2: Draw Pile + Split Lane (hidden while a Phase 1 animation is still running) -->
+    @if (gameSrv.phase() === 2 && !isAnimationLocked()) {
       <div class="prediction-panel prediction-panel--phase2">
         @if (gameSrv.isGameStarted() || gameSrv.isGameFinished()) {
           <div class="draw-layout">
