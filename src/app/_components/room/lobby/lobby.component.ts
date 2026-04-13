@@ -9,6 +9,7 @@ import { RealtimeService, GameMember as RealtimeGameMember } from '../../../serv
 import { AuthService } from '../../../services/auth/auth.service';
 import { GuestService } from '../../../services/guest/guest.service';
 import { KetalSessionService, KetalPlayer } from '../../../services/ketal-session/ketal-session.service';
+import { RoomStatusBadgeComponent } from './room-status-badge/room-status-badge.component';
 
 /** Maximum number of subscription retry attempts */
 const MAX_SUBSCRIPTION_RETRIES = 3;
@@ -34,7 +35,7 @@ const SUBSCRIPTION_RETRY_DELAY_MS = 2000;
   templateUrl: './lobby.component.html',
   styleUrls: ['./lobby.component.scss'],
   standalone: true,
-  imports: [CommonModule, TranslateModule, QRCodeComponent],
+  imports: [CommonModule, TranslateModule, QRCodeComponent, RoomStatusBadgeComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LobbyComponent implements OnInit {
@@ -119,6 +120,21 @@ export class LobbyComponent implements OnInit {
 
   /** Toggle QR code visibility */
   readonly showQrCode = signal(false);
+
+  /** Transient feedback message after copy/share actions (cleared after 2s) */
+  readonly feedback = signal<string | null>(null);
+
+  /** Timer for feedback message auto-clear */
+  private feedbackTimerId: ReturnType<typeof setTimeout> | null = null;
+
+  /** Display name of the most recent joiner (cleared after 3s) */
+  readonly joinedToast = signal<string | null>(null);
+
+  /** Timer for joined toast auto-clear */
+  private joinedToastTimerId: ReturnType<typeof setTimeout> | null = null;
+
+  /** Snapshot of known member ids; used to detect new joiners on realtime updates */
+  private knownMemberIds = new Set<string>();
 
   /** Toggle QR code display */
   toggleQrCode(): void {
@@ -208,8 +224,9 @@ export class LobbyComponent implements OnInit {
   /**
    * Load all members for the current room
    * @param showLoading - Whether to set isLoading signal (false for realtime-triggered reloads to avoid UI flicker)
+   * @param detectJoiners - When true, surface a toast for newly arrived members (skipped on initial load)
    */
-  private async loadRoomMembers(showLoading = true): Promise<void> {
+  private async loadRoomMembers(showLoading = true, detectJoiners = false): Promise<void> {
     const room = this.currentRoom();
     if (!room) {
       return;
@@ -221,6 +238,16 @@ export class LobbyComponent implements OnInit {
         this.isLoading.set(true);
       }
       await this.memberService.getMembersByRoom(room.$id);
+
+      const currentMembers = this.members();
+      if (detectJoiners) {
+        const myMemberId = this.currentMember()?.$id;
+        const newcomer = currentMembers.find((m) => !this.knownMemberIds.has(m.$id) && m.$id !== myMemberId);
+        if (newcomer) {
+          this.showJoinedToast(newcomer.displayName);
+        }
+      }
+      this.knownMemberIds = new Set(currentMembers.map((m) => m.$id));
     } catch (err) {
       this.error.set(this.getErrorMessage(err));
     } finally {
@@ -229,6 +256,18 @@ export class LobbyComponent implements OnInit {
         this.isLoading.set(false);
       }
     }
+  }
+
+  /** Display a transient toast announcing a new member (auto-clears after 3s) */
+  private showJoinedToast(displayName: string): void {
+    this.joinedToast.set(displayName);
+    if (this.joinedToastTimerId) {
+      clearTimeout(this.joinedToastTimerId);
+    }
+    this.joinedToastTimerId = setTimeout(() => {
+      this.joinedToast.set(null);
+      this.joinedToastTimerId = null;
+    }, 3000);
   }
 
   /**
@@ -256,7 +295,7 @@ export class LobbyComponent implements OnInit {
         // Reset retry counter on successful event reception
         this.subscriptionRetryCount = 0;
         // Refresh members list without UI flicker on realtime updates
-        this.loadRoomMembers(false);
+        this.loadRoomMembers(false, true);
       });
       // Reset retry counter on successful subscription creation
       this.subscriptionRetryCount = 0;
@@ -294,6 +333,14 @@ export class LobbyComponent implements OnInit {
       if (this.retryTimerId) {
         clearTimeout(this.retryTimerId);
         this.retryTimerId = null;
+      }
+      if (this.feedbackTimerId) {
+        clearTimeout(this.feedbackTimerId);
+        this.feedbackTimerId = null;
+      }
+      if (this.joinedToastTimerId) {
+        clearTimeout(this.joinedToastTimerId);
+        this.joinedToastTimerId = null;
       }
       if (this.memberSubscriptionId) {
         this.realtimeService.unsubscribe(this.memberSubscriptionId);
@@ -437,11 +484,53 @@ export class LobbyComponent implements OnInit {
 
     try {
       await navigator.clipboard.writeText(room.code);
-      // Could add a toast notification here
+      this.showFeedback('lobby.codeCopied');
     } catch {
-      // Fallback for browsers without clipboard API
       console.warn('Could not copy to clipboard');
     }
+  }
+
+  /**
+   * Share invite via Web Share API when available, otherwise copy link to clipboard.
+   */
+  async shareInvite(): Promise<void> {
+    const url = this.inviteUrl();
+    if (!url) {
+      return;
+    }
+    const room = this.currentRoom();
+    const title = room?.name ?? 'Ketal';
+
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share({ title, text: title, url });
+        return;
+      } catch (err) {
+        // User dismissed the native sheet — silent
+        if (err instanceof Error && err.name === 'AbortError') {
+          return;
+        }
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      this.showFeedback('lobby.linkCopied');
+    } catch {
+      this.showFeedback('lobby.shareError');
+    }
+  }
+
+  /** Display a transient feedback message (auto-clears after 2s) */
+  private showFeedback(messageKey: string): void {
+    this.feedback.set(messageKey);
+    if (this.feedbackTimerId) {
+      clearTimeout(this.feedbackTimerId);
+    }
+    this.feedbackTimerId = setTimeout(() => {
+      this.feedback.set(null);
+      this.feedbackTimerId = null;
+    }, 2000);
   }
 
   /**

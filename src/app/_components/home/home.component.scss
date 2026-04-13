@@ -1,34 +1,85 @@
+@use '../../../breakpoints' as *;
+
 .home-container {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 1rem;
+  padding: 0.5rem;
+
+  @include tablet {
+    padding: 1rem;
+  }
 }
 
 .home-card {
   width: 100%;
   max-width: 400px;
-  padding: 2rem;
-  background-color: #fff;
-  border-radius: 0.5rem;
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  padding: 1.5rem;
+  background: rgba(var(--color-bg-surface-rgb), 0.6);
+
+  @include tablet {
+    padding: var(--space-6);
+    max-width: 450px;
+  }
+
+  @include desktop {
+    padding: 2.5rem;
+  }
+
+  @include wide {
+    padding: 3rem;
+    max-width: 500px;
+  }
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  transition:
+    backdrop-filter var(--animation-normal) var(--ease-default),
+    -webkit-backdrop-filter var(--animation-normal) var(--ease-default),
+    box-shadow var(--animation-normal) var(--ease-default),
+    background var(--animation-normal) var(--ease-default);
+
+  &:hover {
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 14px 24px rgba(0, 0, 0, 0.22);
+  }
+
+  @supports not ((backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px))) {
+    background: var(--color-bg-surface);
+  }
 }
 
 .branding {
   text-align: center;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
+
+  @include tablet {
+    margin-bottom: 2.5rem;
+  }
 
   .app-title {
-    font-size: 2.5rem;
+    font-size: 2rem;
     font-weight: 700;
-    color: #212529;
+    color: var(--color-text-primary);
     margin-bottom: 0.25rem;
     letter-spacing: 0.1em;
+
+    @include tablet {
+      font-size: 2.5rem;
+    }
+
+    @include wide {
+      font-size: 3rem;
+    }
   }
 
   .app-subtitle {
     font-size: 0.9rem;
-    color: #6c757d;
+    color: var(--color-text-secondary);
     margin-bottom: 0;
   }
 }
@@ -41,14 +92,27 @@
 
 .btn-cta {
   width: 100%;
-  padding: 1rem;
+  padding: 0.875rem;
   font-weight: 500;
-  font-size: 1.1rem;
+  font-size: 1rem;
+
+  @include tablet {
+    padding: 1rem;
+    font-size: 1.1rem;
+  }
+
+  @include wide {
+    padding: 1.25rem;
+    font-size: 1.2rem;
+  }
+
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 0.5rem;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 
   &:hover:not(:disabled) {
     transform: translateY(-1px);
@@ -71,57 +135,4 @@
 
 .btn-join-game {
   letter-spacing: 0.02em;
-}
-
-// Responsive adjustments
-@media (max-width: 576px) {
-  .home-container {
-    padding: 0.5rem;
-  }
-
-  .home-card {
-    padding: 1.5rem;
-    box-shadow: none;
-    border: 1px solid #dee2e6;
-  }
-
-  .branding {
-    margin-bottom: 2rem;
-
-    .app-title {
-      font-size: 2rem;
-    }
-  }
-
-  .btn-cta {
-    padding: 0.875rem;
-    font-size: 1rem;
-  }
-}
-
-// Tablet
-@media (min-width: 577px) and (max-width: 991px) {
-  .home-card {
-    max-width: 450px;
-    padding: 2.5rem;
-  }
-}
-
-// Large screens / TV
-@media (min-width: 1200px) {
-  .home-card {
-    max-width: 500px;
-    padding: 3rem;
-  }
-
-  .branding {
-    .app-title {
-      font-size: 3rem;
-    }
-  }
-
-  .btn-cta {
-    padding: 1.25rem;
-    font-size: 1.2rem;
-  }
 }

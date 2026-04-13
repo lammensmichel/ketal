@@ -1,0 +1,12 @@
+<div
+  class="status-badge"
+  [class.connected]="connected()"
+  [class.disconnected]="!connected()"
+  role="status"
+  aria-live="polite"
+>
+  <span class="status-dot"></span>
+  <span class="status-label">
+    {{ (connected() ? 'lobby.connected' : 'lobby.disconnected') | translate }}
+  </span>
+</div>

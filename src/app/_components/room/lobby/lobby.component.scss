@@ -1,18 +1,115 @@
+@use '../../../../breakpoints' as *;
+
 .lobby-container {
   display: flex;
   justify-content: center;
   align-items: flex-start;
   min-height: calc(100vh - 120px);
-  padding: 1.5rem;
+  padding: 0.75rem;
+
+  @include tablet {
+    padding: 1.5rem;
+  }
 }
 
 .lobby-card {
   width: 100%;
   max-width: 500px;
-  padding: 2rem;
-  background-color: #fff;
-  border-radius: 0.5rem;
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  padding: 1.25rem;
+  background: rgba(var(--color-bg-surface-rgb), 0.6);
+
+  @include tablet {
+    padding: var(--space-6);
+  }
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  animation: lobby-fade-in var(--animation-normal) var(--ease-spring) both;
+  transition:
+    backdrop-filter var(--animation-normal) var(--ease-default),
+    -webkit-backdrop-filter var(--animation-normal) var(--ease-default),
+    box-shadow var(--animation-normal) var(--ease-default),
+    background var(--animation-normal) var(--ease-default);
+
+  &:hover {
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 14px 24px rgba(0, 0, 0, 0.22);
+  }
+
+  @supports not ((backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px))) {
+    background: var(--color-bg-surface);
+  }
+}
+
+@keyframes lobby-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes qr-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes member-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.join-toast {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.625rem 0.875rem;
+  background-color: rgba(var(--color-success-rgb), 0.12);
+  color: var(--color-success);
+  border: 1px solid rgba(var(--color-success-rgb), 0.3);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 500;
+  animation: toast-slide-in var(--animation-normal) var(--ease-spring) both;
+
+  .join-toast-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--color-success);
+    flex-shrink: 0;
+  }
 }
 
 // Room Header
@@ -20,12 +117,12 @@
   text-align: center;
   margin-bottom: 1.5rem;
   padding-bottom: 1.5rem;
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: 1px solid var(--color-border);
 
   .room-name {
     font-size: 1.75rem;
     font-weight: 600;
-    color: #212529;
+    color: var(--color-text-primary);
     margin-bottom: 0.5rem;
   }
 
@@ -38,7 +135,7 @@
 
   .room-code-label {
     font-size: 0.9rem;
-    color: #6c757d;
+    color: var(--color-text-secondary);
   }
 
   .room-code {
@@ -51,12 +148,20 @@
     color: #0d6efd;
     background-color: #e7f1ff;
     padding: 0.25rem 0.75rem;
+    border: 0;
     border-radius: 0.25rem;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition:
+      background-color 0.2s ease,
+      box-shadow 0.2s ease;
 
     &:hover {
       background-color: #cfe2ff;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-accent-primary);
+      outline-offset: 2px;
     }
 
     .copy-icon {
@@ -65,45 +170,26 @@
   }
 }
 
-// Connection Status Indicator
-.connection-status {
+.copy-feedback {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  color: var(--color-success);
+  text-align: center;
+  animation: lobby-fade-in 200ms var(--ease-default) both;
+}
+
+.qr-code-section {
+  margin-top: 1rem;
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 1rem;
-  padding: 0.375rem 0.75rem;
-  border-radius: 0.375rem;
-  font-size: 0.8rem;
-  font-weight: 500;
+  animation: qr-fade-in var(--animation-normal) var(--ease-spring) both;
 
-  &.connected {
-    background-color: #d1e7dd;
-    color: #0a3622;
-  }
-
-  &.disconnected {
-    background-color: #f8d7da;
-    color: #58151c;
-  }
-
-  .connection-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  &.connected .connection-dot {
-    background-color: #198754;
-    box-shadow: 0 0 4px rgba(25, 135, 84, 0.5);
-  }
-
-  &.disconnected .connection-dot {
-    background-color: #dc3545;
-  }
-
-  .connection-label {
-    line-height: 1;
+  .qr-hint {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    margin: 0;
   }
 }
 
@@ -118,7 +204,7 @@
   .members-title {
     font-size: 1.1rem;
     font-weight: 600;
-    color: #495057;
+    color: var(--color-text-secondary);
     margin: 0;
   }
 }
@@ -133,18 +219,25 @@
   display: flex;
   align-items: center;
   padding: 0.75rem 1rem;
-  background-color: #f8f9fa;
+  background-color: var(--color-bg-surface);
   border-radius: 0.5rem;
   border: 2px solid transparent;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
+  animation: member-slide-in var(--animation-normal) var(--ease-spring) both;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+
+  &:focus-within {
+    border-color: var(--color-accent-primary);
+  }
 
   &.is-current {
-    border-color: #0d6efd;
-    background-color: #e7f1ff;
+    border-color: var(--color-accent-primary);
+    background-color: rgba(var(--color-bg-surface-rgb), 0.5);
   }
 
   &:hover {
-    background-color: #e9ecef;
+    background-color: var(--color-bg-elevated);
   }
 }
 
@@ -182,7 +275,7 @@
   .member-name {
     font-size: 1rem;
     font-weight: 500;
-    color: #212529;
+    color: var(--color-text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -190,7 +283,7 @@
 
   .member-role-label {
     font-size: 0.8rem;
-    color: #6c757d;
+    color: var(--color-text-secondary);
   }
 }
 
@@ -222,7 +315,7 @@
   border-radius: 0.25rem;
 
   &:hover {
-    background-color: #e9ecef;
+    background-color: var(--color-bg-elevated);
   }
 
   &:focus {
@@ -233,8 +326,8 @@
 .no-members {
   padding: 2rem;
   text-align: center;
-  color: #6c757d;
-  background-color: #f8f9fa;
+  color: var(--color-text-secondary);
+  background-color: var(--color-bg-surface);
   border-radius: 0.5rem;
 }
 
@@ -244,7 +337,7 @@
   flex-direction: column;
   gap: 0.75rem;
   padding-top: 1rem;
-  border-top: 1px solid #dee2e6;
+  border-top: 1px solid var(--color-border);
 }
 
 .btn-start {
@@ -264,7 +357,7 @@
 
 .min-players-hint {
   font-size: 0.85rem;
-  color: #6c757d;
+  color: var(--color-text-secondary);
   text-align: center;
   margin: 0;
 }
@@ -276,18 +369,8 @@
   border-radius: 0.375rem;
 }
 
-// Responsive adjustments
-@media (max-width: 576px) {
-  .lobby-container {
-    padding: 0.75rem;
-  }
-
-  .lobby-card {
-    padding: 1.25rem;
-    box-shadow: none;
-    border: 1px solid #dee2e6;
-  }
-
+// Responsive adjustments — mobile is the base, tablet+ scales up.
+@include below-tablet {
   .room-header {
     .room-name {
       font-size: 1.5rem;

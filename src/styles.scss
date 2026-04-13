@@ -1,9 +1,15 @@
 @import 'design-tokens';
 
 /* You can add global styles to this file, and also import other style files */
-html, body {
+html,
+body {
   height: 100%;
   margin: 0;
+}
+
+body {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
 }
 
 app-root {
@@ -12,7 +18,7 @@ app-root {
   min-height: 100vh;
 }
 
-.border-dashed{
+.border-dashed {
   border-style: dashed !important;
 }
 
