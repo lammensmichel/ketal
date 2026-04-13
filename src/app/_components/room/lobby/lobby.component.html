@@ -81,7 +81,7 @@
             </div>
 
             @if (feedback(); as feedbackKey) {
-              <p class="copy-feedback" aria-live="polite">{{ feedbackKey | translate }}</p>
+              <p class="copy-feedback" role="status" aria-live="polite">{{ feedbackKey | translate }}</p>
             }
 
             <!-- QR Code Section -->
@@ -111,7 +111,7 @@
         }
 
         @if (joinedToast(); as joiner) {
-          <div class="join-toast" aria-live="polite">
+          <div class="join-toast" role="status" aria-live="polite">
             <span class="join-toast-dot" aria-hidden="true"></span>
             <span class="join-toast-text">{{ 'lobby.memberJoined' | translate: { name: joiner } }}</span>
           </div>

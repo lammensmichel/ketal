@@ -17,6 +17,15 @@ const MAX_SUBSCRIPTION_RETRIES = 3;
 /** Delay between retry attempts in milliseconds */
 const SUBSCRIPTION_RETRY_DELAY_MS = 2000;
 
+/** Bail out of the pendingReload retry loop after this many consecutive load errors. */
+const MAX_LOAD_ERROR_RETRIES = 3;
+
+/** How long a newly-joined id keeps the `.is-new` class (matches slide-in animation). */
+const NEW_JOINER_ANIMATION_MS = 450;
+
+/** Debounce window for window-resize → qrSize recomputes. */
+const RESIZE_DEBOUNCE_MS = 150;
+
 /**
  * LobbyComponent - Room lobby for waiting players before game start
  *
@@ -138,8 +147,17 @@ export class LobbyComponent implements OnInit {
     return 220;
   }
 
+  /** Debounce timer for resize events so we don't thrash the QR canvas while the user drags. */
+  private resizeDebounceTimerId: ReturnType<typeof setTimeout> | null = null;
+
   private readonly resizeListener = (): void => {
-    this.qrSize.set(this.computeInitialQrSize());
+    if (this.resizeDebounceTimerId) {
+      clearTimeout(this.resizeDebounceTimerId);
+    }
+    this.resizeDebounceTimerId = setTimeout(() => {
+      this.resizeDebounceTimerId = null;
+      this.qrSize.set(this.computeInitialQrSize());
+    }, RESIZE_DEBOUNCE_MS);
   };
 
   /** Transient feedback message after copy/share actions (cleared after 2s) */
@@ -160,27 +178,40 @@ export class LobbyComponent implements OnInit {
   /** Snapshot of known member ids; used to detect new joiners on realtime updates */
   private knownMemberIds = new Set<string>();
 
-  /** Scratch set of member ids to animate on next render (join-enter animation) */
-  private newlyJoinedIds = new Set<string>();
+  /** Writable signal tracking which member ids should render with the `.is-new` animation class. */
+  private readonly newlyJoinedIds = signal<Set<string>>(new Set());
 
-  /** Re-entrant reload flag: if a realtime event arrives while loading, queue one retry */
+  /** Pending per-id clear timers so we drop the `.is-new` flag once the animation plays out. */
+  private readonly newlyJoinedTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+  /** Member ids observed via realtime *before* the initial seed completed — replayed post-seed. */
+  private pendingJoinerIds = new Set<string>();
+
+  /** True once the first loadRoomMembers call has seeded knownMemberIds. */
+  private initialLoadComplete = false;
+
+  /** Re-entrant reload flag: if a realtime event arrives while loading, queue one retry. */
   private pendingReload = false;
 
-  /** Newly-derived display status for the badge, mapping RoomService status + session state */
+  /** Consecutive failures in `loadRoomMembers`; bail out of pendingReload once we hit the cap. */
+  private consecutiveLoadErrors = 0;
+
+  /** Badge status: 'finished' from session, 'playing' from room, else 'waiting'. */
   readonly displayStatus = computed<RoomDisplayStatus>(() => {
-    const room = this.currentRoom();
-    if (!room) {
-      return 'waiting';
+    const session = this.ketalSessionService.currentSession();
+    if (session?.status === 'finished') {
+      return 'finished';
     }
-    if (room.status === 'playing') {
+    const room = this.currentRoom();
+    if (room?.status === 'playing') {
       return 'playing';
     }
     return 'waiting';
   });
 
-  /** Whether a member id is part of the newly-joined set (used for animation scoping) */
+  /** Whether a member id is currently flagged as newly joined (template hook for animation scoping). */
   isNewlyJoined(memberId: string): boolean {
-    return this.newlyJoinedIds.has(memberId);
+    return this.newlyJoinedIds().has(memberId);
   }
 
   /** Toggle QR code display */
@@ -272,16 +303,16 @@ export class LobbyComponent implements OnInit {
   }
 
   /**
-   * Load all members for the current room
-   * @param showLoading - Whether to set isLoading signal (false for realtime-triggered reloads to avoid UI flicker)
-   * @param detectJoiners - When true, surface a toast for newly arrived members (skipped on initial load)
+   * Load members for the current room and sync `knownMemberIds`.
+   * Join detection happens at the realtime-payload layer, not here, so this stays idempotent.
    */
-  private async loadRoomMembers(showLoading = true, detectJoiners = false): Promise<void> {
+  private async loadRoomMembers(showLoading = true): Promise<void> {
     const room = this.currentRoom();
     if (!room) {
       return;
     }
 
+    let errored = false;
     try {
       this.isMembersLoading = true;
       if (showLoading) {
@@ -290,31 +321,77 @@ export class LobbyComponent implements OnInit {
       await this.memberService.getMembersByRoom(room.$id);
 
       const currentMembers = this.members();
-      if (detectJoiners) {
-        const myMemberId = this.currentMember()?.$id;
-        const newcomers = currentMembers.filter((m) => !this.knownMemberIds.has(m.$id) && m.$id !== myMemberId);
-        if (newcomers.length > 0) {
-          this.newlyJoinedIds = new Set(newcomers.map((m) => m.$id));
-          newcomers.forEach((m) => this.enqueueJoinedToast(m.displayName));
-        } else {
-          this.newlyJoinedIds = new Set();
-        }
-      } else {
-        this.newlyJoinedIds = new Set();
-      }
       this.knownMemberIds = new Set(currentMembers.map((m) => m.$id));
+
+      // On the very first successful seed, replay any joiner events buffered during initial load.
+      if (!this.initialLoadComplete) {
+        this.initialLoadComplete = true;
+        this.replayPendingJoiners();
+      }
+      this.consecutiveLoadErrors = 0;
     } catch (err) {
+      errored = true;
+      this.consecutiveLoadErrors += 1;
       this.error.set(this.getErrorMessage(err));
     } finally {
       this.isMembersLoading = false;
       if (showLoading) {
         this.isLoading.set(false);
       }
+      // Drain a pending realtime event, but only if we haven't hit the error cap.
       if (this.pendingReload) {
         this.pendingReload = false;
-        void this.loadRoomMembers(false, true);
+        if (!errored && this.consecutiveLoadErrors < MAX_LOAD_ERROR_RETRIES) {
+          void this.loadRoomMembers(false);
+        }
       }
     }
+  }
+
+  /** Replay joiner-toast + animation for any $id captured by realtime before the initial seed. */
+  private replayPendingJoiners(): void {
+    if (this.pendingJoinerIds.size === 0) {
+      return;
+    }
+    const myMemberId = this.currentMember()?.$id;
+    const membersById = new Map(this.members().map((m) => [m.$id, m]));
+    for (const id of this.pendingJoinerIds) {
+      if (id === myMemberId) {
+        continue;
+      }
+      const member = membersById.get(id);
+      if (member) {
+        this.announceJoiner(member);
+      }
+    }
+    this.pendingJoinerIds.clear();
+  }
+
+  /** Enqueue toast + mark `.is-new` for animation; callers should have already vetted "not me". */
+  private announceJoiner(member: { $id: string; displayName: string }): void {
+    this.enqueueJoinedToast(member.displayName);
+    this.markNewlyJoined(member.$id);
+  }
+
+  /** Flag an id as newly-joined, then clear the flag after the animation window. */
+  private markNewlyJoined(memberId: string): void {
+    const prev = this.newlyJoinedTimers.get(memberId);
+    if (prev) {
+      clearTimeout(prev);
+    }
+    this.newlyJoinedIds.update((set) => new Set(set).add(memberId));
+    const timerId = setTimeout(() => {
+      this.newlyJoinedTimers.delete(memberId);
+      this.newlyJoinedIds.update((set) => {
+        if (!set.has(memberId)) {
+          return set;
+        }
+        const next = new Set(set);
+        next.delete(memberId);
+        return next;
+      });
+    }, NEW_JOINER_ANIMATION_MS);
+    this.newlyJoinedTimers.set(memberId, timerId);
   }
 
   /** Queue a joiner name; processed sequentially so back-to-back joins each get ~3s on-screen */
@@ -360,14 +437,9 @@ export class LobbyComponent implements OnInit {
     }
 
     try {
-      this.memberSubscriptionId = this.realtimeService.subscribeToMembers(room.$id, (_member: RealtimeGameMember) => {
+      this.memberSubscriptionId = this.realtimeService.subscribeToMembers(room.$id, (member: RealtimeGameMember) => {
         this.subscriptionRetryCount = 0;
-        // If a load is in flight, queue a single follow-up reload so we never drop events.
-        if (this.isMembersLoading) {
-          this.pendingReload = true;
-          return;
-        }
-        void this.loadRoomMembers(false, true);
+        this.handleRealtimeMemberEvent(member);
       });
       // Reset retry counter on successful subscription creation
       this.subscriptionRetryCount = 0;
@@ -375,6 +447,31 @@ export class LobbyComponent implements OnInit {
       console.warn('Realtime subscription failed:', err);
       this.retrySubscription();
     }
+  }
+
+  /**
+   * Payload-driven join detection: realtime events carry the member doc directly, so we can classify
+   * it as a new joiner the moment it arrives (no race with the reload).
+   */
+  private handleRealtimeMemberEvent(member: RealtimeGameMember): void {
+    const myMemberId = this.currentMember()?.$id;
+
+    if (!this.initialLoadComplete) {
+      // Buffer until the initial seed so we don't treat every existing member as a newcomer.
+      if (member.$id !== myMemberId) {
+        this.pendingJoinerIds.add(member.$id);
+      }
+    } else if (member.$id !== myMemberId && !this.knownMemberIds.has(member.$id)) {
+      // Add to knownMemberIds immediately so a second event for the same id doesn't double-announce.
+      this.knownMemberIds.add(member.$id);
+      this.announceJoiner(member);
+    }
+
+    if (this.isMembersLoading) {
+      this.pendingReload = true;
+      return;
+    }
+    void this.loadRoomMembers(false);
   }
 
   /**
@@ -417,6 +514,14 @@ export class LobbyComponent implements OnInit {
         clearTimeout(this.joinedToastTimerId);
         this.joinedToastTimerId = null;
       }
+      if (this.resizeDebounceTimerId) {
+        clearTimeout(this.resizeDebounceTimerId);
+        this.resizeDebounceTimerId = null;
+      }
+      for (const timer of this.newlyJoinedTimers.values()) {
+        clearTimeout(timer);
+      }
+      this.newlyJoinedTimers.clear();
       if (this.memberSubscriptionId) {
         this.realtimeService.unsubscribe(this.memberSubscriptionId);
         this.memberSubscriptionId = null;

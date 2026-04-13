@@ -42,6 +42,7 @@ describe('LobbyComponent', () => {
   };
   let mockKetalSessionService: {
     startGame: jasmine.Spy;
+    currentSession: ReturnType<typeof signal<unknown>>;
   };
 
   const mockRoom: GameRoom = {
@@ -142,6 +143,7 @@ describe('LobbyComponent', () => {
 
     mockKetalSessionService = {
       startGame: jasmine.createSpy('startGame').and.resolveTo({}),
+      currentSession: signal<unknown>(null),
     };
 
     await TestBed.configureTestingModule({
@@ -406,23 +408,23 @@ describe('LobbyComponent', () => {
   });
 
   describe('story 15.6 UI', () => {
-    beforeEach(() => {
+    it('applies glassmorphism class on the lobby card', () => {
       createComponent('room123', true);
       mockMemberService.members.set([mockHostMember, mockPlayerMember]);
       mockMemberService.currentMember.set(mockHostMember);
       fixture.detectChanges();
-    });
 
-    it('applies glassmorphism class on the lobby card', () => {
       const card = fixture.nativeElement.querySelector('.lobby-card');
       expect(card).toBeTruthy();
     });
 
     it('builds the invite URL from the room code', () => {
+      createComponent('room123', true);
       expect(component.inviteUrl()).toContain('/room/join/ABC123');
     });
 
     it('writes the room code to the clipboard and shows feedback', fakeAsync(() => {
+      createComponent('room123', true);
       const writeTextSpy = jasmine.createSpy('writeText').and.resolveTo();
       Object.defineProperty(navigator, 'clipboard', {
         configurable: true,
@@ -437,6 +439,7 @@ describe('LobbyComponent', () => {
     }));
 
     it('maps room.status to the displayStatus signal', () => {
+      createComponent('room123', true);
       expect(component.displayStatus()).toBe('waiting');
 
       mockRoomService.currentRoom.set({ ...mockRoom, status: 'playing' });
@@ -460,13 +463,13 @@ describe('LobbyComponent', () => {
       // Initial load seeds known ids; no-one is marked newly-joined.
       expect(component.isNewlyJoined(mockPlayerMember.$id)).toBe(false);
 
-      // A realtime event brings in a previously-unknown member.
-      const newbie: GameMember = { ...mockPlayerMember, $id: 'member-new', displayName: 'Newbie' };
+      // A realtime event brings in a previously-unknown member. Payload-based detection marks the
+      // id immediately; the subsequent reload just syncs the members list.
       mockMemberService.getMembersByRoom.and.callFake(() => {
-        mockMemberService.members.set([mockHostMember, mockPlayerMember, newbie]);
-        return Promise.resolve([mockHostMember, mockPlayerMember, newbie]);
+        mockMemberService.members.set([mockHostMember, mockPlayerMember]);
+        return Promise.resolve([mockHostMember, mockPlayerMember]);
       });
-      capturedCallback?.({ $id: 'member-new', roomId: 'room123' });
+      capturedCallback?.({ $id: 'member-new', displayName: 'Newbie', roomId: 'room123' });
       tick();
 
       expect(component.isNewlyJoined('member-new')).toBe(true);

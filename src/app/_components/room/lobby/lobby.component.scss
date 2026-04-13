@@ -71,6 +71,15 @@
   min-width: 0;
 }
 
+// Desktop: keep members scrollable within the pane so Start/Leave actions stay on screen in full rooms.
+.lobby-pane--members {
+  @include desktop {
+    max-height: calc(100vh - 260px);
+    overflow-y: auto;
+    padding-right: 0.25rem;
+  }
+}
+
 @keyframes lobby-fade-in {
   from {
     opacity: 0;
