@@ -223,14 +223,9 @@ describe('GameProgressComponent', () => {
       expect(container).toBeTruthy();
     });
 
-    it('should render phase label', () => {
-      const phaseLabel = fixture.debugElement.query(By.css('.phase-label'));
-      expect(phaseLabel).toBeTruthy();
-    });
-
-    it('should render stepper dots in phase 1', () => {
-      const dots = fixture.debugElement.query(By.css('.stepper-dots'));
-      expect(dots).toBeTruthy();
+    it('should render the BEM stepper container in phase 1', () => {
+      const stepper = fixture.debugElement.query(By.css('.stepper'));
+      expect(stepper).toBeTruthy();
     });
 
     it('should not render phase2-progress in phase 1', () => {
@@ -238,28 +233,28 @@ describe('GameProgressComponent', () => {
       expect(progress).toBeFalsy();
     });
 
-    it('should render 4 stepper dots', () => {
-      const dots = fixture.debugElement.queryAll(By.css('.stepper-dot'));
-      expect(dots.length).toBe(4);
+    it('should render 4 stepper steps', () => {
+      const steps = fixture.debugElement.queryAll(By.css('.stepper__step'));
+      expect(steps.length).toBe(4);
     });
 
-    it('should render turn label', () => {
-      const turnLabel = fixture.debugElement.query(By.css('.turn-label'));
-      expect(turnLabel).toBeTruthy();
+    it('should render a label for each stepper step', () => {
+      const labels = fixture.debugElement.queryAll(By.css('.stepper__label'));
+      expect(labels.length).toBe(4);
     });
 
-    it('should show active dot for current turn', () => {
+    it('should mark the current turn step as active', () => {
       turnSignal.set(2);
       fixture.detectChanges();
-      const activeDots = fixture.debugElement.queryAll(By.css('.stepper-dot.active'));
-      expect(activeDots.length).toBe(1);
+      const active = fixture.debugElement.queryAll(By.css('.stepper__step--active'));
+      expect(active.length).toBe(1);
     });
 
-    it('should show completed dots for previous turns', () => {
+    it('should mark previous-turn steps as completed', () => {
       turnSignal.set(3);
       fixture.detectChanges();
-      const completedDots = fixture.debugElement.queryAll(By.css('.stepper-dot.completed'));
-      expect(completedDots.length).toBe(2);
+      const completed = fixture.debugElement.queryAll(By.css('.stepper__step--completed'));
+      expect(completed.length).toBe(2);
     });
   });
 
