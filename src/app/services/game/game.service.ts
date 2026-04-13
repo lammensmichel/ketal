@@ -850,7 +850,10 @@ export class GameService {
     return remainingSipsToGive > 0;
   }
 
-  getLastCard(): CardType {
+  /** Returns the most recently revealed Phase 2 card (give pile takes precedence
+   * when both arrays are equal length). Returns `undefined` when no card has
+   * been drawn yet — both call sites in footer already null-check the result. */
+  getLastCard(): CardType | undefined {
     const giving = this.givingCards();
     const drinking = this.drinkingCards();
     if (giving.length >= drinking.length) {

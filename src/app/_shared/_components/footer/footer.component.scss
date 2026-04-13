@@ -30,12 +30,15 @@
   }
 }
 
-// Hide the Phase 2 panel visually while a Phase 1 animation is still running,
-// but keep it in the DOM so the draw pile / lane counts don't unmount-remount
-// on every transition (preserves pile-count animation state).
+// Hide the Phase 2 panel while a Phase 1 animation is still running, but keep
+// it in the DOM so the draw pile / lane counts don't unmount-remount on every
+// transition (Angular preserves component state through `display: none`).
+// `display: none` is required (not `visibility: hidden`) — on mobile the Phase 1
+// panel is `position: fixed` and Phase 2 is `position: static`, so a hidden but
+// layout-occupying Phase 2 created a brief visual overlap during the last Turn 4
+// animation (~900 ms transition window).
 .prediction-panel--locked {
-  visibility: hidden;
-  pointer-events: none;
+  display: none;
 }
 
 .prediction-panel__player {

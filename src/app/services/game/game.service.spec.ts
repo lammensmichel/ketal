@@ -1893,7 +1893,7 @@ describe('GameService', () => {
 
         const result = testService.getLastCard();
 
-        expect(result.value).toBe('K');
+        expect(result?.value).toBe('K');
       });
 
       it('should return last drinking card when drinkingCards > givingCards', () => {
@@ -1906,7 +1906,7 @@ describe('GameService', () => {
 
         const result = testService.getLastCard();
 
-        expect(result.value).toBe('5');
+        expect(result?.value).toBe('5');
       });
     });
 

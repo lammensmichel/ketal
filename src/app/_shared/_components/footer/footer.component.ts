@@ -282,7 +282,7 @@ export class FooterComponent implements OnDestroy {
     return false;
   }
 
-  openSipGiveModal(newCardGiven: CardType): void {
+  openSipGiveModal(newCardGiven: CardType | undefined): void {
     if (!this.gameSrv.summary() || this.gameSrv.drinkingCards().length !== this.gameSrv.givingCards().length) {
       return;
     }
