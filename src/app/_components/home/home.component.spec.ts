@@ -20,9 +20,7 @@ describe('HomeComponent', () => {
     const roomServiceSpy = jasmine.createSpyObj('RoomService', ['createSoloRoom'], {
       currentRoom: signal(null),
     });
-    roomServiceSpy.createSoloRoom.and.returnValue(
-      Promise.resolve({ $id: 'room1', name: 'Solo-123', code: 'ABC123' })
-    );
+    roomServiceSpy.createSoloRoom.and.returnValue(Promise.resolve({ $id: 'room1', name: 'Solo-123', code: 'ABC123' }));
 
     const authServiceSpy = jasmine.createSpyObj('AuthService', [], {
       currentUser: signal({ name: 'Test User', email: 'test@test.com', $id: 'user1' }),

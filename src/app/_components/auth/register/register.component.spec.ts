@@ -5,11 +5,7 @@ import { RegisterComponent } from './register.component';
 import { AuthService } from '../../../services/auth/auth.service';
 import { GameService } from '../../../services/game/game.service';
 import { SoloRoomService } from '../../../services/solo-room/solo-room.service';
-import {
-  createMockAuthService,
-  createMockGameService,
-  createMockSoloRoomService,
-} from '../../../testing/test-helpers';
+import { createMockAuthService, createMockGameService, createMockSoloRoomService } from '../../../testing/test-helpers';
 
 describe('RegisterComponent', () => {
   let component: RegisterComponent;

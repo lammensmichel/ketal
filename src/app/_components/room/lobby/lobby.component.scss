@@ -17,14 +17,9 @@
   max-width: 500px;
   padding: 1.25rem;
   background: rgba(var(--color-bg-surface-rgb), 0.6);
-
-  @include tablet {
-    padding: var(--space-6);
-  }
-
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   animation: lobby-fade-in var(--animation-normal) var(--ease-spring) both;
@@ -34,6 +29,15 @@
     box-shadow var(--animation-normal) var(--ease-default),
     background var(--animation-normal) var(--ease-default);
 
+  @include tablet {
+    padding: var(--space-6);
+    max-width: 720px;
+  }
+
+  @include desktop {
+    max-width: 1080px;
+  }
+
   &:hover {
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
@@ -42,7 +46,29 @@
 
   @supports not ((backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px))) {
     background: var(--color-bg-surface);
+
+    &:hover {
+      box-shadow: var(--shadow-lg);
+    }
   }
+}
+
+// Layout grid: stacked on mobile/tablet, 2-col from desktop up.
+.lobby-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  @include desktop {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 2.5rem;
+    align-items: start;
+  }
+}
+
+.lobby-pane {
+  min-width: 0;
 }
 
 @keyframes lobby-fade-in {
@@ -70,11 +96,11 @@
 @keyframes member-slide-in {
   from {
     opacity: 0;
-    transform: translateX(-12px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateY(0);
   }
 }
 
@@ -110,6 +136,13 @@
     background-color: var(--color-success);
     flex-shrink: 0;
   }
+
+  .join-toast-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
 }
 
 // Room Header
@@ -118,6 +151,13 @@
   margin-bottom: 1.5rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--color-border);
+
+  @include desktop {
+    text-align: left;
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 1rem;
+  }
 
   .room-name {
     font-size: 1.75rem;
@@ -128,9 +168,14 @@
 
   .room-code-container {
     display: flex;
+    flex-wrap: wrap;
     justify-content: center;
     align-items: center;
     gap: 0.5rem;
+
+    @include desktop {
+      justify-content: flex-start;
+    }
   }
 
   .room-code-label {
@@ -144,24 +189,29 @@
     gap: 0.5rem;
     font-size: 1.25rem;
     font-weight: 700;
-    font-family: 'Courier New', monospace;
-    color: #0d6efd;
-    background-color: #e7f1ff;
+    font-family: var(--font-family-mono);
+    color: var(--color-accent-primary);
+    background-color: rgba(var(--color-bg-surface-rgb), 0.6);
     padding: 0.25rem 0.75rem;
-    border: 0;
-    border-radius: 0.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
     cursor: pointer;
+    user-select: all;
     transition:
       background-color 0.2s ease,
       box-shadow 0.2s ease;
 
     &:hover {
-      background-color: #cfe2ff;
+      background-color: var(--color-bg-elevated);
     }
 
     &:focus-visible {
       outline: 2px solid var(--color-accent-primary);
       outline-offset: 2px;
+    }
+
+    .room-code-value {
+      user-select: all;
     }
 
     .copy-icon {
@@ -175,7 +225,11 @@
   font-size: 0.85rem;
   color: var(--color-success);
   text-align: center;
-  animation: lobby-fade-in 200ms var(--ease-default) both;
+  animation: lobby-fade-in var(--animation-fast) var(--ease-default) both;
+
+  @include desktop {
+    text-align: left;
+  }
 }
 
 .qr-code-section {
@@ -185,6 +239,14 @@
   align-items: center;
   gap: 0.5rem;
   animation: qr-fade-in var(--animation-normal) var(--ease-spring) both;
+
+  .qr-code-wrapper {
+    background: #ffffff;
+    padding: 0.75rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    line-height: 0;
+  }
 
   .qr-hint {
     font-size: 0.85rem;
@@ -213,6 +275,18 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+
+  // Tablet: 2-column grid of players (reverts to single column once the right pane is narrow again on desktop).
+  @include tablet {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  @include desktop {
+    display: flex;
+    flex-direction: column;
+  }
 }
 
 .member-card {
@@ -222,10 +296,13 @@
   background-color: var(--color-bg-surface);
   border-radius: 0.5rem;
   border: 2px solid transparent;
-  animation: member-slide-in var(--animation-normal) var(--ease-spring) both;
   transition:
     border-color 0.2s ease,
     background-color 0.2s ease;
+
+  &.is-new {
+    animation: member-slide-in var(--animation-normal) var(--ease-spring) both;
+  }
 
   &:focus-within {
     border-color: var(--color-accent-primary);
@@ -251,17 +328,17 @@
   margin-right: 0.75rem;
 
   &.role-host {
-    background-color: #ffc107;
-    color: #212529;
+    background-color: var(--color-accent-gold);
+    color: var(--color-text-primary);
   }
 
   &.role-player {
-    background-color: #198754;
+    background-color: var(--color-success);
     color: #fff;
   }
 
   &.role-spectator {
-    background-color: #6c757d;
+    background-color: var(--color-text-muted);
     color: #fff;
   }
 }
@@ -296,16 +373,16 @@
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    border: 2px solid #fff;
+    border: 2px solid var(--color-bg-elevated);
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
   }
 
   &.online .status-indicator {
-    background-color: #198754;
+    background-color: var(--color-success);
   }
 
   &.offline .status-indicator {
-    background-color: #dc3545;
+    background-color: var(--color-error);
   }
 }
 
@@ -337,6 +414,7 @@
   flex-direction: column;
   gap: 0.75rem;
   padding-top: 1rem;
+  margin-top: 1rem;
   border-top: 1px solid var(--color-border);
 }
 
@@ -403,5 +481,15 @@
     .member-role-label {
       font-size: 0.75rem;
     }
+  }
+}
+
+@media (forced-colors: active) {
+  .lobby-card {
+    border: 1px solid CanvasText;
+  }
+
+  .room-code {
+    border-color: CanvasText;
   }
 }

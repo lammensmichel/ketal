@@ -141,12 +141,15 @@
   "lobby": {
     "code": "Code",
     "copyCode": "Cliquer pour copier le code",
+    "copyCodeLabel": "Cliquer pour copier le code : {{code}}",
+    "copyError": "Impossible de copier",
     "players": "Joueurs",
     "noPlayers": "En attente de joueurs...",
     "startGame": "Lancer la partie",
     "leave": "Quitter",
     "minPlayersRequired": "Minimum 2 joueurs requis pour lancer la partie",
     "toggleRole": "Changer le rôle",
+    "toggleRoleLabel": "Changer le rôle de {{name}}",
     "showQr": "QR Code",
     "hideQr": "Masquer",
     "scanToJoin": "Scannez pour rejoindre",
@@ -157,6 +160,11 @@
     "memberJoined": "{{name}} a rejoint la partie",
     "connected": "Connecté en temps réel",
     "disconnected": "Déconnecté - en attente de connexion...",
+    "roomStatus": {
+      "waiting": "En attente",
+      "playing": "En cours",
+      "finished": "Terminée"
+    },
     "role": {
       "host": "Hôte",
       "player": "Joueur",

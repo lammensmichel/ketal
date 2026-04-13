@@ -5,11 +5,7 @@ import { LoginComponent } from './login.component';
 import { AuthService } from '../../../services/auth/auth.service';
 import { GameService } from '../../../services/game/game.service';
 import { SoloRoomService } from '../../../services/solo-room/solo-room.service';
-import {
-  createMockAuthService,
-  createMockGameService,
-  createMockSoloRoomService,
-} from '../../../testing/test-helpers';
+import { createMockAuthService, createMockGameService, createMockSoloRoomService } from '../../../testing/test-helpers';
 
 describe('LoginComponent', () => {
   let component: LoginComponent;

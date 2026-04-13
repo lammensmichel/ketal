@@ -83,9 +83,7 @@ describe('SoloRoomService', () => {
     });
 
     it('should set localModeFallback on failure', async () => {
-      mockRoomService.createSoloRoom = jasmine
-        .createSpy('createSoloRoom')
-        .and.rejectWith(new Error('Network error'));
+      mockRoomService.createSoloRoom = jasmine.createSpy('createSoloRoom').and.rejectWith(new Error('Network error'));
 
       service.startBackgroundRoomCreation();
 
@@ -108,9 +106,7 @@ describe('SoloRoomService', () => {
     });
 
     it('should return null when creation fails', async () => {
-      mockRoomService.createSoloRoom = jasmine
-        .createSpy('createSoloRoom')
-        .and.rejectWith(new Error('Network error'));
+      mockRoomService.createSoloRoom = jasmine.createSpy('createSoloRoom').and.rejectWith(new Error('Network error'));
 
       service.startBackgroundRoomCreation();
 
@@ -136,9 +132,7 @@ describe('SoloRoomService', () => {
     });
 
     it('should return null when localModeFallback is set', async () => {
-      mockRoomService.createSoloRoom = jasmine
-        .createSpy('createSoloRoom')
-        .and.rejectWith(new Error('Failed'));
+      mockRoomService.createSoloRoom = jasmine.createSpy('createSoloRoom').and.rejectWith(new Error('Failed'));
 
       service.startBackgroundRoomCreation();
 

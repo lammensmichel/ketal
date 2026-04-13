@@ -99,7 +99,11 @@ export class RealtimeService {
   /**
    * Subscribe to updates for a specific document in any collection
    */
-  subscribeToDocument<T extends object>(collectionId: string, documentId: string, callback: SubscriptionCallback<T>): string {
+  subscribeToDocument<T extends object>(
+    collectionId: string,
+    documentId: string,
+    callback: SubscriptionCallback<T>
+  ): string {
     const channel = this.buildDocumentChannel(collectionId, documentId);
     return this.createSubscription<T>(channel, callback);
   }
@@ -107,7 +111,10 @@ export class RealtimeService {
   /**
    * Subscribe to updates for a specific Ketal session
    */
-  subscribeToSession<T extends object = Record<string, unknown>>(sessionId: string, callback: SubscriptionCallback<T>): string {
+  subscribeToSession<T extends object = Record<string, unknown>>(
+    sessionId: string,
+    callback: SubscriptionCallback<T>
+  ): string {
     const channel = this.buildDocumentChannel(COLLECTIONS.KETAL_SESSIONS, sessionId);
     return this.createSubscription<T>(channel, callback);
   }

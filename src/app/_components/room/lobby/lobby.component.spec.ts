@@ -215,11 +215,7 @@ describe('LobbyComponent', () => {
       fixture.detectChanges();
       tick();
 
-      expect(mockMemberService.getMemberByUserOrDevice).toHaveBeenCalledWith(
-        'room123',
-        'user-host',
-        'device-123'
-      );
+      expect(mockMemberService.getMemberByUserOrDevice).toHaveBeenCalledWith('room123', 'user-host', 'device-123');
       expect(mockMemberService.setCurrentMember).toHaveBeenCalledWith(mockHostMember);
     }));
 
@@ -252,9 +248,7 @@ describe('LobbyComponent', () => {
       fixture.detectChanges();
       tick();
 
-      expect(mockMemberService.setCurrentMember).toHaveBeenCalledWith(
-        jasmine.objectContaining({ role: 'host' })
-      );
+      expect(mockMemberService.setCurrentMember).toHaveBeenCalledWith(jasmine.objectContaining({ role: 'host' }));
     }));
   });
 
@@ -267,10 +261,7 @@ describe('LobbyComponent', () => {
       fixture.detectChanges();
       tick();
 
-      expect(mockRealtimeService.subscribeToMembers).toHaveBeenCalledWith(
-        'room123',
-        jasmine.any(Function)
-      );
+      expect(mockRealtimeService.subscribeToMembers).toHaveBeenCalledWith('room123', jasmine.any(Function));
     }));
 
     it('should unsubscribe on component destroy', fakeAsync(() => {
@@ -288,12 +279,10 @@ describe('LobbyComponent', () => {
 
     it('should reload members when realtime event is received', fakeAsync(() => {
       let capturedCallback: ((member: unknown) => void) | undefined;
-      mockRealtimeService.subscribeToMembers.and.callFake(
-        (_roomId: string, callback: (member: unknown) => void) => {
-          capturedCallback = callback;
-          return 'sub_123';
-        }
-      );
+      mockRealtimeService.subscribeToMembers.and.callFake((_roomId: string, callback: (member: unknown) => void) => {
+        capturedCallback = callback;
+        return 'sub_123';
+      });
       mockRoomService.setCurrentRoom.and.callFake((room: GameRoom) => {
         mockRoomService.currentRoom.set(room);
       });
@@ -414,5 +403,75 @@ describe('LobbyComponent', () => {
       expect(component.getRoleLabel('player')).toBe('lobby.role.player');
       expect(component.getRoleLabel('spectator')).toBe('lobby.role.spectator');
     });
+  });
+
+  describe('story 15.6 UI', () => {
+    beforeEach(() => {
+      createComponent('room123', true);
+      mockMemberService.members.set([mockHostMember, mockPlayerMember]);
+      mockMemberService.currentMember.set(mockHostMember);
+      fixture.detectChanges();
+    });
+
+    it('applies glassmorphism class on the lobby card', () => {
+      const card = fixture.nativeElement.querySelector('.lobby-card');
+      expect(card).toBeTruthy();
+    });
+
+    it('builds the invite URL from the room code', () => {
+      expect(component.inviteUrl()).toContain('/room/join/ABC123');
+    });
+
+    it('writes the room code to the clipboard and shows feedback', fakeAsync(() => {
+      const writeTextSpy = jasmine.createSpy('writeText').and.resolveTo();
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: { writeText: writeTextSpy },
+      });
+
+      component.copyRoomCode();
+      tick();
+
+      expect(writeTextSpy).toHaveBeenCalledWith('ABC123');
+      expect(component.feedback()).toBe('lobby.codeCopied');
+    }));
+
+    it('maps room.status to the displayStatus signal', () => {
+      expect(component.displayStatus()).toBe('waiting');
+
+      mockRoomService.currentRoom.set({ ...mockRoom, status: 'playing' });
+      expect(component.displayStatus()).toBe('playing');
+    });
+
+    it('flags newly-joined members so the slide-in animation only runs for them', fakeAsync(() => {
+      let capturedCallback: ((member: unknown) => void) | undefined;
+      mockRealtimeService.subscribeToMembers.and.callFake((_roomId: string, callback: (member: unknown) => void) => {
+        capturedCallback = callback;
+        return 'sub_123';
+      });
+      mockRoomService.setCurrentRoom.and.callFake((room: GameRoom) => {
+        mockRoomService.currentRoom.set(room);
+      });
+
+      createComponent('room123');
+      fixture.detectChanges();
+      tick();
+
+      // Initial load seeds known ids; no-one is marked newly-joined.
+      expect(component.isNewlyJoined(mockPlayerMember.$id)).toBe(false);
+
+      // A realtime event brings in a previously-unknown member.
+      const newbie: GameMember = { ...mockPlayerMember, $id: 'member-new', displayName: 'Newbie' };
+      mockMemberService.getMembersByRoom.and.callFake(() => {
+        mockMemberService.members.set([mockHostMember, mockPlayerMember, newbie]);
+        return Promise.resolve([mockHostMember, mockPlayerMember, newbie]);
+      });
+      capturedCallback?.({ $id: 'member-new', roomId: 'room123' });
+      tick();
+
+      expect(component.isNewlyJoined('member-new')).toBe(true);
+      expect(component.isNewlyJoined(mockPlayerMember.$id)).toBe(false);
+      expect(component.joinedToast()).toBe('Newbie');
+    }));
   });
 });

@@ -16,6 +16,16 @@
   max-width: 400px;
   padding: 1.5rem;
   background: rgba(var(--color-bg-surface-rgb), 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  transition:
+    backdrop-filter var(--animation-normal) var(--ease-default),
+    -webkit-backdrop-filter var(--animation-normal) var(--ease-default),
+    box-shadow var(--animation-normal) var(--ease-default),
+    background var(--animation-normal) var(--ease-default);
 
   @include tablet {
     padding: var(--space-6);
@@ -31,17 +41,6 @@
     max-width: 500px;
   }
 
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  transition:
-    backdrop-filter var(--animation-normal) var(--ease-default),
-    -webkit-backdrop-filter var(--animation-normal) var(--ease-default),
-    box-shadow var(--animation-normal) var(--ease-default),
-    background var(--animation-normal) var(--ease-default);
-
   &:hover {
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
@@ -50,6 +49,10 @@
 
   @supports not ((backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px))) {
     background: var(--color-bg-surface);
+
+    &:hover {
+      box-shadow: var(--shadow-lg);
+    }
   }
 }
 
@@ -95,6 +98,13 @@
   padding: 0.875rem;
   font-weight: 500;
   font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 
   @include tablet {
     padding: 1rem;
@@ -105,14 +115,6 @@
     padding: 1.25rem;
     font-size: 1.2rem;
   }
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.5rem;
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease;
 
   &:hover:not(:disabled) {
     transform: translateY(-1px);

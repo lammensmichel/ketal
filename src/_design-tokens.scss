@@ -183,5 +183,5 @@
 }
 
 // ===== Breakpoints =====
-// SCSS variables and mixins live in _breakpoints.scss for re-use without emitting CSS tokens.
-@import 'breakpoints';
+// SCSS variables and mixins live in _breakpoints.scss — components `@use` it directly.
+// No @use/@import here: this file emits CSS custom properties only.

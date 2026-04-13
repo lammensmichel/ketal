@@ -1,12 +1,55 @@
 <div
   class="status-badge"
-  [class.connected]="connected()"
-  [class.disconnected]="!connected()"
+  [class.waiting]="status() === 'waiting'"
+  [class.playing]="status() === 'playing'"
+  [class.finished]="status() === 'finished'"
   role="status"
   aria-live="polite"
+  [attr.aria-label]="labelKey() | translate"
 >
-  <span class="status-dot"></span>
-  <span class="status-label">
-    {{ (connected() ? 'lobby.connected' : 'lobby.disconnected') | translate }}
-  </span>
+  @switch (status()) {
+    @case ('waiting') {
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="14"
+        height="14"
+        fill="currentColor"
+        viewBox="0 0 16 16"
+        aria-hidden="true"
+      >
+        <path
+          d="M2 2a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-1v1A4.5 4.5 0 0 1 9.765 8a4.5 4.5 0 0 1 2.735 4.5v1h1a.5.5 0 0 1 0 1h-11a.5.5 0 0 1 0-1h1v-1A4.5 4.5 0 0 1 6.235 8 4.5 4.5 0 0 1 3.5 3.5v-1h-1A.5.5 0 0 1 2 2zm2.5.5v1a3.5 3.5 0 1 0 7 0v-1h-7zm7 11v-1a3.5 3.5 0 1 0-7 0v1h7z"
+        />
+      </svg>
+    }
+    @case ('playing') {
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="14"
+        height="14"
+        fill="currentColor"
+        viewBox="0 0 16 16"
+        aria-hidden="true"
+      >
+        <path
+          d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"
+        />
+      </svg>
+    }
+    @case ('finished') {
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="14"
+        height="14"
+        fill="currentColor"
+        viewBox="0 0 16 16"
+        aria-hidden="true"
+      >
+        <path
+          d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"
+        />
+      </svg>
+    }
+  }
+  <span class="status-label">{{ labelKey() | translate }}</span>
 </div>

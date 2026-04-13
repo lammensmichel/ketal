@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { TranslateModule } from '@ngx-translate/core';
+
+export type RoomDisplayStatus = 'waiting' | 'playing' | 'finished';
 
 @Component({
   selector: 'app-room-status-badge',
@@ -10,5 +12,7 @@ import { TranslateModule } from '@ngx-translate/core';
   styleUrls: ['./room-status-badge.component.scss'],
 })
 export class RoomStatusBadgeComponent {
-  readonly connected = input.required<boolean>();
+  readonly status = input.required<RoomDisplayStatus>();
+
+  readonly labelKey = computed(() => `lobby.roomStatus.${this.status()}`);
 }

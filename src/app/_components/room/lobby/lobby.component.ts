@@ -9,7 +9,7 @@ import { RealtimeService, GameMember as RealtimeGameMember } from '../../../serv
 import { AuthService } from '../../../services/auth/auth.service';
 import { GuestService } from '../../../services/guest/guest.service';
 import { KetalSessionService, KetalPlayer } from '../../../services/ketal-session/ketal-session.service';
-import { RoomStatusBadgeComponent } from './room-status-badge/room-status-badge.component';
+import { RoomStatusBadgeComponent, RoomDisplayStatus } from './room-status-badge/room-status-badge.component';
 
 /** Maximum number of subscription retry attempts */
 const MAX_SUBSCRIPTION_RETRIES = 3;
@@ -121,20 +121,67 @@ export class LobbyComponent implements OnInit {
   /** Toggle QR code visibility */
   readonly showQrCode = signal(false);
 
+  /** Responsive QR size in px (mobile 220, tablet 260, desktop 280+) */
+  readonly qrSize = signal<number>(this.computeInitialQrSize());
+
+  private computeInitialQrSize(): number {
+    if (typeof window === 'undefined') {
+      return 240;
+    }
+    const w = window.innerWidth;
+    if (w >= 1024) {
+      return 280;
+    }
+    if (w >= 768) {
+      return 260;
+    }
+    return 220;
+  }
+
+  private readonly resizeListener = (): void => {
+    this.qrSize.set(this.computeInitialQrSize());
+  };
+
   /** Transient feedback message after copy/share actions (cleared after 2s) */
   readonly feedback = signal<string | null>(null);
 
   /** Timer for feedback message auto-clear */
   private feedbackTimerId: ReturnType<typeof setTimeout> | null = null;
 
-  /** Display name of the most recent joiner (cleared after 3s) */
+  /** Display name of the currently-shown joiner toast (cleared after 3s) */
   readonly joinedToast = signal<string | null>(null);
 
   /** Timer for joined toast auto-clear */
   private joinedToastTimerId: ReturnType<typeof setTimeout> | null = null;
 
+  /** Pending joiner names when multiple joins land during a single toast lifetime */
+  private joinedToastQueue: string[] = [];
+
   /** Snapshot of known member ids; used to detect new joiners on realtime updates */
   private knownMemberIds = new Set<string>();
+
+  /** Scratch set of member ids to animate on next render (join-enter animation) */
+  private newlyJoinedIds = new Set<string>();
+
+  /** Re-entrant reload flag: if a realtime event arrives while loading, queue one retry */
+  private pendingReload = false;
+
+  /** Newly-derived display status for the badge, mapping RoomService status + session state */
+  readonly displayStatus = computed<RoomDisplayStatus>(() => {
+    const room = this.currentRoom();
+    if (!room) {
+      return 'waiting';
+    }
+    if (room.status === 'playing') {
+      return 'playing';
+    }
+    return 'waiting';
+  });
+
+  /** Whether a member id is part of the newly-joined set (used for animation scoping) */
+  isNewlyJoined(memberId: string): boolean {
+    return this.newlyJoinedIds.has(memberId);
+  }
 
   /** Toggle QR code display */
   toggleQrCode(): void {
@@ -142,6 +189,9 @@ export class LobbyComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', this.resizeListener, { passive: true });
+    }
     this.initializeLobby();
     this.registerCleanup();
   }
@@ -242,10 +292,15 @@ export class LobbyComponent implements OnInit {
       const currentMembers = this.members();
       if (detectJoiners) {
         const myMemberId = this.currentMember()?.$id;
-        const newcomer = currentMembers.find((m) => !this.knownMemberIds.has(m.$id) && m.$id !== myMemberId);
-        if (newcomer) {
-          this.showJoinedToast(newcomer.displayName);
+        const newcomers = currentMembers.filter((m) => !this.knownMemberIds.has(m.$id) && m.$id !== myMemberId);
+        if (newcomers.length > 0) {
+          this.newlyJoinedIds = new Set(newcomers.map((m) => m.$id));
+          newcomers.forEach((m) => this.enqueueJoinedToast(m.displayName));
+        } else {
+          this.newlyJoinedIds = new Set();
         }
+      } else {
+        this.newlyJoinedIds = new Set();
       }
       this.knownMemberIds = new Set(currentMembers.map((m) => m.$id));
     } catch (err) {
@@ -255,18 +310,36 @@ export class LobbyComponent implements OnInit {
       if (showLoading) {
         this.isLoading.set(false);
       }
+      if (this.pendingReload) {
+        this.pendingReload = false;
+        void this.loadRoomMembers(false, true);
+      }
     }
   }
 
-  /** Display a transient toast announcing a new member (auto-clears after 3s) */
-  private showJoinedToast(displayName: string): void {
-    this.joinedToast.set(displayName);
+  /** Queue a joiner name; processed sequentially so back-to-back joins each get ~3s on-screen */
+  private enqueueJoinedToast(displayName: string): void {
+    this.joinedToastQueue.push(displayName);
+    if (!this.joinedToast()) {
+      this.dequeueJoinedToast();
+    }
+  }
+
+  /** Pop next queued name into the visible toast slot; schedules recursion on timeout */
+  private dequeueJoinedToast(): void {
+    const next = this.joinedToastQueue.shift();
+    if (!next) {
+      this.joinedToast.set(null);
+      this.joinedToastTimerId = null;
+      return;
+    }
+    this.joinedToast.set(next);
     if (this.joinedToastTimerId) {
       clearTimeout(this.joinedToastTimerId);
     }
     this.joinedToastTimerId = setTimeout(() => {
-      this.joinedToast.set(null);
       this.joinedToastTimerId = null;
+      this.dequeueJoinedToast();
     }, 3000);
   }
 
@@ -288,14 +361,13 @@ export class LobbyComponent implements OnInit {
 
     try {
       this.memberSubscriptionId = this.realtimeService.subscribeToMembers(room.$id, (_member: RealtimeGameMember) => {
-        // Skip if already loading to prevent UI flicker
+        this.subscriptionRetryCount = 0;
+        // If a load is in flight, queue a single follow-up reload so we never drop events.
         if (this.isMembersLoading) {
+          this.pendingReload = true;
           return;
         }
-        // Reset retry counter on successful event reception
-        this.subscriptionRetryCount = 0;
-        // Refresh members list without UI flicker on realtime updates
-        this.loadRoomMembers(false, true);
+        void this.loadRoomMembers(false, true);
       });
       // Reset retry counter on successful subscription creation
       this.subscriptionRetryCount = 0;
@@ -330,6 +402,9 @@ export class LobbyComponent implements OnInit {
    */
   private registerCleanup(): void {
     this.destroyRef.onDestroy(() => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('resize', this.resizeListener);
+      }
       if (this.retryTimerId) {
         clearTimeout(this.retryTimerId);
         this.retryTimerId = null;
@@ -485,8 +560,9 @@ export class LobbyComponent implements OnInit {
     try {
       await navigator.clipboard.writeText(room.code);
       this.showFeedback('lobby.codeCopied');
-    } catch {
-      console.warn('Could not copy to clipboard');
+    } catch (err) {
+      console.warn('Clipboard write failed:', err);
+      this.showFeedback('lobby.copyError');
     }
   }
 
@@ -499,24 +575,31 @@ export class LobbyComponent implements OnInit {
       return;
     }
     const room = this.currentRoom();
-    const title = room?.name ?? 'Ketal';
+    // Use || not ?? so empty-string room names also fall back to the product name.
+    const title = room?.name || 'Ketal';
+    const shareData = { title, text: title, url };
 
-    if (typeof navigator.share === 'function') {
+    const canNativeShare =
+      typeof navigator.share === 'function' &&
+      (typeof navigator.canShare !== 'function' || navigator.canShare(shareData));
+
+    if (canNativeShare) {
       try {
-        await navigator.share({ title, text: title, url });
+        await navigator.share(shareData);
         return;
       } catch (err) {
-        // User dismissed the native sheet — silent
         if (err instanceof Error && err.name === 'AbortError') {
           return;
         }
+        console.warn('navigator.share failed, falling back to clipboard:', err);
       }
     }
 
     try {
       await navigator.clipboard.writeText(url);
       this.showFeedback('lobby.linkCopied');
-    } catch {
+    } catch (err) {
+      console.warn('Clipboard fallback failed:', err);
       this.showFeedback('lobby.shareError');
     }
   }
