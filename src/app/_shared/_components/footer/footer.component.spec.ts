@@ -136,52 +136,71 @@ describe('FooterComponent', () => {
     });
   });
 
+  // chooseColor / plusOrMinus / inOut / chooseSuit go through the animatedChoice
+  // pipeline (Story 15.3), which defers the actual setChoiceAndPickCard call
+  // behind a setTimeout so tests must advance fake time to observe the spy call.
   describe('chooseColor', () => {
-    it('should call setChoiceAndPickCard with Color enum and selected color', () => {
+    it('should call setChoiceAndPickCard with Color enum and selected color', fakeAsync(() => {
       component.chooseColor('red');
+      tick(250);
       expect(mockGameService.setChoiceAndPickCard).toHaveBeenCalledWith(DrinkChoiceEnum.Color, 'red');
-    });
+      tick(2000); // drain remaining animation timers
+    }));
 
-    it('should call setChoiceAndPickCard with black color', () => {
+    it('should call setChoiceAndPickCard with black color', fakeAsync(() => {
       component.chooseColor('black');
+      tick(250);
       expect(mockGameService.setChoiceAndPickCard).toHaveBeenCalledWith(DrinkChoiceEnum.Color, 'black');
-    });
+      tick(2000);
+    }));
   });
 
   describe('plusOrMinus', () => {
-    it('should call setChoiceAndPickCard with PlusOrMinus enum', () => {
+    it('should call setChoiceAndPickCard with PlusOrMinus enum', fakeAsync(() => {
       component.plusOrMinus('plus');
+      tick(250);
       expect(mockGameService.setChoiceAndPickCard).toHaveBeenCalledWith(DrinkChoiceEnum.PlusOrMinus, 'plus');
-    });
+      tick(2000);
+    }));
 
-    it('should call setChoiceAndPickCard with minus selection', () => {
+    it('should call setChoiceAndPickCard with minus selection', fakeAsync(() => {
       component.plusOrMinus('minus');
+      tick(250);
       expect(mockGameService.setChoiceAndPickCard).toHaveBeenCalledWith(DrinkChoiceEnum.PlusOrMinus, 'minus');
-    });
+      tick(2000);
+    }));
   });
 
   describe('inOut', () => {
-    it('should call setChoiceAndPickCard with InAndOut enum', () => {
+    it('should call setChoiceAndPickCard with InAndOut enum', fakeAsync(() => {
       component.inOut('in');
+      tick(250);
       expect(mockGameService.setChoiceAndPickCard).toHaveBeenCalledWith(DrinkChoiceEnum.InAndOut, 'in');
-    });
+      tick(2000);
+    }));
 
-    it('should call setChoiceAndPickCard with out selection', () => {
+    it('should call setChoiceAndPickCard with out selection', fakeAsync(() => {
       component.inOut('out');
+      tick(250);
       expect(mockGameService.setChoiceAndPickCard).toHaveBeenCalledWith(DrinkChoiceEnum.InAndOut, 'out');
-    });
+      tick(2000);
+    }));
   });
 
   describe('chooseSuit', () => {
-    it('should call setChoiceAndPickCard with Suit enum', () => {
+    it('should call setChoiceAndPickCard with Suit enum', fakeAsync(() => {
       component.chooseSuit('hearts');
+      tick(250);
       expect(mockGameService.setChoiceAndPickCard).toHaveBeenCalledWith(DrinkChoiceEnum.Suit, 'hearts');
-    });
+      tick(2000);
+    }));
 
-    it('should call setChoiceAndPickCard with spades', () => {
+    it('should call setChoiceAndPickCard with spades', fakeAsync(() => {
       component.chooseSuit('spades');
+      tick(250);
       expect(mockGameService.setChoiceAndPickCard).toHaveBeenCalledWith(DrinkChoiceEnum.Suit, 'spades');
-    });
+      tick(2000);
+    }));
   });
 
   describe('hasPlayers', () => {
@@ -445,7 +464,15 @@ describe('FooterComponent', () => {
     }
 
     it('should return the first card of the active player when cards exist', () => {
-      const card: CardType = { value: '4', suit: 'hearts', icon: null, sips: 0, selected: false, img: 'assets/images/cards/svg/4_of_hearts.svg', givenSips: undefined };
+      const card: CardType = {
+        value: '4',
+        suit: 'hearts',
+        icon: null,
+        sips: 0,
+        selected: false,
+        img: 'assets/images/cards/svg/4_of_hearts.svg',
+        givenSips: undefined,
+      };
       const playerWithCard: PlayerModel = { ...mockPlayer, cards: [card] };
       setActivePlayer(playerWithCard);
 
