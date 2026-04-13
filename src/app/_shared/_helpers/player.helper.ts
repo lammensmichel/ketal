@@ -63,7 +63,7 @@ export class PlayerHelperService {
   }
 
   getSipCnt(game: Game, player: PlayerModel, absolute: boolean = false) {
-    const { drinkingCards, givingCards, phase } = game;
+    const { phase } = game;
     const maybeAbs = absolute ? Math.abs : (v: number) => v;
 
     if (phase === 1) {
@@ -75,28 +75,18 @@ export class PlayerHelperService {
       return maybeAbs(totalSips);
     }
 
-    // No cards to compare yet
-    if (drinkingCards.length === 0 && givingCards.length === 0) {
-      return 0;
+    // Phase 2: use accumulated sips stored in player.sips (Phase 2 only)
+    const totalDrunk = player.sips?.['drunk'] ?? 0;
+    const phase1Drunk = player.sips?.['phase1Drunk'] ?? 0;
+    const drunk = totalDrunk - phase1Drunk;
+    const given = player.sips?.['given'] ?? 0;
+
+    if (absolute) {
+      return drunk + given;
     }
 
-    let cntNbSips = 0;
-    const isOdd = (drinkingCards.length + givingCards.length) % 2 === 1;
-    const lastCard = isOdd ? drinkingCards.at(-1) : givingCards.at(-1);
-
-    if (!lastCard) {
-      return 0;
-    }
-
-    const lastCardValue = this.cardSrv.getCardValue(lastCard);
-    for (const card of player.cards) {
-      const playerCardValue = this.cardSrv.getCardValue(card);
-      if (playerCardValue === lastCardValue) {
-        cntNbSips += drinkingCards.length * (isOdd ? -1 : 1);
-      }
-    }
-
-    return maybeAbs(cntNbSips);
+    // Signed: negative = drink, positive = give
+    return given - drunk;
   }
 
   getTotalGivenSips(player: PlayerModel): number {

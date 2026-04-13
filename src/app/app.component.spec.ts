@@ -36,6 +36,7 @@ describe('AppComponent', () => {
     summary: ReturnType<typeof signal<boolean>>;
     isNewGame: jasmine.Spy;
     handleReconnection: jasmine.Spy;
+    clearPersistedSummary: jasmine.Spy;
   };
   let mockPlayerHelperService: jasmine.SpyObj<PlayerHelperService>;
   let mockAuthService: ReturnType<typeof createMockAuthService>;
@@ -50,6 +51,7 @@ describe('AppComponent', () => {
       summary: summarySignal,
       isNewGame: jasmine.createSpy('isNewGame').and.returnValue(true),
       handleReconnection: jasmine.createSpy('handleReconnection').and.resolveTo(undefined),
+      clearPersistedSummary: jasmine.createSpy('clearPersistedSummary'),
     };
 
     mockPlayerHelperService = jasmine.createSpyObj('PlayerHelperService', ['getPlayerNumber']);
@@ -103,6 +105,15 @@ describe('AppComponent', () => {
   });
 
   describe('withSummaryMode computed signal', () => {
+    // The computed short-circuits to false for anonymous/logged-out users so a
+    // summary flag inherited from a prior session can't leak into Partie rapide.
+    // These tests cover the connected non-anonymous path; anonymous behavior is
+    // covered separately below.
+    beforeEach(() => {
+      mockAuthService.isLoggedIn.set(true);
+      mockAuthService.isAnonymous.set(false);
+    });
+
     it('should return false when withSummaryMode signal is false and summary is false', () => {
       fixture.detectChanges();
 
@@ -149,6 +160,29 @@ describe('AppComponent', () => {
       mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
       mockGameService.withSummaryMode.set(false);
       mockGameService.summary.set(false);
+
+      expect(component.withSummaryMode()).toBe(false);
+    });
+
+    it('should return false for anonymous users even with summary signals true', () => {
+      mockAuthService.isLoggedIn.set(true);
+      mockAuthService.isAnonymous.set(true);
+      fixture.detectChanges();
+
+      mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
+      mockGameService.withSummaryMode.set(true);
+      mockGameService.summary.set(true);
+
+      expect(component.withSummaryMode()).toBe(false);
+    });
+
+    it('should return false for logged-out users even with summary signals true', () => {
+      mockAuthService.isLoggedIn.set(false);
+      fixture.detectChanges();
+
+      mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
+      mockGameService.withSummaryMode.set(true);
+      mockGameService.summary.set(true);
 
       expect(component.withSummaryMode()).toBe(false);
     });
@@ -295,6 +329,11 @@ describe('AppComponent', () => {
   });
 
   describe('Signal reactivity', () => {
+    beforeEach(() => {
+      mockAuthService.isLoggedIn.set(true);
+      mockAuthService.isAnonymous.set(false);
+    });
+
     it('should update withSummaryMode when signal changes', () => {
       fixture.detectChanges();
 

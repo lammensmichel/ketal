@@ -29,7 +29,16 @@ export function createMockAuthService(): jasmine.SpyObj<AuthService> & {
 
   const mock = jasmine.createSpyObj(
     'AuthService',
-    ['init', 'signUp', 'loginWithEmail', 'signInWithGoogle', 'logout', 'createAnonymousSession', 'getOrCreateSession', 'consumePendingSummary'],
+    [
+      'init',
+      'signUp',
+      'loginWithEmail',
+      'signInWithGoogle',
+      'logout',
+      'createAnonymousSession',
+      'getOrCreateSession',
+      'consumePendingSummary',
+    ],
     {
       currentUser: signal(null),
       isLoggedIn: mockIsLoggedIn,
@@ -96,6 +105,8 @@ export function createMockGameService(): jasmine.SpyObj<GameService> & {
       'updatePlayerGivenSipsFromCard',
       'openSipGiveModal',
       'getLastTurnSipsForPlayer',
+      'getLastTurnGivenForPlayer',
+      'clearPersistedSummary',
     ],
     {
       withSummaryMode: mockWithSummaryMode,
@@ -112,9 +123,12 @@ export function createMockGameService(): jasmine.SpyObj<GameService> & {
       isRoomMode: signal(false),
       openSipGiveModalEvent$: NEVER,
       lastTurnSips: signal<Record<string, number>>({}),
+      lastTurnGiven: signal<Record<string, number>>({}),
+      phase2LastCardValue: signal<string | null>(null),
     }
   );
   mock.getLastTurnSipsForPlayer.and.returnValue(0);
+  mock.getLastTurnGivenForPlayer.and.returnValue(0);
   mock.isNewGame.and.returnValue(true);
   mock.isGameStarted.and.returnValue(false);
   mock.isGameFinished.and.returnValue(false);
@@ -353,7 +367,17 @@ export function createMockMemberService(): jasmine.SpyObj<MemberService> & {
 export function createMockRealtimeService(): jasmine.SpyObj<RealtimeService> {
   const mock = jasmine.createSpyObj(
     'RealtimeService',
-    ['subscribeToRoom', 'subscribeToSession', 'subscribeToDocument', 'subscribeToMembers', 'subscribeToCollection', 'unsubscribe', 'unsubscribeAll', 'hasSubscription', 'getActiveSubscriptionIds'],
+    [
+      'subscribeToRoom',
+      'subscribeToSession',
+      'subscribeToDocument',
+      'subscribeToMembers',
+      'subscribeToCollection',
+      'unsubscribe',
+      'unsubscribeAll',
+      'hasSubscription',
+      'getActiveSubscriptionIds',
+    ],
     {
       isConnected: signal(true),
       activeSubscriptions: signal(0),

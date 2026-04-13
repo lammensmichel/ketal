@@ -51,12 +51,12 @@ describe('GameProgressComponent', () => {
       expect(component.turn).toBeDefined();
     });
 
-    it('should have phase1TurnKeys defined', () => {
-      expect(component.phase1TurnKeys).toEqual([
-        'game.progress.turn.color',
-        'game.progress.turn.plusMinus',
-        'game.progress.turn.inOut',
-        'game.progress.turn.suit',
+    it('should have steps defined', () => {
+      expect(component.steps).toEqual([
+        { num: 1, icon: '🔴', labelKey: 'game.progress.turn.color' },
+        { num: 2, icon: '↕', labelKey: 'game.progress.turn.plusMinus' },
+        { num: 3, icon: '↔', labelKey: 'game.progress.turn.inOut' },
+        { num: 4, icon: '♠', labelKey: 'game.progress.turn.suit' },
       ]);
     });
   });
@@ -129,35 +129,36 @@ describe('GameProgressComponent', () => {
     });
   });
 
-  describe('currentTurnKey Computed', () => {
-    it('should return color key for turn 1', () => {
+  describe('Steps and Turn Mapping', () => {
+    it('should have step 1 active for turn 1', () => {
       turnSignal.set(1);
-      expect(component.currentTurnKey()).toBe('game.progress.turn.color');
+      expect(component.isStepActive(1)).toBeTrue();
     });
 
-    it('should return plusMinus key for turn 2', () => {
+    it('should have step 2 active for turn 2', () => {
       turnSignal.set(2);
-      expect(component.currentTurnKey()).toBe('game.progress.turn.plusMinus');
+      expect(component.isStepActive(2)).toBeTrue();
     });
 
-    it('should return inOut key for turn 3', () => {
+    it('should have step 3 active for turn 3', () => {
       turnSignal.set(3);
-      expect(component.currentTurnKey()).toBe('game.progress.turn.inOut');
+      expect(component.isStepActive(3)).toBeTrue();
     });
 
-    it('should return suit key for turn 4', () => {
+    it('should have step 4 active for turn 4', () => {
       turnSignal.set(4);
-      expect(component.currentTurnKey()).toBe('game.progress.turn.suit');
+      expect(component.isStepActive(4)).toBeTrue();
     });
 
-    it('should return empty string for turn 0', () => {
+    it('should have no step active for turn 0', () => {
       turnSignal.set(0);
-      expect(component.currentTurnKey()).toBe('');
+      expect(component.isStepActive(1)).toBeFalse();
+      expect(component.isStepActive(2)).toBeFalse();
     });
 
-    it('should return empty string for turn 5', () => {
+    it('should have no step active for turn 5', () => {
       turnSignal.set(5);
-      expect(component.currentTurnKey()).toBe('');
+      expect(component.isStepActive(4)).toBeFalse();
     });
   });
 
@@ -222,14 +223,9 @@ describe('GameProgressComponent', () => {
       expect(container).toBeTruthy();
     });
 
-    it('should render phase label', () => {
-      const phaseLabel = fixture.debugElement.query(By.css('.phase-label'));
-      expect(phaseLabel).toBeTruthy();
-    });
-
-    it('should render stepper dots in phase 1', () => {
-      const dots = fixture.debugElement.query(By.css('.stepper-dots'));
-      expect(dots).toBeTruthy();
+    it('should render the BEM stepper container in phase 1', () => {
+      const stepper = fixture.debugElement.query(By.css('.stepper'));
+      expect(stepper).toBeTruthy();
     });
 
     it('should not render phase2-progress in phase 1', () => {
@@ -237,28 +233,28 @@ describe('GameProgressComponent', () => {
       expect(progress).toBeFalsy();
     });
 
-    it('should render 4 stepper dots', () => {
-      const dots = fixture.debugElement.queryAll(By.css('.stepper-dot'));
-      expect(dots.length).toBe(4);
+    it('should render 4 stepper steps', () => {
+      const steps = fixture.debugElement.queryAll(By.css('.stepper__step'));
+      expect(steps.length).toBe(4);
     });
 
-    it('should render turn label', () => {
-      const turnLabel = fixture.debugElement.query(By.css('.turn-label'));
-      expect(turnLabel).toBeTruthy();
+    it('should render a label for each stepper step', () => {
+      const labels = fixture.debugElement.queryAll(By.css('.stepper__label'));
+      expect(labels.length).toBe(4);
     });
 
-    it('should show active dot for current turn', () => {
+    it('should mark the current turn step as active', () => {
       turnSignal.set(2);
       fixture.detectChanges();
-      const activeDots = fixture.debugElement.queryAll(By.css('.stepper-dot.active'));
-      expect(activeDots.length).toBe(1);
+      const active = fixture.debugElement.queryAll(By.css('.stepper__step--active'));
+      expect(active.length).toBe(1);
     });
 
-    it('should show completed dots for previous turns', () => {
+    it('should mark previous-turn steps as completed', () => {
       turnSignal.set(3);
       fixture.detectChanges();
-      const completedDots = fixture.debugElement.queryAll(By.css('.stepper-dot.completed'));
-      expect(completedDots.length).toBe(2);
+      const completed = fixture.debugElement.queryAll(By.css('.stepper__step--completed'));
+      expect(completed.length).toBe(2);
     });
   });
 
@@ -320,7 +316,8 @@ describe('GameProgressComponent', () => {
 
     it('should handle turn 0 gracefully', () => {
       turnSignal.set(0);
-      expect(component.currentTurnKey()).toBe('');
+      expect(component.isStepActive(1)).toBeFalse();
+      expect(component.isStepCompleted(1)).toBeFalse();
     });
 
     it('should handle empty card arrays in phase 2', () => {

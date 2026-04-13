@@ -92,6 +92,14 @@ export class GameService {
    */
   private readonly _lastTurnSips = signal<Record<string, number>>({});
   readonly lastTurnSips = this._lastTurnSips.asReadonly();
+  /** Per-draw give sips per player (Phase 2 give card matches) so the UI can show
+   * a short-lived "you must give N sips this turn" badge even when summary is off
+   * and no modal/pending counter is available. Cleared on each next card draw. */
+  private readonly _lastTurnGiven = signal<Record<string, number>>({});
+  readonly lastTurnGiven = this._lastTurnGiven.asReadonly();
+
+  /** Phase 2: value of the last revealed card (for match feedback in player-card) */
+  readonly phase2LastCardValue = signal<string | null>(null);
 
   /** localStorage key for summary mode preference */
   private static readonly SUMMARY_MODE_KEY = 'ketal_summary_mode';
@@ -103,16 +111,81 @@ export class GameService {
   private readonly openSipGiveModalEvent = new Subject<PlayerModel>();
   readonly openSipGiveModalEvent$ = this.openSipGiveModalEvent.asObservable();
 
+  /** Previous Phase 2 card counts per array, used to detect newly-added cards in
+   * the sync effect below. Updated on every tick. */
+  private _prevDrinkLen = 0;
+  private _prevGiveLen = 0;
+
   constructor() {
     // Persist summary mode preference to localStorage on every change
     effect(() => {
       localStorage.setItem(GameService.SUMMARY_MODE_KEY, String(this.withSummaryMode()));
     });
 
+    // Detect newly-added Phase 2 cards (local OR via realtime sync in room mode)
+    // and populate the per-draw badge signals. This makes the pink/orange per-draw
+    // badges visible to remote clients that receive the update via KetalSession
+    // realtime sync — they never enter displayNewCard themselves.
+    effect(() => {
+      const game = this._game();
+      if (!game || game.phase !== 2) {
+        this._prevDrinkLen = 0;
+        this._prevGiveLen = 0;
+        return;
+      }
+      const drinkLen = game.drinkingCards?.length ?? 0;
+      const giveLen = game.givingCards?.length ?? 0;
+      const newDrink = drinkLen > this._prevDrinkLen;
+      const newGive = giveLen > this._prevGiveLen;
+      this._prevDrinkLen = drinkLen;
+      this._prevGiveLen = giveLen;
+      if (!newDrink && !newGive) {
+        return;
+      }
+      const latestCard = newGive ? game.givingCards?.[giveLen - 1] : game.drinkingCards?.[drinkLen - 1];
+      if (!latestCard) {
+        return;
+      }
+      const { drinkMap, giveMap } = this.computeTurnMapsForCard(latestCard, newGive, game.players ?? []);
+      this._lastTurnSips.set(drinkMap);
+      this._lastTurnGiven.set(giveMap);
+    });
+
     // Register cleanup on service destruction
     this.destroyRef.onDestroy(() => {
       this.unsubscribeFromSession();
     });
+  }
+
+  /** Pure helper: for a newly drawn Phase 2 card, compute which players match
+   * (they have a card of the same value in hand) and what sip count each owes. */
+  private computeTurnMapsForCard(
+    card: CardType,
+    isGiving: boolean,
+    players: PlayerModel[]
+  ): { drinkMap: Record<string, number>; giveMap: Record<string, number> } {
+    const sipNb = card.sips ?? 0;
+    const drinkMap: Record<string, number> = {};
+    const giveMap: Record<string, number> = {};
+    if (sipNb <= 0) {
+      return { drinkMap, giveMap };
+    }
+    players.forEach((player) => {
+      let sipTurnNb = 0;
+      player.cards?.forEach((c) => {
+        if (c.value === card.value) {
+          sipTurnNb += sipNb;
+        }
+      });
+      if (sipTurnNb > 0 && (player.cards?.length ?? 0) >= 4) {
+        if (isGiving) {
+          giveMap[player.id] = sipTurnNb;
+        } else {
+          drinkMap[player.id] = sipTurnNb;
+        }
+      }
+    });
+    return { drinkMap, giveMap };
   }
 
   private loadGameFromStorage(): Game | null {
@@ -373,6 +446,20 @@ export class GameService {
   }
 
   /**
+   * Force the persisted `summary` flag to false. Called at auth resolution
+   * for anonymous users so a summary flag inherited from a prior logged-in
+   * session cannot leak into Partie rapide.
+   */
+  clearPersistedSummary(): void {
+    const game = this._game();
+    if (game && game.summary) {
+      this.updateGame((g) => {
+        g.summary = false;
+      });
+    }
+  }
+
+  /**
    * Save game state and notify subscribers via signal update.
    * Routes to appropriate persistence layer based on game mode.
    */
@@ -472,8 +559,9 @@ export class GameService {
     this.activeSessionId = null;
     this._pendingSessionUpdate = null;
     this._pendingGameSync = null;
-    // Clear per-turn sip indicator
+    // Clear per-turn sip indicators (both drink and give)
     this._lastTurnSips.set({});
+    this._lastTurnGiven.set({});
 
     // Clean up solo room state and leave room
     this.soloRoomService.reset();
@@ -488,7 +576,7 @@ export class GameService {
       game.status = 0;
 
       game.players.forEach((player) => {
-        player.sips = { drunk: 0, given: 0 };
+        player.sips = { drunk: 0, given: 0, phase1Drunk: 0 };
         player.cards = [];
         player.choice = { color: '', plus_or_minus: '', in_out: '', suit: '' };
       });
@@ -645,6 +733,15 @@ export class GameService {
       } else {
         currPlayer.sips[drink ? 'drunk' : 'given'] += sipNbr;
       }
+
+      // In Phase 2, a drink event (received via give-modal distribution) must
+      // show on the orange per-event badge for the receiving player. The map is
+      // keyed by player ID so different recipients in the same modal save don't
+      // collide; we overwrite (not accumulate) so a duplicate save on the same
+      // player replaces instead of doubling the badge.
+      if (drink && game.phase === 2 && (currPlayer.cards?.length ?? 0) >= 4) {
+        this._lastTurnSips.set({ ...this._lastTurnSips(), [currPlayer.id]: sipNbr });
+      }
     });
   }
 
@@ -696,6 +793,10 @@ export class GameService {
         if (g.turn > 4) {
           g.phase = 2;
           g.activePlayer = undefined;
+          // Snapshot Phase 1 sips so Phase 2 display shows only Phase 2 sips
+          g.players.forEach((p) => {
+            p.sips['phase1Drunk'] = p.sips['drunk'] || 0;
+          });
           // Keep lastTurnSips visible until first Phase 2 card is drawn
         } else {
           g.activePlayer = g.players[0];
@@ -749,7 +850,10 @@ export class GameService {
     return remainingSipsToGive > 0;
   }
 
-  getLastCard(): CardType {
+  /** Returns the most recently revealed Phase 2 card (give pile takes precedence
+   * when both arrays are equal length). Returns `undefined` when no card has
+   * been drawn yet — both call sites in footer already null-check the result. */
+  getLastCard(): CardType | undefined {
     const giving = this.givingCards();
     const drinking = this.drinkingCards();
     if (giving.length >= drinking.length) {
@@ -768,16 +872,21 @@ export class GameService {
       return;
     }
 
-    // Clear Phase 1 per-turn sip indicators on first Phase 2 card draw
-    if (Object.keys(this._lastTurnSips()).length > 0) {
-      this._lastTurnSips.set({});
-    }
+    // Reset per-event indicators on every Phase 2 card draw; for a drink card we
+    // populate drink matches below, for a give card we populate give matches so the
+    // giver gets a "+N to give this turn" badge even when no modal/pending counter exists.
+    this._lastTurnSips.set({});
+    this._lastTurnGiven.set({});
 
     const newCard = this.cardDeckHelperService.getRandomCard();
     newCard.selected = true;
 
     const sipNb = this.getSipsNumber();
     newCard.sips = sipNb;
+
+    // Set Phase 2 match value for player-card feedback, then clear after highlight window
+    this.phase2LastCardValue.set(newCard.value ?? null);
+    setTimeout(() => this.phase2LastCardValue.set(null), 2100);
 
     // Determine if this is a giving card BEFORE mutating the game state.
     // This is safe because JavaScript is single-threaded: no concurrent mutation
@@ -802,7 +911,9 @@ export class GameService {
         });
       });
 
-      // Add sips to players
+      // Add sips to players and track per-draw amounts for badge display
+      const turnSipsMap: Record<string, number> = {};
+      const turnGivenMap: Record<string, number> = {};
       g.players?.forEach((player) => {
         player.sips ??= { drunk: 0, given: 0 };
         let sipTurnNb = 0;
@@ -817,8 +928,17 @@ export class GameService {
           } else {
             player.sips[!isGiving ? 'drunk' : 'given'] += sipTurnNb;
           }
+          // Drink card → matched players drink this event; Give card → matched players
+          // must give this event (each tracked for their own badge).
+          if (isGiving) {
+            turnGivenMap[player.id] = sipTurnNb;
+          } else {
+            turnSipsMap[player.id] = sipTurnNb;
+          }
         }
       });
+      this._lastTurnSips.set(turnSipsMap);
+      this._lastTurnGiven.set(turnGivenMap);
 
       // Add the card to the appropriate array
       if (isGiving) {
@@ -1021,6 +1141,11 @@ export class GameService {
    */
   getLastTurnSipsForPlayer(playerId: string): number {
     return this._lastTurnSips()[playerId] ?? 0;
+  }
+
+  /** Get the per-draw give sips for a player (Phase 2 give card match). */
+  getLastTurnGivenForPlayer(playerId: string): number {
+    return this._lastTurnGiven()[playerId] ?? 0;
   }
 
   openSipGiveModal(player: PlayerModel): void {

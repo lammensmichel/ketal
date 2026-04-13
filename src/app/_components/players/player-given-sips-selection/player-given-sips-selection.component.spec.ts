@@ -250,15 +250,14 @@ describe('PlayerGivenSipsSelectionComponent', () => {
     });
   });
 
-  describe('resetSips() method', () => {
+  describe('closeModal() resets sips', () => {
     beforeEach(() => {
-      // Initialize tempSips for players
       component.players.forEach((p) => {
         component.tempSips[p.id] = 0;
       });
     });
 
-    it('should reset all tempSips to 0', () => {
+    it('should reset all tempSips to 0 on close', () => {
       const player1 = component.players[0];
       const player2 = component.players[1];
       const player3 = component.players[2];
@@ -267,16 +266,16 @@ describe('PlayerGivenSipsSelectionComponent', () => {
       component.tempSips[player3.id] = 2;
       component.sipsToGive = 10;
 
-      component.resetSips();
+      component.closeModal();
 
       expect(component.tempSips[player1.id]).toBe(0);
       expect(component.tempSips[player2.id]).toBe(0);
       expect(component.tempSips[player3.id]).toBe(0);
     });
 
-    it('should reset sipsToGive to 0', () => {
+    it('should reset sipsToGive to 0 on close', () => {
       component.sipsToGive = 15;
-      component.resetSips();
+      component.closeModal();
 
       expect(component.sipsToGive).toBe(0);
     });
@@ -291,13 +290,15 @@ describe('PlayerGivenSipsSelectionComponent', () => {
       });
     });
 
-    it('should hide the modal by setting display to none', () => {
-      const modal = fixture.nativeElement.querySelector('#playerSipsSelectionModal');
-      modal.style.display = 'flex';
+    it('should close the modal (modalOpen flips to false)', () => {
+      // The component uses an Angular `@if (modalOpen)` to mount/unmount the
+      // modal markup instead of toggling display: none on a fixed DOM node, so
+      // we assert the boolean state rather than inspecting computed styles.
+      component.modalOpen = true;
 
       component.closeModal();
 
-      expect(modal.style.display).toBe('none');
+      expect(component.modalOpen).toBeFalse();
     });
 
     it('should reset sips when closing modal', () => {
@@ -315,7 +316,7 @@ describe('PlayerGivenSipsSelectionComponent', () => {
   describe('openModal() method', () => {
     beforeEach(() => {
       fixture.detectChanges();
-      mockPlayerHelperService.getSipCnt.and.returnValue(5);
+      mockPlayerHelperService.getTotalGivenSips.and.returnValue(5);
     });
 
     it('should set givenPlayer to the provided player', () => {
@@ -324,20 +325,23 @@ describe('PlayerGivenSipsSelectionComponent', () => {
       expect(component.givenPlayer).toEqual(testPlayers[0]);
     });
 
-    it('should set sipsToGive by calling playerHelper.getSipCnt', () => {
+    it('should set sipsToGive by calling playerHelper.getTotalGivenSips', () => {
+      // The component reads pending sips from `getTotalGivenSips(player)` (sums
+      // each card's pending givenSips) — not from the older `getSipCnt(game, player)`.
       component.openModal(testPlayers[0]);
 
-      expect(mockPlayerHelperService.getSipCnt).toHaveBeenCalledWith(mockGameService.game(), testPlayers[0]);
+      expect(mockPlayerHelperService.getTotalGivenSips).toHaveBeenCalledWith(testPlayers[0]);
       expect(component.sipsToGive).toBe(5);
     });
 
-    it('should show the modal by setting display to flex', () => {
-      const modal = fixture.nativeElement.querySelector('#playerSipsSelectionModal');
-      modal.style.display = 'none';
+    it('should open the modal (modalOpen flips to true)', () => {
+      // The component uses `@if (modalOpen)` to mount the modal markup; we
+      // assert the boolean state rather than inspecting display: flex/none.
+      component.modalOpen = false;
 
       component.openModal(testPlayers[0]);
 
-      expect(modal.style.display).toBe('flex');
+      expect(component.modalOpen).toBeTrue();
     });
 
     it('should initialize tempSips for all players to 0', () => {
@@ -452,7 +456,7 @@ describe('PlayerGivenSipsSelectionComponent', () => {
   describe('Integration Tests', () => {
     beforeEach(() => {
       fixture.detectChanges();
-      mockPlayerHelperService.getSipCnt.and.returnValue(10);
+      mockPlayerHelperService.getTotalGivenSips.and.returnValue(10);
     });
 
     it('should handle complete workflow: open -> distribute -> save -> close', () => {

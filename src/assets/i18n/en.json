@@ -22,6 +22,7 @@
   "Button_GoToMenu": "Pause",
   "Button_ResumeGame": "Game in progress - Resume",
   "Button_Cancel": "Cancel",
+  "Button_Confirm": "Confirm",
   "Dialog_QuitConfirmMessage": "Reset the game? All data will be lost.",
   "Button_Create": "Create",
   "Button_Delete": "Delete",
@@ -29,6 +30,7 @@
   "Button_Restart": "Restart",
   "Button_Display_Summary": "Display summary",
   "Remaining_Sips": "sips",
+  "Sip_Modal_Hint": "Tap on a player to give them a sip",
   "Label_Sip": "sip",
   "Label_Sips": "sips",
   "Warning": "Warning",
@@ -217,6 +219,9 @@
     "prediction": {
       "correct": "Prediction correct",
       "incorrect": "Prediction incorrect"
+    },
+    "phase2": {
+      "drawPile": "Draw pile"
     },
     "progress": {
       "phase1": "Phase 1: Predictions",

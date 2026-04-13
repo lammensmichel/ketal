@@ -1421,7 +1421,8 @@ describe('GameService', () => {
       expect(testService.getLastTurnSipsForPlayer('player-1')).toBe(1);
     });
 
-    it('should keep lastTurnSips when entering Phase 2 and clear on first Phase 2 card', () => {
+    it('should keep lastTurnSips when entering Phase 2 and reset on first Phase 2 card draw', () => {
+      // Player has 3 hand cards all with default value '5' (from createMockCard).
       const player = createMockPlayer({
         id: 'player-1',
         cards: [createMockCard(), createMockCard(), createMockCard()],
@@ -1435,17 +1436,22 @@ describe('GameService', () => {
       });
       const testService = createServiceWithGame(mockGame);
 
-      const newCard = createMockCard();
-      mockCardDeckHelperService.getRandomCard.and.returnValue(newCard);
+      // Turn-4 pickCard returns a value '5' card. Suit prediction wrong → 4 sips.
+      const drawnPhase1Card = createMockCard();
+      mockCardDeckHelperService.getRandomCard.and.returnValue(drawnPhase1Card);
       mockPlayerHelperService.getPlayerChoice.and.returnValue('spades');
 
       testService.pickCard();
 
-      // lastTurnSips should persist after Phase 2 transition (wrong suit = 4 sips)
+      // lastTurnSips persists across the Phase 1 → Phase 2 transition.
       expect(testService.game().phase).toBe(2);
       expect(testService.getLastTurnSipsForPlayer('player-1')).toBe(4);
 
-      // Clear on first Phase 2 card draw
+      // First Phase 2 card draw: use a card with a value the player does NOT
+      // hold so the per-draw map stays empty (otherwise the new effect would
+      // populate it with the count of matching hand cards).
+      const phase2Card = createMockCard({ value: 'K', suit: 'clubs' });
+      mockCardDeckHelperService.getRandomCard.and.returnValue(phase2Card);
       testService.displayNewCard();
       expect(testService.getLastTurnSipsForPlayer('player-1')).toBe(0);
     });
@@ -1733,7 +1739,7 @@ describe('GameService', () => {
 
       testService.resetGame();
 
-      expect(testService.game().players[0].sips).toEqual({ drunk: 0, given: 0 });
+      expect(testService.game().players[0].sips).toEqual({ drunk: 0, given: 0, phase1Drunk: 0 });
       expect(testService.game().players[0].cards).toEqual([]);
       expect(testService.game().players[0].choice).toEqual({
         color: '',
@@ -1887,7 +1893,7 @@ describe('GameService', () => {
 
         const result = testService.getLastCard();
 
-        expect(result.value).toBe('K');
+        expect(result?.value).toBe('K');
       });
 
       it('should return last drinking card when drinkingCards > givingCards', () => {
@@ -1900,7 +1906,7 @@ describe('GameService', () => {
 
         const result = testService.getLastCard();
 
-        expect(result.value).toBe('5');
+        expect(result?.value).toBe('5');
       });
     });
 

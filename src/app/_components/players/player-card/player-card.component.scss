@@ -111,10 +111,44 @@
     background: var(--color-give-bg);
     color: var(--color-give);
   }
+
+  // Secondary "pending" give badge — outline variant so the solid one keeps the
+  // historical total while this one highlights sips still to dispatch.
+  &--give-pending {
+    background: transparent;
+    color: var(--color-give);
+    border: 1px dashed var(--color-give);
+    animation: sip-pulse-pending 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes sip-pulse-pending {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
 }
 
 .sip-bounce {
   animation: sip-bounce-anim var(--animation-normal) var(--ease-bounce);
+}
+
+.sip-shake {
+  animation: sip-shake-anim 400ms var(--ease-default);
+}
+
+// Severity-based sip counter colors
+.player-card__sip-badge--drink[data-severity='medium'] {
+  background: rgba(239, 68, 68, 0.25);
+  color: #dc2626;
+}
+.player-card__sip-badge--drink[data-severity='high'] {
+  background: rgba(239, 68, 68, 0.4);
+  color: #b91c1c;
+  font-weight: var(--font-weight-bold);
 }
 
 @keyframes sip-bounce-anim {
@@ -123,6 +157,46 @@
   }
   40% {
     transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes sip-shake-anim {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-4px);
+  }
+  40% {
+    transform: translateX(4px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(3px);
+  }
+}
+
+// === Match Highlight (Phase 2 card match) ===
+.player-card--match {
+  animation: match-pulse 600ms var(--ease-bounce);
+  border-color: var(--color-accent-gold);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--color-accent-gold) 50%, transparent);
+}
+
+@keyframes match-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 transparent;
+  }
+  50% {
+    transform: scale(1.03);
+    box-shadow: 0 0 24px color-mix(in srgb, var(--color-accent-gold) 60%, transparent);
   }
   100% {
     transform: scale(1);
@@ -191,6 +265,15 @@
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   animation: fadeSlideIn var(--animation-normal) var(--ease-default);
+
+  // Give variant: pink/magenta — distinct from the cumulative green badge and
+  // from the amber drink per-draw. Uses design tokens so light/dark themes
+  // each pick the hue that meets contrast against their card surface.
+  &--give {
+    background: var(--color-give-event-bg);
+    color: var(--color-give-event);
+    margin-left: 4px;
+  }
 }
 
 @keyframes fadeSlideIn {
@@ -290,8 +373,13 @@
     animation: none;
     box-shadow: 0 0 12px color-mix(in srgb, var(--color-accent-primary) 50%, transparent);
   }
-  .sip-bounce {
+  .sip-bounce,
+  .sip-shake {
     animation: none;
+  }
+  .player-card--match {
+    animation: none;
+    box-shadow: 0 0 12px color-mix(in srgb, var(--color-accent-gold) 50%, transparent);
   }
   .fan-card {
     &:nth-child(1),

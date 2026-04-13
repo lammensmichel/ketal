@@ -20,6 +20,7 @@
   "Button_GoToMenu": "Pause",
   "Button_ResumeGame": "Partie en cours - Reprendre",
   "Button_Cancel": "Annuler",
+  "Button_Confirm": "Confirmer",
   "Dialog_QuitConfirmMessage": "Réinitialiser la partie ? Toutes les données seront perdues.",
   "Button_Create": "Créer",
   "Button_Delete": "Supprimer",
@@ -29,6 +30,7 @@
   "Button_In": "Entre",
   "Button_Out": "Extérieur",
   "Remaining_Sips": "gorgées",
+  "Sip_Modal_Hint": "Tape sur un joueur pour lui donner une gorgée",
   "Label_Sip": "gorgée",
   "Label_Sips": "gorgées",
   "Warning": "Attention",
@@ -221,6 +223,9 @@
     "prediction": {
       "correct": "Prédiction correcte",
       "incorrect": "Prédiction incorrecte"
+    },
+    "phase2": {
+      "drawPile": "Pile de tirage"
     },
     "progress": {
       "phase1": "Phase 1: Prédictions",

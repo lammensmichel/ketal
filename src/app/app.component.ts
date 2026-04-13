@@ -42,9 +42,7 @@ export class AppComponent implements OnInit {
    * result and not re-evaluate on route changes.
    */
   canShowSummary(): boolean {
-    return this.isPlayersPage()
-      && this.authService.isLoggedIn()
-      && !this.authService.isAnonymous();
+    return this.isPlayersPage() && this.authService.isLoggedIn() && !this.authService.isAnonymous();
   }
 
   constructor() {
@@ -53,6 +51,11 @@ export class AppComponent implements OnInit {
     this.translate.use(defaultLang);
 
     this.withSummaryMode = computed(() => {
+      // Anonymous/logged-out users have no summary checkbox and must not get summary features
+      // (the withSummaryMode signal persists in localStorage and can leak across auth states).
+      if (!this.authService.isLoggedIn() || this.authService.isAnonymous()) {
+        return false;
+      }
       const summaryMode = this.gameSrv.withSummaryMode();
       const gameSummary = this.gameSrv.summary();
       return this.playerSrv.getPlayerNumber() > 1 ? summaryMode || gameSummary : summaryMode;
@@ -66,6 +69,10 @@ export class AppComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     try {
       await this.authService.init();
+
+      if (this.authService.isAnonymous()) {
+        this.gameSrv.clearPersistedSummary();
+      }
 
       if (this.authService.isLoggedIn()) {
         const activeSession = await this.soloRoomService.checkActiveSession();

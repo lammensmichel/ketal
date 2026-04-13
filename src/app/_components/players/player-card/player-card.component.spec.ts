@@ -5,15 +5,21 @@ import { Subject } from 'rxjs';
 import { PlayerCardComponent } from './player-card.component';
 import { GameService } from '../../../services/game/game.service';
 import { PlayerHelperService } from '../../../_shared/_helpers/player.helper';
+import { AuthService } from '../../../services/auth/auth.service';
 import { PlayerModel } from '../../../_shared/_models/player.model';
 import { Game } from '../../../_shared/_models/game.model';
-import { createMockGameService, createMockPlayerHelperService } from '../../../testing/test-helpers';
+import {
+  createMockAuthService,
+  createMockGameService,
+  createMockPlayerHelperService,
+} from '../../../testing/test-helpers';
 
 describe('PlayerCardComponent', () => {
   let component: PlayerCardComponent;
   let fixture: ComponentFixture<PlayerCardComponent>;
   let mockGameService: ReturnType<typeof createMockGameService>;
   let mockPlayerHelperService: jasmine.SpyObj<PlayerHelperService>;
+  let mockAuthService: ReturnType<typeof createMockAuthService>;
   let sipGiveModalSubject: Subject<PlayerModel>;
 
   const mockPlayer: PlayerModel = {
@@ -50,6 +56,11 @@ describe('PlayerCardComponent', () => {
     sipGiveModalSubject = new Subject<PlayerModel>();
     mockGameService = createMockGameService();
     mockPlayerHelperService = createMockPlayerHelperService();
+    mockAuthService = createMockAuthService();
+    // Default to logged-in non-anonymous so existing tests that exercise the
+    // give-modal / summary code paths aren't blocked by the anonymous guards.
+    mockAuthService.isLoggedIn.set(true);
+    mockAuthService.isAnonymous.set(false);
 
     Object.defineProperty(mockGameService, 'openSipGiveModalEvent$', {
       get: () => sipGiveModalSubject.asObservable(),
@@ -63,6 +74,7 @@ describe('PlayerCardComponent', () => {
       providers: [
         { provide: GameService, useValue: mockGameService },
         { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+        { provide: AuthService, useValue: mockAuthService },
       ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();

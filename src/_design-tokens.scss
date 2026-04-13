@@ -16,6 +16,8 @@
   --color-drink-bg: rgba(220, 38, 38, 0.1);
   --color-give: #16a34a;
   --color-give-bg: rgba(22, 163, 74, 0.1);
+  --color-give-event: #be185d;
+  --color-give-event-bg: rgba(236, 72, 153, 0.14);
   --color-accent-gold: #d97706;
   --color-accent-primary: #4f46e5;
 
@@ -44,6 +46,8 @@
   --color-drink-bg: rgba(220, 38, 38, 0.15);
   --color-give: #22c55e;
   --color-give-bg: rgba(34, 197, 94, 0.15);
+  --color-give-event: #f472b6;
+  --color-give-event-bg: rgba(236, 72, 153, 0.2);
   --color-accent-gold: #f59e0b;
   --color-accent-primary: #6366f1;
 
@@ -73,6 +77,8 @@
     --color-drink-bg: rgba(220, 38, 38, 0.15);
     --color-give: #22c55e;
     --color-give-bg: rgba(34, 197, 94, 0.15);
+    --color-give-event: #f472b6;
+    --color-give-event-bg: rgba(236, 72, 153, 0.2);
     --color-accent-gold: #f59e0b;
     --color-accent-primary: #6366f1;
 
@@ -92,8 +98,7 @@
 
 // ===== Typography =====
 :root {
-  --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    sans-serif;
+  --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-family-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
   --font-size-xs: 0.75rem;

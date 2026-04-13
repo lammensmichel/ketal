@@ -8,6 +8,7 @@ import { GameService } from '../../../services/game/game.service';
 import { SoloRoomService } from '../../../services/solo-room/solo-room.service';
 import { PlayerHelperService } from '../../_helpers/player.helper';
 import { CardType } from '../../_models/card-type.model';
+import { PlayerModel } from '../../_models/player.model';
 import { DrinkChoiceEnum } from '../../_models/enums/drink_choice.enum';
 import { ToastComponent } from '../toast/toast.component';
 import { PlayingCardComponent } from '../playing-card/playing-card.component';
@@ -59,6 +60,17 @@ export class FooterComponent implements OnDestroy {
   readonly predictionCorrect = signal<boolean | null>(null);
   /** The turn number during animation (null when not animating) */
   readonly animatingTurn = signal<number | null>(null);
+  /** The ID of the player who triggered the animation — frozen for the animation duration
+   * so the UI keeps showing that player's data even after `gameSrv.activePlayer()` advances. */
+  readonly animatingPlayerId = signal<string | null>(null);
+  /** Player to display in the prediction panel: frozen during animation, else the current active player. */
+  readonly displayPlayer = computed<PlayerModel | null>(() => {
+    const id = this.animatingPlayerId();
+    if (id) {
+      return this.gameSrv.players().find((p) => p.id === id) ?? this.gameSrv.activePlayer() ?? null;
+    }
+    return this.gameSrv.activePlayer() ?? null;
+  });
   /** Track if we're transitioning between turns */
   readonly turnTransitioning = signal(false);
 
@@ -74,6 +86,31 @@ export class FooterComponent implements OnDestroy {
   /** Active timeout IDs for animation cleanup on destroy */
   private readonly _animationTimers: ReturnType<typeof setTimeout>[] = [];
 
+  // === Phase 2 draw pile state ===
+  /** Whether a Phase 2 card flip is in progress */
+  readonly revealingPhase2 = signal(false);
+  /** The last drawn Phase 2 card (shown in draw area during flip animation) */
+  readonly lastDrawnCard = signal<CardType | null>(null);
+  /** Whether the last drawn card was a drink card */
+  readonly lastDrawnIsDrink = signal(true);
+
+  /** Whether the next draw is a drink card (even total = drink, odd = give) */
+  readonly nextIsDrink = computed(() => {
+    const total = this.gameSrv.drinkingCards().length + this.gameSrv.givingCards().length;
+    return total % 2 === 0;
+  });
+
+  /** Number of sips for the next card */
+  readonly nextSipValue = computed(() => this.gameSrv.getSipsNumber());
+
+  /** Whether all 12 Phase 2 cards have been drawn */
+  readonly phase2Complete = computed(() => this.gameSrv.givingCards().length >= 6);
+
+  /** Remaining cards in the draw pile */
+  readonly cardsRemaining = computed(
+    () => 12 - this.gameSrv.drinkingCards().length - this.gameSrv.givingCards().length
+  );
+
   ngOnDestroy(): void {
     this._animationTimers.forEach((id) => clearTimeout(id));
     this._animationTimers.length = 0;
@@ -81,7 +118,7 @@ export class FooterComponent implements OnDestroy {
 
   /** Reference card for Turn 2 (the card drawn in Turn 1 for the active player) */
   getReferenceCard(): CardType | null {
-    const activePlayer = this.gameSrv.activePlayer();
+    const activePlayer = this.displayPlayer();
     if (activePlayer?.cards?.length) {
       return activePlayer.cards[0];
     }
@@ -138,6 +175,7 @@ export class FooterComponent implements OnDestroy {
 
     // Phase 1: Button selected
     this.animatingTurn.set(currentTurn);
+    this.animatingPlayerId.set(activePlayerId ?? null);
     this.selectedChoice.set(selection);
     this.animationPhase.set('selected');
 
@@ -172,6 +210,7 @@ export class FooterComponent implements OnDestroy {
             this.revealedCard.set(null);
             this.predictionCorrect.set(null);
             this.animatingTurn.set(null);
+            this.animatingPlayerId.set(null);
             this.turnTransitioning.set(false);
           }, t.transition);
         }, t.result);
@@ -243,7 +282,7 @@ export class FooterComponent implements OnDestroy {
     return false;
   }
 
-  openSipGiveModal(newCardGiven: CardType): void {
+  openSipGiveModal(newCardGiven: CardType | undefined): void {
     if (!this.gameSrv.summary() || this.gameSrv.drinkingCards().length !== this.gameSrv.givingCards().length) {
       return;
     }
@@ -269,6 +308,34 @@ export class FooterComponent implements OnDestroy {
     this.toastComponent?.show();
     await this.delay(2500);
     this.openSipGiveModal(this.gameSrv.getLastCard());
+  }
+
+  /** Draw the next card from the Phase 2 pile */
+  onDrawPhase2Card(): void {
+    if (this.revealingPhase2() || this.phase2Complete()) {
+      return;
+    }
+
+    const isDrink = this.nextIsDrink();
+
+    // Draw the card (adds to drinkingCards/givingCards)
+    const newCard = this.gameSrv.displayNewCard();
+    if (!newCard) {
+      return;
+    }
+
+    this.lastDrawnIsDrink.set(isDrink);
+    this.revealingPhase2.set(true);
+    this.lastDrawnCard.set(newCard);
+
+    const flipDelay = this.prefersReducedMotion ? 50 : 500;
+
+    // Wait for the flip animation, then unlock
+    this._scheduleTimer(() => {
+      this.revealingPhase2.set(false);
+      this.lastDrawnCard.set(null);
+      this.openSipGiveModal(newCard);
+    }, flipDelay);
   }
 
   hasPlayers(): boolean {

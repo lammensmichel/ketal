@@ -1,9 +1,34 @@
-<div
-  class="card-container d-flex flex-column justify-content-center"
-  [ngClass]="{
-    emphasis: card?.selected,
-    'left-overlap': leftOverlap,
-  }"
->
-  <img [src]="card?.img ?? 'assets/images/cards/svg/blue_back.svg'" alt="{{ card?.value }} {{ card?.suit }}" />
-</div>
+@if (faceDown) {
+  <!-- Phase 2 flip mode: card starts face-down, flips on reveal -->
+  <div
+    class="card-container"
+    [ngClass]="{
+      emphasis: card?.selected,
+      'left-overlap': leftOverlap,
+      'card-container--glow-red': flipped && glowColor === 'red',
+      'card-container--glow-green': flipped && glowColor === 'green',
+      'card-container--tappable': tappable,
+    }"
+    (click)="onCardClick()"
+  >
+    <div class="card-flip" [class.card-flip--flipped]="flipped">
+      <div class="card-flip__back">
+        <img src="assets/images/cards/svg/blue_back.svg" alt="card back" />
+      </div>
+      <div class="card-flip__front">
+        <img [src]="card?.img ?? 'assets/images/cards/svg/blue_back.svg'" alt="{{ card?.value }} {{ card?.suit }}" />
+      </div>
+    </div>
+  </div>
+} @else {
+  <!-- Default mode: card face shown immediately (Phase 1, player hands) -->
+  <div
+    class="card-container d-flex flex-column justify-content-center"
+    [ngClass]="{
+      emphasis: card?.selected,
+      'left-overlap': leftOverlap,
+    }"
+  >
+    <img [src]="card?.img ?? 'assets/images/cards/svg/blue_back.svg'" alt="{{ card?.value }} {{ card?.suit }}" />
+  </div>
+}
