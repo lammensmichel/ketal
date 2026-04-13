@@ -6,7 +6,14 @@ import { APP_INITIALIZER, importProvidersFrom } from '@angular/core';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
-import { faCaretRight, faCaretLeft, faMinus, faPlus, faWineGlass, faRightFromBracket } from '@fortawesome/free-solid-svg-icons';
+import {
+  faCaretRight,
+  faCaretLeft,
+  faMinus,
+  faPlus,
+  faWineGlass,
+  faRightFromBracket,
+} from '@fortawesome/free-solid-svg-icons';
 
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app-routing.module';

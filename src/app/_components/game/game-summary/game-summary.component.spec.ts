@@ -62,11 +62,7 @@ describe('GameSummaryComponent', () => {
     });
 
     it('should sort players by total sips descending', () => {
-      const players = [
-        createPlayer('Alice', 3, 1),
-        createPlayer('Bob', 10, 2),
-        createPlayer('Charlie', 1, 0),
-      ];
+      const players = [createPlayer('Alice', 3, 1), createPlayer('Bob', 10, 2), createPlayer('Charlie', 1, 0)];
       mockGameService.players.set(players);
       fixture.detectChanges();
 
@@ -92,11 +88,7 @@ describe('GameSummaryComponent', () => {
     });
 
     it('should mark player with most sips as loser', () => {
-      const players = [
-        createPlayer('Alice', 2, 1),
-        createPlayer('Bob', 10, 5),
-        createPlayer('Charlie', 3, 0),
-      ];
+      const players = [createPlayer('Alice', 2, 1), createPlayer('Bob', 10, 5), createPlayer('Charlie', 3, 0)];
       mockGameService.players.set(players);
       fixture.detectChanges();
 
@@ -107,11 +99,7 @@ describe('GameSummaryComponent', () => {
     });
 
     it('should mark player with least sips as winner', () => {
-      const players = [
-        createPlayer('Alice', 2, 1),
-        createPlayer('Bob', 10, 5),
-        createPlayer('Charlie', 1, 0),
-      ];
+      const players = [createPlayer('Alice', 2, 1), createPlayer('Bob', 10, 5), createPlayer('Charlie', 1, 0)];
       mockGameService.players.set(players);
       fixture.detectChanges();
 
@@ -122,11 +110,7 @@ describe('GameSummaryComponent', () => {
     });
 
     it('should handle tie for loser (multiple losers)', () => {
-      const players = [
-        createPlayer('Alice', 5, 5),
-        createPlayer('Bob', 5, 5),
-        createPlayer('Charlie', 1, 0),
-      ];
+      const players = [createPlayer('Alice', 5, 5), createPlayer('Bob', 5, 5), createPlayer('Charlie', 1, 0)];
       mockGameService.players.set(players);
       fixture.detectChanges();
 
@@ -136,10 +120,7 @@ describe('GameSummaryComponent', () => {
     });
 
     it('should handle all players with same sips (no winner or loser distinction)', () => {
-      const players = [
-        createPlayer('Alice', 3, 2),
-        createPlayer('Bob', 3, 2),
-      ];
+      const players = [createPlayer('Alice', 3, 2), createPlayer('Bob', 3, 2)];
       mockGameService.players.set(players);
       fixture.detectChanges();
 
@@ -150,10 +131,7 @@ describe('GameSummaryComponent', () => {
     });
 
     it('should handle players with zero sips', () => {
-      const players = [
-        createPlayer('Alice', 0, 0),
-        createPlayer('Bob', 5, 3),
-      ];
+      const players = [createPlayer('Alice', 0, 0), createPlayer('Bob', 5, 3)];
       mockGameService.players.set(players);
       fixture.detectChanges();
 
@@ -173,10 +151,7 @@ describe('GameSummaryComponent', () => {
     });
 
     it('should return the player with least sips', () => {
-      const players = [
-        createPlayer('Alice', 10, 0),
-        createPlayer('Bob', 1, 0),
-      ];
+      const players = [createPlayer('Alice', 10, 0), createPlayer('Bob', 1, 0)];
       mockGameService.players.set(players);
       fixture.detectChanges();
 
@@ -194,10 +169,7 @@ describe('GameSummaryComponent', () => {
     });
 
     it('should return the player with most sips', () => {
-      const players = [
-        createPlayer('Alice', 10, 5),
-        createPlayer('Bob', 1, 0),
-      ];
+      const players = [createPlayer('Alice', 10, 5), createPlayer('Bob', 1, 0)];
       mockGameService.players.set(players);
       fixture.detectChanges();
 
@@ -230,10 +202,7 @@ describe('GameSummaryComponent', () => {
     });
 
     it('should render the results table', () => {
-      const players = [
-        createPlayer('Alice', 5, 3),
-        createPlayer('Bob', 2, 1),
-      ];
+      const players = [createPlayer('Alice', 5, 3), createPlayer('Bob', 2, 1)];
       mockGameService.players.set(players);
       fixture.detectChanges();
 
@@ -251,10 +220,7 @@ describe('GameSummaryComponent', () => {
     });
 
     it('should render winner highlight card when winner exists', () => {
-      const players = [
-        createPlayer('Alice', 10, 0),
-        createPlayer('Bob', 1, 0),
-      ];
+      const players = [createPlayer('Alice', 10, 0), createPlayer('Bob', 1, 0)];
       mockGameService.players.set(players);
       fixture.detectChanges();
 
@@ -263,10 +229,7 @@ describe('GameSummaryComponent', () => {
     });
 
     it('should render loser highlight card when loser exists', () => {
-      const players = [
-        createPlayer('Alice', 10, 0),
-        createPlayer('Bob', 1, 0),
-      ];
+      const players = [createPlayer('Alice', 10, 0), createPlayer('Bob', 1, 0)];
       mockGameService.players.set(players);
       fixture.detectChanges();
 
@@ -285,10 +248,7 @@ describe('GameSummaryComponent', () => {
     });
 
     it('should apply table-success class to winner row', () => {
-      const players = [
-        createPlayer('Alice', 10, 0),
-        createPlayer('Bob', 1, 0),
-      ];
+      const players = [createPlayer('Alice', 10, 0), createPlayer('Bob', 1, 0)];
       mockGameService.players.set(players);
       fixture.detectChanges();
 
@@ -297,10 +257,7 @@ describe('GameSummaryComponent', () => {
     });
 
     it('should apply table-danger class to loser row', () => {
-      const players = [
-        createPlayer('Alice', 10, 0),
-        createPlayer('Bob', 1, 0),
-      ];
+      const players = [createPlayer('Alice', 10, 0), createPlayer('Bob', 1, 0)];
       mockGameService.players.set(players);
       fixture.detectChanges();
 

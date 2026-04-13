@@ -163,7 +163,9 @@ export class KetalSessionService {
   /** Composed readonly signal — merges 3 collections into a unified KetalSession */
   readonly currentSession = computed<KetalSession | null>(() => {
     const session = this._sessionData();
-    if (!session) return null;
+    if (!session) {
+      return null;
+    }
     return {
       ...session,
       players: this.getOrderedPlayers(),
@@ -215,22 +217,17 @@ export class KetalSessionService {
 
       // 2. Create player documents
       const playerDocPromises = players.map((player) =>
-        this.appwrite.databases.createDocument(
-          this.appwrite.databaseId,
-          COLLECTION_KETAL_PLAYERS,
-          ID.unique(),
-          {
-            sessionId,
-            memberId: player.memberId,
-            displayName: player.displayName,
-            order: player.order,
-            cards: JSON.stringify(player.cards),
-            choices: JSON.stringify(player.choices),
-            sipsTaken: player.sipsTaken,
-            sipsGiven: player.sipsGiven,
-            isReady: player.isReady,
-          }
-        )
+        this.appwrite.databases.createDocument(this.appwrite.databaseId, COLLECTION_KETAL_PLAYERS, ID.unique(), {
+          sessionId,
+          memberId: player.memberId,
+          displayName: player.displayName,
+          order: player.order,
+          cards: JSON.stringify(player.cards),
+          choices: JSON.stringify(player.choices),
+          sipsTaken: player.sipsTaken,
+          sipsGiven: player.sipsGiven,
+          isReady: player.isReady,
+        })
       );
 
       const playerDocs = await Promise.all(playerDocPromises);
@@ -313,7 +310,9 @@ export class KetalSessionService {
       }
 
       const session = this.currentSession();
-      if (!session) throw new Error('Session state is null after update');
+      if (!session) {
+        throw new Error('Session state is null after update');
+      }
       return session;
     } catch (error) {
       throw new Error(`Failed to update session: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -374,9 +373,7 @@ export class KetalSessionService {
 
       this._sessionData.set(this.mapRawToSessionData(sessionDoc));
       this._playerDocs.set(playersResponse.documents.map((d) => this.mapRawToPlayerDoc(d)));
-      this._cardsDoc.set(
-        cardsResponse.documents.length > 0 ? this.mapRawToCardsDoc(cardsResponse.documents[0]) : null
-      );
+      this._cardsDoc.set(cardsResponse.documents.length > 0 ? this.mapRawToCardsDoc(cardsResponse.documents[0]) : null);
 
       return this.currentSession();
     } catch (error) {
@@ -506,7 +503,9 @@ export class KetalSessionService {
 
     const updatePromises = players.map((player) => {
       const existingDoc = currentDocs.find((d) => d.memberId === player.memberId);
-      if (!existingDoc) return Promise.resolve(null);
+      if (!existingDoc) {
+        return Promise.resolve(null);
+      }
 
       return this.appwrite.databases
         .updateDocument(this.appwrite.databaseId, COLLECTION_KETAL_PLAYERS, existingDoc.$id, {
@@ -531,7 +530,9 @@ export class KetalSessionService {
 
   private async updateCardsDoc(drinkingCards?: string[], givingCards?: string[]): Promise<void> {
     const cardsDoc = this._cardsDoc();
-    if (!cardsDoc) return;
+    if (!cardsDoc) {
+      return;
+    }
 
     const update: Record<string, unknown> = {};
     if (drinkingCards !== undefined) {
@@ -582,9 +583,7 @@ export class KetalSessionService {
   // ============================================================================
 
   private getOrderedPlayers(): KetalPlayer[] {
-    return [...this._playerDocs()]
-      .sort((a, b) => a.order - b.order)
-      .map((doc) => this.mapDocToKetalPlayer(doc));
+    return [...this._playerDocs()].sort((a, b) => a.order - b.order).map((doc) => this.mapDocToKetalPlayer(doc));
   }
 
   private mapRawToSessionData(doc: Record<string, unknown>): SessionData {
@@ -650,7 +649,9 @@ export class KetalSessionService {
   // ============================================================================
 
   private parseJsonArray(data: unknown): string[] {
-    if (Array.isArray(data)) return data;
+    if (Array.isArray(data)) {
+      return data;
+    }
     if (typeof data === 'string') {
       try {
         return JSON.parse(data);
@@ -662,7 +663,9 @@ export class KetalSessionService {
   }
 
   private parseJsonObject<T>(data: unknown, defaultVal: T): T {
-    if (typeof data === 'object' && data !== null && !Array.isArray(data)) return data as T;
+    if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
+      return data as T;
+    }
     if (typeof data === 'string') {
       try {
         return JSON.parse(data);

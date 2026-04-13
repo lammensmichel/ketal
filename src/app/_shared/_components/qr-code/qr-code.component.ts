@@ -7,12 +7,7 @@ import { QRCodeComponent } from 'angularx-qrcode';
   imports: [QRCodeComponent],
   template: `
     <div class="qr-code-container">
-      <qrcode
-        [qrdata]="data()"
-        [width]="size()"
-        [errorCorrectionLevel]="'M'"
-        [margin]="2"
-      ></qrcode>
+      <qrcode [qrdata]="data()" [width]="size()" [errorCorrectionLevel]="'M'" [margin]="2"></qrcode>
       @if (label()) {
         <p class="qr-label">{{ label() }}</p>
       }

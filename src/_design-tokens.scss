@@ -8,6 +8,7 @@
   --color-bg-primary: #f8f9fa;
   --color-bg-secondary: #ffffff;
   --color-bg-surface: #f0f0f5;
+  --color-bg-surface-rgb: 240, 240, 245;
   --color-bg-elevated: #ffffff;
 
   --color-suit-red: #dc2626;
@@ -24,12 +25,15 @@
   --color-text-primary: #1e293b;
   --color-text-secondary: #475569;
   --color-text-muted: #94a3b8;
+  --color-text-muted-rgb: 148, 163, 184;
 
   --color-border: #e2e8f0;
   --color-divider: #f1f5f9;
 
   --color-success: #16a34a;
+  --color-success-rgb: 22, 163, 74;
   --color-warning: #d97706;
+  --color-warning-rgb: 217, 119, 6;
   --color-error: #dc2626;
   --color-info: #2563eb;
 }
@@ -38,6 +42,7 @@
   --color-bg-primary: #0a0a0f;
   --color-bg-secondary: #12121a;
   --color-bg-surface: #1a1a2e;
+  --color-bg-surface-rgb: 26, 26, 46;
   --color-bg-elevated: #242440;
 
   --color-suit-red: #ef4444;
@@ -54,12 +59,15 @@
   --color-text-primary: #f1f5f9;
   --color-text-secondary: #94a3b8;
   --color-text-muted: #64748b;
+  --color-text-muted-rgb: 100, 116, 139;
 
   --color-border: #2d2d4a;
   --color-divider: #1e1e35;
 
   --color-success: #22c55e;
+  --color-success-rgb: 34, 197, 94;
   --color-warning: #f59e0b;
+  --color-warning-rgb: 245, 158, 11;
   --color-error: #ef4444;
   --color-info: #3b82f6;
 }
@@ -69,6 +77,7 @@
     --color-bg-primary: #0a0a0f;
     --color-bg-secondary: #12121a;
     --color-bg-surface: #1a1a2e;
+    --color-bg-surface-rgb: 26, 26, 46;
     --color-bg-elevated: #242440;
 
     --color-suit-red: #ef4444;
@@ -85,12 +94,15 @@
     --color-text-primary: #f1f5f9;
     --color-text-secondary: #94a3b8;
     --color-text-muted: #64748b;
+    --color-text-muted-rgb: 100, 116, 139;
 
     --color-border: #2d2d4a;
     --color-divider: #1e1e35;
 
     --color-success: #22c55e;
+    --color-success-rgb: 34, 197, 94;
     --color-warning: #f59e0b;
+    --color-warning-rgb: 245, 158, 11;
     --color-error: #ef4444;
     --color-info: #3b82f6;
   }
@@ -170,29 +182,6 @@
   --animation-slow: 0ms;
 }
 
-// ===== Breakpoints (SCSS only - cannot be CSS custom properties in media queries) =====
-$bp-mobile: 375px;
-$bp-tablet: 768px;
-$bp-desktop: 1024px;
-$bp-wide: 1440px;
-
-@mixin mobile {
-  @media (min-width: $bp-mobile) {
-    @content;
-  }
-}
-@mixin tablet {
-  @media (min-width: $bp-tablet) {
-    @content;
-  }
-}
-@mixin desktop {
-  @media (min-width: $bp-desktop) {
-    @content;
-  }
-}
-@mixin wide {
-  @media (min-width: $bp-wide) {
-    @content;
-  }
-}
+// ===== Breakpoints =====
+// SCSS variables and mixins live in _breakpoints.scss — components `@use` it directly.
+// No @use/@import here: this file emits CSS custom properties only.

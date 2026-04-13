@@ -11,7 +11,7 @@ describe('HeaderComponent', () => {
 
   beforeEach(async () => {
     mockGameService = jasmine.createSpyObj('GameService', ['resetGame'], {
-      game: undefined
+      game: undefined,
     });
 
     await TestBed.configureTestingModule({

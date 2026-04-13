@@ -253,9 +253,7 @@ describe('KetalSessionService', () => {
             );
           }
           if (collectionId === 'ketal_cards') {
-            return Promise.resolve(
-              createDocResponse({ $id: 'cards-doc-1', sessionId: 'session-new', ...data })
-            );
+            return Promise.resolve(createDocResponse({ $id: 'cards-doc-1', sessionId: 'session-new', ...data }));
           }
           return Promise.reject(new Error('Unknown collection'));
         }
@@ -268,9 +266,7 @@ describe('KetalSessionService', () => {
     it('should throw an error when session creation fails', async () => {
       appwriteMock.databases.createDocument.and.rejectWith(new Error('Network error'));
 
-      await expectAsync(service.startGame(roomId, players, false)).toBeRejectedWithError(
-        /Failed to start game/
-      );
+      await expectAsync(service.startGame(roomId, players, false)).toBeRejectedWithError(/Failed to start game/);
     });
   });
 
@@ -420,9 +416,9 @@ describe('KetalSessionService', () => {
     it('should throw an error when update fails', async () => {
       appwriteMock.databases.updateDocument.and.rejectWith(new Error('Update failed'));
 
-      await expectAsync(
-        service.updateSession('session-123', { status: 'playing' })
-      ).toBeRejectedWithError(/Failed to update session/);
+      await expectAsync(service.updateSession('session-123', { status: 'playing' })).toBeRejectedWithError(
+        /Failed to update session/
+      );
     });
   });
 
@@ -443,12 +439,10 @@ describe('KetalSessionService', () => {
     it('should update session status to finished', async () => {
       await service.endGame('session-123');
 
-      expect(appwriteMock.databases.updateDocument).toHaveBeenCalledWith(
-        'fug',
-        'ketal_sessions',
-        'session-123',
-        { status: 'finished', phase: 'finished' }
-      );
+      expect(appwriteMock.databases.updateDocument).toHaveBeenCalledWith('fug', 'ketal_sessions', 'session-123', {
+        status: 'finished',
+        phase: 'finished',
+      });
     });
 
     it('should clear room currentSessionId and set status to idle', async () => {
@@ -504,41 +498,39 @@ describe('KetalSessionService', () => {
         })
       );
 
-      appwriteMock.databases.listDocuments.and.callFake(
-        (_dbId: string, collectionId: string) => {
-          if (collectionId === 'ketal_players') {
-            return Promise.resolve({
-              documents: [
-                createDocResponse({
-                  $id: 'player-doc-1',
-                  sessionId: 'session-123',
-                  memberId: 'member-1',
-                  displayName: 'Alice',
-                  order: 1,
-                  cards: '["card1"]',
-                  choices: '{"color":"red","plus_or_minus":"","in_out":"","suit":""}',
-                  sipsTaken: 2,
-                  sipsGiven: 1,
-                  isReady: true,
-                }),
-              ],
-            });
-          }
-          if (collectionId === 'ketal_cards') {
-            return Promise.resolve({
-              documents: [
-                createDocResponse({
-                  $id: 'cards-doc-1',
-                  sessionId: 'session-123',
-                  drinkingCards: '["dc1","dc2"]',
-                  givingCards: '["gc1"]',
-                }),
-              ],
-            });
-          }
-          return Promise.resolve({ documents: [] });
+      appwriteMock.databases.listDocuments.and.callFake((_dbId: string, collectionId: string) => {
+        if (collectionId === 'ketal_players') {
+          return Promise.resolve({
+            documents: [
+              createDocResponse({
+                $id: 'player-doc-1',
+                sessionId: 'session-123',
+                memberId: 'member-1',
+                displayName: 'Alice',
+                order: 1,
+                cards: '["card1"]',
+                choices: '{"color":"red","plus_or_minus":"","in_out":"","suit":""}',
+                sipsTaken: 2,
+                sipsGiven: 1,
+                isReady: true,
+              }),
+            ],
+          });
         }
-      );
+        if (collectionId === 'ketal_cards') {
+          return Promise.resolve({
+            documents: [
+              createDocResponse({
+                $id: 'cards-doc-1',
+                sessionId: 'session-123',
+                drinkingCards: '["dc1","dc2"]',
+                givingCards: '["gc1"]',
+              }),
+            ],
+          });
+        }
+        return Promise.resolve({ documents: [] });
+      });
 
       const result = await service.getSession('session-123');
 
@@ -589,9 +581,7 @@ describe('KetalSessionService', () => {
     it('should throw error for non-not-found errors', async () => {
       appwriteMock.databases.getDocument.and.rejectWith(new Error('Network error'));
 
-      await expectAsync(service.getSession('session-123')).toBeRejectedWithError(
-        /Failed to get session/
-      );
+      await expectAsync(service.getSession('session-123')).toBeRejectedWithError(/Failed to get session/);
     });
   });
 
@@ -631,10 +621,7 @@ describe('KetalSessionService', () => {
     it('should subscribe to ketal_players collection', () => {
       service.subscribeToSession('session-123');
 
-      expect(mockRealtimeService.subscribeToCollection).toHaveBeenCalledWith(
-        'ketal_players',
-        jasmine.any(Function)
-      );
+      expect(mockRealtimeService.subscribeToCollection).toHaveBeenCalledWith('ketal_players', jasmine.any(Function));
     });
 
     it('should subscribe to ketal_cards document when cards doc exists', () => {
@@ -649,10 +636,12 @@ describe('KetalSessionService', () => {
 
     it('should call onUpdate callback when session updates arrive', () => {
       const onUpdate = jasmine.createSpy('onUpdate');
-      let capturedSessionCallback: Function = () => {};
+      let capturedSessionCallback: (data: unknown) => void = () => {
+        /* noop */
+      };
 
       mockRealtimeService.subscribeToDocument.and.callFake(
-        (collectionId: string, _docId: string, callback: Function) => {
+        (collectionId: string, _docId: string, callback: (data: unknown) => void) => {
           if (collectionId === 'ketal_sessions') {
             capturedSessionCallback = callback;
           }
@@ -820,18 +809,18 @@ describe('KetalSessionService', () => {
     beforeEach(() => {
       const session = createTestSession({
         $id: 'session-123',
-        players: [
-          createTestPlayer({ memberId: 'member-1', displayName: 'Alice', order: 1 }),
-        ],
+        players: [createTestPlayer({ memberId: 'member-1', displayName: 'Alice', order: 1 })],
       });
       service.setCurrentSession(session);
     });
 
     it('should update an existing player when receiving a realtime update', () => {
-      let capturedPlayersCallback: Function = () => {};
+      let capturedPlayersCallback: (data: unknown) => void = () => {
+        /* noop */
+      };
 
       mockRealtimeService.subscribeToCollection.and.callFake(
-        (_collectionId: string, callback: Function) => {
+        (_collectionId: string, callback: (data: unknown) => void) => {
           capturedPlayersCallback = callback;
           return 'sub_players';
         }
@@ -861,10 +850,12 @@ describe('KetalSessionService', () => {
     });
 
     it('should add a new player when receiving a doc with unknown $id', () => {
-      let capturedPlayersCallback: Function = () => {};
+      let capturedPlayersCallback: (data: unknown) => void = () => {
+        /* noop */
+      };
 
       mockRealtimeService.subscribeToCollection.and.callFake(
-        (_collectionId: string, callback: Function) => {
+        (_collectionId: string, callback: (data: unknown) => void) => {
           capturedPlayersCallback = callback;
           return 'sub_players';
         }
@@ -892,10 +883,12 @@ describe('KetalSessionService', () => {
     });
 
     it('should ignore player updates for different sessions', () => {
-      let capturedPlayersCallback: Function = () => {};
+      let capturedPlayersCallback: (data: unknown) => void = () => {
+        /* noop */
+      };
 
       mockRealtimeService.subscribeToCollection.and.callFake(
-        (_collectionId: string, callback: Function) => {
+        (_collectionId: string, callback: (data: unknown) => void) => {
           capturedPlayersCallback = callback;
           return 'sub_players';
         }

@@ -47,7 +47,8 @@ export class SoloRoomService {
     this._localModeFallback.set(false);
     this._isCreating.set(true);
 
-    this._roomPromise = this.roomService.createSoloRoom()
+    this._roomPromise = this.roomService
+      .createSoloRoom()
       .then((room) => {
         this._isCreating.set(false);
         return room;
