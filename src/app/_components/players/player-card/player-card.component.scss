@@ -14,11 +14,23 @@
 }
 
 .player-card--inactive {
-  opacity: 0.85;
-  transform: scale(0.97);
+  opacity: 0.95;
+  transform: scale(0.99);
+  filter: brightness(0.92) saturate(0.85);
 
   .player-card__name {
     color: var(--color-text-secondary);
+  }
+
+  // The "drunk" sip count must stay fully visible on inactive players
+  // because the active player needs to see it immediately — it's the
+  // number they must drink next.  Keep it bold and saturated so it
+  // survives the parent-level desaturation without needing its own
+  // severity override.
+  .player-card__sip-badge--drink {
+    opacity: 1;
+    filter: none;
+    font-weight: var(--font-weight-bold);
   }
 
   // Keep sip badges fully visible even when inactive
