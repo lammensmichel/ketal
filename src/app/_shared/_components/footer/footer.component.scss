@@ -256,9 +256,45 @@
   min-width: 64px;
   min-height: 64px;
   padding: var(--space-2);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: var(--color-text-primary);
   @media (max-width: 767px) {
     min-width: 56px;
     min-height: 56px;
+  }
+
+  // Override base button hover effects - no background change
+  &:hover:not(:disabled) {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    transform: scale(1.1);
+  }
+
+  // Override base button active effects
+  &:active:not(:disabled) {
+    transform: scale(0.95);
+    box-shadow: none;
+  }
+
+  // Selected state - just scale up with text shadow on icon
+  &--selected {
+    transform: scale(1.15);
+    .prediction-btn__suit-icon--red {
+      text-shadow: 0 0 12px rgba(220, 38, 38, 0.6);
+    }
+    .prediction-btn__suit-icon:not(.prediction-btn__suit-icon--red) {
+      text-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+    }
+  }
+
+  // Not selected state - just reduce opacity
+  &--not-selected {
+    opacity: 0.5;
+    transform: scale(1);
+    pointer-events: none;
   }
 }
 .prediction-btn__suit-icon {
@@ -668,16 +704,6 @@
 .prediction-btn--black.prediction-btn--selected {
   box-shadow: 0 0 24px color-mix(in srgb, var(--color-accent-primary) 50%, transparent);
   border-color: var(--color-accent-primary);
-}
-
-// Suit button selected glow colors
-.prediction-btn--suit.prediction-btn--selected {
-  .prediction-btn__suit-icon--red {
-    text-shadow: 0 0 12px rgba(220, 38, 38, 0.6);
-  }
-  .prediction-btn__suit-icon:not(.prediction-btn__suit-icon--red) {
-    text-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
-  }
 }
 
 .quit-confirm-overlay {

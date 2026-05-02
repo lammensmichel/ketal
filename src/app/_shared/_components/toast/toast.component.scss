@@ -15,8 +15,13 @@
   background-color: var(--color-warning, #d97706);
   color: #ffffff;
 
-  // Add shadow for elevation
-  @include shadow-md;
+  // Critical: Add dark border for AAA contrast on any background
+  border: 3px solid #1a1a1a;
+
+  // Enhanced shadow for visibility and depth
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(0, 0, 0, 0.2);
 }
 
 .toast-header {
@@ -27,6 +32,9 @@
   strong {
     color: #ffffff;
   }
+
+  // Ensure header border is consistent with toast border
+  border-bottom: 3px solid #1a1a1a;
 }
 
 .toast-body {
