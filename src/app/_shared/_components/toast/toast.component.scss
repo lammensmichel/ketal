@@ -1,7 +1,35 @@
+// Toast component styles - ensure proper color contrast
+// Using warning color background with light text for visibility
+
 .center-toast {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 9999;
+}
+
+// Override Bootstrap's default toast styles for proper contrast
+.toast {
+  // Use warning color background with white/light text
+  background-color: var(--color-warning, #d97706);
+  color: #ffffff;
+
+  // Add shadow for elevation
+  @include shadow-md;
+}
+
+.toast-header {
+  // Dark icon container with light text
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #ffffff;
+
+  strong {
+    color: #ffffff;
+  }
+}
+
+.toast-body {
+  color: #ffffff;
+  font-size: var(--font-size-base, 1rem);
 }

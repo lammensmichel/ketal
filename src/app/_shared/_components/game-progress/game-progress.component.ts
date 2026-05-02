@@ -45,4 +45,9 @@ export class GameProgressComponent {
   isStepActive(step: number): boolean {
     return this.turn() === step;
   }
+
+  /** Check if a step is in the future (not yet reached) in phase 1 */
+  isStepFuture(step: number): boolean {
+    return this.turn() < step;
+  }
 }

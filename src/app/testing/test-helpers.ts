@@ -1,5 +1,6 @@
 import { NEVER, Subject } from 'rxjs';
 import { signal, WritableSignal } from '@angular/core';
+
 import { AuthService } from '../services/auth/auth.service';
 import { GameService } from '../services/game/game.service';
 import { PlayerHelperService } from '../_shared/_helpers/player.helper';
@@ -15,10 +16,41 @@ import { Game } from '../_shared/_models/game.model';
 import { PlayerModel } from '../_shared/_models/player.model';
 import { CardType } from '../_shared/_models/card-type.model';
 
+/** Simple mock function with '.and' chain for test helpers */
+function createMockFn(): any {
+  const fn: any = function (..._args: unknown[]): unknown {
+    return undefined;
+  };
+  fn.and = {
+    returnValue(val: unknown) {
+      fn._value = val;
+    },
+    resolveTo(val: unknown) {
+      fn._value = Promise.resolve(val);
+    },
+    rejectTo(val: unknown) {
+      fn._value = Promise.reject(val);
+    },
+    stub() {},
+  };
+  fn.and.stub();
+  return fn;
+}
+
+/** Simple createSpyObj — returns an object where specified methods are mock functions */
+function createSpyObj(name: string, methods: string[] = [], props: Record<string, unknown> = {}): any {
+  const obj: Record<string, unknown> = { ...props };
+  for (const m of methods) {
+    obj[m] = createMockFn();
+  }
+  (obj as any).name = name;
+  return obj;
+}
+
 /**
  * Creates a mock AuthService for testing
  */
-export function createMockAuthService(): jasmine.SpyObj<AuthService> & {
+export function createMockAuthService(): any & {
   isLoggedIn: WritableSignal<boolean>;
   isAnonymous: WritableSignal<boolean>;
   isLoading: WritableSignal<boolean>;
@@ -27,7 +59,7 @@ export function createMockAuthService(): jasmine.SpyObj<AuthService> & {
   const mockIsAnonymous = signal<boolean>(false);
   const mockIsLoading = signal<boolean>(false);
 
-  const mock = jasmine.createSpyObj(
+  const mock = createSpyObj(
     'AuthService',
     [
       'init',
@@ -54,7 +86,7 @@ export function createMockAuthService(): jasmine.SpyObj<AuthService> & {
   mock.createAnonymousSession.and.resolveTo(undefined);
   mock.consumePendingSummary.and.returnValue(false);
 
-  return mock as jasmine.SpyObj<AuthService> & {
+  return mock as any & {
     isLoggedIn: WritableSignal<boolean>;
     isAnonymous: WritableSignal<boolean>;
     isLoading: WritableSignal<boolean>;
@@ -64,7 +96,7 @@ export function createMockAuthService(): jasmine.SpyObj<AuthService> & {
 /**
  * Creates a mock GameService for testing
  */
-export function createMockGameService(): jasmine.SpyObj<GameService> & {
+export function createMockGameService(): any & {
   game: WritableSignal<Game>;
   players: WritableSignal<PlayerModel[]>;
   drinkingCards: WritableSignal<CardType[]>;
@@ -87,7 +119,7 @@ export function createMockGameService(): jasmine.SpyObj<GameService> & {
   const mockDrinkingCards = signal<CardType[]>([]);
   const mockGivingCards = signal<CardType[]>([]);
 
-  const mock = jasmine.createSpyObj(
+  const mock = createSpyObj(
     'GameService',
     [
       'isNewGame',
@@ -134,7 +166,7 @@ export function createMockGameService(): jasmine.SpyObj<GameService> & {
   mock.isGameFinished.and.returnValue(false);
   mock.isSummaryMode.and.returnValue(false);
   mock.isSummaryActivated.and.returnValue(false);
-  return mock as jasmine.SpyObj<GameService> & {
+  return mock as any & {
     game: WritableSignal<Game>;
     players: WritableSignal<PlayerModel[]>;
     drinkingCards: WritableSignal<CardType[]>;
@@ -145,8 +177,8 @@ export function createMockGameService(): jasmine.SpyObj<GameService> & {
 /**
  * Creates a mock PlayerHelperService for testing
  */
-export function createMockPlayerHelperService(): jasmine.SpyObj<PlayerHelperService> {
-  const mock = jasmine.createSpyObj('PlayerHelperService', [
+export function createMockPlayerHelperService(): any {
+  const mock = createSpyObj('PlayerHelperService', [
     'getPlayerNumber',
     'getPlayers',
     'addPlayer',
@@ -169,8 +201,8 @@ export function createMockPlayerHelperService(): jasmine.SpyObj<PlayerHelperServ
 /**
  * Creates a mock LocalService for testing
  */
-export function createMockLocalService(): jasmine.SpyObj<LocalService> {
-  const mock = jasmine.createSpyObj('LocalService', ['getData', 'saveData', 'removeData', 'clearData']);
+export function createMockLocalService(): any {
+  const mock = createSpyObj('LocalService', ['getData', 'saveData', 'removeData', 'clearData']);
   mock.getData.and.returnValue(null);
   return mock;
 }
@@ -178,8 +210,8 @@ export function createMockLocalService(): jasmine.SpyObj<LocalService> {
 /**
  * Creates a mock CardService for testing
  */
-export function createMockCardService(): jasmine.SpyObj<CardService> {
-  const mock = jasmine.createSpyObj('CardService', [
+export function createMockCardService(): any {
+  const mock = createSpyObj('CardService', [
     'getCardValue',
     'lowerOrUpperCard',
     'lowestCard',
@@ -194,20 +226,20 @@ export function createMockCardService(): jasmine.SpyObj<CardService> {
 /**
  * Creates a mock CardDeckHelperService for testing
  */
-export function createMockCardDeckHelperService(): jasmine.SpyObj<CardDeckHelperService> {
-  const mock = jasmine.createSpyObj('CardDeckHelperService', ['constructDeck', 'getRandomCard']);
+export function createMockCardDeckHelperService(): any {
+  const mock = createSpyObj('CardDeckHelperService', ['constructDeck', 'getRandomCard']);
   return mock;
 }
 
 /**
  * Creates a mock RoomService for testing
  */
-export function createMockRoomService(): jasmine.SpyObj<RoomService> & {
+export function createMockRoomService(): any & {
   currentRoom: WritableSignal<GameRoom | null>;
 } {
   const mockCurrentRoom = signal<GameRoom | null>(null);
 
-  const mock = jasmine.createSpyObj(
+  const mock = createSpyObj(
     'RoomService',
     [
       'createRoom',
@@ -239,7 +271,7 @@ export function createMockRoomService(): jasmine.SpyObj<RoomService> & {
   mock.updateRoom.and.resolveTo(null);
   mock.subscribeToRoom.and.returnValue('subscription-id');
 
-  return mock as jasmine.SpyObj<RoomService> & {
+  return mock as any & {
     currentRoom: WritableSignal<GameRoom | null>;
   };
 }
@@ -247,12 +279,12 @@ export function createMockRoomService(): jasmine.SpyObj<RoomService> & {
 /**
  * Creates a mock KetalSessionService for testing
  */
-export function createMockKetalSessionService(): jasmine.SpyObj<KetalSessionService> & {
+export function createMockKetalSessionService(): any & {
   currentSession: WritableSignal<KetalSession | null>;
 } {
   const mockCurrentSession = signal<KetalSession | null>(null);
 
-  const mock = jasmine.createSpyObj(
+  const mock = createSpyObj(
     'KetalSessionService',
     ['startGame', 'updateSession', 'endGame', 'getSession', 'subscribeToSession', 'unsubscribe', 'setCurrentSession'],
     {
@@ -271,7 +303,7 @@ export function createMockKetalSessionService(): jasmine.SpyObj<KetalSessionServ
   mock.getSession.and.resolveTo(null);
   mock.subscribeToSession.and.stub();
 
-  return mock as jasmine.SpyObj<KetalSessionService> & {
+  return mock as any & {
     currentSession: WritableSignal<KetalSession | null>;
   };
 }
@@ -320,14 +352,14 @@ export function createMockKetalSession(overrides: Partial<KetalSession> = {}): K
 /**
  * Creates a mock MemberService for testing
  */
-export function createMockMemberService(): jasmine.SpyObj<MemberService> & {
+export function createMockMemberService(): any & {
   members: WritableSignal<GameMember[]>;
   currentMember: WritableSignal<GameMember | null>;
 } {
   const mockMembers = signal<GameMember[]>([]);
   const mockCurrentMember = signal<GameMember | null>(null);
 
-  const mock = jasmine.createSpyObj(
+  const mock = createSpyObj(
     'MemberService',
     [
       'createMember',
@@ -355,7 +387,7 @@ export function createMockMemberService(): jasmine.SpyObj<MemberService> & {
   mock.updateMemberStats.and.resolveTo(null);
   mock.deleteMember.and.resolveTo(undefined);
 
-  return mock as jasmine.SpyObj<MemberService> & {
+  return mock as any & {
     members: WritableSignal<GameMember[]>;
     currentMember: WritableSignal<GameMember | null>;
   };
@@ -364,8 +396,8 @@ export function createMockMemberService(): jasmine.SpyObj<MemberService> & {
 /**
  * Creates a mock RealtimeService for testing
  */
-export function createMockRealtimeService(): jasmine.SpyObj<RealtimeService> {
-  const mock = jasmine.createSpyObj(
+export function createMockRealtimeService(): any {
+  const mock = createSpyObj(
     'RealtimeService',
     [
       'subscribeToRoom',
@@ -398,14 +430,14 @@ export function createMockRealtimeService(): jasmine.SpyObj<RealtimeService> {
 /**
  * Creates a mock SoloRoomService for testing
  */
-export function createMockSoloRoomService(): jasmine.SpyObj<SoloRoomService> & {
+export function createMockSoloRoomService(): any & {
   localModeFallback: WritableSignal<boolean>;
   isCreating: WritableSignal<boolean>;
 } {
   const mockLocalModeFallback = signal<boolean>(false);
   const mockIsCreating = signal<boolean>(false);
 
-  const mock = jasmine.createSpyObj(
+  const mock = createSpyObj(
     'SoloRoomService',
     ['startBackgroundRoomCreation', 'awaitRoom', 'checkActiveSession', 'reset'],
     {
@@ -417,7 +449,7 @@ export function createMockSoloRoomService(): jasmine.SpyObj<SoloRoomService> & {
   mock.awaitRoom.and.resolveTo(null);
   mock.checkActiveSession.and.resolveTo(null);
 
-  return mock as jasmine.SpyObj<SoloRoomService> & {
+  return mock as any & {
     localModeFallback: WritableSignal<boolean>;
     isCreating: WritableSignal<boolean>;
   };

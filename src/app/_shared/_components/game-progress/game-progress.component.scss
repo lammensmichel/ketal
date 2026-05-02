@@ -74,11 +74,13 @@
   height: 2px;
   min-width: 1.5rem;
   max-width: 3rem;
+  position: relative;
+  overflow: hidden;
   background: var(--color-border);
   margin: 0 0.15rem;
   margin-bottom: 1rem; // align with icon, not label
   border-radius: 1px;
-  transition: background var(--animation-normal) var(--ease-default);
+  transition: all var(--animation-normal) var(--ease-default);
 
   @media (max-width: 767px) {
     min-width: 1rem;
@@ -86,8 +88,34 @@
     margin-bottom: 0.8rem;
   }
 
+  // Completed state
   &--completed {
     background: var(--color-success);
+  }
+
+  // Active progress state with animated fill
+  &--active-fill {
+    background: var(--color-accent-primary);
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, var(--color-success), var(--color-accent-primary));
+      animation: progress-fill var(--animation-slow) ease-out;
+    }
+  }
+}
+
+@keyframes progress-fill {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
   }
 }
 
@@ -102,10 +130,20 @@
   }
 }
 
+.stepper__step--future {
+  .stepper__label {
+    color: var(--color-text-muted);
+  }
+  .stepper__icon {
+    opacity: 0.5;
+    border-color: var(--color-text-muted);
+  }
+}
+
 .stepper__step--active {
   .stepper__icon {
     border-color: var(--color-accent-primary);
-    background: color-mix(in srgb, var(--color-accent-primary) 15%, transparent);
+    background: color-mix(in srgb, var(--color-accent-primary) 15%, var(--color-bg-surface));
     box-shadow: 0 0 10px color-mix(in srgb, var(--color-accent-primary) 40%, transparent);
   }
   .stepper__label {

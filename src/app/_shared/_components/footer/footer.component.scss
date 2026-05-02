@@ -472,6 +472,43 @@
   }
 }
 
+// === Phase 2 Header (Distribution Stats) ===
+.phase2-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) 0;
+  width: 100%;
+
+  &__stats {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: var(--space-3);
+  }
+
+  &__stat-value {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+  }
+
+  &__guidance {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    font-style: italic;
+    text-align: center;
+    padding: var(--space-1) var(--space-2);
+    line-height: 1.4;
+
+    @media (max-width: 767px) {
+      font-size: var(--font-size-xs);
+      padding: var(--space-1);
+    }
+  }
+}
+
 .phase2-actions {
   display: flex;
   flex-direction: column;

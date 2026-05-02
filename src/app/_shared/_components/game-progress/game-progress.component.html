@@ -3,12 +3,17 @@
     <div class="stepper">
       @for (step of steps; track step.num) {
         @if (step.num > 1) {
-          <div class="stepper__line" [class.stepper__line--completed]="isStepCompleted(step.num)"></div>
+          <div
+            class="stepper__line"
+            [class.stepper__line--completed]="isStepCompleted(step.num)"
+            [class.stepper__line--active-fill]="isStepActive(step.num)"
+          ></div>
         }
         <div
           class="stepper__step"
           [class.stepper__step--completed]="isStepCompleted(step.num)"
           [class.stepper__step--active]="isStepActive(step.num)"
+          [class.stepper__step--future]="isStepFuture(step.num)"
         >
           <div class="stepper__icon">
             @if (isStepCompleted(step.num)) {

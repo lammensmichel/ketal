@@ -321,6 +321,11 @@ export class FooterComponent implements OnDestroy {
     // Draw the card (adds to drinkingCards/givingCards)
     const newCard = this.gameSrv.displayNewCard();
     if (!newCard) {
+      // When sips remain, show toast and auto-open sip modal
+      if (this.gameSrv.isNotAllSipsGiven()) {
+        this.toastComponent?.show();
+        this.openSipGiveModal(this.gameSrv.getLastCard());
+      }
       return;
     }
 
