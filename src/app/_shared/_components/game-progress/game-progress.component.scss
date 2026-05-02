@@ -105,6 +105,7 @@
       height: 100%;
       width: 100%;
       background: linear-gradient(90deg, var(--color-success), var(--color-accent-primary));
+      /* Animation only triggers once due to ::before pseudo-element limitation */
       animation: progress-fill var(--animation-slow) ease-out;
     }
   }
@@ -143,7 +144,7 @@
 .stepper__step--active {
   .stepper__icon {
     border-color: var(--color-accent-primary);
-    background: color-mix(in srgb, var(--color-accent-primary) 15%, var(--color-bg-surface));
+    background: color-mix(in srgb, var(--color-accent-primary) 15%, var(--color-bg-surface) 85%);
     box-shadow: 0 0 10px color-mix(in srgb, var(--color-accent-primary) 40%, transparent);
   }
   .stepper__label {

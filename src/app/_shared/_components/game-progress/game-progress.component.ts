@@ -28,7 +28,8 @@ export class GameProgressComponent {
   /** Total cards in phase 2 (drinking + giving) */
   readonly totalPhase2Cards = computed(() => this.drinkingCardsCount() + this.givingCardsCount());
 
-  /** Step definitions with icons and label keys */
+  /** Step definitions with icons and label keys
+   * Icons: emoji acceptable for non-text UI elements */
   readonly steps = [
     { num: 1, icon: '🔴', labelKey: 'game.progress.turn.color' },
     { num: 2, icon: '↕', labelKey: 'game.progress.turn.plusMinus' },
@@ -46,7 +47,8 @@ export class GameProgressComponent {
     return this.turn() === step;
   }
 
-  /** Check if a step is in the future (not yet reached) in phase 1 */
+  /** Check if a step is in the future (not yet reached) in phase 1
+   * Note: isFuture is intentionally explicit for clearer intent */
   isStepFuture(step: number): boolean {
     return this.turn() < step;
   }

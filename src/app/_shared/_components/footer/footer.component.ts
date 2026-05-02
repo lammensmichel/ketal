@@ -136,18 +136,30 @@ export class FooterComponent implements OnDestroy {
   }
 
   chooseColor(color: string) {
+    if (!color) {
+      return;
+    }
     this.animatedChoice(DrinkChoiceEnum.Color, color);
   }
 
   plusOrMinus(selection: string) {
+    if (!selection) {
+      return;
+    }
     this.animatedChoice(DrinkChoiceEnum.PlusOrMinus, selection);
   }
 
   inOut(selection: string) {
+    if (!selection) {
+      return;
+    }
     this.animatedChoice(DrinkChoiceEnum.InAndOut, selection);
   }
 
   chooseSuit(selection: string) {
+    if (!selection) {
+      return;
+    }
     this.animatedChoice(DrinkChoiceEnum.Suit, selection);
   }
 
@@ -161,6 +173,9 @@ export class FooterComponent implements OnDestroy {
    * When prefers-reduced-motion is active, delays are minimized.
    */
   private animatedChoice(choiceEnum: DrinkChoiceEnum, selection: string): void {
+    if (!selection) {
+      return;
+    } // Guard: prevent empty selections
     if (this.isAnimationLocked()) {
       return;
     }
@@ -180,6 +195,11 @@ export class FooterComponent implements OnDestroy {
     this.animationPhase.set('selected');
 
     this._scheduleTimer(() => {
+      // Verify turn hasn't changed before executing (fix HIGH #1 race condition)
+      if (this.gameSrv.turn() !== currentTurn) {
+        return;
+      }
+
       // Execute the actual game logic
       this.gameSrv.setChoiceAndPickCard(choiceEnum, selection);
 
