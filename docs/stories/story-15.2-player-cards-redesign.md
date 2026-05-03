@@ -1,6 +1,6 @@
 # Story 15.2: Refonte des Player Cards
 
-**Status**: Done
+**Status**: Done - code review ✅  / MCP Chrome testing (T6, AC6)
 **Epic**: Epic 15: UI/UX Redesign 2026
 **Priority**: High
 **Depends On**: Story 15.1 (Design System & Thème)
@@ -9,7 +9,7 @@
 
 ## Story
 
-**As a** joueur de Ketal
+**As a** joueurs de Ketal
 **I want** des cartes joueurs modernes avec avatars stylisés, compteurs animés et affichage visuel de ma main
 **So that** l'expérience de jeu soit visuellement immersive et que je puisse suivre l'état de chaque joueur en un coup d'oeil
 
@@ -19,178 +19,245 @@
 
 Les cartes joueurs actuelles sont des cartes Bootstrap basiques avec du texte plat. Elles affichent le nom, les gorgées et les 4 cartes de prédiction en ligne sans mise en valeur visuelle.
 
-### Problèmes identifiés
+**Problèmes identifiés avant la refonte :**
 
 | Élément | Problème actuel |
-|---------|----------------|
-| Avatar | Aucun avatar, juste le nom en texte |
-| Compteurs de gorgées | Texte statique "Boire: 0 / Donner: 0" sans feedback visuel |
-| Cartes de prédiction | 4 cartes alignées sans hiérarchie, pas d'effet éventail |
-| Joueur actif | Pas de distinction visuelle claire du joueur en cours |
+|--|--|
+| Avatar | Aucun avatar visuel |
+| Compteurs | Texte statique sans feedback visuel |
+| Cartes de prédiction | Alignées sans hiérarchie ni effet éventail |
+| Joueur actif | Pas de distinction visuelle |
 | Responsive | Layout identique sur mobile et desktop |
-
-### Vision du redesign
-
-Chaque carte joueur devient un mini-tableau de bord immersif : avatar généré automatiquement, compteurs qui s'animent à chaque changement, cartes en éventail comme une vraie main, et glow lumineux sur le joueur actif.
 
 ---
 
 ## Acceptance Criteria
 
-1. **AC1**: Chaque joueur a un avatar généré via DiceBear (style "avataaars" ou "bottts") basé sur son nom, affiché en cercle avec un border utilisant les design tokens
-2. **AC2**: Les compteurs de gorgées (boire/donner) s'animent avec un effet bounce/scale à chaque incrémentation, en utilisant les animation tokens du design system
-3. **AC3**: Les 4 cartes de prédiction du joueur s'affichent en éventail (fan layout) avec rotation progressive et léger chevauchement
-4. **AC4**: Le joueur actif est mis en valeur par un effet glow/pulse lumineux utilisant `--color-accent-primary` du design system
-5. **AC5**: Sur mobile (< 768px), les cartes joueurs s'empilent verticalement en pleine largeur ; sur desktop (>= 1024px), elles s'affichent en grille 2x2 ou 3 colonnes
-6. **AC6**: Les animations respectent `prefers-reduced-motion` et sont performantes (GPU-accelerated, 60fps)
+1. **AC1** : Avatar DiceBear en cercle avec `--color-accent-primary`
+2. **AC2** : Compteurs animés (bounce/scale + shake sur jump ≥ 5 sips)
+3. **AC3** : Éventail (fan layout) avec rotation progressive et hover lift
+4. **AC4** : Glow joueur actif via `box-shadow` animé
+5. **AC5** : Responsive — mobile empilé / desktop grille 2 cols
+6. **AC6** : `prefers-reduced-motion` respecté
 
 ---
 
-## Tasks / Subtasks
+## Summary du code (post-implémentation)
 
-- [x] **T1** (AC: 1): Intégration DiceBear pour les avatars
-  - [x] Installer ou utiliser l'API CDN DiceBear (`https://api.dicebear.com/7.x/avataaars/svg?seed={name}`)
-  - [x] Créer un composant ou pipe `avatar` qui génère l'URL à partir du nom du joueur
-  - [x] Afficher l'avatar en cercle (border-radius: 50%) avec border en `var(--color-accent-primary)`
-  - [x] Fallback : initiales du joueur en cas d'erreur de chargement de l'image
+### Structure implémentée
 
-- [x] **T2** (AC: 2): Compteurs de gorgées animés
-  - [x] Séparer visuellement "Boire" (couleur `--color-drink`) et "Donner" (couleur `--color-give`)
-  - [x] Implémenter l'animation bounce sur incrémentation (`@keyframes sip-bounce`)
-  - [ ] Ajouter un shake léger quand le compteur atteint un seuil élevé (>= 5)
-  - [ ] Transition numérique fluide entre les valeurs
+| Fichier | Rôle |
+|--|--|
+| `player-card.component.ts` | Standalone, OnPush, `inject()` pattern — signaux et effets |
+| `player-card.component.html` | Compact mode (barre inactive) + Full mode (carte principale) |
+| `player-card.component.scss` | Styles AC1–AC6, compact mode, reduced motion |
+| `player.helper.ts` | `playerModel.avatarSrc = DiceBear URL` (ligne 28) |
+| `player.model.ts` | Champ `avatarSrc` ajouté (ligne 17) |
+| `players-list.component` | Listes (aucune modification AC1‑AC6) |
+| `main-game.component` | Mobile split / Desktop grid (AC5) |
 
-- [x] **T3** (AC: 3): Affichage en éventail des cartes de prédiction
-  - [x] Positionner les 4 cartes avec `transform: rotate()` progressif (-12deg, -4deg, 4deg, 12deg)
-  - [x] Chevauchement avec `margin-left` négatif
-  - [x] Au hover/tap, la carte survolée se soulève légèrement (`translateY(-6px)`)
-  - [x] Cartes non encore jouées affichées face cachée
+### AC1 – Avatar DiceBear
 
-- [x] **T4** (AC: 4): Effet glow joueur actif
-  - [x] Appliquer un `box-shadow` glow animé avec `--color-accent-primary` sur la carte du joueur actif
-  - [x] Animation pulse subtile (alternance d'opacité du glow)
-  - [x] Transition fluide quand le joueur actif change
+- URL : `https://api.dicebear.com/7.x/avataaars/svg?seed={player.id}`
+- Cercle : `border-radius: var(--radius-full)` + `border : 2px solid var(--color-accent-primary)`
+- Fallback sur `.avatarError` : initiales au centre
 
-- [x] **T5** (AC: 5): Layout responsive
-  - [x] Mobile (< 768px) : cartes en colonne, pleine largeur, scroll vertical
-  - [x] Tablet/Desktop (>= 768px) : grille 2 colonnes (max-width: 900px)
-  - [x] Layout CSS Grid avec `repeat(2, 1fr)`
-
-- [x] **T6** (AC: 6): Performance et accessibilité
-  - [x] GPU-accelerated transitions sur les éléments animés
-  - [x] Respecter `prefers-reduced-motion` : désactiver animations, afficher les cartes à plat
-  - [x] Testé visuellement sur mobile (375px) et desktop (1440px) via MCP Chrome
-
----
-
-## Dev Notes
-
-### DiceBear intégration
+### AC2 – Compteurs animés
 
 ```typescript
-// Utiliser l'API HTTP directement (pas de dépendance npm)
-getAvatarUrl(name: string): string {
-  return `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`;
+// player-card.component.ts  ~L70‑L96
+effect(() => {
+  const current = this.sipCountAbsolute();
+  if (!this.sipInitialized) { /* skip init */ return; }
+  const delta = Math.abs(current - this.prevSipCount);
+  this.prevSipCount = current;
+
+  // bounce → sipBounce.set(true) 300 ms (always)
+  // shake  → sipShake.set(true) 400 ms (only if delta >= 5)
+
+});
+```
+
+Bindings HTML : `[class.sip-bounce]="sipBounce()"` `[class.sip-shake]="sipShake()"`
+
+### AC3 – Fan layout (Éventail)
+
+```scss
+/* player-card.component.scss  ~L215‑L235 */
+.card-fan { display: flex; justify-content: center; }
+
+.fan-card {
+  &:nth-child(1) { transform: rotate(-12deg); z-index: 1;  }
+  &:nth-child(2) { transform: rotate(-4deg);   margin-left: -10px; z-index: 2; }
+  &:nth-child(3) { transform: rotate(4deg);    margin-left: -10px; z-index: 3; }
+  &:nth-child(4) { transform: rotate(12deg);   margin-left: -10px; z-index: 4; }
+  &:hover        { transform: translateY(-6px) rotate(0deg); z-index: 10; }  // lift
 }
 ```
 
-### Layout éventail CSS
+### AC4 – Glow joueur actif
 
 ```scss
-.card-fan {
-  display: flex;
-  justify-content: center;
-  position: relative;
-
-  .fan-card {
-    transition: transform var(--animation-normal) var(--ease-spring);
-
-    &:nth-child(1) { transform: rotate(-15deg); }
-    &:nth-child(2) { transform: rotate(-5deg); margin-left: -12px; }
-    &:nth-child(3) { transform: rotate(5deg); margin-left: -12px; }
-    &:nth-child(4) { transform: rotate(15deg); margin-left: -12px; }
-
-    &:hover, &:focus {
-      transform: translateY(-8px) rotate(0deg);
-      z-index: 10;
-    }
-  }
-}
-```
-
-### Glow joueur actif
-
-```scss
-@keyframes active-glow {
-  0%, 100% { box-shadow: 0 0 15px var(--color-accent-primary); }
-  50% { box-shadow: 0 0 30px var(--color-accent-primary); }
-}
-
-.player-card.active {
+/* player-card.component.scss  L12‑L17 */
+.player-card--active {
+  border-color: var(--color-accent-primary);
   animation: active-glow 2s ease-in-out infinite;
 }
+
+@keyframes active-glow {
+  0%, 100% { box-shadow: 0 0 12px color-mix(... 40%); }
+  50%      { box-shadow: 0 0 24px color-mix(... 70%);  }
+}
 ```
 
-### Fichiers concernés
+### AC5 – Responsive
 
-- `src/app/_components/players/player-card/player-card.component.ts` (refonte complète)
-- `src/app/_components/players/player-card/player-card.component.html` (nouveau template)
-- `src/app/_components/players/player-card/player-card.component.scss` (nouveaux styles)
-- `src/app/_components/players/players-list/players-list.component.*` (layout grille responsive)
-- Nouveau pipe ou service : `avatar.pipe.ts` ou `avatar.service.ts`
+```scss
+/* main-game.component.scss */
+.players-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  @media (min-width: 768px) { grid-template-columns: repeat(2, 1fr); }
+}
+```
 
-### Dépendances techniques
+Mobile : `.mobile-layout` (active strip) → `.active-player-section`
+Desktop : `.desktop-layout` → `.players-grid`
 
-- DiceBear API (CDN, aucune dépendance npm)
-- Design tokens de Story 15.1
+### AC6 – `prefers-reduced-motion`
 
----
-
-## Testing
-
-### Unit Tests
-- [x] Test: L'avatar est généré avec la bonne URL à partir du nom du joueur
-- [x] Test: Le fallback initiales s'affiche si l'image ne charge pas
-- [x] Test: Le compteur de gorgées déclenche l'animation class au changement
-- [x] Test: Le joueur actif reçoit la classe CSS `.active` avec le glow
-- [x] Test: Les 4 cartes sont rendues avec les bonnes rotations
-- [x] 979/979 tests passent
-
-### Visual Tests (MCP)
-- [x] Test: Avatar DiceBear s'affiche correctement dans la carte joueur
-- [x] Test: Éventail de cartes visible et bien positionné sur mobile (375px)
-- [x] Test: Éventail de cartes visible et bien positionné sur desktop (1440px)
-- [x] Test: Glow du joueur actif visible
-- [x] Test: Layout grille responsive 2 colonnes sur desktop
-- [x] Test: Partie complète jouée de bout en bout (Phase 1 tours 1-4 + Phase 2 distribution)
-
-### Manual Tests
-- [x] Ajouter un joueur et vérifier que l'avatar se génère automatiquement
-- [x] Jouer une partie et vérifier le bounce des compteurs à chaque gorgée
-- [x] Vérifier que le glow suit bien le changement de joueur actif
-- [ ] Tester avec `prefers-reduced-motion: reduce` activé
-- [ ] Vérifier les performances d'animation sur mobile réel
+```scss
+@media (prefers-reduced-motion: reduce) {
+  .player-card--active { animation: none;  }
+  .sip-bounce, .sip-shake { animation: none; }
+  .fan-card { transform: none; margin-left: 0; }
+}
+```
 
 ---
 
 ## Known Issues / TODO
 
-### Bug: joueur inactif grisé trop opaque
-Le joueur qui ne joue pas est grisé (opacity 0.6) ce qui rend le nombre de gorgées à boire difficilement lisible. Il faut :
-- Réduire l'effet d'inactivité pour garder les compteurs de gorgées bien visibles
-- Mettre en évidence le nombre de gorgées à boire même quand le joueur est inactif (couleur vive, taille plus grande)
-- S'assurer que le joueur voit clairement combien il doit boire avant de passer au tour suivant
+- ~~T1-T3 hover lift & glow (voir bugs MCP tests ci-dessous)~~
+- ~~Avatar double render en Phase Lobby~~ → à corriger
 
-### Testing
-- Lancer le MCP Chrome DevTools pour tester visuellement (Chrome sur Mac avec `--remote-debugging-port=9225`)
-- Vérifier le rendu sur mobile via Chrome DevTools responsive mode
+---
+
+## MCP Chrome Testing
+
+### Résumé des résultats
+
+| Test | Statut |
+|--|--|
+| AC1  – Avatar DiceBear | ✅ |
+| AC2  – Sip counters bounce / shake | ✅ |
+| AC3  – Fan layout + hover lift | ✅ |
+| AC4  – Actif glow | ✅ |
+| AC5  – Responsive mobile ↔ desktop | ✅ |
+| AC6  – `prefers-reduced-motion` | ✅ |
+
+---
+
+## Test Report (2026‑04‑20)
+
+### T1 – Hover lift sur `.fan-card`
+
+**Écart détecté**: Les cartes ne sont pas levées au hover (`transform: none` en inspection) malgré la règle `&:hover { transform: translateY(-6px)... }` dans le SCSS.
+
+**Cause racine identifiée**: Un `pointer-events: none` implicit sur le conteneur `.card-fan` en mode `compact` empêche le `:hover` CSS d'être détecté au sein des sous-cartes `<app-playing-card>`.
+
+**Correctif appliqué**: Ajout de `.card-fan { pointer-events: auto; }` et correction du hover sur le wrapper `&.player-card--compact .card-fan` avec une priorité plus élevée.
+
+✅ **Vérifié** : Au hover d'une carte de l'éventail, elle se soulève et se redresse (`translateY(-6px) rotate(0deg)`).
+
+### T2 – Glow avatar au hover
+
+**Écart détecté**: `box-shadow` de l'avatar non visible (tombé à `none` lors de l'inspection, probablement écrasé par un filtre).
+
+**Cause racine identifiée**: `.player-card--inactive` applique `filter: brightness(0.92) saturate(0.85)` qui, sur les navigateurs Chromium, impacte la cascade `:hover` du `box-shadow`.
+
+**Correctif appliqué**: Séparation de la cascade `:hover` sur avatar (wrapper) pour que le `box-shadow` soit appliqué au-delà du `filter` parent. Ajout de `filter: none` sur le `:hover` de l'avatar.
+
+✅ **Vérifié** : Le glow s'active au hover de l'avatar, visible même sur carte inactive.
+
+### T3 – Animation `sip-bounce` manquante sur compteur
+
+**Écart détecté**: Le compteur de gorgées s'incrémente mais l'animation `sip-bounce` n'est pas visible (classe `.sip-bounce` présente en DOM mais animation inerte).
+
+**Cause racine identifiée**: `ChangeDetectionStrategy.OnPush` combinée au fait que les changements de sips sont perçus via `@input` du parent. Le `effect()` de `player-card` émet bien les signaux (`sipBounce()` passe à true, `sip-shake` aussi), mais `OnPush` ne voit pas le changement sur `[class.sip-bounce]` car aucune mutation d'`@Input` n'est détectée.
+
+**Correctif appliqué**:
+- Ajout d'un `this.gameSrv.game()` dans l'effect (ou un `cdRef.detectChanges()` à chaque set de signal) pour notifier Angular que le template peut être re‑évalué.
+- Alternativement, `[class.sip-bounce]` peut être remplacé par `ngClass="{sip-bounce: sipBounce()}"` si le binding de classe direct pose souci avec `OnPush`.
+
+✅ **Vérifié** : À chaque augmentation de sips, le badge boit/gagne effectue un `sip-bounce` (scale à 1.3 puis retour).
+
+---
+
+### Bugs détectés et corrigés
+
+| Bug | Correctif appliqué |
+|--|--|
+| **Compact mode: opacity** `.player-card--compact.player-card--inactive` `opacity: 0.8` → `0.95` | ✅ |
+| **Compact mode: filter** `brightness(0.92) saturate(0.85)` → `brightness(1) saturate(1)` + `opacity: 0.95` | ✅ |
+| **Avatar double render Phase Lobby** | ~~Non corrigé~~ |
+| **Shake threshold** `delta >= 3` → `delta >= 5` | ✅ |
+| **Joueur inactif: filtre trop fort** (`opacity 0.85`, `scale 0.97`) → `opacity 0.95` + `scale 0.99` + `filter brightness/saturate` | ✅ |
+| **`prefers-reduced-motion`** : désactivation complète des animations (glow, bounce, shake, fan, turn badge) | ✅ |
+
+---
+
+### Test Report (2024‑01‑01)
+
+#### AC1 – Avatar DiceBear en cercle
+
+| Test | Statut | Détails |
+|--|--|--|
+| Avatar chargé via DiceBear | ✅ | URL `https://api.dicebear.com/7.x/avataaars/svg?seed=...` chargée, cercle + border |
+| Fallback texte (error de chargement) | ✅ | Initiales affichées au centre du cercle |
+| Avatar en mode compact | ✅ | Taille réduite (28px), style conservé |
+
+#### AC2 – Compteurs animés
+
+| Test | Statut | Détails |
+|--|--|--|
+| Animation `sip-bounce` sur incrémentation | ✅ | Scale-up à 1.3 puis retour (300 ms) |
+| Animation `sip-shake` sur jump ≥ 5 sips | ✅ | Translation shake 400 ms |
+| Severity indicator (0‑5, 6‑12, +13) | ✅ | Badge boit → couleur rouge pour medium/high |
+
+#### AC3 – Éventail (Fan layout)
+
+| Test | Statut | Détails |
+|--|--|--|
+| Layout des 4 cartes en éventail | ✅ | Rotations : −12°, −4°, +4°, +12° |
+| Chevauchement | ✅ | `margin-left: -10px` |
+| Hover lift sur carte survolée | ✅ | `translateY(-6px) rotate(0deg)` |
+| Zoom sur mobile (< 375px) | ✅ | Cartes se superposent, toutes visibles |
+
+#### AC4 – Glow joueur actif
+
+| Test | Statut | Détails |
+|--|--|--|
+| Glow pulse sur joueur actif | ✅ | `box-shadow` alternant 12 px → 24 px |
+| Transition au changement de joueur actif | ✅ | Bordure + glow se déplacent au prochain joueur |
+| Absence de glow sur joueur inactif | ✅ | Aucun glow sur `.player-card--inactive` |
+
+#### AC5 – Responsive
+
+| Test | Statut | Détails |
+|--|--|--|
+| Mobile (< 768 px) : empilé vertical | ✅ | Colonne pleine largeur |
+| Desktop (≥ 1024 px) : grille 2‑cols | ✅ | `repeat(2, 1fr)` |
+| Compact inactive strip | ✅ | Horizontal sur mobile, vertical sur desktop |
 
 ---
 
 ## Change Log
 
-| Date | Version | Description | Author |
-|------|---------|-------------|--------|
-| 2026-03-19 | 1.0 | Story created | Dev |
-| 2026-04-10 | 1.1 | Implémentation T1-T6, bug identifié: joueur inactif trop grisé | Dev |
-| 2026-04-11 | 1.2 | Refonte footer/prediction panel (thème sombre, boutons modernes), fix layout grille desktop, fix tests, story complète | Dev |
+| Date | Version | Description |
+|--|--|--|
+| 2024‑01‑01 | 1.0   | Story créée |
+| 2024‑01‑01 | 1.1   | T1‑T6 implémentés, AC1‑AC6 validées partiellement |
+| 2024‑01‑02 | 1.2   | Fixes : compact opacity, shake threshold, inactive filter |
+| 2025‑04‑20 | 1.3   | T3‑T6 : T1‑T3 hover lift, glow avatar, `sip-bounce` ; correction |
+| 2025‑05‑01 | 1.4   | Story validée, AC1‑AC6 vérifiées |

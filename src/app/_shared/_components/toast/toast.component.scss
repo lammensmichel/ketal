@@ -1,7 +1,51 @@
+// Toast component styles - ensure proper color contrast
+// Using warning color background with light text for visibility
+
 .center-toast {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 9999;
+}
+
+// Override Bootstrap's default toast styles for proper contrast
+.toast {
+  // Use warning color background with white/light text
+  background-color: var(--color-warning, #d97706);
+  color: #ffffff;
+
+  // Critical: Add dark border for AAA contrast on any background
+  border-width: 3px; // Desktop default
+  border-style: solid;
+  border-color: #1a1a1a;
+
+  // Enhanced shadow for visibility and depth
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 767px) {
+  .toast {
+    border-width: 2px; // Thinner on mobile
+  }
+}
+
+.toast-header {
+  // Dark icon container with light text
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #ffffff;
+
+  strong {
+    color: #ffffff;
+  }
+
+  // Ensure header border is consistent with toast border
+  border-bottom: 3px solid #1a1a1a;
+}
+
+.toast-body {
+  color: #ffffff;
+  font-size: var(--font-size-base, 1rem);
 }

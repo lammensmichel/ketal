@@ -233,10 +233,23 @@
     }
 
     <!-- Phase 2: Draw Pile + Split Lane (visually hidden while a Phase 1 animation is
-         still running so the draw pile state is preserved across the transition) -->
+          still running so the draw pile state is preserved across the transition) -->
     @if (gameSrv.phase() === 2) {
       <div class="prediction-panel prediction-panel--phase2" [class.prediction-panel--locked]="isAnimationLocked()">
         @if (gameSrv.isGameStarted() || gameSrv.isGameFinished()) {
+          <!-- Phase 2 header: distribution stats -->
+          <div class="phase2-header">
+            <div class="phase2-header__stats">
+              <span class="phase2-header__stat-value">Boire {{ gameSrv.drinkingCards().length }}/6</span>
+              <span class="phase2-header__stat-value">Donner {{ gameSrv.givingCards().length }}/6</span>
+            </div>
+            <!-- Sip distribution guidance -->
+            @if (gameSrv.isNotAllSipsGiven()) {
+              <div class="phase2-header__guidance">
+                <span [translate]="'Phase2_Sip_Guidance'"></span>
+              </div>
+            }
+          </div>
           <div class="draw-layout">
             <!-- Left lane: drink cards (red) -->
             <div class="draw-lane draw-lane--drink">
