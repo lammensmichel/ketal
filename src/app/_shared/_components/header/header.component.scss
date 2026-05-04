@@ -4,8 +4,9 @@
   justify-content: space-between;
   padding: 0.5rem 1rem;
   height: 50px;
-  background: #fff;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .compact-header-title {
@@ -15,6 +16,7 @@
   font-variant: small-caps;
   font-weight: bold;
   line-height: 1;
+  color: var(--color-text-primary);
 }
 
 .btn-hamburger {
@@ -28,15 +30,15 @@
   border-radius: 0.375rem;
   cursor: pointer;
   font-size: 1.25rem;
-  color: #212529;
-  transition: background-color 0.15s ease-in-out;
+  color: var(--color-text-primary);
+  transition: background-color var(--animation-fast) var(--ease-default);
 
   &:hover {
-    background-color: #f8f9fa;
+    background-color: var(--color-bg-surface);
   }
 
   &:focus {
-    outline: 2px solid var(--bs-primary, #0d6efd);
+    outline: 2px solid var(--color-accent-primary);
     outline-offset: 2px;
   }
 }

@@ -17,6 +17,9 @@
     flex-direction: row;
     justify-content: center;
     gap: var(--space-5);
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 
@@ -188,6 +191,16 @@
   min-height: auto;
   padding: var(--space-2) var(--space-3);
   gap: 0;
+  // Keep the inline cards small so the panel never grows tall enough to
+  // hide the bottom row of player fiches in the body above.
+  ::ng-deep .card-container {
+    width: 44px !important;
+    min-height: 60px !important;
+    @media (min-width: 768px) {
+      width: 50px !important;
+      min-height: 68px !important;
+    }
+  }
 }
 .inout-card-wrapper {
   display: flex;
@@ -252,36 +265,38 @@
   }
 }
 
+// Suit prediction buttons are styled as mini playing cards: white face,
+// red icons for hearts/diamonds, BLACK icons for spades/clubs.
 .prediction-btn--suit {
   min-width: 64px;
   min-height: 64px;
   padding: var(--space-2);
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  color: var(--color-text-primary);
+  background: #fff;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
   @media (max-width: 767px) {
     min-width: 56px;
     min-height: 56px;
   }
 
-  // Override base button hover effects - no background change
   &:hover:not(:disabled) {
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    transform: scale(1.1);
+    background: #fff;
+    border-color: var(--color-accent-primary);
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent-primary) 30%, transparent);
   }
 
-  // Override base button active effects
   &:active:not(:disabled) {
     transform: scale(0.95);
-    box-shadow: none;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
   }
 
-  // Selected state - just scale up with text shadow on icon
+  // Selected state - scale + glow ring + icon emphasis
   &--selected {
     transform: scale(1.15);
+    border-color: var(--color-accent-primary);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--color-accent-primary) 50%, transparent);
     .prediction-btn__suit-icon--red {
       text-shadow: 0 0 12px rgba(220, 38, 38, 0.6);
     }
@@ -299,7 +314,7 @@
 }
 .prediction-btn__suit-icon {
   font-size: 2rem;
-  color: var(--color-text-primary);
+  color: #1a1a1a;
   &--red {
     color: #dc2626;
   }
@@ -313,6 +328,16 @@
   background: var(--color-bg-surface);
   border-radius: var(--radius-md);
   border: 1px dashed var(--color-border);
+  // Compact the reference card so the Plus/Moins panel stays the same height
+  // as Turn 1 (Couleur) and doesn't push player fiches off-screen.
+  ::ng-deep .card-container {
+    width: 44px !important;
+    min-height: 60px !important;
+    @media (min-width: 768px) {
+      width: 50px !important;
+      min-height: 68px !important;
+    }
+  }
 }
 .prediction-panel__reference-label {
   font-size: var(--font-size-sm);
@@ -346,7 +371,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-3);
   flex: 1;
   min-width: 0;
 
@@ -366,13 +391,14 @@
   &__cards {
     display: flex;
     justify-content: center;
-    min-height: 55px;
+    min-height: 56px;
     max-width: 100%;
 
-    // Smaller cards in lanes
+    // Lane cards stay smaller than the draw pile so the active draw zone keeps
+    // the visual focus and 6 cards fit comfortably without overflow.
     ::ng-deep .card-container {
-      width: 36px;
-      min-height: 50px;
+      width: 38px;
+      min-height: 53px;
 
       @media (min-width: 768px) {
         width: 50px;
@@ -380,7 +406,7 @@
       }
     }
     ::ng-deep .card-container.left-overlap {
-      margin-left: -18px;
+      margin-left: -19px;
       @media (min-width: 768px) {
         margin-left: -25px;
       }
@@ -475,19 +501,25 @@
 
   &__sip-badge {
     position: absolute;
-    top: -6px;
-    right: -6px;
-    width: 22px;
-    height: 22px;
-    border-radius: var(--radius-full);
-    display: flex;
+    top: -7px;
+    right: -8px;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    font-weight: var(--font-weight-bold);
+    gap: 2px;
+    padding: 1px 5px;
+    border-radius: 999px;
     color: #fff;
+    font-size: 0.62rem;
+    font-weight: var(--font-weight-bold);
+    line-height: 1;
     z-index: 2;
     animation: sip-pulse 1.5s ease-in-out infinite;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+
+    fa-icon {
+      font-size: 0.7rem;
+      line-height: 1;
+    }
 
     &--drink {
       background: #ef4444;
@@ -495,6 +527,9 @@
     &--give {
       background: #22c55e;
     }
+  }
+  &__sip-badge-value {
+    line-height: 1;
   }
 }
 
@@ -545,19 +580,65 @@
   }
 }
 
-.phase2-actions {
+.phase2-pending-distribution {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) 0;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-2);
+  text-align: center;
+  max-width: 480px;
+  margin: 0 auto;
 
-  // Smaller action buttons here so the flanking card lanes keep usable width.
-  .prediction-btn--start {
-    min-width: 0;
-    padding: var(--space-1) var(--space-2);
+  &__message {
+    margin: 0;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.3;
+  }
+  &__hint {
+    margin: 0;
+    color: var(--color-text-secondary);
     font-size: var(--font-size-sm);
+    line-height: 1.4;
+  }
+  &__pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: var(--color-give-event);
+    color: #fff;
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-xs);
+  }
+}
+
+.phase2-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-2);
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto;
+
+  .prediction-btn--start {
+    width: 100%;
+    min-height: 48px;
+    font-size: var(--font-size-base);
     white-space: nowrap;
+  }
+
+  // On wider viewports, place the two actions side-by-side
+  @media (min-width: 480px) {
+    flex-direction: row;
+    max-width: 520px;
+    .prediction-btn--start {
+      flex: 1;
+    }
   }
 }
 

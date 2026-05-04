@@ -19,6 +19,16 @@
         <app-playing-card [card]="player.cards[i]"></app-playing-card>
       }
     </div>
+    @if (lastTurnSips() > 0) {
+      <span class="player-card__turn-badge player-card__turn-badge--sm">
+        +{{ lastTurnSips() }} <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon>
+      </span>
+    }
+    @if (lastTurnGiven() > 0) {
+      <span class="player-card__turn-badge player-card__turn-badge--sm player-card__turn-badge--give">
+        +{{ lastTurnGiven() }} <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon>
+      </span>
+    }
     <div class="player-card__sips player-card__sips--sm" (click)="openPlayerGivenSipsModal(player)">
       <span class="player-card__sip-badge player-card__sip-badge--drink">
         {{ sipsDrunk() }} <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon>
@@ -32,16 +42,6 @@
         </span>
       }
     </div>
-    @if (lastTurnSips() > 0) {
-      <span class="player-card__turn-badge player-card__turn-badge--sm">
-        +{{ lastTurnSips() }} <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon>
-      </span>
-    }
-    @if (lastTurnGiven() > 0) {
-      <span class="player-card__turn-badge player-card__turn-badge--sm player-card__turn-badge--give">
-        +{{ lastTurnGiven() }} <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon>
-      </span>
-    }
   </div>
 } @else {
   <!-- Full mode -->

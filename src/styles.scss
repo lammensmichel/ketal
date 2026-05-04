@@ -22,6 +22,171 @@ app-root {
   border-style: dashed !important;
 }
 
+// === Bootstrap overrides for dark theme consistency ===
+// Inputs
+.form-control,
+.form-select {
+  background-color: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+
+  &::placeholder {
+    color: var(--color-text-secondary);
+    opacity: 0.7;
+  }
+
+  &:focus {
+    background-color: var(--color-bg-elevated);
+    color: var(--color-text-primary);
+    border-color: var(--color-accent-primary);
+    box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--color-accent-primary) 25%, transparent);
+  }
+
+  &:disabled,
+  &[readonly] {
+    background-color: var(--color-bg-surface);
+    opacity: 0.7;
+  }
+}
+
+.input-group-text {
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+// Primary button — use the app's accent color, not Bootstrap blue.
+.btn-primary {
+  background-color: var(--color-accent-primary);
+  border-color: var(--color-accent-primary);
+  color: #fff;
+
+  &:hover:not(:disabled),
+  &:focus:not(:disabled) {
+    background-color: color-mix(in srgb, var(--color-accent-primary) 88%, black);
+    border-color: color-mix(in srgb, var(--color-accent-primary) 88%, black);
+    color: #fff;
+  }
+
+  &:active:not(:disabled),
+  &:disabled {
+    background-color: color-mix(in srgb, var(--color-accent-primary) 80%, black);
+    border-color: color-mix(in srgb, var(--color-accent-primary) 80%, black);
+  }
+}
+
+.btn-outline-primary {
+  color: var(--color-accent-primary);
+  border-color: var(--color-accent-primary);
+
+  &:hover:not(:disabled),
+  &:focus:not(:disabled) {
+    background-color: var(--color-accent-primary);
+    border-color: var(--color-accent-primary);
+    color: #fff;
+  }
+}
+
+.btn-outline-secondary {
+  color: var(--color-text-secondary);
+  border-color: var(--color-border);
+
+  &:hover:not(:disabled),
+  &:focus:not(:disabled) {
+    background-color: var(--color-bg-surface);
+    border-color: var(--color-text-secondary);
+    color: var(--color-text-primary);
+  }
+}
+
+// List groups (used in the players list)
+.list-group-item {
+  background-color: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+// Alerts — keep Bootstrap colors but tune background for dark contrast.
+.alert {
+  border-color: var(--color-border);
+}
+.alert-secondary {
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+
+// === Summary mode toggle (used on /players page) ===
+.summary-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  margin: 0 auto var(--space-1);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+
+  .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 20px;
+    flex-shrink: 0;
+
+    input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+
+      &:checked + .toggle-slider {
+        background: var(--color-accent-primary);
+        border-color: var(--color-accent-primary);
+      }
+
+      &:checked + .toggle-slider::before {
+        transform: translateX(16px);
+        background: #fff;
+      }
+
+      &:focus + .toggle-slider {
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent-primary) 35%, transparent);
+      }
+    }
+  }
+
+  .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    transition:
+      background var(--animation-fast) var(--ease-default),
+      border-color var(--animation-fast) var(--ease-default);
+
+    &::before {
+      content: '';
+      position: absolute;
+      height: 14px;
+      width: 14px;
+      left: 2px;
+      bottom: 2px;
+      background: var(--color-text-secondary);
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+      transition: transform var(--animation-fast) var(--ease-default);
+    }
+  }
+
+  .toggle-label {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
+    user-select: none;
+  }
+}
+
 //hr {
 //  display: block;
 //  margin-top: 0em;

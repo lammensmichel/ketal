@@ -10,6 +10,7 @@ import { GameService } from '../../../services/game/game.service';
   styleUrls: ['./player-list-player.component.scss'],
   standalone: true,
   imports: [FontAwesomeIconsModule],
+  host: { class: 'player-list-player-host' },
 })
 export class PlayerListPlayerComponent {
   private readonly playerHelper = inject(PlayerHelperService);

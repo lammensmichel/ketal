@@ -5,11 +5,12 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { QRCodeComponent } from 'angularx-qrcode';
 import { PlayerHelperService } from 'src/app/_shared/_helpers/player.helper';
-import { PlayerModel } from 'src/app/_shared/_models/player.model';
+import { PlayerGender, PlayerModel } from 'src/app/_shared/_models/player.model';
 import { LocalService } from 'src/app/services/local/local.service';
 import { isNullOrWhiteSpace } from 'src/app/_shared/_helpers/string.helper';
 import { GameService } from '../../../services/game/game.service';
 import { RoomService } from '../../../services/room/room.service';
+import { AuthService } from '../../../services/auth/auth.service';
 import { PlayerListPlayerComponent } from '../player-list-player/player-list-player.component';
 
 @Component({
@@ -28,9 +29,17 @@ export class PlayersListComponent {
   readonly gameSrv = inject(GameService);
   readonly translate = inject(TranslateService);
   readonly roomService = inject(RoomService);
+  private readonly authService = inject(AuthService);
 
   readonly playersForm: FormGroup;
   allPlayersCreated = false;
+
+  /** Gender selected for the next player to add. Defaults to neutral. */
+  readonly selectedGender = signal<PlayerGender>('neutral');
+
+  selectGender(gender: PlayerGender): void {
+    this.selectedGender.set(gender);
+  }
   @Output() readonly beginGame = new EventEmitter<void>();
 
   /** Whether the invite panel is shown */
@@ -39,8 +48,13 @@ export class PlayersListComponent {
   /** Success message for copy feedback */
   readonly inviteCopySuccess = signal<string | null>(null);
 
-  /** Computed: whether a room exists (invite button visible) */
+  /** Computed: whether a room exists */
   readonly hasRoom = computed(() => !!this.roomService.currentRoom());
+
+  /** Whether the invite button should be offered: any logged-in non-anonymous
+   * user (room is auto-created on first click if missing). Shown regardless of
+   * game state so the user can always reach the room link/QR. */
+  readonly canInvite = computed(() => this.authService.isLoggedIn() && !this.authService.isAnonymous());
 
   /** Computed: invite URL */
   readonly inviteUrl = computed(() => {
@@ -76,8 +90,9 @@ export class PlayersListComponent {
     }
 
     if (this.playersForm.valid && !isNullOrWhiteSpace(this.playersForm.controls['newPlayer'].value)) {
-      this.playerHelper.addPlayer(this.playersForm.value.newPlayer);
+      this.playerHelper.addPlayer(this.playersForm.value.newPlayer, this.selectedGender());
       this.playersForm.reset();
+      this.selectedGender.set('neutral');
     }
   }
 
@@ -90,6 +105,8 @@ export class PlayersListComponent {
   }
 
   public isGamePaused(): boolean {
+    // Paused = a game is started or finished but the user stepped back to the
+    // /players setup screen. Status 0 (new) and 3 (summary) don't qualify.
     return this.gameSrv.isGameInProgress();
   }
 
@@ -101,8 +118,30 @@ export class PlayersListComponent {
     return this.playersForm.get('newPlayer');
   }
 
-  /** Toggle invite panel visibility */
-  toggleInvite(): void {
+  /** Whether the summary mode toggle is offered:
+   * - Logged-in non-anonymous user
+   * - Game is still in setup (status 0). Hidden during a paused game so the
+   *   user can't flip the mode mid-round. */
+  canShowSummaryToggle(): boolean {
+    return this.authService.isLoggedIn() && !this.authService.isAnonymous() && this.gameSrv.isNewGame();
+  }
+
+  onSummaryToggle(event: Event): void {
+    const checkbox = event.target as HTMLInputElement;
+    this.gameSrv.withSummaryMode.set(checkbox.checked);
+  }
+
+  /** Toggle invite panel visibility. Auto-creates a multiplayer room on first
+   * open so the invite button can be reached without going through the home
+   * "Créer une partie" flow. */
+  async toggleInvite(): Promise<void> {
+    if (!this.hasRoom()) {
+      try {
+        await this.roomService.createSoloRoom();
+      } catch {
+        return;
+      }
+    }
     this.showInvite.update((v) => !v);
   }
 

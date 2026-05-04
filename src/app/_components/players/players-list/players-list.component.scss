@@ -1,7 +1,22 @@
 .container {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  gap: var(--space-2);
+
+  // The pill-style summary toggle should not stretch to full column width;
+  // keep it content-sized and centered.
+  ::ng-deep .summary-toggle {
+    align-self: center;
+  }
+
+  // Resume banner already has its own max-width (500px) — center it.
+  .resume-banner {
+    align-self: center;
+  }
 }
 
 .resume-banner {
@@ -63,4 +78,61 @@ h2 {
   flex-direction: row;
   text-align: justify;
   gap: 0.5em;
+}
+
+// === Players grid (tiles) ===
+.players-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--space-2);
+  width: 100%;
+  margin-top: var(--space-2);
+}
+
+// === Gender picker (rendered as input-group prepend buttons) ===
+.gender-picker__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-secondary);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background var(--animation-fast) var(--ease-default),
+    color var(--animation-fast) var(--ease-default),
+    border-color var(--animation-fast) var(--ease-default),
+    z-index 0s;
+
+  &:hover {
+    border-color: var(--color-accent-primary);
+    color: var(--color-text-primary);
+    z-index: 2;
+  }
+
+  &--active {
+    background: var(--color-accent-primary);
+    border-color: var(--color-accent-primary);
+    color: #fff;
+    z-index: 1;
+  }
+}
+
+// Invite section — discreet centered link rather than a full-width button
+.invite-section {
+  text-align: center;
+
+  > .btn {
+    width: auto !important;
+    min-width: 200px;
+  }
+}
+
+.invite-panel {
+  background: var(--color-bg-elevated);
+  border-color: var(--color-border) !important;
+  color: var(--color-text-primary);
 }

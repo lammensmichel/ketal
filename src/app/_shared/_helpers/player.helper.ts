@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { CardType } from '../_models/card-type.model';
-import { PlayerChoice, PlayerModel } from '../_models/player.model';
+import { PlayerChoice, PlayerGender, PlayerModel } from '../_models/player.model';
 import { LocalService } from '../../services/local/local.service';
 import { inject, Injectable } from '@angular/core';
 import { CardService } from '../../services/card/card.service';
@@ -13,10 +13,11 @@ export class PlayerHelperService {
 
   public players: PlayerModel[] = [];
 
-  public addPlayer(player: string): void {
+  public addPlayer(player: string, gender: PlayerGender = 'neutral'): void {
     const playerModel = new PlayerModel();
     playerModel.name = player;
     playerModel.id = uuidv4();
+    playerModel.gender = gender;
     playerModel.cards = new Array<CardType>();
     playerModel.choice = {
       color: '',
@@ -25,7 +26,10 @@ export class PlayerHelperService {
       suit: '',
     } as PlayerChoice;
 
-    playerModel.avatarSrc = `https://api.dicebear.com/7.x/avataaars/svg?seed=${playerModel.id}`;
+    // Seed prefix nudges Dicebear toward consistent gender-leaning avatars while
+    // staying within the same `avataaars` style for visual coherence.
+    const seedPrefix = gender === 'male' ? 'm-' : gender === 'female' ? 'f-' : '';
+    playerModel.avatarSrc = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seedPrefix}${playerModel.id}`;
     this.players.push(playerModel);
     this.savePlayerToStorage(this.players);
   }

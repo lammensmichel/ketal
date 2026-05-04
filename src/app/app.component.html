@@ -1,25 +1,14 @@
 <div class="main-container">
   <app-header></app-header>
 
-  <div class="content container d-flex gap-1 justify-content-center my-4 mt-2 mb-2">
-    <div class="d-flex flex-column gap-2">
-      @if (canShowSummary()) {
-        <div class="summary-toggle">
-          <label class="toggle-switch">
-            <input
-              type="checkbox"
-              [checked]="withSummaryMode()"
-              (change)="onSummaryModeCheckChange($event)"
-            />
-            <span class="toggle-slider"></span>
-          </label>
-          <span class="toggle-label" [translate]="'Summary_Mode_Selection'"></span>
-        </div>
-      }
-      <!-- Router outlet for lazy loaded modules -->
+  <div class="content container my-4 mt-2 mb-2">
+    <div class="d-flex flex-column gap-2 w-100">
+      <!-- Summary toggle now lives inside /players (closer to game setup) -->
       <router-outlet></router-outlet>
     </div>
   </div>
 
-  <app-footer [withSummaryMode]="withSummaryMode()"></app-footer>
+  <div class="container">
+    <app-footer [withSummaryMode]="withSummaryMode()"></app-footer>
+  </div>
 </div>

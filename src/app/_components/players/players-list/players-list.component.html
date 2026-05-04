@@ -10,7 +10,7 @@
       ></button>
     </div>
   }
-  @if (hasRoom() && this.gameSrv.isNewGame()) {
+  @if (canInvite()) {
     <div class="invite-section mb-2">
       <button type="button" class="btn btn-outline-primary btn-sm w-100" (click)="toggleInvite()">
         <svg
@@ -45,8 +45,37 @@
   }
   @if (!allPlayersCreated && this.gameSrv.isNewGame()) {
     <form [formGroup]="playersForm" (ngSubmit)="addPlayer()" class="mb-1">
-      <div class="input-group mb-1">
-        <span class="input-group-text">🥃</span>
+      <div class="input-group mb-1" role="group" aria-label="Ajouter un joueur">
+        <button
+          type="button"
+          class="gender-picker__btn"
+          [class.gender-picker__btn--active]="selectedGender() === 'male'"
+          [attr.aria-pressed]="selectedGender() === 'male'"
+          (click)="selectGender('male')"
+          title="Masculin"
+        >
+          ♂
+        </button>
+        <button
+          type="button"
+          class="gender-picker__btn"
+          [class.gender-picker__btn--active]="selectedGender() === 'female'"
+          [attr.aria-pressed]="selectedGender() === 'female'"
+          (click)="selectGender('female')"
+          title="Féminin"
+        >
+          ♀
+        </button>
+        <button
+          type="button"
+          class="gender-picker__btn"
+          [class.gender-picker__btn--active]="selectedGender() === 'neutral'"
+          [attr.aria-pressed]="selectedGender() === 'neutral'"
+          (click)="selectGender('neutral')"
+          title="Non genré"
+        >
+          ⚧
+        </button>
         <input
           type="text"
           class="form-control"
@@ -75,26 +104,18 @@
       }
     </form>
   }
-  <div class="d-flex flex-row col-12">
-    <div class="d-flex flex-grow-1" [ngClass]="{ 'w-50': getPlayers().length > 12 }">
-      <ul class="list-group text-start flex-grow-1">
-        @for (player of getPlayers().slice(0, 12); track player.id) {
-          <li class="list-group-item d-flex flex-grow-1">
-            <app-player-list-player class="w-100" [player]="player"></app-player-list-player>
-          </li>
-        }
-      </ul>
+  @if (canShowSummaryToggle()) {
+    <div class="summary-toggle">
+      <label class="toggle-switch">
+        <input type="checkbox" [checked]="gameSrv.withSummaryMode()" (change)="onSummaryToggle($event)" />
+        <span class="toggle-slider"></span>
+      </label>
+      <span class="toggle-label" [translate]="'Summary_Mode_Selection'"></span>
     </div>
-    @if (getPlayers().length > 12) {
-      <div class="w-50">
-        <ul class="list-group text-start">
-          @for (player of getPlayers().slice(12); track player.id) {
-            <li class="list-group-item d-flex custom-height-px">
-              <app-player-list-player class="w-100" [player]="player"></app-player-list-player>
-            </li>
-          }
-        </ul>
-      </div>
+  }
+  <div class="players-tiles">
+    @for (player of getPlayers(); track player.id) {
+      <app-player-list-player [player]="player"></app-player-list-player>
     }
   </div>
 </div>

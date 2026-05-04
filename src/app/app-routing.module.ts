@@ -49,6 +49,7 @@ export const routes: Routes = [
     loadComponent: () => import('./_components/legal/terms/terms.component').then((m) => m.TermsComponent),
   },
   { path: '', redirectTo: 'login', pathMatch: 'full' },
+  { path: '**', redirectTo: 'home' },
 ];
 
 @NgModule({

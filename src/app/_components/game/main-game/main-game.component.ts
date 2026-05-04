@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, HostListener, inject, signal } from '@angular/core';
 import { GameService } from '../../../services/game/game.service';
 import { GameProgressComponent } from '../../../_shared/_components/game-progress/game-progress.component';
 import { PlayerCardComponent } from '../../players/player-card/player-card.component';
@@ -24,9 +24,44 @@ export class MainGameComponent {
     return this.gameSrv.players().filter((p) => p.id !== active.id);
   });
 
+  // ── Viewport tracking for dynamic compact decision ──
+  /** Estimated full-mode player card height (incl. gap). Calibrated so a
+   * typical desktop viewport (≥800px tall) keeps 6 players full instead of
+   * falling back to the compact strip when there's clearly room. */
+  private static readonly FULL_CARD_HEIGHT = 200;
+  /** Vertical UI chrome reserved for header + footer panel. */
+  private static readonly RESERVED_HEIGHT = 180;
+
+  private readonly _viewportH = signal(typeof window !== 'undefined' ? window.innerHeight : 800);
+  private readonly _viewportW = signal(typeof window !== 'undefined' ? window.innerWidth : 800);
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this._viewportH.set(window.innerHeight);
+    this._viewportW.set(window.innerWidth);
+  }
+
+  /** True when the current viewport can fit every player in FULL mode without
+   * the user having to scroll. Drives compact decisions across both phases. */
+  readonly canFitAllFull = computed(() => {
+    const playerCount = this.gameSrv.players().length;
+    if (playerCount === 0) {
+      return true;
+    }
+    const available = this._viewportH() - MainGameComponent.RESERVED_HEIGHT;
+    const cols = this._viewportW() >= 768 ? 2 : 1;
+    const rows = Math.ceil(playerCount / cols);
+    return rows * MainGameComponent.FULL_CARD_HEIGHT <= available;
+  });
+
   // ── Phase 2 compact: persistent, compares vs ONLY the last drawn card ──
   readonly phase2CompactState = computed<Record<string, boolean>>(() => {
     if (this.gameSrv.phase() !== 2) {
+      return {};
+    }
+
+    // When the screen has room for everyone in full mode, never compact.
+    if (this.canFitAllFull()) {
       return {};
     }
 
@@ -48,40 +83,49 @@ export class MainGameComponent {
     return result;
   });
 
-  // ── Phase 1 compact delay control ──
-  // Uses a signal so Angular OnPush detects changes from 3s timeouts
-  private readonly compactState = signal<Map<string, number | string>>(new Map());
+  /** Track which player was last active. Used to detect when active player changes. */
+  private _lastActiveId: string | null = null;
+  /** Map of inactive players currently in compact mode. Absence from the map means
+   * the player is rendered FULL (used during the 3s "drink reveal" window so the
+   * orange +N badge is prominent before the card shrinks). */
+  private readonly compactState = signal<Map<string, number>>(new Map());
 
-  /** Phase 1: when active player changes, reset compact states.
-   * Inactive players start full (compactDelay = 3000), then become compact after 3s. */
+  /** Phase 1: on active-player change, decide compact vs full for each inactive
+   * player. Inactive without sips → compact immediately. Inactive with sips →
+   * stay full for 3s (player isn't in the map), then a setTimeout flips them
+   * to compact. Always rewrites the map — otherwise stale "compact" entries
+   * from a previous round survive and block the full window the next time the
+   * same player picks. */
   private readonly compactResetEffect = effect(() => {
     const currentActiveId = this.gameSrv.activePlayer()?.id ?? null;
-    this.compactState.update((currentState) => {
-      const newState = new Map<string, number | string>(currentState);
-      const prevActiveId = newState.get('__activePlayer') ?? null;
+    const players = this.gameSrv.players();
 
-      gameState: {
-        if (currentActiveId !== prevActiveId) {
-          // Active player changed — reset all inactive player delays to full (3000)
-          const oldKeys = Array.from(newState.keys()).filter((k) => k !== '__activePlayer');
-          oldKeys.forEach((k) => newState.delete(k));
-          if (currentActiveId) {
-            newState.set('__activePlayer', currentActiveId);
-          }
+    if (currentActiveId === this._lastActiveId) {
+      return;
+    }
+    this._lastActiveId = currentActiveId;
 
-          // Schedule 3s timeout for each inactive player to become compact
-          for (const playerId of oldKeys) {
-            if (playerId !== currentActiveId) {
-              setTimeout(() => {
-                this.compactState.update((s) => s.set(playerId, 0));
-              }, 3000);
-            }
-          }
-          break gameState;
-        }
+    const newState = new Map<string, number>();
+    const inactivePlayerIds = currentActiveId
+      ? players.filter((p) => p.id !== currentActiveId).map((p) => p.id)
+      : players.map((p) => p.id);
+
+    for (const playerId of inactivePlayerIds) {
+      const sips = this.gameSrv.getLastTurnSipsForPlayer(playerId);
+      if (sips > 0) {
+        setTimeout(() => {
+          this.compactState.update((state) => {
+            const s = new Map(state);
+            s.set(playerId, 0);
+            return s;
+          });
+        }, 3000);
+      } else {
+        newState.set(playerId, 0);
       }
-      return newState;
-    });
+    }
+
+    this.compactState.set(newState);
   });
 
   /** Get compact delay value for a player in Phase 1. */
@@ -89,19 +133,25 @@ export class MainGameComponent {
     if (this.gameSrv.phase() !== 1) {
       return 0;
     }
+    // Plenty of vertical room: keep every inactive player full so the user
+    // doesn't lose context when they're not the spotlight.
+    if (this.canFitAllFull()) {
+      return 3000;
+    }
     const activeId = this.gameSrv.activePlayer()?.id;
     if (!activeId || playerId === activeId) {
       return 0;
     }
     const state = this.compactState();
+
+    // If the player has no entry in compactState, they're still full (3s before compact)
     const value = state.get(playerId);
     if (value === undefined) {
-      return 3000;
+      return 3000; // Still full — hasn't been assigned yet (first run or player count changed)
     }
-    if (typeof value === 'number') {
-      return value;
-    }
-    return 3000;
+
+    // If value is 0, they're already compact
+    return value; // 0 or 3000
   }
 
   /** Phase 2 compact state accessor for a player by ID */
