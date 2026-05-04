@@ -199,6 +199,18 @@
   animation: match-pulse 600ms var(--ease-bounce);
   border-color: var(--color-accent-gold);
   box-shadow: 0 0 16px color-mix(in srgb, var(--color-accent-gold) 50%, transparent);
+
+  // Visual connection line hint - dashed gold border
+  position: relative;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 2px dashed color-mix(in srgb, var(--color-accent-gold) 60%, transparent);
+    border-radius: var(--radius-lg);
+    animation: match-line-pulse 2s ease-in-out infinite;
+    pointer-events: none;
+  }
 }
 
 @keyframes match-pulse {
@@ -212,6 +224,18 @@
   }
   100% {
     transform: scale(1);
+  }
+}
+
+@keyframes match-line-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+    box-shadow: 0 0 8px color-mix(in srgb, var(--color-accent-gold) 40%, transparent);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 16px color-mix(in srgb, var(--color-accent-gold) 70%, transparent);
   }
 }
 
@@ -255,7 +279,7 @@
   }
 }
 
-::ng-deep .card-fan .card-container {
+::ng-deep .player-card__cards .card-fan .card-container {
   width: 48px;
   min-height: auto;
 }
@@ -301,13 +325,13 @@
 
 // === Responsive ===
 @media (min-width: 768px) {
-  ::ng-deep .card-fan .card-container {
+  ::ng-deep .player-card__cards .card-fan .card-container {
     width: 52px;
   }
 }
 
 @media (min-width: 1024px) {
-  ::ng-deep .card-fan .card-container {
+  ::ng-deep .player-card__cards .card-fan .card-container {
     width: 56px;
   }
 }
@@ -392,6 +416,9 @@
   .player-card--match {
     animation: none;
     box-shadow: 0 0 12px color-mix(in srgb, var(--color-accent-gold) 50%, transparent);
+    &::after {
+      display: none;
+    }
   }
   .fan-card {
     &:nth-child(1),

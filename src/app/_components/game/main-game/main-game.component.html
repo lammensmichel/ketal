@@ -14,7 +14,7 @@
                 [player]="player"
                 [isActive]="false"
                 [hasActivePlayer]="true"
-                [compact]="true"
+                [compact]="getCompactDelay(player.id) === 0"
               ></app-player-card>
             }
           </div>
@@ -38,6 +38,7 @@
               [player]="player"
               [isActive]="player.id === gameSrv.activePlayer()?.id"
               [hasActivePlayer]="true"
+              [compact]="player.id !== gameSrv.activePlayer()?.id && getCompactDelay(player.id) === 0"
             ></app-player-card>
           }
         </div>
@@ -48,7 +49,12 @@
     @if (!gameSrv.activePlayer()) {
       <div class="players-grid">
         @for (player of gameSrv.players(); track player.id) {
-          <app-player-card [player]="player" [isActive]="false" [hasActivePlayer]="false"></app-player-card>
+          <app-player-card
+            [player]="player"
+            [isActive]="false"
+            [hasActivePlayer]="false"
+            [compact]="phase2CompactState()[player.id]"
+          ></app-player-card>
         }
       </div>
     }

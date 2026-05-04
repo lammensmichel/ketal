@@ -1148,6 +1148,15 @@ export class GameService {
     return this._lastTurnGiven()[playerId] ?? 0;
   }
 
+  /**
+   * Clear the per-turn sip indicators for drink and give.
+   * Used when the sip-giving modal is closed to remove persistent badges.
+   */
+  clearLastTurnIndicators(): void {
+    this._lastTurnSips.set({});
+    this._lastTurnGiven.set({});
+  }
+
   openSipGiveModal(player: PlayerModel): void {
     this.openSipGiveModalEvent.next(player);
   }
