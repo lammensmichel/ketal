@@ -2,6 +2,8 @@ import { CardType } from './card-type.model';
 
 type UUIDv4 = string;
 
+export type PlayerGender = 'male' | 'female' | 'neutral';
+
 export interface PlayerChoice {
   [key: string]: string;
 }
@@ -13,6 +15,7 @@ export interface PlayerSips {
 export class PlayerModel {
   public name: string = '';
   public id: UUIDv4 = '';
+  public gender: PlayerGender = 'neutral';
   public cards: Array<CardType> = [];
   public avatarSrc: string = '';
   public choice: PlayerChoice = {

@@ -1,3 +1,12 @@
+// Host shares the 900px column with .players-grid and .footer-wrapper for
+// strict vertical alignment of the three stacked zones.
+:host {
+  display: block;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
 .game-progress {
   display: flex;
   align-items: center;
@@ -7,6 +16,8 @@
   background-color: var(--color-bg-elevated);
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 // === Stepper ===

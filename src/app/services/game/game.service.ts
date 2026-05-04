@@ -84,19 +84,35 @@ export class GameService {
   readonly givingCards = computed(() => this._game()?.givingCards ?? []);
   readonly summary = computed(() => this._game()?.summary ?? false);
 
+  /** localStorage keys for the per-turn badges, persisted so a F5 mid-game does
+   * not erase the "previous player drinks N" indicator. */
+  private static readonly LAST_TURN_SIPS_KEY = 'last_turn_sips';
+  private static readonly LAST_TURN_GIVEN_KEY = 'last_turn_given';
+
   /**
    * Per-turn sip indicator for Phase 1.
    * Tracks the sips from the most recently dealt card per player.
    * Resets when the active player changes (next player's turn starts).
    * Map key = player ID, value = sips from the last dealt card.
    */
-  private readonly _lastTurnSips = signal<Record<string, number>>({});
+  private readonly _lastTurnSips = signal<Record<string, number>>(this.loadLastTurnMap(GameService.LAST_TURN_SIPS_KEY));
   readonly lastTurnSips = this._lastTurnSips.asReadonly();
   /** Per-draw give sips per player (Phase 2 give card matches) so the UI can show
    * a short-lived "you must give N sips this turn" badge even when summary is off
    * and no modal/pending counter is available. Cleared on each next card draw. */
-  private readonly _lastTurnGiven = signal<Record<string, number>>({});
+  private readonly _lastTurnGiven = signal<Record<string, number>>(
+    this.loadLastTurnMap(GameService.LAST_TURN_GIVEN_KEY)
+  );
   readonly lastTurnGiven = this._lastTurnGiven.asReadonly();
+
+  private loadLastTurnMap(key: string): Record<string, number> {
+    try {
+      const raw = this.localSrv.getData(key);
+      return raw ? (JSON.parse(raw) as Record<string, number>) : {};
+    } catch {
+      return {};
+    }
+  }
 
   /** Phase 2: value of the last revealed card (for match feedback in player-card) */
   readonly phase2LastCardValue = signal<string | null>(null);
@@ -120,6 +136,14 @@ export class GameService {
     // Persist summary mode preference to localStorage on every change
     effect(() => {
       localStorage.setItem(GameService.SUMMARY_MODE_KEY, String(this.withSummaryMode()));
+    });
+
+    // Persist per-turn drink/give badges so they survive a page reload.
+    effect(() => {
+      this.localSrv.saveData(GameService.LAST_TURN_SIPS_KEY, JSON.stringify(this._lastTurnSips()));
+    });
+    effect(() => {
+      this.localSrv.saveData(GameService.LAST_TURN_GIVEN_KEY, JSON.stringify(this._lastTurnGiven()));
     });
 
     // Detect newly-added Phase 2 cards (local OR via realtime sync in room mode)
@@ -1146,6 +1170,29 @@ export class GameService {
   /** Get the per-draw give sips for a player (Phase 2 give card match). */
   getLastTurnGivenForPlayer(playerId: string): number {
     return this._lastTurnGiven()[playerId] ?? 0;
+  }
+
+  /**
+   * Clear the per-turn sip indicators for drink and give.
+   * Used when the sip-giving modal is closed to remove persistent badges.
+   */
+  clearLastTurnIndicators(): void {
+    this._lastTurnSips.set({});
+    this._lastTurnGiven.set({});
+  }
+
+  /** Clear the per-turn give indicator for a single player. Used when the giver
+   * finishes distributing via the modal — the pink "+N 🍷" per-event badge
+   * should disappear since the obligation is settled. */
+  clearLastTurnGivenForPlayer(playerId: string): void {
+    this._lastTurnGiven.update((state) => {
+      if (!(playerId in state)) {
+        return state;
+      }
+      const next = { ...state };
+      delete next[playerId];
+      return next;
+    });
   }
 
   openSipGiveModal(player: PlayerModel): void {

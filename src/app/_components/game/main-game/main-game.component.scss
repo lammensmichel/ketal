@@ -33,7 +33,7 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-3);
-  padding: var(--space-2) 0;
+  padding: var(--space-2) var(--space-2);
   // Reserve space for the Phase 2 draw panel on mobile
   padding-bottom: 160px;
   max-width: 900px;

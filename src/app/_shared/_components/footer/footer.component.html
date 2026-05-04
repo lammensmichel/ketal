@@ -237,39 +237,39 @@
     @if (gameSrv.phase() === 2) {
       <div class="prediction-panel prediction-panel--phase2" [class.prediction-panel--locked]="isAnimationLocked()">
         @if (gameSrv.isGameStarted() || gameSrv.isGameFinished()) {
-          <!-- Phase 2 header: distribution stats -->
-          <div class="phase2-header">
-            <div class="phase2-header__stats">
-              <span class="phase2-header__stat-value">Boire {{ gameSrv.drinkingCards().length }}/6</span>
-              <span class="phase2-header__stat-value">Donner {{ gameSrv.givingCards().length }}/6</span>
-            </div>
-            <!-- Sip distribution guidance -->
-            @if (gameSrv.isNotAllSipsGiven()) {
+          <!-- Phase 2 guidance (only shown when sips remain to distribute).
+               The drink/give counts are surfaced by the per-lane labels with icons
+               below — no need to duplicate them here. -->
+          @if (!phase2DistributionDone() && gameSrv.isNotAllSipsGiven()) {
+            <div class="phase2-header">
               <div class="phase2-header__guidance">
                 <span [translate]="'Phase2_Sip_Guidance'"></span>
               </div>
-            }
-          </div>
-          <div class="draw-layout">
-            <!-- Left lane: drink cards (red) -->
-            <div class="draw-lane draw-lane--drink">
-              <span class="draw-lane__label draw-lane__label--drink"> 🍷 {{ gameSrv.drinkingCards().length }}/6 </span>
-              <div class="draw-lane__cards">
-                @for (card of gameSrv.drinkingCards(); track $index) {
-                  <app-playing-card
-                    [card]="card"
-                    [faceDown]="true"
-                    [flipped]="true"
-                    [glowColor]="'red'"
-                    [leftOverlap]="$index !== 0"
-                  ></app-playing-card>
-                }
-              </div>
             </div>
+          }
+          @if (!phase2Complete()) {
+            <div class="draw-layout">
+              <!-- Left lane: drink cards (red) -->
+              <div class="draw-lane draw-lane--drink">
+                <span class="draw-lane__label draw-lane__label--drink">
+                  <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon>
+                  {{ gameSrv.drinkingCards().length }}/6
+                </span>
+                <div class="draw-lane__cards">
+                  @for (card of gameSrv.drinkingCards(); track $index) {
+                    <app-playing-card
+                      [card]="card"
+                      [faceDown]="true"
+                      [flipped]="true"
+                      [glowColor]="'red'"
+                      [leftOverlap]="$index !== 0"
+                    ></app-playing-card>
+                  }
+                </div>
+              </div>
 
-            <!-- Center: draw pile -->
-            <div class="draw-pile">
-              @if (!phase2Complete()) {
+              <!-- Center: draw pile -->
+              <div class="draw-pile">
                 <button
                   class="draw-pile__btn"
                   [disabled]="revealingPhase2()"
@@ -307,46 +307,59 @@
                       'draw-pile__sip-badge--give': !nextIsDrink(),
                     }"
                   >
-                    {{ nextSipValue() }}
+                    <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon>
+                    <span class="draw-pile__sip-badge-value">{{ nextSipValue() }}</span>
                   </span>
                 </button>
-              } @else {
-                <!-- All cards drawn: show actions -->
-                <div class="phase2-actions">
-                  <button
-                    type="button"
-                    class="prediction-btn prediction-btn--start"
-                    (click)="restartGame()"
-                    [translate]="'Button_Restart'"
-                  ></button>
-                  @if (gameSrv.isGameFinished() && gameSrv.isSummaryActivated() && !gameSrv.isSummaryMode()) {
-                    <button
-                      type="button"
-                      class="prediction-btn prediction-btn--start"
-                      (click)="displaySummary()"
-                      [translate]="'Button_Display_Summary'"
-                    ></button>
+              </div>
+
+              <!-- Right lane: give cards (green) -->
+              <div class="draw-lane draw-lane--give">
+                <span class="draw-lane__label draw-lane__label--give">
+                  <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon>
+                  {{ gameSrv.givingCards().length }}/6
+                </span>
+                <div class="draw-lane__cards">
+                  @for (card of gameSrv.givingCards(); track $index) {
+                    <app-playing-card
+                      [card]="card"
+                      [faceDown]="true"
+                      [flipped]="true"
+                      [glowColor]="'green'"
+                      [leftOverlap]="$index !== 0"
+                    ></app-playing-card>
                   }
                 </div>
-              }
-            </div>
-
-            <!-- Right lane: give cards (green) -->
-            <div class="draw-lane draw-lane--give">
-              <span class="draw-lane__label draw-lane__label--give"> 🫳 {{ gameSrv.givingCards().length }}/6 </span>
-              <div class="draw-lane__cards">
-                @for (card of gameSrv.givingCards(); track $index) {
-                  <app-playing-card
-                    [card]="card"
-                    [faceDown]="true"
-                    [flipped]="true"
-                    [glowColor]="'green'"
-                    [leftOverlap]="$index !== 0"
-                  ></app-playing-card>
-                }
               </div>
             </div>
-          </div>
+          } @else if (!phase2DistributionDone()) {
+            <!-- Cards all drawn but sips still owed: prompt user to finish distribution -->
+            <div class="phase2-pending-distribution">
+              <p class="phase2-pending-distribution__message" [translate]="'Phase2_Sip_Guidance'"></p>
+              <p class="phase2-pending-distribution__hint">
+                Touche le badge rose <span class="phase2-pending-distribution__pill">+N 🍷</span> sur la fiche d'un
+                joueur pour rouvrir la distribution.
+              </p>
+            </div>
+          } @else {
+            <!-- End of round: clean full-width actions panel -->
+            <div class="phase2-actions">
+              <button
+                type="button"
+                class="prediction-btn prediction-btn--start"
+                (click)="restartGame()"
+                [translate]="'Button_Restart'"
+              ></button>
+              @if (gameSrv.isGameFinished() && gameSrv.isSummaryActivated() && !gameSrv.isSummaryMode()) {
+                <button
+                  type="button"
+                  class="prediction-btn prediction-btn--start"
+                  (click)="displaySummary()"
+                  [translate]="'Button_Display_Summary'"
+                ></button>
+              }
+            </div>
+          }
         }
       </div>
     }

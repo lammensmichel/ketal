@@ -1,29 +1,17 @@
-<div class="d-flex flex-row gap-1 gap-align-items-center w-100">
-  <img
-    title="avatarImg"
-    alt="{{ player?.name }}"
-    class="img-thumbnail"
-    width="32"
-    height="32"
-    src="{{ player?.avatarSrc }}"
-  />
-  <div class="flex-grow-1 text-truncate order-2">{{ player?.name }}</div>
-  @if (this.gameSrv.isSummaryMode() && player && player.sips) {
-    <span class="badge bg-danger order-3"
-      >{{ player.sips['drunk'] }} <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon
-    ></span>
-  }
-  @if (this.gameSrv.isSummaryMode() && player && player.sips) {
-    <span class="badge bg-success order-3"
-      >{{ player.sips['given'] }} <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon
-    ></span>
-  }
+<div class="player-tile">
   @if (player && this.gameSrv.isNewGame()) {
-    <button
-      type="button"
-      class="btn-close order-4 align-self-end"
-      aria-label="Close"
-      (click)="deletePlayer(player)"
-    ></button>
+    <button type="button" class="player-tile__remove" aria-label="Supprimer" (click)="deletePlayer(player)">×</button>
+  }
+  <img class="player-tile__avatar" alt="{{ player?.name }}" src="{{ player?.avatarSrc }}" />
+  <span class="player-tile__name">{{ player?.name }}</span>
+  @if (this.gameSrv.isSummaryMode() && player && player.sips) {
+    <div class="player-tile__badges">
+      <span class="player-tile__badge player-tile__badge--drink">
+        {{ player.sips['drunk'] }} <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon>
+      </span>
+      <span class="player-tile__badge player-tile__badge--give">
+        {{ player.sips['given'] }} <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon>
+      </span>
+    </div>
   }
 </div>

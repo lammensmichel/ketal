@@ -74,6 +74,9 @@ export class PlayerGivenSipsSelectionComponent {
       this.gameSrv.updatePlayerGivenSipsFromCard(this.givenPlayer, card, 0);
     });
 
+    // Clear the giver's per-event "+N to give" badge — the obligation is now settled.
+    this.gameSrv.clearLastTurnGivenForPlayer(this.givenPlayer.id);
+
     this.closeModal();
   }
 

@@ -199,6 +199,18 @@
   animation: match-pulse 600ms var(--ease-bounce);
   border-color: var(--color-accent-gold);
   box-shadow: 0 0 16px color-mix(in srgb, var(--color-accent-gold) 50%, transparent);
+
+  // Visual connection line hint - dashed gold border
+  position: relative;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 2px dashed color-mix(in srgb, var(--color-accent-gold) 60%, transparent);
+    border-radius: var(--radius-lg);
+    animation: match-line-pulse 2s ease-in-out infinite;
+    pointer-events: none;
+  }
 }
 
 @keyframes match-pulse {
@@ -212,6 +224,18 @@
   }
   100% {
     transform: scale(1);
+  }
+}
+
+@keyframes match-line-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+    box-shadow: 0 0 8px color-mix(in srgb, var(--color-accent-gold) 40%, transparent);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 16px color-mix(in srgb, var(--color-accent-gold) 70%, transparent);
   }
 }
 
@@ -255,7 +279,7 @@
   }
 }
 
-::ng-deep .card-fan .card-container {
+::ng-deep .player-card__cards .card-fan .card-container {
   width: 48px;
   min-height: auto;
 }
@@ -301,13 +325,13 @@
 
 // === Responsive ===
 @media (min-width: 768px) {
-  ::ng-deep .card-fan .card-container {
+  ::ng-deep .player-card__cards .card-fan .card-container {
     width: 52px;
   }
 }
 
 @media (min-width: 1024px) {
-  ::ng-deep .card-fan .card-container {
+  ::ng-deep .player-card__cards .card-fan .card-container {
     width: 56px;
   }
 }
@@ -319,10 +343,26 @@
   gap: var(--space-1);
   padding: var(--space-1) var(--space-2);
   flex-shrink: 0;
+  border-left: 3px solid transparent;
+  transition:
+    border-color var(--animation-fast) var(--ease-default),
+    box-shadow var(--animation-fast) var(--ease-default);
 
   &.player-card--inactive {
     opacity: 0.8;
     transform: none;
+  }
+
+  // Highlight the whole card while a per-turn drink/give badge is present, so
+  // the eye is drawn to the player who just drew (not just to the small badge).
+  &:has(.player-card__turn-badge--sm) {
+    border-left-color: var(--color-accent-gold);
+    box-shadow: -2px 0 12px color-mix(in srgb, var(--color-accent-gold) 25%, transparent);
+    opacity: 1;
+  }
+  &:has(.player-card__turn-badge--sm.player-card__turn-badge--give) {
+    border-left-color: var(--color-give-event);
+    box-shadow: -2px 0 12px color-mix(in srgb, var(--color-give-event) 25%, transparent);
   }
 }
 
@@ -370,13 +410,47 @@
 .player-card__turn-badge--sm {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
-  padding: 1px 4px;
-  border-radius: var(--radius-sm);
-  background: rgba(217, 119, 6, 0.15);
-  color: var(--color-accent-gold);
-  font-size: 0.6rem;
-  font-weight: var(--font-weight-semibold);
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--color-accent-gold);
+  color: #1a0f00;
+  font-size: 0.72rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.02em;
+  box-shadow:
+    0 0 12px color-mix(in srgb, var(--color-accent-gold) 55%, transparent),
+    0 1px 2px rgba(0, 0, 0, 0.2);
+  animation: turnBadgePulseSm 1.4s var(--ease-default) 1;
+  flex-shrink: 0;
+
+  &--give {
+    background: var(--color-give-event);
+    color: #fff;
+    box-shadow:
+      0 0 12px color-mix(in srgb, var(--color-give-event) 55%, transparent),
+      0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+}
+
+@keyframes turnBadgePulseSm {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  35% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
+  55% {
+    transform: scale(0.96);
+  }
+  75% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 // === Reduced Motion ===
@@ -392,6 +466,9 @@
   .player-card--match {
     animation: none;
     box-shadow: 0 0 12px color-mix(in srgb, var(--color-accent-gold) 50%, transparent);
+    &::after {
+      display: none;
+    }
   }
   .fan-card {
     &:nth-child(1),
@@ -405,7 +482,8 @@
       transform: none;
     }
   }
-  .player-card__turn-badge {
+  .player-card__turn-badge,
+  .player-card__turn-badge--sm {
     animation: none;
   }
 }

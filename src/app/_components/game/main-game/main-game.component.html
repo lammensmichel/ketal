@@ -4,51 +4,69 @@
     <app-game-progress></app-game-progress>
 
     @if (gameSrv.activePlayer()) {
-      <!-- Mobile: split active vs inactive players -->
-      <div class="mobile-layout">
-        <!-- Inactive players: compact horizontal strip -->
-        @if (inactivePlayers().length > 0) {
-          <div class="players-strip">
-            @for (player of inactivePlayers(); track player.id) {
-              <app-player-card
-                [player]="player"
-                [isActive]="false"
-                [hasActivePlayer]="true"
-                [compact]="true"
-              ></app-player-card>
-            }
-          </div>
-        }
-
-        <!-- Active player: prominent card -->
-        <div class="active-player-section">
-          <app-player-card
-            [player]="gameSrv.activePlayer()!"
-            [isActive]="true"
-            [hasActivePlayer]="true"
-          ></app-player-card>
-        </div>
-      </div>
-
-      <!-- Desktop: classic 2-column grid -->
-      <div class="desktop-layout">
+      @if (canFitAllFull()) {
+        <!-- Spacious viewport: render every player full in a grid; the active one
+             is highlighted by its own glow ring. No strip, no compaction. -->
         <div class="players-grid">
           @for (player of gameSrv.players(); track player.id) {
             <app-player-card
               [player]="player"
               [isActive]="player.id === gameSrv.activePlayer()?.id"
               [hasActivePlayer]="true"
+              [compact]="false"
             ></app-player-card>
           }
         </div>
-      </div>
+      } @else {
+        <!-- Tight viewport: fallback to responsive layouts (mobile strip / desktop grid) -->
+        <div class="mobile-layout">
+          @if (inactivePlayers().length > 0) {
+            <div class="players-strip">
+              @for (player of inactivePlayers(); track player.id) {
+                <app-player-card
+                  [player]="player"
+                  [isActive]="false"
+                  [hasActivePlayer]="true"
+                  [compact]="getCompactDelay(player.id) === 0"
+                ></app-player-card>
+              }
+            </div>
+          }
+
+          <div class="active-player-section">
+            <app-player-card
+              [player]="gameSrv.activePlayer()!"
+              [isActive]="true"
+              [hasActivePlayer]="true"
+            ></app-player-card>
+          </div>
+        </div>
+
+        <div class="desktop-layout">
+          <div class="players-grid">
+            @for (player of gameSrv.players(); track player.id) {
+              <app-player-card
+                [player]="player"
+                [isActive]="player.id === gameSrv.activePlayer()?.id"
+                [hasActivePlayer]="true"
+                [compact]="player.id !== gameSrv.activePlayer()?.id && getCompactDelay(player.id) === 0"
+              ></app-player-card>
+            }
+          </div>
+        </div>
+      }
     }
 
-    <!-- Phase 2 / no active player: normal grid -->
+    <!-- Phase 2 / no active player: grid with optional per-match compact when tight -->
     @if (!gameSrv.activePlayer()) {
       <div class="players-grid">
         @for (player of gameSrv.players(); track player.id) {
-          <app-player-card [player]="player" [isActive]="false" [hasActivePlayer]="false"></app-player-card>
+          <app-player-card
+            [player]="player"
+            [isActive]="false"
+            [hasActivePlayer]="false"
+            [compact]="phase2CompactState()[player.id]"
+          ></app-player-card>
         }
       </div>
     }

@@ -1,4 +1,4 @@
-import { Component, Input, ViewChild, OnDestroy, inject, signal, computed } from '@angular/core';
+import { Component, Input, ViewChild, OnDestroy, inject, signal, computed, effect } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { NgClass } from '@angular/common';
@@ -106,10 +106,43 @@ export class FooterComponent implements OnDestroy {
   /** Whether all 12 Phase 2 cards have been drawn */
   readonly phase2Complete = computed(() => this.gameSrv.givingCards().length >= 6);
 
+  /** Phase 2 fully done: all 12 cards drawn AND every owed give-sip has been
+   * distributed via the modal. Gates the end-of-round buttons so a user cannot
+   * skip distribution. */
+  readonly phase2DistributionDone = computed(() => this.phase2Complete() && !this.gameSrv.isNotAllSipsGiven());
+
   /** Remaining cards in the draw pile */
   readonly cardsRemaining = computed(
     () => 12 - this.gameSrv.drinkingCards().length - this.gameSrv.givingCards().length
   );
+
+  /** Tracks whether we already auto-opened the modal for the current pending state.
+   * Reset whenever the pending condition clears (so it re-arms for a future round). */
+  private _autoOpenedAtComplete = false;
+
+  /** When phase 2 finishes drawing but sips remain to distribute, auto-open the
+   * give modal for any player still owing sips. Without this, the user reaches
+   * 6/6 and is stuck since no card draw triggers the usual openSipGiveModal. */
+  private readonly autoOpenPendingGiveEffect = effect(() => {
+    const complete = this.phase2Complete();
+    const pending = this.gameSrv.isNotAllSipsGiven();
+
+    if (!complete || !pending) {
+      this._autoOpenedAtComplete = false;
+      return;
+    }
+    if (this._autoOpenedAtComplete) {
+      return;
+    }
+    this._autoOpenedAtComplete = true;
+    // Defer one tick so the panel finishes its layout swap before the modal animates in.
+    queueMicrotask(() => {
+      this.gameSrv
+        .players()
+        .filter((p) => this.playerHelper.getTotalGivenSips(p) > 0)
+        .forEach((p) => this.gameSrv.openSipGiveModal(p));
+    });
+  });
 
   ngOnDestroy(): void {
     this._animationTimers.forEach((id) => clearTimeout(id));
