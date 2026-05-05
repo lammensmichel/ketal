@@ -107,6 +107,12 @@ export class SideMenuComponent {
     this.router.navigate(['/players']);
   }
 
+  /** Navigate to my rooms page */
+  goToRooms(): void {
+    this.closeMenu();
+    this.router.navigate(['/rooms']);
+  }
+
   /** Show quit confirmation dialog */
   showQuitConfirmation(): void {
     this.showQuitConfirm.set(true);

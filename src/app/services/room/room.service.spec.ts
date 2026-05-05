@@ -27,6 +27,7 @@ describe('RoomService', () => {
     mode: 'multiplayer' as RoomMode,
     maxPlayers: 10,
     gamesPlayed: 0,
+    archived: false,
   };
 
   const mockGameRoom: GameRoom = {
@@ -41,6 +42,7 @@ describe('RoomService', () => {
     mode: 'multiplayer',
     maxPlayers: 10,
     gamesPlayed: 0,
+    archived: false,
   };
 
   beforeEach(() => {
@@ -509,7 +511,7 @@ describe('RoomService', () => {
       await service.createRoom('Test Room');
       expect(service.currentRoom()).not.toBeNull();
 
-      await service.leaveRoom();
+      await service.leaveRoom(service.currentRoom()!.$id);
 
       expect(service.currentRoom()).toBeNull();
     });

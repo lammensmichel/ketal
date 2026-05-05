@@ -1,50 +1,50 @@
 <div class="home-container">
-  <div class="home-card">
-    <!-- Branding -->
-    <div class="branding">
-      <h1 class="app-title">KETAL</h1>
-      <p class="app-subtitle">{{ 'auth.partOfFug' | translate }}</p>
+  <!-- Welcome Header -->
+  @if (!isLoading()) {
+    <div class="welcome-header">
+      <h1>Bienvenue {{ userName() }}</h1>
     </div>
+  }
 
-    <!-- Error Alert -->
-    @if (error()) {
-      <div class="alert alert-danger" role="alert">
-        {{ error()! | translate }}
-      </div>
-    }
+  <!-- Error Alert -->
+  @if (errorMsg() !== null) {
+    <div class="alert alert-danger" role="alert">
+      {{ errorMsg()! }}
+    </div>
+  }
 
-    <!-- CTA Buttons -->
-    <div class="cta-buttons">
-      <!-- Create Game Button -->
-      <button
-        type="button"
-        class="btn btn-primary btn-cta btn-create-game"
-        (click)="createGame()"
-        [disabled]="isCreating()"
-      >
-        @if (isCreating()) {
-          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-        } @else {
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16" class="me-2">
-            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-            <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm10-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1z"/>
-          </svg>
+  <!-- Recent Rooms Carousel -->
+  @if (!isLoading() && recentRooms().length > 0) {
+    <div class="recent-section">
+      <h2 class="section-title">Mes parties récentes</h2>
+
+      <div class="rooms-carousel">
+        @for (room of recentRooms(); track room.$id) {
+          <div class="room-tile">
+            <app-room-tile [room]="room" [currentRole]="'player'" [membersCount]="room.memberCount" />
+          </div>
         }
-        {{ 'home.createGame' | translate }}
-      </button>
+      </div>
 
-      <!-- Join Game Button -->
-      <button
-        type="button"
-        class="btn btn-outline-primary btn-cta btn-join-game"
-        (click)="joinGame()"
-        [disabled]="isCreating()"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16" class="me-2">
-          <path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1h8Zm-7.978-1A.261.261 0 0 1 7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002a.274.274 0 0 1-.014.002H7.022ZM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM6.936 9.28a5.88 5.88 0 0 0-1.23-.247A7.35 7.35 0 0 0 5 9c-4 0-5 3-5 4 0 .667.333 1 1 1h4.216A2.238 2.238 0 0 1 5 13c0-.828.299-1.986 1.027-2.999.243-.339.525-.655.841-.94.074-.07.148-.138.224-.202l-.062-.045-.094-.07ZM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/>
-        </svg>
-        {{ 'home.joinGame' | translate }}
-      </button>
+      <div class="see-all-link">
+        <a (click)="goToRooms()" role="link" tabindex="0">Voir tout →</a>
+      </div>
+    </div>
+  } @else if (!isLoading) {
+    <!-- No rooms message -->
+    <div class="recent-section">
+      <p class="no-rooms-text">Vous n'avez encore aucune partie.</p>
+    </div>
+  }
+
+  <!-- CTA Section -->
+  <div class="cta-section">
+    <!-- Large primary button: Create Game -->
+    <button type="button" class="create-btn" (click)="createGame()">Créer une partie</button>
+
+    <!-- Text link: Join Game -->
+    <div class="join-link">
+      <a (click)="joinGame()" role="link" tabindex="0">Rejoindre une partie</a>
     </div>
   </div>
 </div>

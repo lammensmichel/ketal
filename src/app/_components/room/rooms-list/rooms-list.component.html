@@ -1,0 +1,71 @@
+<div class="rooms-container">
+  <!-- Header -->
+  <header class="rooms-header">
+    <h1 class="page-title">Mes Rooms</h1>
+  </header>
+
+  <!-- Error Alert -->
+  @if (error()) {
+    <div class="alert alert-danger" role="alert">
+      {{ error()! }}
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="loading-skeleton">
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!isLoading() && !hasRooms()) {
+    <div class="empty-state">
+      <div class="empty-state-content">
+        <div class="empty-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" viewBox="0 0 16 16">
+            <path
+              d="M13 1a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h10zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"
+            />
+            <path d="M1 3.5h14v3h-14z" />
+            <path d="M3 9h10v2H3z" />
+          </svg>
+        </div>
+        <h2 class="empty-title">Aucune room récente</h2>
+        <p class="empty-text">Vous n'avez pas de rooms en cours ou récentes.</p>
+        <button type="button" class="btn btn-primary btn-lg" (click)="handleCreateRoom()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            fill="currentColor"
+            viewBox="0 0 16 16"
+            class="me-2"
+          >
+            <path
+              d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"
+            />
+          </svg>
+          Créer une partie
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Rooms Grid -->
+  @if (!isLoading() && hasRooms()) {
+    <div class="rooms-grid">
+      @for (room of visibleRooms(); track room.$id) {
+        <app-room-tile [room]="room" [currentRole]="getRoomRole(room.$id)" [membersCount]="room.memberCount" />
+      } @empty {
+        <div class="empty-state">
+          <p class="empty-text">Aucune room affichée</p>
+          <button type="button" class="btn btn-primary" (click)="handleCreateRoom()">Créer une partie</button>
+        </div>
+      }
+    </div>
+  }
+</div>

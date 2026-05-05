@@ -589,7 +589,10 @@ export class GameService {
 
     // Clean up solo room state and leave room
     this.soloRoomService.reset();
-    this.roomService.leaveRoom();
+    const room = this.roomService.currentRoom();
+    if (room) {
+      this.roomService.leaveRoom(room.$id);
+    }
 
     this.updateGame((game) => {
       game.givingCards = [];

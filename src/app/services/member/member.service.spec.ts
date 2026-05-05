@@ -37,6 +37,7 @@ describe('MemberService', () => {
     displayName: 'Test Player',
     role: 'player',
     isOnline: true,
+    lastSeenAt: null,
     totalSipsGiven: 10,
     totalSipsTaken: 5,
     totalGamesPlayed: 2,

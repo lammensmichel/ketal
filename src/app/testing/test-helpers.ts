@@ -324,6 +324,7 @@ export function createMockGameRoom(overrides: Partial<GameRoom> = {}): GameRoom 
     mode: 'multiplayer',
     maxPlayers: 10,
     gamesPlayed: 0,
+    archived: false,
     ...overrides,
   };
 }
@@ -341,6 +342,7 @@ export function createMockKetalSession(overrides: Partial<KetalSession> = {}): K
     phase: 'setup',
     turn: 0,
     activePlayerId: null,
+    terminatedBy: null,
     players: [],
     drinkingCards: [],
     givingCards: [],

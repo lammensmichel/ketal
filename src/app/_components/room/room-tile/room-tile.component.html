@@ -1,0 +1,39 @@
+<div
+  class="room-tile"
+  [class.clickable]="isClickable()"
+  [class.archived]="displayStatus() === 'archived'"
+  (click)="handleClick()"
+>
+  <!-- Status bar at the top -->
+  <div
+    class="status-bar"
+    [class.idle]="displayStatus() === 'idle'"
+    [class.playing]="displayStatus() === 'playing'"
+    [class.archived]="displayStatus() === 'archived'"
+  ></div>
+
+  <div class="tile-content">
+    <!-- Room name and code -->
+    <div class="room-info">
+      <h4 class="room-name">{{ roomName() }}</h4>
+      <p class="room-code">Code: {{ room().code }}</p>
+    </div>
+
+    <!-- Member count -->
+    <p class="member-count">{{ membersCount() }}/{{ room().maxPlayers }} joueurs</p>
+  </div>
+
+  <!-- Action button -->
+  <div class="tile-actions">
+    @if (actionLabel()) {
+      <button
+        type="button"
+        class="btn btn-sm"
+        (click)="$event.stopPropagation(); handleAction()"
+        [disabled]="isDisabled()"
+      >
+        {{ actionLabel() }}
+      </button>
+    }
+  </div>
+</div>

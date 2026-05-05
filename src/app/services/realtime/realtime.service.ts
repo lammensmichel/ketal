@@ -1,5 +1,5 @@
 import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
-import { RealtimeResponseEvent } from 'appwrite';
+import { Models, RealtimeResponseEvent } from 'appwrite';
 import { AppwriteService, DATABASE_ID } from '../appwrite/appwrite.service';
 
 /**
@@ -26,11 +26,12 @@ export interface GameRoom {
   inviteToken: string;
   currentGameId: string | null;
   currentSessionId: string | null;
-  status: 'idle' | 'playing';
+  status: 'idle' | 'playing' | 'archived';
   hostMemberId: string;
   mode: 'local' | 'multiplayer' | 'solo';
   maxPlayers: number;
   gamesPlayed: number;
+  archived?: boolean;
 }
 
 /**
@@ -233,5 +234,23 @@ export class RealtimeService {
    */
   private updateSubscriptionCount(): void {
     this._subscriptionCount.set(this._subscriptions.size);
+  }
+
+  /**
+   * Broadcast an event to all members of a room
+   *
+   * In production, this should be implemented using Appwrite Cloud Functions
+   * since the client SDK cannot directly push to multiple clients.
+   * For now, this logs the event - clients should subscribe to room updates
+   * to receive real-time notifications.
+   *
+   * @param roomId - The room ID to broadcast to
+   * @param event - The event name (e.g., 'room_renamed', 'member_left')
+   * @param data - Event-specific payload data
+   */
+  broadcastToRoom(roomId: string, event: string, data: Record<string, unknown>): void {
+    // Log the event for debugging
+    console.log(`[RealtimeService] Broadcasting event '${event}' to room ${roomId}`, data);
+    // Note: Actual broadcast requires Appwrite Cloud Functions in production
   }
 }

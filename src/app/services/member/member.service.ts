@@ -48,6 +48,8 @@ export interface GameMember {
   totalSipsTaken: number;
   /** Total number of games played */
   totalGamesPlayed: number;
+  /** Last seen timestamp (ISO string) */
+  lastSeenAt?: string;
   /** Per-game statistics keyed by game ID */
   gameStats: {
     [gameId: string]: GameStats;
@@ -326,6 +328,36 @@ export class MemberService {
     } catch (error) {
       throw new Error(`Failed to set online status: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  }
+
+  /**
+   * Get all members for a specific userId (across all rooms)
+   */
+  async getMembersByUserId(userId: string): Promise<GameMember[]> {
+    try {
+      const response = await this.appwrite.databases.listDocuments(this.appwrite.databaseId, COLLECTION_GAME_MEMBERS, [
+        Query.equal('userId', userId),
+        Query.limit(100),
+      ]);
+      return response.documents.map((doc) => this.mapDocumentToMember(doc));
+    } catch (error) {
+      throw new Error(`Failed to get members by userId: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Update current member's online status
+   */
+  async updateRoom(_role: string): Promise<void> {
+    const current = this._currentMember();
+    if (!current) {
+      return;
+    }
+
+    await this.updateMember(current.$id, {
+      isOnline: true,
+      lastSeenAt: new Date().toISOString(),
+    });
   }
 
   /**

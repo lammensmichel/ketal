@@ -1,140 +1,130 @@
-@use '../../../breakpoints' as *;
+:host {
+  display: block;
+}
 
 .home-container {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 0.5rem;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px;
 
-  @include tablet {
-    padding: 1rem;
+  @media (min-width: 768px) {
+    padding: 32px 24px;
   }
 }
 
-.home-card {
-  width: 100%;
-  max-width: 400px;
-  padding: 1.5rem;
-  background: rgba(var(--color-bg-surface-rgb), 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  transition:
-    backdrop-filter var(--animation-normal) var(--ease-default),
-    -webkit-backdrop-filter var(--animation-normal) var(--ease-default),
-    box-shadow var(--animation-normal) var(--ease-default),
-    background var(--animation-normal) var(--ease-default);
+.welcome-header {
+  margin-bottom: 32px;
 
-  @include tablet {
-    padding: var(--space-6);
-    max-width: 450px;
+  h1 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0;
+  }
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: var(--color-text-primary);
+}
+
+.recent-section {
+  margin-bottom: 32px;
+}
+
+.rooms-carousel {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 8px;
+
+  // Hide scrollbar for WebKit browsers
+  &::-webkit-scrollbar {
+    display: none;
   }
 
-  @include desktop {
-    padding: 2.5rem;
-  }
+  // Hide scrollbar for Firefox
+  scrollbar-width: none;
 
-  @include wide {
-    padding: 3rem;
-    max-width: 500px;
+  .room-tile {
+    flex: 0 0 240px;
+    scroll-snap-align: start;
   }
+}
 
-  &:hover {
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    box-shadow: 0 14px 24px rgba(0, 0, 0, 0.22);
-  }
+.see-all-link {
+  text-align: right;
+  margin-top: 8px;
 
-  @supports not ((backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px))) {
-    background: var(--color-bg-surface);
+  a {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
 
     &:hover {
-      box-shadow: var(--shadow-lg);
+      text-decoration: underline;
     }
   }
 }
 
-.branding {
-  text-align: center;
-  margin-bottom: 2rem;
-
-  @include tablet {
-    margin-bottom: 2.5rem;
-  }
-
-  .app-title {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--color-text-primary);
-    margin-bottom: 0.25rem;
-    letter-spacing: 0.1em;
-
-    @include tablet {
-      font-size: 2.5rem;
-    }
-
-    @include wide {
-      font-size: 3rem;
-    }
-  }
-
-  .app-subtitle {
-    font-size: 0.9rem;
-    color: var(--color-text-secondary);
-    margin-bottom: 0;
-  }
-}
-
-.cta-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.btn-cta {
-  width: 100%;
-  padding: 0.875rem;
-  font-weight: 500;
+.no-rooms-text {
   font-size: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.5rem;
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease;
+  color: var(--color-text-secondary);
+  text-align: center;
+  padding: 24px 0;
+  background: var(--color-bg-surface);
+  border-radius: 12px;
+}
 
-  @include tablet {
-    padding: 1rem;
+.cta-section {
+  margin-top: 40px;
+
+  .create-btn {
+    width: 100%;
+    padding: 16px;
     font-size: 1.1rem;
+    font-weight: 600;
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition:
+      background 0.2s,
+      transform 0.1s;
+
+    &:hover:not(:disabled) {
+      background: var(--color-primary-dark);
+      transform: translateY(-1px);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
   }
 
-  @include wide {
-    padding: 1.25rem;
-    font-size: 1.2rem;
+  .join-link {
+    margin-top: 12px;
+    text-align: center;
+
+    a {
+      color: var(--color-primary);
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
   }
-
-  &:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15);
-  }
-
-  &:active:not(:disabled) {
-    transform: translateY(0);
-  }
-
-  svg {
-    flex-shrink: 0;
-  }
-}
-
-.btn-create-game {
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.btn-join-game {
-  letter-spacing: 0.02em;
 }

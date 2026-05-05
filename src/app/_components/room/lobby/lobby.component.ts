@@ -634,6 +634,12 @@ export class LobbyComponent implements OnInit {
       return;
     }
 
+    const room = this.currentRoom();
+    if (!room) {
+      console.error('No current room to leave');
+      return;
+    }
+
     try {
       this.isLoading.set(true);
       this.error.set(null);
@@ -642,7 +648,7 @@ export class LobbyComponent implements OnInit {
       await this.memberService.deleteMember(member.$id);
 
       // Clear room state
-      await this.roomService.leaveRoom();
+      await this.roomService.leaveRoom(room.$id);
 
       // Navigate to home
       await this.router.navigate(['/']);

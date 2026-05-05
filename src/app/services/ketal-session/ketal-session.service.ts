@@ -41,12 +41,14 @@ export interface KetalPlayer {
   sipsTaken: number;
   /** Whether the player is ready to start */
   isReady: boolean;
+  /** Whether the player has left the session */
+  hasLeft?: boolean;
 }
 
 /**
  * Session status values
  */
-export type SessionStatus = 'waiting' | 'playing' | 'finished';
+export type SessionStatus = 'waiting' | 'playing' | 'finished' | 'cancelled';
 
 /**
  * Game phase values
@@ -73,6 +75,8 @@ export interface KetalSession {
   turn: number;
   /** ID of the player whose turn it is */
   activePlayerId: string | null;
+  /** ID of the member who terminated the session */
+  terminatedBy?: string | null;
   /** Array of players in the game */
   players: KetalPlayer[];
   /** Cards drawn during the drinking phase */
@@ -102,6 +106,7 @@ interface KetalPlayerDoc {
   sipsTaken: number;
   sipsGiven: number;
   isReady: boolean;
+  hasLeft: boolean;
 }
 
 /**
@@ -126,6 +131,7 @@ interface SessionData {
   phase: SessionPhase;
   turn: number;
   activePlayerId: string | null;
+  terminatedBy?: string | null;
   withSummary: boolean;
 }
 
@@ -209,6 +215,7 @@ export class KetalSessionService {
           phase: 'setup',
           turn: 0,
           activePlayerId: players.length > 0 ? players[0].memberId : null,
+          terminatedBy: null,
           withSummary,
         }
       );
@@ -227,6 +234,7 @@ export class KetalSessionService {
           sipsTaken: player.sipsTaken,
           sipsGiven: player.sipsGiven,
           isReady: player.isReady,
+          hasLeft: player.hasLeft ?? false,
         })
       );
 
@@ -280,6 +288,7 @@ export class KetalSessionService {
         'phase',
         'turn',
         'activePlayerId',
+        'terminatedBy',
         'withSummary',
       ];
 
@@ -468,6 +477,7 @@ export class KetalSessionService {
       phase: session.phase,
       turn: session.turn,
       activePlayerId: session.activePlayerId,
+      terminatedBy: session.terminatedBy ?? null,
       withSummary: session.withSummary,
     });
 
@@ -483,6 +493,7 @@ export class KetalSessionService {
         sipsTaken: p.sipsTaken,
         sipsGiven: p.sipsGiven,
         isReady: p.isReady,
+        hasLeft: p.hasLeft ?? false,
       }))
     );
 
@@ -596,6 +607,7 @@ export class KetalSessionService {
       phase: (doc['phase'] as SessionPhase) ?? 'setup',
       turn: (doc['turn'] as number) ?? 0,
       activePlayerId: (doc['activePlayerId'] as string) ?? null,
+      terminatedBy: (doc['terminatedBy'] as string) ?? null,
       withSummary: (doc['withSummary'] as boolean) ?? false,
     };
   }
@@ -612,6 +624,7 @@ export class KetalSessionService {
       sipsTaken: (doc['sipsTaken'] as number) ?? 0,
       sipsGiven: (doc['sipsGiven'] as number) ?? 0,
       isReady: (doc['isReady'] as boolean) ?? false,
+      hasLeft: (doc['hasLeft'] as boolean) ?? false,
     };
   }
 
@@ -641,6 +654,7 @@ export class KetalSessionService {
       sipsTaken: doc.sipsTaken,
       sipsGiven: doc.sipsGiven,
       isReady: doc.isReady,
+      hasLeft: doc.hasLeft ?? false,
     };
   }
 
