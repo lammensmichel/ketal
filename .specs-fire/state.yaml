@@ -1,0 +1,27 @@
+project:
+  name: Ketal
+  description: Angular 19 drinking card game
+  created: 2026-05-12T10:00:00Z
+  fire_version: 0.1.8
+workspace:
+  type: brownfield
+  structure: monolith
+  autonomy_bias: balanced
+  run_scope_preference: single
+  run_scope_history: []
+intents: []
+runs:
+  active:
+    - id: run-ketal-001
+      scope: single
+      work_items:
+        - id: story-1-realtime-foundation
+          intent: appwrite-sdk-v25-migration
+          mode: validate
+          status: in_progress
+          current_phase: execute
+          checkpoint_state: approved
+          current_checkpoint: plan
+      current_item: story-1-realtime-foundation
+      started: 2026-05-12T08:07:44.747Z
+  completed: []

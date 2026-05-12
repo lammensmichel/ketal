@@ -1,8 +1,10 @@
-import { TestBed } from '@angular/core/testing';
+import { TestBed, inject } from '@angular/core/testing';
+import { DestroyRef } from '@angular/core';
 import { GameService } from './game.service';
 import { LocalService } from '../local/local.service';
 import { CardService } from '../card/card.service';
 import { RoomService } from '../room/room.service';
+import { AuthService } from '../auth/auth.service';
 import { KetalSessionService } from '../ketal-session/ketal-session.service';
 import { MemberService } from '../member/member.service';
 import { PlayerHelperService } from '../../_shared/_helpers/player.helper';
@@ -13,15 +15,18 @@ import {
   createMockPlayerHelperService,
   createMockCardDeckHelperService,
   createMockRoomService,
+  createMockAuthService,
   createMockKetalSessionService,
   createMockMemberService,
   createMockRealtimeService,
   createMockSoloRoomService,
+  createMockAppwriteService,
   createMockGameRoom,
   createMockKetalSession,
 } from '../../testing/test-helpers';
 import { RealtimeService } from '../realtime/realtime.service';
 import { SoloRoomService } from '../solo-room/solo-room.service';
+import { AppwriteService } from '../appwrite/appwrite.service';
 import { Game } from '../../_shared/_models/game.model';
 import { PlayerModel } from '../../_shared/_models/player.model';
 import { CardType } from '../../_shared/_models/card-type.model';
@@ -98,6 +103,7 @@ describe('GameService', () => {
   let mockPlayerHelperService: jasmine.SpyObj<PlayerHelperService>;
   let mockCardDeckHelperService: jasmine.SpyObj<CardDeckHelperService>;
   let mockRoomService: ReturnType<typeof createMockRoomService>;
+  let mockAuthService: ReturnType<typeof createMockAuthService>;
   let mockKetalSessionService: ReturnType<typeof createMockKetalSessionService>;
   let mockMemberService: ReturnType<typeof createMockMemberService>;
   let mockRealtimeService: ReturnType<typeof createMockRealtimeService>;
@@ -110,10 +116,17 @@ describe('GameService', () => {
     mockPlayerHelperService = createMockPlayerHelperService();
     mockCardDeckHelperService = createMockCardDeckHelperService();
     mockRoomService = createMockRoomService();
+    mockAuthService = createMockAuthService();
     mockKetalSessionService = createMockKetalSessionService();
     mockMemberService = createMockMemberService();
     mockRealtimeService = createMockRealtimeService();
     mockSoloRoomService = createMockSoloRoomService();
+
+    // Break the circular dependency by using factory functions for RoomService and AuthService
+    // Angular's DI cycle detection works by exploring the graph BEFORE considering useValue.
+    // By using factory functions, we defer the actual value creation until after DI resolution.
+    const mockRoomServiceFactory = () => mockRoomService;
+    const mockAuthServiceFactory = () => mockAuthService;
 
     TestBed.configureTestingModule({
       providers: [
@@ -122,11 +135,14 @@ describe('GameService', () => {
         { provide: CardService, useValue: mockCardService },
         { provide: PlayerHelperService, useValue: mockPlayerHelperService },
         { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-        { provide: RoomService, useValue: mockRoomService },
+        // Use factory to break cycle detection - returns mock after DI graph is resolved
+        { provide: RoomService, useFactory: mockRoomServiceFactory },
+        { provide: AuthService, useFactory: mockAuthServiceFactory },
         { provide: KetalSessionService, useValue: mockKetalSessionService },
         { provide: MemberService, useValue: mockMemberService },
         { provide: RealtimeService, useValue: mockRealtimeService },
         { provide: SoloRoomService, useValue: mockSoloRoomService },
+        { provide: AppwriteService, useValue: createMockAppwriteService() },
       ],
     });
     service = TestBed.inject(GameService);
@@ -144,6 +160,10 @@ describe('GameService', () => {
       const mockGame = createMockGame();
       mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
 
+      // Factory functions to break circular dependency
+      const mockRoomServiceFactory = () => mockRoomService;
+      const mockAuthServiceFactory = () => mockAuthService;
+
       // Re-create service to trigger constructor
       TestBed.resetTestingModule();
       TestBed.configureTestingModule({
@@ -153,7 +173,8 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          { provide: RoomService, useValue: mockRoomService },
+          { provide: RoomService, useFactory: mockRoomServiceFactory },
+          { provide: AuthService, useFactory: mockAuthServiceFactory },
           { provide: KetalSessionService, useValue: mockKetalSessionService },
           { provide: MemberService, useValue: mockMemberService },
           { provide: RealtimeService, useValue: mockRealtimeService },
@@ -170,6 +191,10 @@ describe('GameService', () => {
     it('should return empty game when no data in local storage', () => {
       mockLocalService.getData.and.returnValue(null);
 
+      // Factory functions to break circular dependency
+      const mockRoomServiceFactory = () => mockRoomService;
+      const mockAuthServiceFactory = () => mockAuthService;
+
       TestBed.resetTestingModule();
       TestBed.configureTestingModule({
         providers: [
@@ -178,7 +203,8 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          { provide: RoomService, useValue: mockRoomService },
+          { provide: RoomService, useFactory: mockRoomServiceFactory },
+          { provide: AuthService, useFactory: mockAuthServiceFactory },
           { provide: KetalSessionService, useValue: mockKetalSessionService },
           { provide: MemberService, useValue: mockMemberService },
           { provide: RealtimeService, useValue: mockRealtimeService },
@@ -677,7 +703,8 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          { provide: RoomService, useValue: mockRoomService },
+          { provide: RoomService, useFactory: () => mockRoomService },
+          { provide: AuthService, useFactory: () => mockAuthService },
           { provide: KetalSessionService, useValue: mockKetalSessionService },
           { provide: MemberService, useValue: mockMemberService },
           { provide: RealtimeService, useValue: mockRealtimeService },
@@ -1068,7 +1095,8 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          { provide: RoomService, useValue: mockRoomService },
+          { provide: RoomService, useFactory: () => mockRoomService },
+          { provide: AuthService, useFactory: () => mockAuthService },
           { provide: KetalSessionService, useValue: mockKetalSessionService },
           { provide: MemberService, useValue: mockMemberService },
           { provide: RealtimeService, useValue: mockRealtimeService },
@@ -1116,7 +1144,8 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          { provide: RoomService, useValue: mockRoomService },
+          { provide: RoomService, useFactory: () => mockRoomService },
+          { provide: AuthService, useFactory: () => mockAuthService },
           { provide: KetalSessionService, useValue: mockKetalSessionService },
           { provide: MemberService, useValue: mockMemberService },
           { provide: RealtimeService, useValue: mockRealtimeService },
@@ -1224,7 +1253,8 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          { provide: RoomService, useValue: mockRoomService },
+          { provide: RoomService, useFactory: () => mockRoomService },
+          { provide: AuthService, useFactory: () => mockAuthService },
           { provide: KetalSessionService, useValue: mockKetalSessionService },
           { provide: MemberService, useValue: mockMemberService },
           { provide: RealtimeService, useValue: mockRealtimeService },
@@ -1472,7 +1502,8 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          { provide: RoomService, useValue: mockRoomService },
+          { provide: RoomService, useFactory: () => mockRoomService },
+          { provide: AuthService, useFactory: () => mockAuthService },
           { provide: KetalSessionService, useValue: mockKetalSessionService },
           { provide: MemberService, useValue: mockMemberService },
           { provide: RealtimeService, useValue: mockRealtimeService },
@@ -1666,7 +1697,8 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          { provide: RoomService, useValue: mockRoomService },
+          { provide: RoomService, useFactory: () => mockRoomService },
+          { provide: AuthService, useFactory: () => mockAuthService },
           { provide: KetalSessionService, useValue: mockKetalSessionService },
           { provide: MemberService, useValue: mockMemberService },
           { provide: RealtimeService, useValue: mockRealtimeService },
@@ -1812,7 +1844,8 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          { provide: RoomService, useValue: mockRoomService },
+          { provide: RoomService, useFactory: () => mockRoomService },
+          { provide: AuthService, useFactory: () => mockAuthService },
           { provide: KetalSessionService, useValue: mockKetalSessionService },
           { provide: MemberService, useValue: mockMemberService },
           { provide: RealtimeService, useValue: mockRealtimeService },
@@ -2201,7 +2234,8 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          { provide: RoomService, useValue: mockRoomService },
+          { provide: RoomService, useFactory: () => mockRoomService },
+          { provide: AuthService, useFactory: () => mockAuthService },
           { provide: KetalSessionService, useValue: mockKetalSessionService },
         ],
       });
@@ -2220,7 +2254,8 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-            { provide: RoomService, useValue: mockRoomService },
+            { provide: RoomService, useFactory: () => mockRoomService },
+            { provide: AuthService, useFactory: () => mockAuthService },
             { provide: KetalSessionService, useValue: mockKetalSessionService },
             { provide: MemberService, useValue: mockMemberService },
           ],
@@ -2242,7 +2277,8 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-            { provide: RoomService, useValue: mockRoomService },
+            { provide: RoomService, useFactory: () => mockRoomService },
+            { provide: AuthService, useFactory: () => mockAuthService },
             { provide: KetalSessionService, useValue: mockKetalSessionService },
             { provide: MemberService, useValue: mockMemberService },
           ],
@@ -2265,7 +2301,8 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-            { provide: RoomService, useValue: mockRoomService },
+            { provide: RoomService, useFactory: () => mockRoomService },
+            { provide: AuthService, useFactory: () => mockAuthService },
             { provide: KetalSessionService, useValue: mockKetalSessionService },
             { provide: MemberService, useValue: mockMemberService },
           ],
@@ -2287,7 +2324,8 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-            { provide: RoomService, useValue: mockRoomService },
+            { provide: RoomService, useFactory: () => mockRoomService },
+            { provide: AuthService, useFactory: () => mockAuthService },
             { provide: KetalSessionService, useValue: mockKetalSessionService },
             { provide: MemberService, useValue: mockMemberService },
           ],
@@ -2337,7 +2375,8 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-            { provide: RoomService, useValue: mockRoomService },
+            { provide: RoomService, useFactory: () => mockRoomService },
+            { provide: AuthService, useFactory: () => mockAuthService },
             { provide: KetalSessionService, useValue: mockKetalSessionService },
             { provide: MemberService, useValue: mockMemberService },
           ],
@@ -2392,7 +2431,8 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-            { provide: RoomService, useValue: mockRoomService },
+            { provide: RoomService, useFactory: () => mockRoomService },
+            { provide: AuthService, useFactory: () => mockAuthService },
             { provide: KetalSessionService, useValue: mockKetalSessionService },
             { provide: MemberService, useValue: mockMemberService },
           ],
@@ -2426,7 +2466,8 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-            { provide: RoomService, useValue: mockRoomService },
+            { provide: RoomService, useFactory: () => mockRoomService },
+            { provide: AuthService, useFactory: () => mockAuthService },
             { provide: KetalSessionService, useValue: mockKetalSessionService },
             { provide: MemberService, useValue: mockMemberService },
           ],
@@ -2653,7 +2694,8 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-            { provide: RoomService, useValue: mockRoomService },
+            { provide: RoomService, useFactory: () => mockRoomService },
+            { provide: AuthService, useFactory: () => mockAuthService },
             { provide: KetalSessionService, useValue: mockKetalSessionService },
             { provide: MemberService, useValue: mockMemberService },
           ],
@@ -2685,7 +2727,8 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-            { provide: RoomService, useValue: mockRoomService },
+            { provide: RoomService, useFactory: () => mockRoomService },
+            { provide: AuthService, useFactory: () => mockAuthService },
             { provide: KetalSessionService, useValue: mockKetalSessionService },
             { provide: MemberService, useValue: mockMemberService },
           ],
@@ -2763,7 +2806,8 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          { provide: RoomService, useValue: mockRoomService },
+          { provide: RoomService, useFactory: () => mockRoomService },
+          { provide: AuthService, useFactory: () => mockAuthService },
           { provide: KetalSessionService, useValue: mockKetalSessionService },
           { provide: MemberService, useValue: mockMemberService },
           { provide: RealtimeService, useValue: mockRealtimeService },

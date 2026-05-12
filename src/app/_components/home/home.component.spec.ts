@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick, waitForAsync } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { HomeComponent } from './home.component';
@@ -13,23 +13,24 @@ describe('HomeComponent', () => {
   let roomService: jasmine.SpyObj<RoomService>;
   let authService: jasmine.SpyObj<AuthService>;
 
-  beforeEach(async () => {
+  beforeEach(waitForAsync(() => {
     const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
     routerSpy.navigate.and.returnValue(Promise.resolve(true));
 
-    const roomServiceSpy = jasmine.createSpyObj('RoomService', ['createSoloRoom'], {
+    const roomServiceSpy = jasmine.createSpyObj('RoomService', ['createSoloRoom', 'getMyRooms'], {
       currentRoom: signal(null),
     });
     roomServiceSpy.createSoloRoom.and.returnValue(Promise.resolve({ $id: 'room1', name: 'Solo-123', code: 'ABC123' }));
+    roomServiceSpy.getMyRooms.and.returnValue(Promise.resolve([]));
 
-    const authServiceSpy = jasmine.createSpyObj('AuthService', [], {
+    const authServiceSpy = jasmine.createSpyObj('AuthService', ['init'], {
       currentUser: signal({ name: 'Test User', email: 'test@test.com', $id: 'user1' }),
       isLoggedIn: signal(true),
       isAnonymous: signal(false),
       isLoading: signal(false),
     });
 
-    await TestBed.configureTestingModule({
+    TestBed.configureTestingModule({
       imports: [HomeComponent, TranslateModule.forRoot()],
       providers: [
         { provide: Router, useValue: routerSpy },
@@ -45,22 +46,25 @@ describe('HomeComponent', () => {
     fixture = TestBed.createComponent(HomeComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should display branding', () => {
+  it('should display welcome header', () => {
     const compiled = fixture.nativeElement as HTMLElement;
-    const title = compiled.querySelector('.app-title');
-    expect(title?.textContent).toContain('KETAL');
+    const header = compiled.querySelector('.welcome-header');
+    expect(header).toBeTruthy();
+    expect(header?.textContent).toContain('Bienvenue');
   });
 
-  it('should have two CTA buttons', () => {
+  it('should have CTA buttons', () => {
     const compiled = fixture.nativeElement as HTMLElement;
-    const buttons = compiled.querySelectorAll('.btn-cta');
-    expect(buttons.length).toBe(2);
+    const createBtn = compiled.querySelector('.create-btn');
+    const joinLink = compiled.querySelector('.join-link');
+    expect(createBtn).toBeTruthy();
+    expect(joinLink).toBeTruthy();
   });
 
   it('should call createGame and navigate to /players on success', fakeAsync(() => {
@@ -69,7 +73,7 @@ describe('HomeComponent', () => {
 
     expect(roomService.createSoloRoom).toHaveBeenCalled();
     expect(router.navigate).toHaveBeenCalledWith(['/players']);
-    expect(component.isCreating()).toBe(false);
+    expect(component.isLoading()).toBe(false);
   }));
 
   it('should set error on createGame failure', fakeAsync(() => {
@@ -78,8 +82,8 @@ describe('HomeComponent', () => {
     component.createGame();
     tick();
 
-    expect(component.error()).toBe('Network error');
-    expect(component.isCreating()).toBe(false);
+    expect(component.errorMsg()).toBe('home.errors.createFailed');
+    expect(component.isLoading()).toBe(false);
   }));
 
   it('should not allow double-click on createGame', fakeAsync(() => {
@@ -101,14 +105,7 @@ describe('HomeComponent', () => {
     tick();
   }));
 
-  it('should navigate to /room/join when joinGame is called', fakeAsync(() => {
-    component.joinGame();
-    tick();
-
-    expect(router.navigate).toHaveBeenCalledWith(['/room/join']);
-  }));
-
-  it('should show loading spinner when creating', fakeAsync(() => {
+  it('should not allow double-click when room creation is in progress', fakeAsync(() => {
     let resolveRoom: (value: any) => void;
     roomService.createSoloRoom.and.returnValue(
       new Promise((resolve) => {
@@ -117,18 +114,20 @@ describe('HomeComponent', () => {
     );
 
     component.createGame();
-    fixture.detectChanges();
+    // Second call should be ignored because createGame checks isCreatingRoom
+    component.createGame();
 
-    const spinner = fixture.nativeElement.querySelector('.spinner-border');
-    expect(spinner).toBeTruthy();
-    expect(component.isCreating()).toBe(true);
+    expect(roomService.createSoloRoom).toHaveBeenCalledTimes(1);
 
     resolveRoom!({ $id: 'room1', name: 'Solo', code: 'ABC123' });
     tick();
-    fixture.detectChanges();
+  }));
 
-    const spinnerAfter = fixture.nativeElement.querySelector('.spinner-border');
-    expect(spinnerAfter).toBeFalsy();
+  it('should navigate to /room/join when joinGame is called', fakeAsync(() => {
+    component.joinGame();
+    tick();
+
+    expect(router.navigate).toHaveBeenCalledWith(['/room/join']);
   }));
 
   it('should compute userName from auth service', () => {

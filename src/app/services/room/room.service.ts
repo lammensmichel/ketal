@@ -86,9 +86,7 @@ interface CreateRoomData {
  *
  * Uses Angular 19 patterns with signals for reactive state management.
  */
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable()
 export class RoomService {
   private readonly appwrite = inject(AppwriteService);
   private readonly realtime = inject(RealtimeService);
@@ -414,6 +412,11 @@ export class RoomService {
         // Set hasLeft=true for all players in session
       }
     }
+
+    // Clear current room if it matches the room being left
+    if (this._currentRoom()?.$id === roomId) {
+      this._currentRoom.set(null);
+    }
   }
 
   /**
@@ -478,7 +481,7 @@ export class RoomService {
    * Map an Appwrite document to a GameRoom interface
    */
   private mapDocumentToGameRoom(document: Record<string, unknown>): GameRoom {
-    return {
+    const result: GameRoom = {
       $id: document['$id'] as string,
       name: document['name'] as string,
       code: document['code'] as string,
@@ -490,7 +493,16 @@ export class RoomService {
       mode: (document['mode'] as RoomMode) || 'multiplayer',
       maxPlayers: (document['maxPlayers'] as number) || 10,
       gamesPlayed: (document['gamesPlayed'] as number) || 0,
-      $updatedAt: (document['$updatedAt'] as string) || undefined,
     };
+    if ('archived' in document) {
+      result.archived = document['archived'] as boolean;
+    }
+    if ('$updatedAt' in document) {
+      result.$updatedAt = document['$updatedAt'] as string;
+    }
+    if ('$updatedAt' in document) {
+      result.$updatedAt = document['$updatedAt'] as string;
+    }
+    return result;
   }
 }

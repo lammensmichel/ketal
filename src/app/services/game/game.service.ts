@@ -21,9 +21,7 @@ import { mapGameToSessionUpdate, mapPlayerModelToKetalPlayer, mapSessionToGame }
 /** Game mode type: local (localStorage) or room (Appwrite) */
 export type GameMode = 'local' | 'room';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable()
 export class GameService {
   private readonly localSrv = inject(LocalService);
   private readonly cardSrv = inject(CardService);

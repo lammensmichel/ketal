@@ -30,9 +30,7 @@ import { LocalService } from '../local/local.service';
  *   console.log('User:', authService.currentUser());
  * }
  */
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable()
 export class AuthService {
   private readonly appwrite = inject(AppwriteService);
   private readonly gameService = inject(GameService);

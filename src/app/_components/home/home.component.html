@@ -30,7 +30,7 @@
         <a (click)="goToRooms()" role="link" tabindex="0">Voir tout →</a>
       </div>
     </div>
-  } @else if (!isLoading) {
+  } @else if (!isLoading()) {
     <!-- No rooms message -->
     <div class="recent-section">
       <p class="no-rooms-text">Vous n'avez encore aucune partie.</p>

@@ -7,11 +7,15 @@ import { PlayersListComponent } from './players-list.component';
 import { PlayerHelperService } from '../../../_shared/_helpers/player.helper';
 import { GameService } from '../../../services/game/game.service';
 import { LocalService } from '../../../services/local/local.service';
+import { RoomService } from '../../../services/room/room.service';
+import { AuthService } from '../../../services/auth/auth.service';
 import { PlayerModel } from '../../../_shared/_models/player.model';
 import {
   createMockPlayerHelperService,
   createMockGameService,
   createMockLocalService,
+  createMockRoomService,
+  createMockAuthService,
 } from '../../../testing/test-helpers';
 
 describe('PlayersListComponent', () => {
@@ -20,11 +24,14 @@ describe('PlayersListComponent', () => {
   let mockPlayerHelperService: jasmine.SpyObj<PlayerHelperService>;
   let mockGameService: ReturnType<typeof createMockGameService>;
   let mockLocalService: jasmine.SpyObj<LocalService>;
+  let mockRoomService: jasmine.SpyObj<any>;
+  let mockAuthService: jasmine.SpyObj<any>;
   let translateService: TranslateService;
 
   const mockPlayer: PlayerModel = {
     id: '1',
     name: 'Test Player',
+    gender: 'neutral',
     cards: [],
     avatarSrc: '',
     choice: { color: '', plus_or_minus: '', in_out: '', suit: '' },
@@ -35,6 +42,8 @@ describe('PlayersListComponent', () => {
     mockPlayerHelperService = createMockPlayerHelperService();
     mockGameService = createMockGameService();
     mockLocalService = createMockLocalService();
+    mockRoomService = createMockRoomService();
+    mockAuthService = createMockAuthService();
 
     // Setup mock game object with players
     mockGameService.game.set({
@@ -55,6 +64,8 @@ describe('PlayersListComponent', () => {
         { provide: PlayerHelperService, useValue: mockPlayerHelperService },
         { provide: GameService, useValue: mockGameService },
         { provide: LocalService, useValue: mockLocalService },
+        { provide: RoomService, useValue: mockRoomService },
+        { provide: AuthService, useValue: mockAuthService },
       ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
@@ -114,7 +125,7 @@ describe('PlayersListComponent', () => {
       mockPlayerHelperService.isMaxPlayerNumberNotReached.and.returnValue(true);
       component.playersForm.controls['newPlayer'].setValue('New Player');
       component.addPlayer();
-      expect(mockPlayerHelperService.addPlayer).toHaveBeenCalledWith('New Player');
+      expect(mockPlayerHelperService.addPlayer).toHaveBeenCalledWith('New Player', 'neutral');
     });
 
     it('should reset form after adding player', () => {

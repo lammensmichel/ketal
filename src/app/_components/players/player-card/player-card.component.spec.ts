@@ -24,9 +24,10 @@ describe('PlayerCardComponent', () => {
 
   const mockPlayer: PlayerModel = {
     id: '1',
-    name: 'Test Player',
+    name: 'Test Player 1',
+    gender: 'neutral',
     cards: [],
-    avatarSrc: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
+    avatarSrc: '',
     choice: { color: '', plus_or_minus: '', in_out: '', suit: '' },
     sips: { drunk: 0, given: 0 },
   };
@@ -34,6 +35,7 @@ describe('PlayerCardComponent', () => {
   const mockPlayer2: PlayerModel = {
     id: '2',
     name: 'Test Player 2',
+    gender: 'neutral',
     cards: [],
     avatarSrc: '',
     choice: { color: '', plus_or_minus: '', in_out: '', suit: '' },

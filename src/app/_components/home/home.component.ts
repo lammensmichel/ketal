@@ -44,6 +44,9 @@ export class HomeComponent implements OnInit {
   /** Number of rooms to show in carousel */
   readonly MAX_ROOMS = 3;
 
+  /** Flag to prevent double-click during room creation */
+  private isCreatingRoom = false;
+
   /**
    * Component initialization
    */
@@ -88,12 +91,19 @@ export class HomeComponent implements OnInit {
    * Create a game room and navigate to /players
    */
   async createGame(): Promise<void> {
+    // Prevent double-click
+    if (this.isCreatingRoom) {
+      return;
+    }
+    this.isCreatingRoom = true;
     try {
       await this.roomService.createSoloRoom();
       await this.router.navigate(['/players']);
     } catch (err) {
       console.error('Failed to create game:', err);
       this.errorMsg.set('home.errors.createFailed');
+    } finally {
+      this.isCreatingRoom = false;
     }
   }
 

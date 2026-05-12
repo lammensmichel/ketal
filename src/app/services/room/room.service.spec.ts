@@ -2,11 +2,16 @@ import { TestBed } from '@angular/core/testing';
 import { RoomService, GameRoom, RoomMode, RoomStatus } from './room.service';
 import { AppwriteService } from '../appwrite/appwrite.service';
 import { RealtimeService } from '../realtime/realtime.service';
+import { MemberService, GameMember } from '../member/member.service';
+import { AuthService } from '../auth/auth.service';
+import { signal, WritableSignal } from '@angular/core';
 
 describe('RoomService', () => {
   let service: RoomService;
   let mockAppwriteService: jasmine.SpyObj<AppwriteService>;
   let mockRealtimeService: jasmine.SpyObj<RealtimeService>;
+  let mockMemberService: jasmine.SpyObj<MemberService>;
+  let mockAuthService: jasmine.SpyObj<AuthService>;
   let mockDatabases: {
     createDocument: jasmine.Spy;
     deleteDocument: jasmine.Spy;
@@ -60,12 +65,40 @@ describe('RoomService', () => {
     });
 
     mockRealtimeService = jasmine.createSpyObj('RealtimeService', ['subscribeToRoom', 'unsubscribe']);
+    mockMemberService = jasmine.createSpyObj('MemberService', [
+      'getMembersByRoom',
+      'getMembersByUserId',
+      'createMember',
+      'updateMember',
+      'deleteMember',
+    ]);
+    mockAuthService = jasmine.createSpyObj(
+      'AuthService',
+      [
+        'init',
+        'signUp',
+        'loginWithEmail',
+        'signInWithGoogle',
+        'logout',
+        'createAnonymousSession',
+        'getOrCreateSession',
+        'consumePendingSummary',
+      ],
+      {
+        currentUser: signal(null),
+        isLoggedIn: signal(false),
+        isAnonymous: signal(true),
+        isLoading: signal(false),
+      }
+    );
 
     TestBed.configureTestingModule({
       providers: [
         RoomService,
         { provide: AppwriteService, useValue: mockAppwriteService },
         { provide: RealtimeService, useValue: mockRealtimeService },
+        { provide: MemberService, useValue: mockMemberService },
+        { provide: AuthService, useValue: mockAuthService },
       ],
     });
 
@@ -342,37 +375,86 @@ describe('RoomService', () => {
   });
 
   describe('getMyRooms', () => {
-    it('should return all rooms sorted by creation date', async () => {
+    it('should return rooms for logged-in user', async () => {
+      (mockAuthService.isLoggedIn as unknown as WritableSignal<boolean>).set(true);
+      (mockAuthService.isAnonymous as unknown as WritableSignal<boolean>).set(false);
+      (mockAuthService.currentUser as unknown as WritableSignal<any>).set({ $id: 'user1' });
+
+      const mockMember1: GameMember = {
+        $id: 'member1',
+        roomId: 'room123',
+        userId: 'user1',
+        deviceId: null,
+        displayName: 'Player 1',
+        role: 'player',
+        isOnline: false,
+        totalSipsGiven: 0,
+        totalSipsTaken: 0,
+        totalGamesPlayed: 0,
+        gameStats: {},
+      };
+      const mockMember2: GameMember = {
+        $id: 'member2',
+        roomId: 'room456',
+        userId: 'user1',
+        deviceId: null,
+        displayName: 'Player 2',
+        role: 'player',
+        isOnline: false,
+        totalSipsGiven: 0,
+        totalSipsTaken: 0,
+        totalGamesPlayed: 0,
+        gameStats: {},
+      };
+      mockMemberService.getMembersByUserId.and.resolveTo([mockMember1, mockMember2]);
+      mockMemberService.getMembersByRoom.and.resolveTo([mockMember1]);
+
       const mockRoomDocument2 = { ...mockRoomDocument, $id: 'room456', name: 'Room 2' };
-      mockDatabases.listDocuments.and.resolveTo({
-        documents: [mockRoomDocument, mockRoomDocument2],
+      mockDatabases.getDocument.and.callFake((dbId: string, collectionId: string, roomId: string) => {
+        return Promise.resolve(roomId === 'room456' ? mockRoomDocument2 : mockRoomDocument);
       });
 
       const result = await service.getMyRooms();
 
-      expect(mockDatabases.listDocuments).toHaveBeenCalledWith('fug', 'fug_game_rooms', jasmine.any(Array));
-      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
-      expect(queries.some((q) => q.includes('orderDesc') && q.includes('$createdAt'))).toBeTrue();
-      expect(queries.some((q) => q.includes('limit') && q.includes('100'))).toBeTrue();
+      expect(mockMemberService.getMembersByUserId).toHaveBeenCalledWith('user1');
+      expect(mockDatabases.getDocument).toHaveBeenCalledWith('fug', 'fug_game_rooms', 'room123');
+      expect(mockDatabases.getDocument).toHaveBeenCalledWith('fug', 'fug_game_rooms', 'room456');
       expect(result.length).toBe(2);
       expect(result[0].$id).toBe('room123');
       expect(result[1].$id).toBe('room456');
     });
 
     it('should return empty array when no rooms exist', async () => {
-      mockDatabases.listDocuments.and.resolveTo({
-        documents: [],
-      });
+      (mockAuthService.isLoggedIn as unknown as WritableSignal<boolean>).set(true);
+      (mockAuthService.isAnonymous as unknown as WritableSignal<boolean>).set(false);
+      (mockAuthService.currentUser as unknown as WritableSignal<any>).set({ $id: 'user1' });
+      mockMemberService.getMembersByUserId.and.resolveTo([]);
 
       const result = await service.getMyRooms();
 
       expect(result).toEqual([]);
     });
 
-    it('should throw error on database failure', async () => {
-      mockDatabases.listDocuments.and.rejectWith(new Error('Database error'));
+    it('should throw error on member service failure', async () => {
+      (mockAuthService.isLoggedIn as unknown as WritableSignal<boolean>).set(true);
+      (mockAuthService.isAnonymous as unknown as WritableSignal<boolean>).set(false);
+      (mockAuthService.currentUser as unknown as WritableSignal<any>).set({ $id: 'user123' });
 
-      await expectAsync(service.getMyRooms()).toBeRejectedWithError('Failed to get rooms: Database error');
+      let spyCalled = false;
+      mockMemberService.getMembersByUserId.and.callFake(async () => {
+        spyCalled = true;
+        throw new Error('Database error');
+      });
+
+      let errorCaught = false;
+      try {
+        await service.getMyRooms();
+      } catch (err: any) {
+        errorCaught = true;
+        expect(err.message).toContain('Database error');
+      }
+      expect(spyCalled).toBeTrue();
+      expect(errorCaught).toBeTrue();
     });
   });
 
@@ -507,6 +589,11 @@ describe('RoomService', () => {
   describe('leaveRoom', () => {
     it('should clear currentRoom signal', async () => {
       mockDatabases.createDocument.and.resolveTo(mockRoomDocument);
+      mockDatabases.getDocument.and.resolveTo(mockRoomDocument);
+      mockMemberService.getMembersByRoom.and.resolveTo([
+        { $id: 'member123', roomId: 'room123', userId: 'current123', role: 'host' } as any,
+      ]);
+      (mockAuthService.currentUser as unknown as WritableSignal<any>).set({ $id: 'current123' });
 
       await service.createRoom('Test Room');
       expect(service.currentRoom()).not.toBeNull();
