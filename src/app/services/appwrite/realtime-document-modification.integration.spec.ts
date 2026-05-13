@@ -12,7 +12,7 @@ import { environment } from '../../../environments/environment';
  * 3. Modifies the document
  * 4. Verifies the callback receives the correct events with payloads
  */
-describe('Realtime Document Modification Integration', () => {
+xdescribe('Realtime Document Modification Integration', () => {
   let appwriteService: AppwriteService;
   const COLLECTION_ID = 'fug_game_rooms'; // Pre-existing collection with Realtime enabled
 

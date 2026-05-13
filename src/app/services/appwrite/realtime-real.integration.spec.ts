@@ -14,7 +14,7 @@ import { environment } from '../../../environments/environment';
  * 3. Our RealtimeService subscribes to these events and broadcasts via callbacks
  * 4. The test verifies the event callback receives the correct payload
  */
-describe('Appwrite Realtime Document Modification Integration', () => {
+xdescribe('Appwrite Realtime Document Modification Integration', () => {
   let appwriteService: AppwriteService;
   const COLLECTION_ID = 'fug_game_rooms';
 

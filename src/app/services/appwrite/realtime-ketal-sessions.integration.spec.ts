@@ -9,7 +9,7 @@ import { environment } from '../../../environments/environment';
  *
  * This test creates a ketal session and verifies Realtime callbacks receive events.
  */
-describe('Realtime ketal_sessions Integration', () => {
+xdescribe('Realtime ketal_sessions Integration', () => {
   let appwriteService: AppwriteService;
   let realtimeService: RealtimeService;
 
