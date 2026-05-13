@@ -141,7 +141,7 @@ export class SideMenuComponent {
   async connectToAccount(): Promise<void> {
     this.closeMenu();
     try {
-      await this.appwrite.account.deleteSession('current');
+      await this.appwrite.account.deleteSession({ sessionId: 'current' });
     } catch {
       // Session might already be invalid, continue
     }
