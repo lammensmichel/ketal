@@ -156,12 +156,18 @@ describe('AuthService', () => {
       await service.signUp('test@example.com', 'password123', 'Test User');
 
       expect(mockAccount.create).toHaveBeenCalledWith(
-        jasmine.any(String),
-        'test@example.com',
-        'password123',
-        'Test User'
+        jasmine.objectContaining({
+          email: 'test@example.com',
+          password: 'password123',
+          name: 'Test User',
+        })
       );
-      expect(mockAccount.createEmailPasswordSession).toHaveBeenCalledWith('test@example.com', 'password123');
+      expect(mockAccount.createEmailPasswordSession).toHaveBeenCalledWith(
+        jasmine.objectContaining({
+          email: 'test@example.com',
+          password: 'password123',
+        })
+      );
       expect(service.currentUser()).toEqual(mockUser);
       expect(service.isLoggedIn()).toBeTrue();
     });
@@ -192,9 +198,11 @@ describe('AuthService', () => {
       service.signInWithGoogle();
 
       expect(mockAccount.createOAuth2Session).toHaveBeenCalledWith(
-        'google',
-        jasmine.stringMatching(/\/$/),
-        jasmine.stringMatching(/\/login$/)
+        jasmine.objectContaining({
+          provider: 'google',
+          success: jasmine.stringMatching(/\/$/),
+          failure: jasmine.stringMatching(/\/login$/),
+        })
       );
     });
   });
@@ -206,7 +214,12 @@ describe('AuthService', () => {
 
       await service.loginWithEmail('test@example.com', 'password123');
 
-      expect(mockAccount.createEmailPasswordSession).toHaveBeenCalledWith('test@example.com', 'password123');
+      expect(mockAccount.createEmailPasswordSession).toHaveBeenCalledWith(
+        jasmine.objectContaining({
+          email: 'test@example.com',
+          password: 'password123',
+        })
+      );
       expect(service.currentUser()).toEqual(mockUser);
       expect(service.isLoggedIn()).toBeTrue();
     });
@@ -237,7 +250,7 @@ describe('AuthService', () => {
 
       await service.logout();
 
-      expect(mockAccount.deleteSession).toHaveBeenCalledWith('current');
+      expect(mockAccount.deleteSession).toHaveBeenCalledWith(jasmine.objectContaining({ sessionId: 'current' }));
       expect(service.currentUser()).toBeNull();
       expect(service.isLoggedIn()).toBeFalse();
     });

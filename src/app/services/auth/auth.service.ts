@@ -114,16 +114,21 @@ export class AuthService {
     try {
       // Logout any existing session first (e.g., guest session)
       try {
-        await this.appwrite.account.deleteSession('current');
+        await this.appwrite.account.deleteSession({ sessionId: 'current' });
       } catch {
         // No session to delete, continue
       }
 
       // Create the account
-      await this.appwrite.account.create(ID.unique(), email, password, name);
+      await this.appwrite.account.create({
+        userId: ID.unique(),
+        email,
+        password,
+        name,
+      });
 
       // Create a session (log in the user)
-      await this.appwrite.account.createEmailPasswordSession(email, password);
+      await this.appwrite.account.createEmailPasswordSession({ email, password });
 
       // Get user data and update state
       const user = await this.appwrite.account.get();
@@ -145,7 +150,11 @@ export class AuthService {
   signInWithGoogle(): void {
     const successUrl = window.location.origin + '/';
     const failureUrl = window.location.origin + '/login';
-    this.appwrite.account.createOAuth2Session(OAuthProvider.Google, successUrl, failureUrl);
+    this.appwrite.account.createOAuth2Session({
+      provider: OAuthProvider.Google,
+      success: successUrl,
+      failure: failureUrl,
+    });
   }
 
   /**
@@ -163,12 +172,12 @@ export class AuthService {
     try {
       // Logout any existing session first (e.g., guest session)
       try {
-        await this.appwrite.account.deleteSession('current');
+        await this.appwrite.account.deleteSession({ sessionId: 'current' });
       } catch {
         // No session to delete, continue
       }
 
-      await this.appwrite.account.createEmailPasswordSession(email, password);
+      await this.appwrite.account.createEmailPasswordSession({ email, password });
       const user = await this.appwrite.account.get();
       this._currentUser.set(user);
     } catch (error) {
@@ -222,7 +231,7 @@ export class AuthService {
         setGame: () => {},
         updateGame: () => {},
         loadGameFromStorage: () => null,
-        createEmptyGame: () => ({} as any),
+        createEmptyGame: () => ({}) as any,
         beginGame: () => {},
         displayNewCard: () => {},
         updatePlayerGivenSipsFromCard: () => {},
@@ -286,7 +295,7 @@ export class AuthService {
 
     // Delete the Appwrite session
     try {
-      await this.appwrite.account.deleteSession('current');
+      await this.appwrite.account.deleteSession({ sessionId: 'current' });
     } catch {
       // Session might already be invalid, ignore errors
     } finally {
