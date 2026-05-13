@@ -299,12 +299,12 @@ export class KetalSessionService {
       }
 
       if (Object.keys(sessionUpdate).length > 0) {
-        const doc = await this.appwrite.databases.updateDocument(
-          this.appwrite.databaseId,
-          COLLECTION_KETAL_SESSIONS,
-          sessionId,
-          sessionUpdate
-        );
+        const doc = await this.appwrite.databases.updateDocument({
+          databaseId: this.appwrite.databaseId,
+          collectionId: COLLECTION_KETAL_SESSIONS,
+          documentId: sessionId,
+          data: sessionUpdate,
+        });
         this._sessionData.set(this.mapRawToSessionData(doc));
       }
 
@@ -333,9 +333,14 @@ export class KetalSessionService {
    */
   async endGame(sessionId: string): Promise<void> {
     try {
-      await this.appwrite.databases.updateDocument(this.appwrite.databaseId, COLLECTION_KETAL_SESSIONS, sessionId, {
-        status: 'finished',
-        phase: 'finished',
+      await this.appwrite.databases.updateDocument({
+        databaseId: this.appwrite.databaseId,
+        collectionId: COLLECTION_KETAL_SESSIONS,
+        documentId: sessionId,
+        data: {
+          status: 'finished',
+          phase: 'finished',
+        },
       });
 
       const roomId = this._sessionData()?.roomId;
@@ -519,12 +524,17 @@ export class KetalSessionService {
       }
 
       return this.appwrite.databases
-        .updateDocument(this.appwrite.databaseId, COLLECTION_KETAL_PLAYERS, existingDoc.$id, {
-          cards: JSON.stringify(player.cards),
-          choices: JSON.stringify(player.choices),
-          sipsTaken: player.sipsTaken,
-          sipsGiven: player.sipsGiven,
-          isReady: player.isReady,
+        .updateDocument({
+          databaseId: this.appwrite.databaseId,
+          collectionId: COLLECTION_KETAL_PLAYERS,
+          documentId: existingDoc.$id,
+          data: {
+            cards: JSON.stringify(player.cards),
+            choices: JSON.stringify(player.choices),
+            sipsTaken: player.sipsTaken,
+            sipsGiven: player.sipsGiven,
+            isReady: player.isReady,
+          },
         })
         .then((doc) => this.mapRawToPlayerDoc(doc));
     });
@@ -554,12 +564,12 @@ export class KetalSessionService {
     }
 
     if (Object.keys(update).length > 0) {
-      const doc = await this.appwrite.databases.updateDocument(
-        this.appwrite.databaseId,
-        COLLECTION_KETAL_CARDS,
-        cardsDoc.$id,
-        update
-      );
+      const doc = await this.appwrite.databases.updateDocument({
+        databaseId: this.appwrite.databaseId,
+        collectionId: COLLECTION_KETAL_CARDS,
+        documentId: cardsDoc.$id,
+        data: update,
+      });
       this._cardsDoc.set(this.mapRawToCardsDoc(doc));
     }
   }
@@ -594,7 +604,9 @@ export class KetalSessionService {
   // ============================================================================
 
   private getOrderedPlayers(): KetalPlayer[] {
-    return [...this._playerDocs()].sort((a, b) => a.order - b.order).map((doc) => this.mapDocToKetalPlayer(doc));
+    return [...(this._playerDocs() || [])]
+      .sort((a, b) => a.order - b.order)
+      .map((doc) => this.mapDocToKetalPlayer(doc));
   }
 
   private mapRawToSessionData(doc: Record<string, unknown>): SessionData {

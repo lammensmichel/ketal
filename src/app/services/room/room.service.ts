@@ -127,12 +127,12 @@ export class RoomService {
     };
 
     try {
-      const document = await this.appwrite.databases.createDocument(
-        this.appwrite.databaseId,
-        COLLECTION_GAME_ROOMS,
-        ID.unique(),
-        roomData
-      );
+      const document = await this.appwrite.databases.createDocument({
+        databaseId: this.appwrite.databaseId,
+        collectionId: COLLECTION_GAME_ROOMS,
+        documentId: ID.unique(),
+        data: roomData,
+      });
 
       const room = this.mapDocumentToGameRoom(document);
       this._currentRoom.set(room);
@@ -161,7 +161,11 @@ export class RoomService {
    */
   async deleteRoom(roomId: string): Promise<void> {
     try {
-      await this.appwrite.databases.deleteDocument(this.appwrite.databaseId, COLLECTION_GAME_ROOMS, roomId);
+      await this.appwrite.databases.deleteDocument({
+        databaseId: this.appwrite.databaseId,
+        collectionId: COLLECTION_GAME_ROOMS,
+        documentId: roomId,
+      });
 
       if (this._currentRoom()?.$id === roomId) {
         this._currentRoom.set(null);
@@ -182,10 +186,11 @@ export class RoomService {
     }
 
     try {
-      const response = await this.appwrite.databases.listDocuments(this.appwrite.databaseId, COLLECTION_GAME_ROOMS, [
-        Query.equal('code', normalizedCode),
-        Query.limit(1),
-      ]);
+      const response = await this.appwrite.databases.listDocuments({
+        databaseId: this.appwrite.databaseId,
+        collectionId: COLLECTION_GAME_ROOMS,
+        queries: [Query.equal('code', normalizedCode), Query.limit(1)],
+      });
 
       if (response.documents.length === 0) {
         return null;
@@ -204,10 +209,11 @@ export class RoomService {
     const normalizedToken = token.trim().toLowerCase();
 
     try {
-      const response = await this.appwrite.databases.listDocuments(this.appwrite.databaseId, COLLECTION_GAME_ROOMS, [
-        Query.equal('inviteToken', normalizedToken),
-        Query.limit(1),
-      ]);
+      const response = await this.appwrite.databases.listDocuments({
+        databaseId: this.appwrite.databaseId,
+        collectionId: COLLECTION_GAME_ROOMS,
+        queries: [Query.equal('inviteToken', normalizedToken), Query.limit(1)],
+      });
 
       if (response.documents.length === 0) {
         return null;
@@ -226,11 +232,11 @@ export class RoomService {
    */
   async getRoomById(roomId: string): Promise<GameRoom | null> {
     try {
-      const document = await this.appwrite.databases.getDocument(
-        this.appwrite.databaseId,
-        COLLECTION_GAME_ROOMS,
-        roomId
-      );
+      const document = await this.appwrite.databases.getDocument({
+        databaseId: this.appwrite.databaseId,
+        collectionId: COLLECTION_GAME_ROOMS,
+        documentId: roomId,
+      });
 
       return this.mapDocumentToGameRoom(document);
     } catch (error: unknown) {
@@ -318,12 +324,12 @@ export class RoomService {
    */
   async updateRoom(roomId: string, updates: Partial<Omit<GameRoom, '$id'>>): Promise<GameRoom> {
     try {
-      const document = await this.appwrite.databases.updateDocument(
-        this.appwrite.databaseId,
-        COLLECTION_GAME_ROOMS,
-        roomId,
-        updates
-      );
+      const document = await this.appwrite.databases.updateDocument({
+        databaseId: this.appwrite.databaseId,
+        collectionId: COLLECTION_GAME_ROOMS,
+        documentId: roomId,
+        data: updates,
+      });
 
       const room = this.mapDocumentToGameRoom(document);
 

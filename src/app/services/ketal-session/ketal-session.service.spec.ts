@@ -310,21 +310,22 @@ describe('KetalSessionService', () => {
         turn: 1,
       });
 
-      expect(appwriteMock.databases.updateDocument).toHaveBeenCalledWith(
-        'fug',
-        'ketal_sessions',
-        'session-123',
-        jasmine.objectContaining({ status: 'playing', phase: 'dealing', turn: 1 })
-      );
+      expect(appwriteMock.databases.updateDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'ketal_sessions',
+        documentId: 'session-123',
+        data: jasmine.objectContaining({ status: 'playing', phase: 'dealing', turn: 1 }),
+      });
       expect(result.status).toBe('playing');
     });
 
     it('should update player documents when players are provided', async () => {
       appwriteMock.databases.updateDocument.and.callFake(
-        (_dbId: string, collectionId: string, docId: string, data: Record<string, unknown>) => {
+        (params: { collectionId: string; documentId: string; data: Record<string, unknown> }) => {
+          const { collectionId, documentId, data } = params;
           return Promise.resolve(
             createDocResponse({
-              $id: docId,
+              $id: documentId,
               sessionId: 'session-123',
               memberId: collectionId === 'ketal_players' ? 'member-1' : undefined,
               displayName: 'Player 1',
@@ -357,12 +358,12 @@ describe('KetalSessionService', () => {
 
       await service.updateSession('session-123', { drinkingCards: ['card1', 'card2'] });
 
-      expect(appwriteMock.databases.updateDocument).toHaveBeenCalledWith(
-        'fug',
-        'ketal_cards',
-        'local-cards',
-        jasmine.objectContaining({ drinkingCards: '["card1","card2"]' })
-      );
+      expect(appwriteMock.databases.updateDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'ketal_cards',
+        documentId: 'local-cards',
+        data: jasmine.objectContaining({ drinkingCards: '["card1","card2"]' }),
+      });
     });
 
     it('should update cards document when givingCards are provided', async () => {
@@ -377,12 +378,12 @@ describe('KetalSessionService', () => {
 
       await service.updateSession('session-123', { givingCards: ['cardA'] });
 
-      expect(appwriteMock.databases.updateDocument).toHaveBeenCalledWith(
-        'fug',
-        'ketal_cards',
-        'local-cards',
-        jasmine.objectContaining({ givingCards: '["cardA"]' })
-      );
+      expect(appwriteMock.databases.updateDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'ketal_cards',
+        documentId: 'local-cards',
+        data: jasmine.objectContaining({ givingCards: '["cardA"]' }),
+      });
     });
 
     it('should not call updateDocument when no session-level fields provided', async () => {
@@ -409,7 +410,7 @@ describe('KetalSessionService', () => {
       // Should only update ketal_players, not ketal_sessions
       const sessionCalls = (appwriteMock.databases.updateDocument as jasmine.Spy).calls
         .allArgs()
-        .filter((args: unknown[]) => args[1] === 'ketal_sessions');
+        .filter((args: unknown[]) => (args[0] as { collectionId: string }).collectionId === 'ketal_sessions');
       expect(sessionCalls.length).toBe(0);
     });
 
@@ -439,9 +440,14 @@ describe('KetalSessionService', () => {
     it('should update session status to finished', async () => {
       await service.endGame('session-123');
 
-      expect(appwriteMock.databases.updateDocument).toHaveBeenCalledWith('fug', 'ketal_sessions', 'session-123', {
-        status: 'finished',
-        phase: 'finished',
+      expect(appwriteMock.databases.updateDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'ketal_sessions',
+        documentId: 'session-123',
+        data: {
+          status: 'finished',
+          phase: 'finished',
+        },
       });
     });
 

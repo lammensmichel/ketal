@@ -121,11 +121,11 @@ describe('RoomService', () => {
 
       const result = await service.createRoom('Test Room');
 
-      expect(mockDatabases.createDocument).toHaveBeenCalledWith(
-        'fug',
-        'fug_game_rooms',
-        jasmine.any(String),
-        jasmine.objectContaining({
+      expect(mockDatabases.createDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_rooms',
+        documentId: jasmine.any(String),
+        data: jasmine.objectContaining({
           name: 'Test Room',
           code: jasmine.any(String),
           inviteToken: jasmine.any(String),
@@ -136,8 +136,8 @@ describe('RoomService', () => {
           mode: 'multiplayer',
           maxPlayers: 10,
           gamesPlayed: 0,
-        })
-      );
+        }),
+      });
       expect(result.$id).toBe('room123');
       expect(result.name).toBe('Test Room');
     });
@@ -151,16 +151,16 @@ describe('RoomService', () => {
 
       const result = await service.createRoom('Local Room', 'local', 6);
 
-      expect(mockDatabases.createDocument).toHaveBeenCalledWith(
-        'fug',
-        'fug_game_rooms',
-        jasmine.any(String),
-        jasmine.objectContaining({
+      expect(mockDatabases.createDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_rooms',
+        documentId: jasmine.any(String),
+        data: jasmine.objectContaining({
           name: 'Local Room',
           mode: 'local',
           maxPlayers: 6,
-        })
-      );
+        }),
+      });
       expect(result.mode).toBe('local');
       expect(result.maxPlayers).toBe(6);
     });
@@ -184,10 +184,9 @@ describe('RoomService', () => {
 
       await service.createRoom('Test Room');
 
-      const callArgs = mockDatabases.createDocument.calls.mostRecent().args;
-      const roomData = callArgs[3] as { code: string };
-      expect(roomData.code.length).toBe(6);
-      expect(roomData.code).toMatch(/^[A-Z0-9]+$/);
+      const callArgs = mockDatabases.createDocument.calls.mostRecent().args[0] as { data: { code: string } };
+      expect(callArgs.data.code.length).toBe(6);
+      expect(callArgs.data.code).toMatch(/^[A-Z0-9]+$/);
     });
 
     it('should generate a UUID invite token', async () => {
@@ -195,10 +194,11 @@ describe('RoomService', () => {
 
       await service.createRoom('Test Room');
 
-      const callArgs = mockDatabases.createDocument.calls.mostRecent().args;
-      const roomData = callArgs[3] as { inviteToken: string };
+      const callArgs = mockDatabases.createDocument.calls.mostRecent().args[0] as { data: { inviteToken: string } };
       // UUID v4 format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
-      expect(roomData.inviteToken).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+      expect(callArgs.data.inviteToken).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+      );
     });
   });
 
@@ -208,7 +208,11 @@ describe('RoomService', () => {
 
       await service.deleteRoom('room123');
 
-      expect(mockDatabases.deleteDocument).toHaveBeenCalledWith('fug', 'fug_game_rooms', 'room123');
+      expect(mockDatabases.deleteDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_rooms',
+        documentId: 'room123',
+      });
     });
 
     it('should clear currentRoom signal if deleting current room', async () => {
@@ -248,8 +252,12 @@ describe('RoomService', () => {
 
       const result = await service.getRoomByCode('ABC123');
 
-      expect(mockDatabases.listDocuments).toHaveBeenCalledWith('fug', 'fug_game_rooms', jasmine.any(Array));
-      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      expect(mockDatabases.listDocuments).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_rooms',
+        queries: jasmine.any(Array),
+      });
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[0].queries as string[];
       expect(queries.some((q) => q.includes('"code"') && q.includes('"ABC123"'))).toBeTrue();
       expect(result).toEqual(mockGameRoom);
     });
@@ -261,7 +269,7 @@ describe('RoomService', () => {
 
       await service.getRoomByCode('abc123');
 
-      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[0].queries as string[];
       expect(queries.some((q) => q.includes('"ABC123"'))).toBeTrue();
     });
 
@@ -272,7 +280,7 @@ describe('RoomService', () => {
 
       await service.getRoomByCode('  ABC123  ');
 
-      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[0].queries as string[];
       expect(queries.some((q) => q.includes('"ABC123"'))).toBeTrue();
     });
 
@@ -310,8 +318,12 @@ describe('RoomService', () => {
 
       const result = await service.getRoomByInviteToken('550e8400-e29b-41d4-a716-446655440000');
 
-      expect(mockDatabases.listDocuments).toHaveBeenCalledWith('fug', 'fug_game_rooms', jasmine.any(Array));
-      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      expect(mockDatabases.listDocuments).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_rooms',
+        queries: jasmine.any(Array),
+      });
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[0].queries as string[];
       expect(
         queries.some((q) => q.includes('"inviteToken"') && q.includes('"550e8400-e29b-41d4-a716-446655440000"'))
       ).toBeTrue();
@@ -325,7 +337,7 @@ describe('RoomService', () => {
 
       await service.getRoomByInviteToken('  550E8400-E29B-41D4-A716-446655440000  ');
 
-      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[0].queries as string[];
       expect(queries.some((q) => q.includes('"550e8400-e29b-41d4-a716-446655440000"'))).toBeTrue();
     });
 
@@ -354,7 +366,11 @@ describe('RoomService', () => {
 
       const result = await service.getRoomById('room123');
 
-      expect(mockDatabases.getDocument).toHaveBeenCalledWith('fug', 'fug_game_rooms', 'room123');
+      expect(mockDatabases.getDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_rooms',
+        documentId: 'room123',
+      });
       expect(result).toEqual(mockGameRoom);
     });
 
@@ -410,15 +426,23 @@ describe('RoomService', () => {
       mockMemberService.getMembersByRoom.and.resolveTo([mockMember1]);
 
       const mockRoomDocument2 = { ...mockRoomDocument, $id: 'room456', name: 'Room 2' };
-      mockDatabases.getDocument.and.callFake((dbId: string, collectionId: string, roomId: string) => {
-        return Promise.resolve(roomId === 'room456' ? mockRoomDocument2 : mockRoomDocument);
+      mockDatabases.getDocument.and.callFake((params: { documentId: string }) => {
+        return Promise.resolve(params.documentId === 'room456' ? mockRoomDocument2 : mockRoomDocument);
       });
 
       const result = await service.getMyRooms();
 
       expect(mockMemberService.getMembersByUserId).toHaveBeenCalledWith('user1');
-      expect(mockDatabases.getDocument).toHaveBeenCalledWith('fug', 'fug_game_rooms', 'room123');
-      expect(mockDatabases.getDocument).toHaveBeenCalledWith('fug', 'fug_game_rooms', 'room456');
+      expect(mockDatabases.getDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_rooms',
+        documentId: 'room123',
+      });
+      expect(mockDatabases.getDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_rooms',
+        documentId: 'room456',
+      });
       expect(result.length).toBe(2);
       expect(result[0].$id).toBe('room123');
       expect(result[1].$id).toBe('room456');
@@ -468,9 +492,14 @@ describe('RoomService', () => {
         status: 'playing',
       });
 
-      expect(mockDatabases.updateDocument).toHaveBeenCalledWith('fug', 'fug_game_rooms', 'room123', {
-        name: 'Updated Room',
-        status: 'playing',
+      expect(mockDatabases.updateDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_rooms',
+        documentId: 'room123',
+        data: {
+          name: 'Updated Room',
+          status: 'playing',
+        },
       });
       expect(result.name).toBe('Updated Room');
       expect(result.status).toBe('playing');
