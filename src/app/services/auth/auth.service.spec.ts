@@ -76,14 +76,14 @@ describe('AuthService', () => {
 
     TestBed.configureTestingModule({
       providers: [
-        AuthService,
-        { provide: AppwriteService, useValue: mockAppwriteService },
         { provide: GameService, useValue: mockGameService },
+        { provide: AppwriteService, useValue: mockAppwriteService },
         { provide: RoomService, useValue: mockRoomService },
         { provide: MemberService, useValue: mockMemberService },
         { provide: KetalSessionService, useValue: mockKetalSessionService },
         { provide: RealtimeService, useValue: mockRealtimeService },
         { provide: LocalService, useValue: mockLocalService },
+        AuthService,
       ],
     });
 

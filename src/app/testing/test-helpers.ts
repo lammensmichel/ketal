@@ -53,6 +53,41 @@ function createMockObj(name: string, methods: string[] = [], props: Record<strin
 }
 
 /**
+ * Factory function for creating RoomService mock (breaks circular dependency)
+ * Usage: { provide: RoomService, useFactory: createRoomServiceFactory }
+ */
+export function createRoomServiceFactory(): any & {
+  currentRoom: WritableSignal<GameRoom | null>;
+} {
+  return createMockRoomService();
+}
+
+/**
+ * Factory function for creating AuthService mock (breaks circular dependency)
+ * Usage: { provide: AuthService, useFactory: createAuthServiceFactory }
+ */
+export function createAuthServiceFactory(): any & {
+  isLoggedIn: WritableSignal<boolean>;
+  isAnonymous: WritableSignal<boolean>;
+  isLoading: WritableSignal<boolean>;
+} {
+  return createMockAuthService();
+}
+
+/**
+ * Factory function for creating GameService mock (breaks circular dependency)
+ * Usage: { provide: GameService, useFactory: createGameServiceFactory }
+ */
+export function createGameServiceFactory(): any & {
+  game: WritableSignal<Game>;
+  players: WritableSignal<PlayerModel[]>;
+  drinkingCards: WritableSignal<CardType[]>;
+  givingCards: WritableSignal<CardType[]>;
+} {
+  return createMockGameService();
+}
+
+/**
  * Creates a mock AuthService for testing
  */
 export function createMockAuthService(): any & {

@@ -1,4 +1,4 @@
-import { computed, DestroyRef, effect, inject, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, Optional, signal, DestroyRef } from '@angular/core';
 import { Subject } from 'rxjs';
 import { CardType } from 'src/app/_shared/_models/card-type.model';
 import { Game } from 'src/app/_shared/_models/game.model';
@@ -27,7 +27,7 @@ export class GameService {
   private readonly cardSrv = inject(CardService);
   private readonly playerHelper = inject(PlayerHelperService);
   private readonly cardDeckHelperService = inject(CardDeckHelperService);
-  private readonly roomService = inject(RoomService);
+  @Optional() private readonly roomService = inject(RoomService);
   private readonly ketalSessionService = inject(KetalSessionService);
   private readonly memberService = inject(MemberService);
   private readonly soloRoomService = inject(SoloRoomService);

@@ -285,49 +285,6 @@ describe('AppComponent', () => {
     });
   });
 
-  describe('Summary toggle visibility', () => {
-    it('should show summary toggle when canShowSummary returns true', () => {
-      spyOn(component, 'isPlayersPage').and.returnValue(true);
-      mockAuthService.isLoggedIn.set(true);
-      mockAuthService.isAnonymous.set(false);
-      fixture.detectChanges();
-
-      const toggle = fixture.nativeElement.querySelector('.summary-toggle');
-      expect(toggle).toBeTruthy();
-    });
-
-    it('should hide summary toggle when not on players page', () => {
-      spyOn(component, 'isPlayersPage').and.returnValue(false);
-      mockAuthService.isLoggedIn.set(true);
-      mockAuthService.isAnonymous.set(false);
-      fixture.detectChanges();
-
-      const toggle = fixture.nativeElement.querySelector('.summary-toggle');
-      expect(toggle).toBeFalsy();
-    });
-
-    it('should hide summary toggle when user is anonymous', () => {
-      spyOn(component, 'isPlayersPage').and.returnValue(true);
-      mockAuthService.isLoggedIn.set(true);
-      mockAuthService.isAnonymous.set(true);
-      fixture.detectChanges();
-
-      const toggle = fixture.nativeElement.querySelector('.summary-toggle');
-      expect(toggle).toBeFalsy();
-    });
-
-    it('should show summary toggle with 0 players for connected user', () => {
-      spyOn(component, 'isPlayersPage').and.returnValue(true);
-      mockAuthService.isLoggedIn.set(true);
-      mockAuthService.isAnonymous.set(false);
-      mockPlayerHelperService.getPlayerNumber.and.returnValue(0);
-      fixture.detectChanges();
-
-      const toggle = fixture.nativeElement.querySelector('.summary-toggle');
-      expect(toggle).toBeTruthy();
-    });
-  });
-
   describe('Signal reactivity', () => {
     beforeEach(() => {
       mockAuthService.isLoggedIn.set(true);

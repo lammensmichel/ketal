@@ -128,24 +128,29 @@ describe('GameService', () => {
     const mockRoomServiceFactory = () => mockRoomService;
     const mockAuthServiceFactory = () => mockAuthService;
 
-    TestBed.configureTestingModule({
-      providers: [
-        GameService,
-        { provide: LocalService, useValue: mockLocalService },
-        { provide: CardService, useValue: mockCardService },
-        { provide: PlayerHelperService, useValue: mockPlayerHelperService },
-        { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-        // Use factory to break cycle detection - returns mock after DI graph is resolved
-        { provide: RoomService, useFactory: mockRoomServiceFactory },
-        { provide: AuthService, useFactory: mockAuthServiceFactory },
-        { provide: KetalSessionService, useValue: mockKetalSessionService },
-        { provide: MemberService, useValue: mockMemberService },
-        { provide: RealtimeService, useValue: mockRealtimeService },
-        { provide: SoloRoomService, useValue: mockSoloRoomService },
-        { provide: AppwriteService, useValue: createMockAppwriteService() },
-      ],
-    });
-    service = TestBed.inject(GameService);
+      // Create factory functions that return the pre-created mock objects
+      // This breaks the circular dependency by deferring object creation
+      const roomServiceFactory = () => mockRoomService;
+      const authServiceFactory = () => mockAuthService;
+
+      TestBed.configureTestingModule({
+        providers: [
+          GameService,
+          { provide: LocalService, useValue: mockLocalService },
+          { provide: CardService, useValue: mockCardService },
+          { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+          { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          // Use factory to break circular dependency between RoomService and AuthService
+          { provide: RoomService, useFactory: roomServiceFactory },
+          { provide: AuthService, useFactory: authServiceFactory },
+          { provide: KetalSessionService, useValue: mockKetalSessionService },
+          { provide: MemberService, useValue: mockMemberService },
+          { provide: RealtimeService, useValue: mockRealtimeService },
+          { provide: SoloRoomService, useValue: mockSoloRoomService },
+          { provide: AppwriteService, useValue: createMockAppwriteService() },
+        ],
+      });
+      service = TestBed.inject(GameService);
   });
 
   it('should be created', () => {
@@ -173,8 +178,8 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          { provide: RoomService, useFactory: mockRoomServiceFactory },
-          { provide: AuthService, useFactory: mockAuthServiceFactory },
+          { provide: RoomService, useValue: mockRoomService },
+          { provide: AuthService, useValue: mockAuthService },
           { provide: KetalSessionService, useValue: mockKetalSessionService },
           { provide: MemberService, useValue: mockMemberService },
           { provide: RealtimeService, useValue: mockRealtimeService },
@@ -203,8 +208,8 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          { provide: RoomService, useFactory: mockRoomServiceFactory },
-          { provide: AuthService, useFactory: mockAuthServiceFactory },
+          { provide: RoomService, useValue: mockRoomService },
+          { provide: AuthService, useValue: mockAuthService },
           { provide: KetalSessionService, useValue: mockKetalSessionService },
           { provide: MemberService, useValue: mockMemberService },
           { provide: RealtimeService, useValue: mockRealtimeService },
@@ -238,6 +243,12 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+            { provide: RealtimeService, useValue: mockRealtimeService },
+            { provide: SoloRoomService, useValue: mockSoloRoomService },
           ],
         });
         const newService = TestBed.inject(GameService);
@@ -263,6 +274,12 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+            { provide: RealtimeService, useValue: mockRealtimeService },
+            { provide: SoloRoomService, useValue: mockSoloRoomService },
           ],
         });
         const newService = TestBed.inject(GameService);
@@ -289,6 +306,12 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+            { provide: RealtimeService, useValue: mockRealtimeService },
+            { provide: SoloRoomService, useValue: mockSoloRoomService },
           ],
         });
         const newService = TestBed.inject(GameService);
@@ -313,6 +336,12 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+            { provide: RealtimeService, useValue: mockRealtimeService },
+            { provide: SoloRoomService, useValue: mockSoloRoomService },
           ],
         });
         const newService = TestBed.inject(GameService);
@@ -332,7 +361,7 @@ describe('GameService', () => {
       it('should return 0 when game is not defined', () => {
         mockLocalService.getData.and.returnValue(null);
 
-        // Re-create service
+        // Re-create service with full providers
         TestBed.resetTestingModule();
         TestBed.configureTestingModule({
           providers: [
@@ -341,6 +370,12 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+            { provide: RealtimeService, useValue: mockRealtimeService },
+            { provide: SoloRoomService, useValue: mockSoloRoomService },
           ],
         });
         const newService = TestBed.inject(GameService);
@@ -361,6 +396,12 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+            { provide: RealtimeService, useValue: mockRealtimeService },
+            { provide: SoloRoomService, useValue: mockSoloRoomService },
           ],
         });
         const newService = TestBed.inject(GameService);
@@ -382,6 +423,12 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+            { provide: RealtimeService, useValue: mockRealtimeService },
+            { provide: SoloRoomService, useValue: mockSoloRoomService },
           ],
         });
         const newService = TestBed.inject(GameService);
@@ -401,6 +448,12 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+            { provide: RealtimeService, useValue: mockRealtimeService },
+            { provide: SoloRoomService, useValue: mockSoloRoomService },
           ],
         });
         const newService = TestBed.inject(GameService);
@@ -422,6 +475,12 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+            { provide: RealtimeService, useValue: mockRealtimeService },
+            { provide: SoloRoomService, useValue: mockSoloRoomService },
           ],
         });
         const newService = TestBed.inject(GameService);
@@ -441,6 +500,12 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+            { provide: RealtimeService, useValue: mockRealtimeService },
+            { provide: SoloRoomService, useValue: mockSoloRoomService },
           ],
         });
         const newService = TestBed.inject(GameService);
@@ -462,6 +527,12 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+            { provide: RealtimeService, useValue: mockRealtimeService },
+            { provide: SoloRoomService, useValue: mockSoloRoomService },
           ],
         });
         const newService = TestBed.inject(GameService);
@@ -481,6 +552,12 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+            { provide: RealtimeService, useValue: mockRealtimeService },
+            { provide: SoloRoomService, useValue: mockSoloRoomService },
           ],
         });
         const newService = TestBed.inject(GameService);
@@ -502,6 +579,12 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+            { provide: RealtimeService, useValue: mockRealtimeService },
+            { provide: SoloRoomService, useValue: mockSoloRoomService },
           ],
         });
         const newService = TestBed.inject(GameService);
@@ -521,6 +604,12 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+            { provide: RealtimeService, useValue: mockRealtimeService },
+            { provide: SoloRoomService, useValue: mockSoloRoomService },
           ],
         });
         const newService = TestBed.inject(GameService);
@@ -540,6 +629,12 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+            { provide: RealtimeService, useValue: mockRealtimeService },
+            { provide: SoloRoomService, useValue: mockSoloRoomService },
           ],
         });
         const newService = TestBed.inject(GameService);
@@ -561,6 +656,12 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+            { provide: RealtimeService, useValue: mockRealtimeService },
+            { provide: SoloRoomService, useValue: mockSoloRoomService },
           ],
         });
         const newService = TestBed.inject(GameService);
@@ -580,6 +681,12 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+            { provide: RealtimeService, useValue: mockRealtimeService },
+            { provide: SoloRoomService, useValue: mockSoloRoomService },
           ],
         });
         const newService = TestBed.inject(GameService);
@@ -601,6 +708,12 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+            { provide: RealtimeService, useValue: mockRealtimeService },
+            { provide: SoloRoomService, useValue: mockSoloRoomService },
           ],
         });
         const newService = TestBed.inject(GameService);
@@ -611,46 +724,58 @@ describe('GameService', () => {
       });
     });
 
-    describe('withSummaryMode', () => {
-      afterEach(() => {
-        localStorage.removeItem('ketal_summary_mode');
+  describe('withSummaryMode', () => {
+    afterEach(() => {
+      localStorage.removeItem('ketal_summary_mode');
+    });
+
+    it('should return false when no value in localStorage', () => {
+      localStorage.removeItem('ketal_summary_mode');
+
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          GameService,
+          { provide: LocalService, useValue: mockLocalService },
+          { provide: CardService, useValue: mockCardService },
+          { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+          { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          { provide: RoomService, useValue: mockRoomService },
+          { provide: AuthService, useValue: mockAuthService },
+          { provide: KetalSessionService, useValue: mockKetalSessionService },
+          { provide: MemberService, useValue: mockMemberService },
+          { provide: RealtimeService, useValue: mockRealtimeService },
+          { provide: SoloRoomService, useValue: mockSoloRoomService },
+        ],
       });
+      const newService = TestBed.inject(GameService);
 
-      it('should return false when no value in localStorage', () => {
-        localStorage.removeItem('ketal_summary_mode');
+      expect(newService.withSummaryMode()).toBe(false);
+    });
 
-        TestBed.resetTestingModule();
-        TestBed.configureTestingModule({
-          providers: [
-            GameService,
-            { provide: LocalService, useValue: mockLocalService },
-            { provide: CardService, useValue: mockCardService },
-            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
-            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          ],
-        });
-        const newService = TestBed.inject(GameService);
+    it('should return true when localStorage has "true"', () => {
+      localStorage.setItem('ketal_summary_mode', 'true');
 
-        expect(newService.withSummaryMode()).toBe(false);
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          GameService,
+          { provide: LocalService, useValue: mockLocalService },
+          { provide: CardService, useValue: mockCardService },
+          { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+          { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          { provide: RoomService, useValue: mockRoomService },
+          { provide: AuthService, useValue: mockAuthService },
+          { provide: KetalSessionService, useValue: mockKetalSessionService },
+          { provide: MemberService, useValue: mockMemberService },
+          { provide: RealtimeService, useValue: mockRealtimeService },
+          { provide: SoloRoomService, useValue: mockSoloRoomService },
+        ],
       });
+      const newService = TestBed.inject(GameService);
 
-      it('should return true when localStorage has "true"', () => {
-        localStorage.setItem('ketal_summary_mode', 'true');
-
-        TestBed.resetTestingModule();
-        TestBed.configureTestingModule({
-          providers: [
-            GameService,
-            { provide: LocalService, useValue: mockLocalService },
-            { provide: CardService, useValue: mockCardService },
-            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
-            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          ],
-        });
-        const newService = TestBed.inject(GameService);
-
-        expect(newService.withSummaryMode()).toBe(true);
-      });
+      expect(newService.withSummaryMode()).toBe(true);
+    });
 
       it('should persist value to localStorage when set to true', () => {
         localStorage.removeItem('ketal_summary_mode');
@@ -703,8 +828,8 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          { provide: RoomService, useFactory: () => mockRoomService },
-          { provide: AuthService, useFactory: () => mockAuthService },
+          { provide: RoomService, useValue: mockRoomService },
+          { provide: AuthService, useValue: mockAuthService },
           { provide: KetalSessionService, useValue: mockKetalSessionService },
           { provide: MemberService, useValue: mockMemberService },
           { provide: RealtimeService, useValue: mockRealtimeService },
@@ -1095,8 +1220,8 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          { provide: RoomService, useFactory: () => mockRoomService },
-          { provide: AuthService, useFactory: () => mockAuthService },
+          { provide: RoomService, useValue: mockRoomService },
+          { provide: AuthService, useValue: mockAuthService },
           { provide: KetalSessionService, useValue: mockKetalSessionService },
           { provide: MemberService, useValue: mockMemberService },
           { provide: RealtimeService, useValue: mockRealtimeService },
@@ -1144,8 +1269,8 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          { provide: RoomService, useFactory: () => mockRoomService },
-          { provide: AuthService, useFactory: () => mockAuthService },
+          { provide: RoomService, useValue: mockRoomService },
+          { provide: AuthService, useValue: mockAuthService },
           { provide: KetalSessionService, useValue: mockKetalSessionService },
           { provide: MemberService, useValue: mockMemberService },
           { provide: RealtimeService, useValue: mockRealtimeService },
@@ -1253,8 +1378,8 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          { provide: RoomService, useFactory: () => mockRoomService },
-          { provide: AuthService, useFactory: () => mockAuthService },
+          { provide: RoomService, useValue: mockRoomService },
+          { provide: AuthService, useValue: mockAuthService },
           { provide: KetalSessionService, useValue: mockKetalSessionService },
           { provide: MemberService, useValue: mockMemberService },
           { provide: RealtimeService, useValue: mockRealtimeService },
@@ -1502,8 +1627,8 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          { provide: RoomService, useFactory: () => mockRoomService },
-          { provide: AuthService, useFactory: () => mockAuthService },
+          { provide: RoomService, useValue: mockRoomService },
+          { provide: AuthService, useValue: mockAuthService },
           { provide: KetalSessionService, useValue: mockKetalSessionService },
           { provide: MemberService, useValue: mockMemberService },
           { provide: RealtimeService, useValue: mockRealtimeService },
@@ -1697,8 +1822,8 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          { provide: RoomService, useFactory: () => mockRoomService },
-          { provide: AuthService, useFactory: () => mockAuthService },
+          { provide: RoomService, useValue: mockRoomService },
+          { provide: AuthService, useValue: mockAuthService },
           { provide: KetalSessionService, useValue: mockKetalSessionService },
           { provide: MemberService, useValue: mockMemberService },
           { provide: RealtimeService, useValue: mockRealtimeService },
@@ -1844,8 +1969,8 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          { provide: RoomService, useFactory: () => mockRoomService },
-          { provide: AuthService, useFactory: () => mockAuthService },
+          { provide: RoomService, useValue: mockRoomService },
+          { provide: AuthService, useValue: mockAuthService },
           { provide: KetalSessionService, useValue: mockKetalSessionService },
           { provide: MemberService, useValue: mockMemberService },
           { provide: RealtimeService, useValue: mockRealtimeService },
@@ -2234,8 +2359,8 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          { provide: RoomService, useFactory: () => mockRoomService },
-          { provide: AuthService, useFactory: () => mockAuthService },
+          { provide: RoomService, useValue: mockRoomService },
+          { provide: AuthService, useValue: mockAuthService },
           { provide: KetalSessionService, useValue: mockKetalSessionService },
         ],
       });
@@ -2254,8 +2379,8 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-            { provide: RoomService, useFactory: () => mockRoomService },
-            { provide: AuthService, useFactory: () => mockAuthService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
             { provide: KetalSessionService, useValue: mockKetalSessionService },
             { provide: MemberService, useValue: mockMemberService },
           ],
@@ -2277,8 +2402,8 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-            { provide: RoomService, useFactory: () => mockRoomService },
-            { provide: AuthService, useFactory: () => mockAuthService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
             { provide: KetalSessionService, useValue: mockKetalSessionService },
             { provide: MemberService, useValue: mockMemberService },
           ],
@@ -2301,8 +2426,8 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-            { provide: RoomService, useFactory: () => mockRoomService },
-            { provide: AuthService, useFactory: () => mockAuthService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
             { provide: KetalSessionService, useValue: mockKetalSessionService },
             { provide: MemberService, useValue: mockMemberService },
           ],
@@ -2324,8 +2449,8 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-            { provide: RoomService, useFactory: () => mockRoomService },
-            { provide: AuthService, useFactory: () => mockAuthService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
             { provide: KetalSessionService, useValue: mockKetalSessionService },
             { provide: MemberService, useValue: mockMemberService },
           ],
@@ -2375,8 +2500,8 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-            { provide: RoomService, useFactory: () => mockRoomService },
-            { provide: AuthService, useFactory: () => mockAuthService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
             { provide: KetalSessionService, useValue: mockKetalSessionService },
             { provide: MemberService, useValue: mockMemberService },
           ],
@@ -2431,8 +2556,8 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-            { provide: RoomService, useFactory: () => mockRoomService },
-            { provide: AuthService, useFactory: () => mockAuthService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
             { provide: KetalSessionService, useValue: mockKetalSessionService },
             { provide: MemberService, useValue: mockMemberService },
           ],
@@ -2466,8 +2591,8 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-            { provide: RoomService, useFactory: () => mockRoomService },
-            { provide: AuthService, useFactory: () => mockAuthService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
             { provide: KetalSessionService, useValue: mockKetalSessionService },
             { provide: MemberService, useValue: mockMemberService },
           ],
@@ -2694,8 +2819,8 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-            { provide: RoomService, useFactory: () => mockRoomService },
-            { provide: AuthService, useFactory: () => mockAuthService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
             { provide: KetalSessionService, useValue: mockKetalSessionService },
             { provide: MemberService, useValue: mockMemberService },
           ],
@@ -2727,8 +2852,8 @@ describe('GameService', () => {
             { provide: CardService, useValue: mockCardService },
             { provide: PlayerHelperService, useValue: mockPlayerHelperService },
             { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-            { provide: RoomService, useFactory: () => mockRoomService },
-            { provide: AuthService, useFactory: () => mockAuthService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
             { provide: KetalSessionService, useValue: mockKetalSessionService },
             { provide: MemberService, useValue: mockMemberService },
           ],
@@ -2806,8 +2931,8 @@ describe('GameService', () => {
           { provide: CardService, useValue: mockCardService },
           { provide: PlayerHelperService, useValue: mockPlayerHelperService },
           { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          { provide: RoomService, useFactory: () => mockRoomService },
-          { provide: AuthService, useFactory: () => mockAuthService },
+          { provide: RoomService, useValue: mockRoomService },
+          { provide: AuthService, useValue: mockAuthService },
           { provide: KetalSessionService, useValue: mockKetalSessionService },
           { provide: MemberService, useValue: mockMemberService },
           { provide: RealtimeService, useValue: mockRealtimeService },

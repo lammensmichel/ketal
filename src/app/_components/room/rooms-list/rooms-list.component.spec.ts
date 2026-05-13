@@ -7,6 +7,11 @@ import { RoomsListComponent } from './rooms-list.component';
 import { RoomService, GameRoomWithMemberCount, GameRoom } from '../../../services/room/room.service';
 import { AuthService } from '../../../services/auth/auth.service';
 import { MemberService, GameMember } from '../../../services/member/member.service';
+import { GameService } from '../../../services/game/game.service';
+import { AppwriteService } from '../../../services/appwrite/appwrite.service';
+import { RealtimeService } from '../../../services/realtime/realtime.service';
+import { LocalService } from '../../../services/local/local.service';
+import { KetalSessionService } from '../../../services/ketal-session/ketal-session.service';
 
 describe('RoomsListComponent', () => {
   let component: RoomsListComponent;
@@ -104,12 +109,18 @@ describe('RoomsListComponent', () => {
       deleteMember: jasmine.createSpy('deleteMember'),
     };
 
-    // Set up mocks for AuthService
+    // Create minimal mocks for services that AuthService depends on
     const mockAuthService = {
       currentUser: signal<{ $id: string } | null>({ $id: 'user1', email: 'test@test.com' } as any),
       isLoggedIn: signal(true),
       isAnonymous: signal(false),
     };
+
+    const mockGameService = jasmine.createSpyObj('GameService', ['isGameStarted', 'isGameFinished', 'resetGame']);
+    const mockAppwriteService = {};
+    const mockRealtimeService = {};
+    const mockLocalService = {};
+    const mockKetalSessionService = {};
 
     await TestBed.configureTestingModule({
       imports: [RouterTestingModule, RoomsListComponent],
@@ -119,6 +130,11 @@ describe('RoomsListComponent', () => {
         { provide: RoomService, useValue: mockRoomService },
         { provide: AuthService, useValue: mockAuthService },
         { provide: MemberService, useValue: mockMemberService },
+        { provide: GameService, useValue: mockGameService },
+        { provide: AppwriteService, useValue: mockAppwriteService },
+        { provide: RealtimeService, useValue: mockRealtimeService },
+        { provide: LocalService, useValue: mockLocalService },
+        { provide: KetalSessionService, useValue: mockKetalSessionService },
       ],
     }).compileComponents();
   });
