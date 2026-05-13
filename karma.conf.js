@@ -14,8 +14,12 @@ module.exports = function (config) {
     ],
     customLaunchers: {
       ChromeHeadlessNoSandbox: {
-        base: 'ChromeHeadless',
-        flags: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage']
+        base: 'Chrome',
+        flags: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--headless=new']
+      },
+      ChromiumHeadlessNoSandbox: {
+        base: 'Chromium',
+        flags: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--headless=new']
       }
     },
     client: {
@@ -52,7 +56,7 @@ module.exports = function (config) {
     colors: true,
     logLevel: config.LOG_INFO,
     autoWatch: true,
-    browsers: ['ChromeHeadlessNoSandbox'],
+    browsers: ['ChromiumHeadlessNoSandbox'],
     singleRun: true,
     restartOnFileChange: true
   });

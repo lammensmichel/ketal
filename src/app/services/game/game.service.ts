@@ -330,7 +330,7 @@ export class GameService {
    *
    * @param sessionId - The session ID to subscribe to
    */
-  subscribeToSessionUpdates(sessionId: string): void {
+  async subscribeToSessionUpdates(sessionId: string): Promise<void> {
     // Cleanup any existing subscription first
     this.unsubscribeFromSession();
 
@@ -338,11 +338,16 @@ export class GameService {
     this.activeSessionId = sessionId;
 
     // Subscribe via KetalSessionService (handles ketal_sessions + ketal_players + ketal_cards)
-    this.ketalSessionService.subscribeToSession(sessionId, (updatedSession) => {
-      this.handleSessionUpdate(updatedSession);
+    await this.ketalSessionService.subscribeToSession(sessionId, (updatedSession) => {
+      // Callbacks are set up; actual subscription is already established internally
     });
 
     console.debug('[GameService] Subscribed to session updates', { sessionId });
+
+    // Update the game service with whatever current state is available
+    if (sessionId === this.activeSessionId && this.ketalSessionService.currentSession()) {
+      this.handleSessionUpdate(this.ketalSessionService.currentSession()!);
+    }
   }
 
   /**

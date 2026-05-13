@@ -132,7 +132,7 @@ describe('LobbyComponent', () => {
 
     mockRealtimeService = {
       isConnected: signal<boolean>(false),
-      subscribeToMembers: jasmine.createSpy('subscribeToMembers').and.returnValue('sub_123'),
+      subscribeToMembers: jasmine.createSpy('subscribeToMembers').and.resolveTo('sub_123'),
       unsubscribe: jasmine.createSpy('unsubscribe'),
     };
 

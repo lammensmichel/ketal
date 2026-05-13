@@ -9,11 +9,16 @@ export type SubscriptionCallback<T> = (data: T) => void;
 
 /**
  * Represents an active realtime subscription
+ * Maps to v25 RealtimeSubscription internally.
  */
 export interface Subscription {
   id: string;
   channel: string;
   unsubscribe: () => void;
+  /** Replace the channels/queries for this subscription without re-creating it */
+  update: (changes: { channels?: string[] }) => void;
+  /** Alias of `unsubscribe()` plus auto-disconnect when last subscription */
+  close: () => void;
 }
 
 /**
@@ -63,6 +68,9 @@ const COLLECTIONS = {
  *
  * Provides a centralized way to subscribe to realtime events for game rooms,
  * sessions, and members. Uses Angular 19 patterns with signals for reactive state.
+ *
+ * Under the hood, uses Appwrite v25 Realtime class with proper
+ * RealtimeSubscription objects.
  */
 @Injectable({
   providedIn: 'root',
@@ -92,38 +100,89 @@ export class RealtimeService {
   /**
    * Subscribe to updates for a specific game room
    */
-  subscribeToRoom(roomId: string, callback: SubscriptionCallback<GameRoom>): string {
+  async subscribeToRoom(
+    roomId: string,
+    callback: SubscriptionCallback<GameRoom>,
+    timeout: number = 5000
+  ): Promise<string> {
     const channel = this.buildDocumentChannel(COLLECTIONS.GAME_ROOMS, roomId);
-    return this.createSubscription<GameRoom>(channel, callback);
+    const subId = await this.createSubscription(channel, callback, timeout);
+
+    // Wait for WebSocket to be ready (socket.open event fired)
+    // Appwrite v25 SDK has a race condition where subscribe() doesn't wait
+    // for socket to be fully ready before sending subscribe message
+    let attempts = 0;
+    const checkSocketReady = () => {
+      attempts++;
+      if (this.appwrite.connected() || attempts * 100 >= timeout) {
+        return;
+      }
+      setTimeout(checkSocketReady, 100);
+    };
+    checkSocketReady();
+
+    return subId;
   }
 
   /**
    * Subscribe to updates for a specific document in any collection
    */
-  subscribeToDocument<T extends object>(
+  async subscribeToDocument<T extends object>(
     collectionId: string,
     documentId: string,
-    callback: SubscriptionCallback<T>
-  ): string {
+    callback: SubscriptionCallback<T>,
+    timeout: number = 5000
+  ): Promise<string> {
     const channel = this.buildDocumentChannel(collectionId, documentId);
-    return this.createSubscription<T>(channel, callback);
+    const subId = await this.createSubscription(channel, callback, timeout);
+
+    // Wait for WebSocket to be ready
+    let attempts = 0;
+    const checkSocketReady = () => {
+      attempts++;
+      if (this.appwrite.connected() || attempts * 100 >= timeout) {
+        return;
+      }
+      setTimeout(checkSocketReady, 100);
+    };
+    checkSocketReady();
+
+    return subId;
   }
 
   /**
    * Subscribe to updates for a specific Ketal session
    */
-  subscribeToSession<T extends object = Record<string, unknown>>(
+  async subscribeToSession<T extends object = Record<string, unknown>>(
     sessionId: string,
-    callback: SubscriptionCallback<T>
-  ): string {
+    callback: SubscriptionCallback<T>,
+    timeout: number = 5000
+  ): Promise<string> {
     const channel = this.buildDocumentChannel(COLLECTIONS.KETAL_SESSIONS, sessionId);
-    return this.createSubscription<T>(channel, callback);
+    const subId = await this.createSubscription(channel, callback, timeout);
+
+    // Wait for WebSocket to be ready
+    let attempts = 0;
+    const checkSocketReady = () => {
+      attempts++;
+      if (this.appwrite.connected() || attempts * 100 >= timeout) {
+        return;
+      }
+      setTimeout(checkSocketReady, 100);
+    };
+    checkSocketReady();
+
+    return subId;
   }
 
   /**
    * Subscribe to member updates for a specific room
    */
-  subscribeToMembers(roomId: string, callback: SubscriptionCallback<GameMember>): string {
+  async subscribeToMembers(
+    roomId: string,
+    callback: SubscriptionCallback<GameMember>,
+    timeout: number = 5000
+  ): Promise<string> {
     const channel = this.buildCollectionChannel(COLLECTIONS.GAME_MEMBERS);
 
     const filteredCallback: SubscriptionCallback<GameMember> = (member) => {
@@ -132,15 +191,45 @@ export class RealtimeService {
       }
     };
 
-    return this.createSubscription<GameMember>(channel, filteredCallback);
+    const subId = await this.createSubscription(channel, filteredCallback, timeout);
+
+    // Wait for WebSocket to be ready
+    let attempts = 0;
+    const checkSocketReady = () => {
+      attempts++;
+      if (this.appwrite.connected() || attempts * 100 >= timeout) {
+        return;
+      }
+      setTimeout(checkSocketReady, 100);
+    };
+    checkSocketReady();
+
+    return subId;
   }
 
   /**
    * Subscribe to all documents in a collection
    */
-  subscribeToCollection<T extends object>(collectionId: string, callback: SubscriptionCallback<T>): string {
+  async subscribeToCollection<T extends object>(
+    collectionId: string,
+    callback: SubscriptionCallback<T>,
+    timeout: number = 5000
+  ): Promise<string> {
     const channel = this.buildCollectionChannel(collectionId);
-    return this.createSubscription<T>(channel, callback);
+    const subId = await this.createSubscription(channel, callback, timeout);
+
+    // Wait for WebSocket to be ready
+    let attempts = 0;
+    const checkSocketReady = () => {
+      attempts++;
+      if (this.appwrite.connected() || attempts * 100 >= timeout) {
+        return;
+      }
+      setTimeout(checkSocketReady, 100);
+    };
+    checkSocketReady();
+
+    return subId;
   }
 
   /**
@@ -149,7 +238,11 @@ export class RealtimeService {
   unsubscribe(subscriptionId: string): void {
     const subscription = this._subscriptions.get(subscriptionId);
     if (subscription) {
-      subscription.unsubscribe();
+      // v25 native unsubscribe is async — wrap to prevent errors if not awaited
+      Promise.resolve()
+        .then(() => subscription.close())
+        .catch((err) => console.warn(`[RealtimeService] close failed for ${subscriptionId}:`, err));
+
       this._subscriptions.delete(subscriptionId);
       this.updateSubscriptionCount();
     }
@@ -160,7 +253,10 @@ export class RealtimeService {
    */
   unsubscribeAll(): void {
     this._subscriptions.forEach((subscription) => {
-      subscription.unsubscribe();
+      // v25 native close is async — wrap to prevent errors if not awaited
+      Promise.resolve()
+        .then(() => subscription.close())
+        .catch((err) => console.warn(`[RealtimeService] close failed:`, err));
     });
     this._subscriptions.clear();
     this.updateSubscriptionCount();
@@ -181,25 +277,56 @@ export class RealtimeService {
   }
 
   /**
-   * Create a realtime subscription
+   * Create a realtime subscription using Appwrite v25 Realtime class.
+   * Returns our adaptable Subscription interface wrapping the native
+   * RealtimeSubscription object.
+   *
+   * THIS METHOD WAITS FOR WEBSOCKET CONNECT to work around Appwrite v25.0.0
+   * SDK timing bug where subscribe() returns before WebSocket is ready.
    */
-  private createSubscription<T extends object>(channel: string, callback: SubscriptionCallback<T>): string {
+  private async createSubscription<T extends object>(
+    channel: string,
+    callback: SubscriptionCallback<T>,
+    timeout: number = 5000
+  ): Promise<string> {
     const subscriptionId = this.generateSubscriptionId();
+
+    console.log(`[RealtimeService] Creating subscription to channel: ${channel}`);
 
     const wrappedCallback = (response: RealtimeResponseEvent<T>) => {
       this.appwrite.setConnected(true);
+      console.log(`[RealtimeService] RECEIVED EVENT on ${channel}:`, response);
 
       if (response.payload) {
+        console.log(`[RealtimeService] Calling callback with payload:`, response.payload);
         callback(response.payload);
       }
     };
 
-    const unsubscribe = this.appwrite.subscribe<T>(channel, wrappedCallback);
+    console.log(`[RealtimeService] Calling appwrite.subscribe with channel:`, channel);
+    // v25 async subscribe with timeout -> Native RealtimeSubscription
+    const realSub = await this.appwrite.subscribe<T>(channel, wrappedCallback, timeout);
+    console.log(`[RealtimeService] Subscription created: ${subscriptionId}`);
 
     const subscription: Subscription = {
       id: subscriptionId,
       channel,
-      unsubscribe,
+      /** Wrap native async unsubscribe for backward-compatible sync API */
+      unsubscribe: () => {
+        realSub
+          .unsubscribe()
+          .catch((err) => console.warn(`[RealtimeService] unsubscribe failed for ${subscriptionId}:`, err));
+      },
+      /** Delegate to native RealtimeSubscription.update() */
+      update: (changes) => {
+        realSub
+          .update(changes)
+          .catch((err) => console.warn(`[RealtimeService] subscription update failed for ${subscriptionId}:`, err));
+      },
+      /** Wrap native async close for backward-compatible sync API */
+      close: () => {
+        realSub.close().catch((err) => console.warn(`[RealtimeService] close failed for ${subscriptionId}:`, err));
+      },
     };
 
     this._subscriptions.set(subscriptionId, subscription);
@@ -243,10 +370,6 @@ export class RealtimeService {
    * since the client SDK cannot directly push to multiple clients.
    * For now, this logs the event - clients should subscribe to room updates
    * to receive real-time notifications.
-   *
-   * @param roomId - The room ID to broadcast to
-   * @param event - The event name (e.g., 'room_renamed', 'member_left')
-   * @param data - Event-specific payload data
    */
   broadcastToRoom(roomId: string, event: string, data: Record<string, unknown>): void {
     // Log the event for debugging

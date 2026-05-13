@@ -255,7 +255,7 @@ export class RoomService {
     if (!this.authService) {
       return [];
     }
-    
+
     if (!this.authService.isLoggedIn() || this.authService.isAnonymous()) {
       return [];
     }
@@ -351,13 +351,13 @@ export class RoomService {
    * @param callback - Callback function to handle room updates
    * @returns Subscription ID for unsubscribing
    */
-  subscribeToRoom(roomId: string, callback: SubscriptionCallback<GameRoom>): string {
+  async subscribeToRoom(roomId: string, callback: SubscriptionCallback<GameRoom>): Promise<string> {
     // The callback receives RealtimeService.GameRoom which has archived status
     // Cast to RoomService.GameRoom which shares the same structure
-    return this.realtime.subscribeToRoom(
+    return (await this.realtime.subscribeToRoom(
       roomId,
       callback as SubscriptionCallback<import('../realtime/realtime.service').GameRoom>
-    );
+    )) as string;
   }
 
   /**
@@ -377,7 +377,7 @@ export class RoomService {
     if (!this.authService) {
       throw new Error('User not authenticated');
     }
-    
+
     // Check host permission
     const room = await this.getRoomById(roomId);
     if (!room) {
@@ -406,7 +406,7 @@ export class RoomService {
     if (!this.authService) {
       return;
     }
-    
+
     const current = this.authService.currentUser();
     const members = await this.memberService.getMembersByRoom(roomId);
     const myMember = members.find((m) => m.userId === current?.$id);

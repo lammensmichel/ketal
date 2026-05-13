@@ -397,12 +397,12 @@ export class KetalSessionService {
    * Subscribe to realtime updates for a session across all 3 collections.
    * Composes updates and notifies via callback.
    */
-  subscribeToSession(sessionId: string, onUpdate?: (session: KetalSession) => void): void {
+  async subscribeToSession(sessionId: string, onUpdate?: (session: KetalSession) => void): Promise<void> {
     this.unsubscribe();
     this._onUpdateCallback = onUpdate ?? null;
 
     // 1. Subscribe to session document
-    this._sessionSubId = this.realtime.subscribeToDocument<Record<string, unknown>>(
+    this._sessionSubId = await this.realtime.subscribeToDocument<Record<string, unknown>>(
       COLLECTION_KETAL_SESSIONS,
       sessionId,
       (payload) => {
@@ -412,7 +412,7 @@ export class KetalSessionService {
     );
 
     // 2. Subscribe to players collection (filtered by sessionId)
-    this._playersSubId = this.realtime.subscribeToCollection<Record<string, unknown>>(
+    this._playersSubId = await this.realtime.subscribeToCollection<Record<string, unknown>>(
       COLLECTION_KETAL_PLAYERS,
       (payload) => {
         if (payload['sessionId'] === sessionId) {
@@ -425,7 +425,7 @@ export class KetalSessionService {
     // 3. Subscribe to cards document (if we have the doc ID)
     const cardsDoc = this._cardsDoc();
     if (cardsDoc) {
-      this._cardsSubId = this.realtime.subscribeToDocument<Record<string, unknown>>(
+      this._cardsSubId = await this.realtime.subscribeToDocument<Record<string, unknown>>(
         COLLECTION_KETAL_CARDS,
         cardsDoc.$id,
         (payload) => {

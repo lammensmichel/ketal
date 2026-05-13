@@ -525,34 +525,36 @@ describe('RoomService', () => {
   });
 
   describe('subscribeToRoom', () => {
-    it('should subscribe to room updates via RealtimeService', () => {
+    it('should subscribe to room updates via RealtimeService', async () => {
       const callback = jasmine.createSpy('callback');
-      mockRealtimeService.subscribeToRoom.and.returnValue('sub_123');
+      mockRealtimeService.subscribeToRoom.and.resolveTo('sub_123');
 
-      const subscriptionId = service.subscribeToRoom('room123', callback);
+      const subscriptionId = await service.subscribeToRoom('room123', callback);
 
       expect(mockRealtimeService.subscribeToRoom).toHaveBeenCalledWith('room123', callback);
       expect(subscriptionId).toBe('sub_123');
     });
 
-    it('should return subscription id for unsubscribing', () => {
+    it('should return subscription id for unsubscribing', async () => {
       const callback = jasmine.createSpy('callback');
-      mockRealtimeService.subscribeToRoom.and.returnValue('sub_456');
+      mockRealtimeService.subscribeToRoom.and.resolveTo('sub_456');
 
-      const subscriptionId = service.subscribeToRoom('room123', callback);
+      const subscriptionId = await service.subscribeToRoom('room123', callback);
 
       expect(subscriptionId).toBe('sub_456');
     });
 
-    it('should update currentRoom when receiving room updates', () => {
+    it('should update currentRoom when receiving room updates', async () => {
       let capturedCallback: ((room: GameRoom) => void) | undefined;
-      mockRealtimeService.subscribeToRoom.and.callFake((_roomId: string, callback: (room: GameRoom) => void) => {
-        capturedCallback = callback;
-        return 'sub_789';
-      });
+      mockRealtimeService.subscribeToRoom.and.callFake(
+        (_roomId: string, callback: (room: GameRoom) => void): Promise<string> => {
+          capturedCallback = callback;
+          return Promise.resolve('sub_789');
+        }
+      );
 
       const callback = jasmine.createSpy('callback');
-      service.subscribeToRoom('room123', callback);
+      await service.subscribeToRoom('room123', callback);
 
       const updatedRoom: GameRoom = { ...mockGameRoom, status: 'playing' };
       if (capturedCallback) {

@@ -16,6 +16,9 @@ import { Game } from '../_shared/_models/game.model';
 import { PlayerModel } from '../_shared/_models/player.model';
 import { CardType } from '../_shared/_models/card-type.model';
 
+// Jasmine type declaration for build context (no-op when jasmine is not available)
+declare const jasmine: any;
+
 /**
  * Mock object creator that simulates jasmine's createSpyObj API.
  * In test context, it wraps jasmine.createSpyObj. In build context, it creates a simple mock.
@@ -323,7 +326,7 @@ export function createMockRoomService(): any & {
   mock.getRoomByInviteToken.and.resolveTo(null);
   mock.getMyRooms.and.resolveTo([]);
   mock.updateRoom.and.resolveTo(null);
-  mock.subscribeToRoom.and.returnValue('subscription-id');
+  mock.subscribeToRoom.and.resolveTo('sub_room_123');
 
   return mock as any & {
     currentRoom: WritableSignal<GameRoom | null>;
@@ -355,7 +358,7 @@ export function createMockKetalSessionService(): any & {
   mock.updateSession.and.resolveTo(null);
   mock.endGame.and.resolveTo(undefined);
   mock.getSession.and.resolveTo(null);
-  mock.subscribeToSession.and.stub();
+  mock.subscribeToSession.and.resolveTo(undefined);
 
   return mock as any & {
     currentSession: WritableSignal<KetalSession | null>;
@@ -472,11 +475,11 @@ export function createMockRealtimeService(): any {
     }
   );
 
-  mock.subscribeToRoom.and.returnValue('sub_room_123');
-  mock.subscribeToSession.and.returnValue('sub_session_123');
-  mock.subscribeToDocument.and.returnValue('sub_document_123');
-  mock.subscribeToMembers.and.returnValue('sub_members_123');
-  mock.subscribeToCollection.and.returnValue('sub_collection_123');
+  mock.subscribeToRoom.and.resolveTo('sub_room_123');
+  mock.subscribeToSession.and.resolveTo('sub_session_123');
+  mock.subscribeToDocument.and.resolveTo('sub_document_123');
+  mock.subscribeToMembers.and.resolveTo('sub_members_123');
+  mock.subscribeToCollection.and.resolveTo('sub_collection_123');
   mock.hasSubscription.and.returnValue(false);
   mock.getActiveSubscriptionIds.and.returnValue([]);
 

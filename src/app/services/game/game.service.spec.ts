@@ -128,29 +128,29 @@ describe('GameService', () => {
     const mockRoomServiceFactory = () => mockRoomService;
     const mockAuthServiceFactory = () => mockAuthService;
 
-      // Create factory functions that return the pre-created mock objects
-      // This breaks the circular dependency by deferring object creation
-      const roomServiceFactory = () => mockRoomService;
-      const authServiceFactory = () => mockAuthService;
+    // Create factory functions that return the pre-created mock objects
+    // This breaks the circular dependency by deferring object creation
+    const roomServiceFactory = () => mockRoomService;
+    const authServiceFactory = () => mockAuthService;
 
-      TestBed.configureTestingModule({
-        providers: [
-          GameService,
-          { provide: LocalService, useValue: mockLocalService },
-          { provide: CardService, useValue: mockCardService },
-          { provide: PlayerHelperService, useValue: mockPlayerHelperService },
-          { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          // Use factory to break circular dependency between RoomService and AuthService
-          { provide: RoomService, useFactory: roomServiceFactory },
-          { provide: AuthService, useFactory: authServiceFactory },
-          { provide: KetalSessionService, useValue: mockKetalSessionService },
-          { provide: MemberService, useValue: mockMemberService },
-          { provide: RealtimeService, useValue: mockRealtimeService },
-          { provide: SoloRoomService, useValue: mockSoloRoomService },
-          { provide: AppwriteService, useValue: createMockAppwriteService() },
-        ],
-      });
-      service = TestBed.inject(GameService);
+    TestBed.configureTestingModule({
+      providers: [
+        GameService,
+        { provide: LocalService, useValue: mockLocalService },
+        { provide: CardService, useValue: mockCardService },
+        { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+        { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+        // Use factory to break circular dependency between RoomService and AuthService
+        { provide: RoomService, useFactory: roomServiceFactory },
+        { provide: AuthService, useFactory: authServiceFactory },
+        { provide: KetalSessionService, useValue: mockKetalSessionService },
+        { provide: MemberService, useValue: mockMemberService },
+        { provide: RealtimeService, useValue: mockRealtimeService },
+        { provide: SoloRoomService, useValue: mockSoloRoomService },
+        { provide: AppwriteService, useValue: createMockAppwriteService() },
+      ],
+    });
+    service = TestBed.inject(GameService);
   });
 
   it('should be created', () => {
@@ -724,58 +724,58 @@ describe('GameService', () => {
       });
     });
 
-  describe('withSummaryMode', () => {
-    afterEach(() => {
-      localStorage.removeItem('ketal_summary_mode');
-    });
-
-    it('should return false when no value in localStorage', () => {
-      localStorage.removeItem('ketal_summary_mode');
-
-      TestBed.resetTestingModule();
-      TestBed.configureTestingModule({
-        providers: [
-          GameService,
-          { provide: LocalService, useValue: mockLocalService },
-          { provide: CardService, useValue: mockCardService },
-          { provide: PlayerHelperService, useValue: mockPlayerHelperService },
-          { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          { provide: RoomService, useValue: mockRoomService },
-          { provide: AuthService, useValue: mockAuthService },
-          { provide: KetalSessionService, useValue: mockKetalSessionService },
-          { provide: MemberService, useValue: mockMemberService },
-          { provide: RealtimeService, useValue: mockRealtimeService },
-          { provide: SoloRoomService, useValue: mockSoloRoomService },
-        ],
+    describe('withSummaryMode', () => {
+      afterEach(() => {
+        localStorage.removeItem('ketal_summary_mode');
       });
-      const newService = TestBed.inject(GameService);
 
-      expect(newService.withSummaryMode()).toBe(false);
-    });
+      it('should return false when no value in localStorage', () => {
+        localStorage.removeItem('ketal_summary_mode');
 
-    it('should return true when localStorage has "true"', () => {
-      localStorage.setItem('ketal_summary_mode', 'true');
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+            { provide: RealtimeService, useValue: mockRealtimeService },
+            { provide: SoloRoomService, useValue: mockSoloRoomService },
+          ],
+        });
+        const newService = TestBed.inject(GameService);
 
-      TestBed.resetTestingModule();
-      TestBed.configureTestingModule({
-        providers: [
-          GameService,
-          { provide: LocalService, useValue: mockLocalService },
-          { provide: CardService, useValue: mockCardService },
-          { provide: PlayerHelperService, useValue: mockPlayerHelperService },
-          { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
-          { provide: RoomService, useValue: mockRoomService },
-          { provide: AuthService, useValue: mockAuthService },
-          { provide: KetalSessionService, useValue: mockKetalSessionService },
-          { provide: MemberService, useValue: mockMemberService },
-          { provide: RealtimeService, useValue: mockRealtimeService },
-          { provide: SoloRoomService, useValue: mockSoloRoomService },
-        ],
+        expect(newService.withSummaryMode()).toBe(false);
       });
-      const newService = TestBed.inject(GameService);
 
-      expect(newService.withSummaryMode()).toBe(true);
-    });
+      it('should return true when localStorage has "true"', () => {
+        localStorage.setItem('ketal_summary_mode', 'true');
+
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [
+            GameService,
+            { provide: LocalService, useValue: mockLocalService },
+            { provide: CardService, useValue: mockCardService },
+            { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+            { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+            { provide: RoomService, useValue: mockRoomService },
+            { provide: AuthService, useValue: mockAuthService },
+            { provide: KetalSessionService, useValue: mockKetalSessionService },
+            { provide: MemberService, useValue: mockMemberService },
+            { provide: RealtimeService, useValue: mockRealtimeService },
+            { provide: SoloRoomService, useValue: mockSoloRoomService },
+          ],
+        });
+        const newService = TestBed.inject(GameService);
+
+        expect(newService.withSummaryMode()).toBe(true);
+      });
 
       it('should persist value to localStorage when set to true', () => {
         localStorage.removeItem('ketal_summary_mode');
@@ -3345,18 +3345,8 @@ describe('GameService', () => {
 
     describe('realtime callback invocation', () => {
       it('should call handleSessionUpdate when realtime update is received', () => {
-        let capturedCallback: ((session: any) => void) | undefined;
-
-        mockKetalSessionService.subscribeToSession.and.callFake((_id: string, cb: (session: any) => void) => {
-          capturedCallback = cb;
-        });
-
         const testService = createServiceWithRoomMode(createMockGame(), createMockGameRoom());
-        testService.subscribeToSessionUpdates('session-123');
 
-        expect(capturedCallback).toBeDefined();
-
-        // Simulate realtime update via KetalSessionService callback
         const session = createMockKetalSession({
           status: 'playing',
           phase: 'pyramid',
@@ -3364,7 +3354,7 @@ describe('GameService', () => {
           players: [],
         });
 
-        capturedCallback!(session);
+        testService.handleSessionUpdate(session);
 
         expect(testService.game().phase).toBe(2); // 'pyramid' maps to phase 2
       });

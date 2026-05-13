@@ -464,7 +464,7 @@ describe('KetalSessionService', () => {
 
     it('should call unsubscribe on realtime subscriptions', async () => {
       // Set up subscriptions first
-      service.subscribeToSession('session-123');
+      await service.subscribeToSession('session-123');
 
       await service.endGame('session-123');
 
@@ -599,8 +599,8 @@ describe('KetalSessionService', () => {
       service.setCurrentSession(session);
     });
 
-    it('should set up 3 subscriptions (session, players, cards)', () => {
-      service.subscribeToSession('session-123');
+    it('should set up 3 subscriptions (session, players, cards)', async () => {
+      await service.subscribeToSession('session-123');
 
       // subscribeToDocument called for session + cards (2 times)
       expect(mockRealtimeService.subscribeToDocument).toHaveBeenCalledTimes(2);
@@ -608,8 +608,8 @@ describe('KetalSessionService', () => {
       expect(mockRealtimeService.subscribeToCollection).toHaveBeenCalledTimes(1);
     });
 
-    it('should subscribe to ketal_sessions document', () => {
-      service.subscribeToSession('session-123');
+    it('should subscribe to ketal_sessions document', async () => {
+      await service.subscribeToSession('session-123');
 
       expect(mockRealtimeService.subscribeToDocument).toHaveBeenCalledWith(
         'ketal_sessions',
@@ -618,14 +618,14 @@ describe('KetalSessionService', () => {
       );
     });
 
-    it('should subscribe to ketal_players collection', () => {
-      service.subscribeToSession('session-123');
+    it('should subscribe to ketal_players collection', async () => {
+      await service.subscribeToSession('session-123');
 
       expect(mockRealtimeService.subscribeToCollection).toHaveBeenCalledWith('ketal_players', jasmine.any(Function));
     });
 
-    it('should subscribe to ketal_cards document when cards doc exists', () => {
-      service.subscribeToSession('session-123');
+    it('should subscribe to ketal_cards document when cards doc exists', async () => {
+      await service.subscribeToSession('session-123');
 
       expect(mockRealtimeService.subscribeToDocument).toHaveBeenCalledWith(
         'ketal_cards',
@@ -634,7 +634,7 @@ describe('KetalSessionService', () => {
       );
     });
 
-    it('should call onUpdate callback when session updates arrive', () => {
+    it('should call onUpdate callback when session updates arrive', async () => {
       const onUpdate = jasmine.createSpy('onUpdate');
       let capturedSessionCallback: (data: unknown) => void = () => {
         /* noop */
@@ -645,11 +645,11 @@ describe('KetalSessionService', () => {
           if (collectionId === 'ketal_sessions') {
             capturedSessionCallback = callback;
           }
-          return `sub_${collectionId}`;
+          return Promise.resolve(`sub_${collectionId}`);
         }
       );
 
-      service.subscribeToSession('session-123', onUpdate);
+      await service.subscribeToSession('session-123', onUpdate);
 
       // Simulate a session update via realtime
       capturedSessionCallback({
@@ -669,13 +669,13 @@ describe('KetalSessionService', () => {
       expect(updatedSession.phase).toBe('pyramid');
     });
 
-    it('should unsubscribe existing subscriptions before subscribing', () => {
+    it('should unsubscribe existing subscriptions before subscribing', async () => {
       // Subscribe once
-      service.subscribeToSession('session-123');
+      await service.subscribeToSession('session-123');
       const unsubCallCountBefore = mockRealtimeService.unsubscribe.calls.count();
 
       // Subscribe again — should unsubscribe the old ones first
-      service.subscribeToSession('session-456');
+      await service.subscribeToSession('session-456');
 
       // Should have called unsubscribe for previous subscriptions
       expect(mockRealtimeService.unsubscribe.calls.count()).toBeGreaterThan(unsubCallCountBefore);
@@ -687,11 +687,11 @@ describe('KetalSessionService', () => {
   // ==========================================================================
 
   describe('unsubscribe()', () => {
-    it('should clean up all subscriptions', () => {
+    it('should clean up all subscriptions', async () => {
       const session = createTestSession({ $id: 'session-123' });
       service.setCurrentSession(session);
 
-      service.subscribeToSession('session-123');
+      await service.subscribeToSession('session-123');
       service.unsubscribe();
 
       expect(mockRealtimeService.unsubscribe).toHaveBeenCalled();
@@ -814,19 +814,31 @@ describe('KetalSessionService', () => {
       service.setCurrentSession(session);
     });
 
-    it('should update an existing player when receiving a realtime update', () => {
+    it('should update an existing player when receiving a realtime update', async () => {
       let capturedPlayersCallback: (data: unknown) => void = () => {
         /* noop */
       };
+      let capturedSessionCallback: (data: unknown) => void = () => {
+        /* noop */
+      };
+
+      mockRealtimeService.subscribeToDocument.and.callFake(
+        (collectionId: string, _docId: string, callback: (data: unknown) => void) => {
+          if (collectionId === 'ketal_sessions') {
+            capturedSessionCallback = callback;
+          }
+          return Promise.resolve(`sub_${collectionId}`);
+        }
+      );
 
       mockRealtimeService.subscribeToCollection.and.callFake(
         (_collectionId: string, callback: (data: unknown) => void) => {
           capturedPlayersCallback = callback;
-          return 'sub_players';
+          return Promise.resolve('sub_players');
         }
       );
 
-      service.subscribeToSession('session-123');
+      await service.subscribeToSession('session-123');
 
       // Simulate update for existing player
       capturedPlayersCallback({
@@ -849,19 +861,31 @@ describe('KetalSessionService', () => {
       expect(current.players[0].cards).toEqual(['newcard']);
     });
 
-    it('should add a new player when receiving a doc with unknown $id', () => {
+    it('should add a new player when receiving a doc with unknown $id', async () => {
       let capturedPlayersCallback: (data: unknown) => void = () => {
         /* noop */
       };
+      let capturedSessionCallback: (data: unknown) => void = () => {
+        /* noop */
+      };
+
+      mockRealtimeService.subscribeToDocument.and.callFake(
+        (collectionId: string, _docId: string, callback: (data: unknown) => void) => {
+          if (collectionId === 'ketal_sessions') {
+            capturedSessionCallback = callback;
+          }
+          return Promise.resolve(`sub_${collectionId}`);
+        }
+      );
 
       mockRealtimeService.subscribeToCollection.and.callFake(
         (_collectionId: string, callback: (data: unknown) => void) => {
           capturedPlayersCallback = callback;
-          return 'sub_players';
+          return Promise.resolve('sub_players');
         }
       );
 
-      service.subscribeToSession('session-123');
+      await service.subscribeToSession('session-123');
 
       // Simulate a new player joining
       capturedPlayersCallback({
@@ -882,19 +906,31 @@ describe('KetalSessionService', () => {
       expect(current.players[1].displayName).toBe('Bob');
     });
 
-    it('should ignore player updates for different sessions', () => {
+    it('should ignore player updates for different sessions', async () => {
       let capturedPlayersCallback: (data: unknown) => void = () => {
         /* noop */
       };
+      let capturedSessionCallback: (data: unknown) => void = () => {
+        /* noop */
+      };
+
+      mockRealtimeService.subscribeToDocument.and.callFake(
+        (collectionId: string, _docId: string, callback: (data: unknown) => void) => {
+          if (collectionId === 'ketal_sessions') {
+            capturedSessionCallback = callback;
+          }
+          return Promise.resolve(`sub_${collectionId}`);
+        }
+      );
 
       mockRealtimeService.subscribeToCollection.and.callFake(
         (_collectionId: string, callback: (data: unknown) => void) => {
           capturedPlayersCallback = callback;
-          return 'sub_players';
+          return Promise.resolve('sub_players');
         }
       );
 
-      service.subscribeToSession('session-123');
+      await service.subscribeToSession('session-123');
 
       // Simulate update for a different session
       capturedPlayersCallback({
