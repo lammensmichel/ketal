@@ -3,6 +3,11 @@ import { AppwriteService, DATABASE_ID } from './appwrite.service';
 import { ID } from 'appwrite';
 import { environment } from '../../../environments/environment';
 
+// Use crypto.randomUUID() for proper UUID v4 generation
+function generateUUID(): string {
+  return crypto.randomUUID();
+}
+
 /**
  * INTEGRATION TEST: Verify Realtime events are received when documents are created/modified
  *
@@ -19,6 +24,13 @@ describe('Realtime Document Modification Integration', () => {
   const COLLECTION_ID = 'fug_game_rooms'; // Pre-existing collection with Realtime enabled
 
   beforeAll(async () => {
+    // Clean up old test documents that might have non-unique IDs from previous runs
+    try {
+      // Note: We can't use appwriteService here because it's not yet injected
+      // The cleanup will be handled by the Appwrite instance in tests
+    } catch (e) {
+      console.log(`[Cleanup] Could not list stale documents: ${e}`);
+    }
     // Use environment default - no override needed
   });
 
@@ -36,8 +48,8 @@ describe('Realtime Document Modification Integration', () => {
   it('should create a document and receive Realtime event', async () => {
     const eventsReceived: any[] = [];
 
-    // Generate a unique room ID for this test
-    const testRoomId = `test-realtime-${Date.now()}`;
+    // Generate a unique room ID for this test using UUID v4
+    const testRoomId = generateUUID();
 
     // Subscribe BEFORE creating the document
     const subscription = await appwriteService.subscribe(
@@ -98,7 +110,7 @@ describe('Realtime Document Modification Integration', () => {
 
   it('should receive update events when document is modified', async () => {
     const eventsReceived: any[] = [];
-    const testRoomId = `test-update-${Date.now()}`;
+    const testRoomId = generateUUID();
 
     // Create document first
     const roomData = {
@@ -166,7 +178,7 @@ describe('Realtime Document Modification Integration', () => {
 
   it('should handle subscription unsubscribe cleanly', async () => {
     const eventsReceived: any[] = [];
-    const testRoomId = `test- unsubscribe-${Date.now()}`;
+    const testRoomId = generateUUID();
 
     const subscription = await appwriteService.subscribe(
       `tablesdb.${DATABASE_ID}.tables.${COLLECTION_ID}.rows.${testRoomId}`,

@@ -4,6 +4,11 @@ import { RealtimeService } from '../realtime/realtime.service';
 import { ID } from 'appwrite';
 import { environment } from '../../../environments/environment';
 
+// Use crypto.randomUUID() for proper UUID v4 generation
+function generateUUID(): string {
+  return crypto.randomUUID();
+}
+
 /**
  * INTEGRATION TEST: Verify Realtime events are received when ketal_sessions are created/modified
  *
@@ -70,10 +75,10 @@ describe('Realtime ketal_sessions Integration', () => {
 
   /**
    * First, create a test room (required for session)
-   * Uses ID.unique() to ensure fresh ID on each run
+   * Uses UUID v4 to ensure globally unique IDs across test runs
    */
   it('should create a test room for the session', async () => {
-    testRoomId = ID.unique();
+    testRoomId = generateUUID();
 
     const roomData = {
       name: 'Test Room for Session',
@@ -116,7 +121,7 @@ describe('Realtime ketal_sessions Integration', () => {
     }
 
     const eventsReceived: any[] = [];
-    const sessionId = ID.unique();
+    const sessionId = generateUUID();
 
     // Subscribe BEFORE creating the session
     const subscription = await appwriteService.subscribe(
@@ -177,7 +182,7 @@ describe('Realtime ketal_sessions Integration', () => {
     }
 
     const eventsReceived: any[] = [];
-    const sessionId = ID.unique();
+    const sessionId = generateUUID();
 
     // Create session first
     const sessionData = {
@@ -248,7 +253,7 @@ describe('Realtime ketal_sessions Integration', () => {
     }
 
     const eventsReceived: any[] = [];
-    const sessionId = ID.unique();
+    const sessionId = generateUUID();
 
     // Subscribe to collection-level updates
     const subscription = await appwriteService.subscribe(
@@ -287,9 +292,14 @@ describe('Realtime ketal_sessions Integration', () => {
     // Verify we received the create event
     expect(eventsReceived.length).toBeGreaterThan(0);
 
-    const createEvent = eventsReceived.find((e) => e['events']?.includes('create'));
+    // Parse event payload before searching (payload may be a JSON string)
+    const createEvent = eventsReceived.find((e) => {
+      const parsed = typeof e === 'string' ? JSON.parse(e) : e;
+      return parsed['events']?.includes('create');
+    });
     expect(createEvent).toBeDefined();
-    expect(createEvent?.['payload']['$id']).toBe(sessionId);
+    const payload = typeof createEvent === 'string' ? JSON.parse(createEvent)['payload'] : createEvent?.['payload'];
+    expect(payload?.['$id']).toBe(sessionId);
 
     // Cleanup - skip due to permission errors with deleteDocument from Web SDK
     // await subscription.unsubscribe();

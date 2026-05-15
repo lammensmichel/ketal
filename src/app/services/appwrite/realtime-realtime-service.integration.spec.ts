@@ -4,6 +4,11 @@ import { RealtimeService } from '../realtime/realtime.service';
 import { ID } from 'appwrite';
 import { environment } from '../../../environments/environment';
 
+// Use crypto.randomUUID() for proper UUID v4 generation
+function generateUUID(): string {
+  return crypto.randomUUID();
+}
+
 /**
  * INTEGRATION TEST: Verify Realtime events flow through RealtimeService
  *
@@ -156,7 +161,7 @@ describe('RealtimeService Realtime Integration', () => {
   }, 30000);
 
   it('should properly unsubscribe from RealtimeService', async () => {
-    const testRoomId = ID.unique();
+    const testRoomId = generateUUID();
     console.log(`[Test RS Unsubscribe] Using room ID: ${testRoomId}`);
 
     const callback = jasmine.createSpy('callback');
@@ -179,7 +184,7 @@ describe('RealtimeService Realtime Integration', () => {
   }, 20000);
 
   it('should properly unsubscribeAll', async () => {
-    const testRoomId = ID.unique();
+    const testRoomId = generateUUID();
     console.log(`[Test RS UnsubscribeAll] Using room ID: ${testRoomId}`);
 
     const callback = jasmine.createSpy('callback');
