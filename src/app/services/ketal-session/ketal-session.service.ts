@@ -2,7 +2,6 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { ID, Query } from 'appwrite';
 import { AppwriteService } from '../appwrite/appwrite.service';
 import { RealtimeService } from '../realtime/realtime.service';
-import { RoomService } from '../room/room.service';
 
 /**
  * Collection IDs for Ketal in Appwrite
@@ -151,7 +150,6 @@ interface SessionData {
 export class KetalSessionService {
   private readonly appwrite = inject(AppwriteService);
   private readonly realtime = inject(RealtimeService);
-  private readonly roomService = inject(RoomService);
 
   /** Internal split state */
   private readonly _sessionData = signal<SessionData | null>(null);
@@ -196,11 +194,20 @@ export class KetalSessionService {
    * Start a new game in a room
    *
    * Creates documents across 3 collections: session, players, and cards.
+   * @param roomId - Room ID
+   * @param players - Array of players
+   * @param withSummary - Whether to enable summary mode at game end
+   * @param gamesPlayed - Current number of games played in the room (passed to avoid RoomService dependency)
+   * @returns The newly created KetalSession
    */
-  async startGame(roomId: string, players: KetalPlayer[], withSummary: boolean): Promise<KetalSession> {
+  async startGame(
+    roomId: string,
+    players: KetalPlayer[],
+    withSummary: boolean,
+    gamesPlayed: number
+  ): Promise<KetalSession> {
     try {
-      const currentRoom = this.roomService.currentRoom();
-      const gameNumber = (currentRoom?.gamesPlayed ?? 0) + 1;
+      const gameNumber = gamesPlayed + 1;
 
       // 1. Create session document
       const sessionDoc = await this.appwrite.databases.createDocument({
@@ -258,10 +265,15 @@ export class KetalSessionService {
       });
 
       // 4. Update room with current session ID and increment games played
-      await this.roomService.updateRoom(roomId, {
-        currentSessionId: sessionId,
-        status: 'playing',
-        gamesPlayed: gameNumber,
+      await this.appwrite.databases.updateDocument({
+        databaseId: this.appwrite.databaseId,
+        collectionId: 'fug_game_rooms',
+        documentId: roomId,
+        data: {
+          currentSessionId: sessionId,
+          status: 'playing',
+          gamesPlayed: gameNumber,
+        },
       });
 
       // 5. Update internal signals
@@ -335,6 +347,8 @@ export class KetalSessionService {
 
   /**
    * Cancel the current game (mark as cancelled)
+   * @param sessionId - Session ID to cancel
+   * @param roomId - Room ID (passed to avoid RoomService dependency)
    */
   async cancelSession(sessionId: string, roomId: string): Promise<void> {
     try {
@@ -351,13 +365,15 @@ export class KetalSessionService {
       });
 
       // Reset room to idle
-      const room = await this.roomService.getRoomById(roomId);
-      if (room) {
-        await this.roomService.updateRoom(roomId, {
+      await this.appwrite.databases.updateDocument({
+        databaseId: this.appwrite.databaseId,
+        collectionId: 'fug_game_rooms',
+        documentId: roomId,
+        data: {
           currentSessionId: null,
           status: 'idle',
-        });
-      }
+        },
+      });
 
       this.unsubscribe();
 
@@ -372,8 +388,10 @@ export class KetalSessionService {
 
   /**
    * End the current game
+   * @param sessionId - Session ID to end
+   * @param roomId - Room ID (passed to avoid RoomService dependency)
    */
-  async endGame(sessionId: string): Promise<void> {
+  async endGame(sessionId: string, roomId: string): Promise<void> {
     try {
       await this.appwrite.databases.updateDocument({
         databaseId: this.appwrite.databaseId,
@@ -385,13 +403,15 @@ export class KetalSessionService {
         },
       });
 
-      const roomId = this._sessionData()?.roomId;
-      if (roomId) {
-        await this.roomService.updateRoom(roomId, {
+      await this.appwrite.databases.updateDocument({
+        databaseId: this.appwrite.databaseId,
+        collectionId: 'fug_game_rooms',
+        documentId: roomId,
+        data: {
           currentSessionId: null,
           status: 'idle',
-        });
-      }
+        },
+      });
 
       this.unsubscribe();
 

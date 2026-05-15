@@ -64,7 +64,11 @@ describe('RoomService', () => {
       databaseId: 'fug',
     });
 
-    mockRealtimeService = jasmine.createSpyObj('RealtimeService', ['subscribeToRoom', 'unsubscribe']);
+    mockRealtimeService = jasmine.createSpyObj('RealtimeService', [
+      'subscribeToRoom',
+      'unsubscribe',
+      'broadcastToRoom',
+    ]);
     mockMemberService = jasmine.createSpyObj('MemberService', [
       'getMembersByRoom',
       'getMembersByUserId',

@@ -519,7 +519,8 @@ export class RoomService {
     };
 
     // Create session via KetalSessionService (creates session + player docs + cards doc)
-    const session = await this.ketalSession.startGame(roomId, [hostPlayer], false);
+    // Pass gamesPlayed to avoid circular dependency with RoomService
+    const session = await this.ketalSession.startGame(roomId, [hostPlayer], false, room.gamesPlayed);
 
     // Update room with new session ID and playing status
     await this.updateRoom(roomId, { currentSessionId: session.$id, status: 'playing' });
