@@ -1,6 +1,6 @@
 ---
 description: FIRE Planner Agent - captures intents and decomposes into work items
-agent: build
+agent: plan
 ---
 
 # Activate FIRE Planner

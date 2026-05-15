@@ -4,6 +4,7 @@ import { AppwriteService } from '../appwrite/appwrite.service';
 import { RealtimeService, SubscriptionCallback } from '../realtime/realtime.service';
 import { MemberService } from '../member/member.service';
 import { AuthService } from '../auth/auth.service';
+import { KetalSessionService, KetalPlayer } from '../ketal-session/ketal-session.service';
 
 /**
  * Collection ID for game rooms in Appwrite
@@ -91,6 +92,7 @@ export class RoomService {
   private readonly appwrite = inject(AppwriteService);
   private readonly realtime = inject(RealtimeService);
   private readonly memberService = inject(MemberService);
+  private readonly ketalSession = inject(KetalSessionService);
   @Optional() private readonly authService = inject(AuthService);
 
   /** Signal holding the current room the user is in */
@@ -371,7 +373,8 @@ export class RoomService {
    */
   async renameRoom(roomId: string, newName: string): Promise<GameRoom> {
     const room = await this.updateRoom(roomId, { name: newName });
-    // Broadcast via RealtimeService
+    // Broadcast room rename event to all members in the room
+    this.realtime.broadcastToRoom(roomId, 'room.renamed', { name: newName, roomId });
     return room;
   }
 
@@ -422,17 +425,59 @@ export class RoomService {
     }
 
     // Delete member record
-    await this.memberService.deleteMember(myMember.$id);
+    const memberIdToDelete = myMember.$id;
+    await this.memberService.deleteMember(memberIdToDelete);
 
-    // If host, cleanup session
+    // If host, cleanup session and handle host transfer
     if (myMember.role === 'host') {
       const room = await this.getRoomById(roomId);
-      if (room?.currentSessionId) {
-        await this.updateRoom(roomId, { status: 'idle', currentSessionId: null });
-        // Cancel session
-        // Set hasLeft=true for all players in session
+      if (room) {
+        // Cancel any active session
+        if (room.currentSessionId) {
+          try {
+            await this.ketalSession.cancelSession(room.currentSessionId, roomId);
+          } catch (err: unknown) {
+            console.warn('[RoomService] Failed to cancel session on host leave:', err);
+          }
+          // Update room state
+          await this.updateRoom(roomId, { status: 'idle', currentSessionId: null });
+        }
+
+        // Broadcast host departure to remaining members
+        this.realtime.broadcastToRoom(roomId, 'room.host_left', {
+          roomId,
+          oldHostMemberId: myMember.$id,
+        });
+
+        // Transfer host if other members remain, otherwise mark idle
+        const remainingMembers = await this.memberService.getMembersByRoom(roomId);
+        if (remainingMembers.length > 0) {
+          // Promote the remaining non-host member to host
+          const newHost = remainingMembers.find((m) => m.role === 'player');
+          if (newHost) {
+            await this.memberService.updateMember(newHost.$id, { role: 'host' });
+            await this.updateRoom(roomId, { hostMemberId: newHost.$id });
+
+            // Broadcast new host assignment
+            this.realtime.broadcastToRoom(roomId, 'room.host_transferred', {
+              roomId,
+              newHostMemberId: newHost.$id,
+              newHostDisplayName: newHost.displayName,
+            });
+          }
+        } else {
+          // No members left — room should be archived or cleaned up
+          await this.updateRoom(roomId, { status: 'archived' });
+        }
       }
     }
+
+    // Broadcast player leaving event to all remaining members in the room
+    // (emitted for ALL leavers — host AND non-host — so every client sees the departure)
+    this.realtime.broadcastToRoom(roomId, 'room.player_left', {
+      roomId,
+      playerName: myMember.displayName,
+    });
 
     // Clear current room if it matches the room being left
     if (this._currentRoom()?.$id === roomId) {
@@ -442,8 +487,11 @@ export class RoomService {
 
   /**
    * Start a new session in a room
+   *
+   * Creates a new Ketal game session for the host player and updates the room.
+   * @returns The newly created KetalSession
    */
-  async startNewSession(roomId: string): Promise<any> {
+  async startNewSession(roomId: string): Promise<ReturnType<KetalSessionService['currentSession']>> {
     const room = await this.getRoomById(roomId);
     if (!room) {
       throw new Error('Room not found');
@@ -452,9 +500,31 @@ export class RoomService {
       throw new Error('Room must be idle to start a new game');
     }
 
-    // Create new session
-    // Add host as player
-    return null;
+    // Get the host (current member)
+    const current = this.memberService.currentMember();
+    if (!current) {
+      throw new Error('No member context available to start session');
+    }
+
+    // Build a minimal KetalPlayer for the host (cards will be dealt later)
+    const hostPlayer: KetalPlayer = {
+      memberId: current.$id,
+      displayName: current.displayName,
+      order: 1,
+      cards: [],
+      choices: { color: '', plus_or_minus: '', in_out: '', suit: '' },
+      sipsGiven: 0,
+      sipsTaken: 0,
+      isReady: true,
+    };
+
+    // Create session via KetalSessionService (creates session + player docs + cards doc)
+    const session = await this.ketalSession.startGame(roomId, [hostPlayer], false);
+
+    // Update room with new session ID and playing status
+    await this.updateRoom(roomId, { currentSessionId: session.$id, status: 'playing' });
+
+    return session;
   }
 
   /**

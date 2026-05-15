@@ -140,7 +140,8 @@ describe('KetalSessionService', () => {
 
       // Mock session doc creation
       appwriteMock.databases.createDocument.and.callFake(
-        (_dbId: string, collectionId: string, _docId: string, _data: Record<string, unknown>) => {
+        (params: { collectionId: string; data: Record<string, unknown> }) => {
+          const { collectionId, data } = params;
           if (collectionId === 'ketal_sessions') {
             return Promise.resolve(
               createDocResponse({
@@ -159,16 +160,16 @@ describe('KetalSessionService', () => {
           if (collectionId === 'ketal_players') {
             return Promise.resolve(
               createDocResponse({
-                $id: `player-doc-${_data['memberId']}`,
+                $id: `player-doc-${data['memberId']}`,
                 sessionId: 'session-new',
-                memberId: _data['memberId'],
-                displayName: _data['displayName'],
-                order: _data['order'],
-                cards: _data['cards'],
-                choices: _data['choices'],
-                sipsTaken: _data['sipsTaken'],
-                sipsGiven: _data['sipsGiven'],
-                isReady: _data['isReady'],
+                memberId: data['memberId'],
+                displayName: data['displayName'],
+                order: data['order'],
+                cards: data['cards'],
+                choices: data['choices'],
+                sipsTaken: data['sipsTaken'],
+                sipsGiven: data['sipsGiven'],
+                isReady: data['isReady'],
               })
             );
           }
@@ -227,7 +228,8 @@ describe('KetalSessionService', () => {
 
       // Update mock to reflect gameNumber 4
       appwriteMock.databases.createDocument.and.callFake(
-        (_dbId: string, collectionId: string, _docId: string, data: Record<string, unknown>) => {
+        (params: { collectionId: string; data: Record<string, unknown> }) => {
+          const { collectionId, data } = params;
           if (collectionId === 'ketal_sessions') {
             return Promise.resolve(
               createDocResponse({
@@ -504,7 +506,8 @@ describe('KetalSessionService', () => {
         })
       );
 
-      appwriteMock.databases.listDocuments.and.callFake((_dbId: string, collectionId: string) => {
+      appwriteMock.databases.listDocuments.and.callFake((params: { collectionId: string; queries?: unknown[] }) => {
+        const { collectionId } = params;
         if (collectionId === 'ketal_players') {
           return Promise.resolve({
             documents: [
