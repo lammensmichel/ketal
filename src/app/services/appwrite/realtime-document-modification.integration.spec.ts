@@ -11,13 +11,15 @@ import { environment } from '../../../environments/environment';
  * 2. Subscribes to Realtime events for that document
  * 3. Modifies the document
  * 4. Verifies the callback receives the correct events with payloads
+ *
+ * Channel format for Appwrite v1.9.0: tablesdb.<DB_ID>.tables.<COLLECTION_ID>.rows
  */
-xdescribe('Realtime Document Modification Integration', () => {
+describe('Realtime Document Modification Integration', () => {
   let appwriteService: AppwriteService;
   const COLLECTION_ID = 'fug_game_rooms'; // Pre-existing collection with Realtime enabled
 
   beforeAll(async () => {
-    (environment as any).appwrite.endpoint = 'http://127.0.0.1/v1';
+    // Use environment default - no override needed
   });
 
   beforeEach(() => {
@@ -28,7 +30,7 @@ xdescribe('Realtime Document Modification Integration', () => {
   });
 
   afterAll(async () => {
-    (environment as any).appwrite.endpoint = 'http://localhost/v1';
+    // Use environment default - no override needed
   });
 
   it('should create a document and receive Realtime event', async () => {
@@ -39,7 +41,7 @@ xdescribe('Realtime Document Modification Integration', () => {
 
     // Subscribe BEFORE creating the document
     const subscription = await appwriteService.subscribe(
-      `databases.${DATABASE_ID}.collections.${COLLECTION_ID}.documents.${testRoomId}`,
+      `tablesdb.${DATABASE_ID}.tables.${COLLECTION_ID}.rows.${testRoomId}`,
       (event) => {
         console.log(`[Test] Received event:`, JSON.stringify(event));
         eventsReceived.push(event);
@@ -63,7 +65,12 @@ xdescribe('Realtime Document Modification Integration', () => {
       gamesPlayed: 0,
     };
 
-    const createdDoc = await appwriteService.databases.createDocument(DATABASE_ID, COLLECTION_ID, testRoomId, roomData);
+    const createdDoc = await appwriteService.databases.createDocument({
+      databaseId: DATABASE_ID,
+      collectionId: COLLECTION_ID,
+      documentId: testRoomId,
+      data: roomData,
+    });
 
     console.log(`[Test] Created document:`, createdDoc.$id);
 
@@ -81,8 +88,12 @@ xdescribe('Realtime Document Modification Integration', () => {
     expect(firstEvent['payload']['status']).toBe('idle');
 
     // Cleanup
-    await subscription.unsubscribe();
-    await appwriteService.databases.deleteDocument(DATABASE_ID, COLLECTION_ID, testRoomId);
+    await subscription.close();
+    await appwriteService.databases.deleteDocument({
+      databaseId: DATABASE_ID,
+      collectionId: COLLECTION_ID,
+      documentId: testRoomId,
+    });
   }, 30000);
 
   it('should receive update events when document is modified', async () => {
@@ -103,11 +114,16 @@ xdescribe('Realtime Document Modification Integration', () => {
       gamesPlayed: 0,
     };
 
-    await appwriteService.databases.createDocument(DATABASE_ID, COLLECTION_ID, testRoomId, roomData);
+    await appwriteService.databases.createDocument({
+      databaseId: DATABASE_ID,
+      collectionId: COLLECTION_ID,
+      documentId: testRoomId,
+      data: roomData,
+    });
 
     // Subscribe to the specific document
     const subscription = await appwriteService.subscribe(
-      `databases.${DATABASE_ID}.collections.${COLLECTION_ID}.documents.${testRoomId}`,
+      `tablesdb.${DATABASE_ID}.tables.${COLLECTION_ID}.rows.${testRoomId}`,
       (event) => {
         console.log(`[Test Update] Received event:`, JSON.stringify(event));
         eventsReceived.push(event);
@@ -117,9 +133,14 @@ xdescribe('Realtime Document Modification Integration', () => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // Modify the document
-    await appwriteService.databases.updateDocument(DATABASE_ID, COLLECTION_ID, testRoomId, {
-      name: 'Updated Name',
-      status: 'playing',
+    await appwriteService.databases.updateDocument({
+      databaseId: DATABASE_ID,
+      collectionId: COLLECTION_ID,
+      documentId: testRoomId,
+      data: {
+        name: 'Updated Name',
+        status: 'playing',
+      },
     });
 
     // Wait for realtime event
@@ -135,8 +156,12 @@ xdescribe('Realtime Document Modification Integration', () => {
     expect(lastEvent['payload']['status']).toBe('playing');
 
     // Cleanup
-    await subscription.unsubscribe();
-    await appwriteService.databases.deleteDocument(DATABASE_ID, COLLECTION_ID, testRoomId);
+    await subscription.close();
+    await appwriteService.databases.deleteDocument({
+      databaseId: DATABASE_ID,
+      collectionId: COLLECTION_ID,
+      documentId: testRoomId,
+    });
   }, 30000);
 
   it('should handle subscription unsubscribe cleanly', async () => {
@@ -144,14 +169,14 @@ xdescribe('Realtime Document Modification Integration', () => {
     const testRoomId = `test- unsubscribe-${Date.now()}`;
 
     const subscription = await appwriteService.subscribe(
-      `databases.${DATABASE_ID}.collections.${COLLECTION_ID}.documents.${testRoomId}`,
+      `tablesdb.${DATABASE_ID}.tables.${COLLECTION_ID}.rows.${testRoomId}`,
       (event) => eventsReceived.push(event)
     );
 
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     // Unsubscribe should complete without error
-    await expectAsync(subscription.unsubscribe()).toBeResolved();
+    await expectAsync(subscription.close()).toBeResolved();
 
     // Try to create a document after unsubscribe - should not receive event
     const roomData = {
@@ -167,7 +192,12 @@ xdescribe('Realtime Document Modification Integration', () => {
       gamesPlayed: 0,
     };
 
-    await appwriteService.databases.createDocument(DATABASE_ID, COLLECTION_ID, testRoomId, roomData);
+    await appwriteService.databases.createDocument({
+      databaseId: DATABASE_ID,
+      collectionId: COLLECTION_ID,
+      documentId: testRoomId,
+      data: roomData,
+    });
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
@@ -178,7 +208,11 @@ xdescribe('Realtime Document Modification Integration', () => {
 
     // Cleanup the document regardless
     try {
-      await appwriteService.databases.deleteDocument(DATABASE_ID, COLLECTION_ID, testRoomId);
+      await appwriteService.databases.deleteDocument({
+        databaseId: DATABASE_ID,
+        collectionId: COLLECTION_ID,
+        documentId: testRoomId,
+      });
     } catch (e) {
       // Document might already be deleted
     }
@@ -188,7 +222,7 @@ xdescribe('Realtime Document Modification Integration', () => {
     const testRoomId = `test-close-${Date.now()}`;
 
     const subscription = await appwriteService.subscribe(
-      `databases.${DATABASE_ID}.collections.${COLLECTION_ID}.documents.${testRoomId}`,
+      `tablesdb.${DATABASE_ID}.tables.${COLLECTION_ID}.rows.${testRoomId}`,
       () => {}
     );
 
@@ -199,7 +233,11 @@ xdescribe('Realtime Document Modification Integration', () => {
 
     // Cleanup
     try {
-      await appwriteService.databases.deleteDocument(DATABASE_ID, COLLECTION_ID, testRoomId);
+      await appwriteService.databases.deleteDocument({
+        databaseId: DATABASE_ID,
+        collectionId: COLLECTION_ID,
+        documentId: testRoomId,
+      });
     } catch (e) {
       // Document might not exist
     }

@@ -21,14 +21,14 @@ import { environment } from '../../../environments/environment';
 // before the client can send the subscribe message. This is a timing issue
 // in the Appwrite v25 SDK where createSocket() doesn't properly await the
 // WebSocket open event before returning.
-xdescribe('RealtimeService Realtime Integration', () => {
+describe('RealtimeService Realtime Integration', () => {
   let appwriteService: AppwriteService;
   let realtimeService: RealtimeService;
 
   const ROOMS_COLLECTION_ID = 'fug_game_rooms';
 
   beforeAll(async () => {
-    (environment as any).appwrite.endpoint = 'http://127.0.0.1/v1';
+    // Use environment default - no override needed
   });
 
   beforeEach(() => {
@@ -40,7 +40,7 @@ xdescribe('RealtimeService Realtime Integration', () => {
   });
 
   afterAll(async () => {
-    (environment as any).appwrite.endpoint = 'http://localhost/v1';
+    // Use environment default - no override needed
   });
 
   it('should receive events via RealtimeService.subscribeToRoom', async () => {
@@ -155,7 +155,7 @@ xdescribe('RealtimeService Realtime Integration', () => {
     realtimeService.unsubscribe(subId);
   }, 30000);
 
-  xit('should properly unsubscribe from RealtimeService', async () => {
+  it('should properly unsubscribe from RealtimeService', async () => {
     const testRoomId = ID.unique();
     console.log(`[Test RS Unsubscribe] Using room ID: ${testRoomId}`);
 

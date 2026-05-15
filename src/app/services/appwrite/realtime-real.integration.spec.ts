@@ -14,12 +14,12 @@ import { environment } from '../../../environments/environment';
  * 3. Our RealtimeService subscribes to these events and broadcasts via callbacks
  * 4. The test verifies the event callback receives the correct payload
  */
-xdescribe('Appwrite Realtime Document Modification Integration', () => {
+describe('Appwrite Realtime Document Modification Integration', () => {
   let appwriteService: AppwriteService;
   const COLLECTION_ID = 'fug_game_rooms';
 
   beforeAll(async () => {
-    (environment as any).appwrite.endpoint = 'http://127.0.0.1/v1';
+    // Use environment default - no override needed
   });
 
   beforeEach(() => {
@@ -30,7 +30,7 @@ xdescribe('Appwrite Realtime Document Modification Integration', () => {
   });
 
   afterAll(async () => {
-    (environment as any).appwrite.endpoint = 'http://localhost/v1';
+    // Use environment default - no override needed
   });
 
   it('should receive realtime event when a document is created', async () => {
@@ -38,7 +38,7 @@ xdescribe('Appwrite Realtime Document Modification Integration', () => {
 
     // Subscribe to document events
     const subscription = await appwriteService.subscribe(
-      `databases.${DATABASE_ID}.collections.${COLLECTION_ID}.documents`,
+      `tablesdb.${DATABASE_ID}.tables.${COLLECTION_ID}.rows`,
       (event) => {
         eventsReceived.push(event);
       }
@@ -75,7 +75,7 @@ xdescribe('Appwrite Realtime Document Modification Integration', () => {
     }
 
     // Cleanup
-    await subscription.unsubscribe();
+    await subscription.close();
   }, 25000);
 
   it('should receive update events when document is modified', async () => {
@@ -83,7 +83,7 @@ xdescribe('Appwrite Realtime Document Modification Integration', () => {
 
     // Subscribe to all document events
     const subscription = await appwriteService.subscribe(
-      `databases.${DATABASE_ID}.collections.${COLLECTION_ID}.documents.*.update`,
+      `tablesdb.${DATABASE_ID}.tables.${COLLECTION_ID}.rows.*.update`,
       (event) => {
         eventsReceived.push(event);
       }
@@ -107,14 +107,14 @@ xdescribe('Appwrite Realtime Document Modification Integration', () => {
       expect(firstEvent['payload']['$id']).toBeDefined();
     }
 
-    await subscription.unsubscribe();
+    await subscription.close();
   }, 25000);
 
   it('should handleRealtime subscription unsubscribe cleanly', async () => {
     const eventsReceived: any[] = [];
 
     const subscription = await appwriteService.subscribe(
-      `databases.${DATABASE_ID}.collections.${COLLECTION_ID}.documents`,
+      `tablesdb.${DATABASE_ID}.tables.${COLLECTION_ID}.rows`,
       (event) => {
         eventsReceived.push(event);
       }
@@ -123,7 +123,7 @@ xdescribe('Appwrite Realtime Document Modification Integration', () => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // Unsubscribe should complete without error
-    await expectAsync(subscription.unsubscribe()).toBeResolved();
+    await expectAsync(subscription.close()).toBeResolved();
 
     // After unsubscribe, no more events should come
     // (verified by timeout - if any events come after this, test would fail)
@@ -134,7 +134,7 @@ xdescribe('Appwrite Realtime Document Modification Integration', () => {
     const eventsReceived: any[] = [];
 
     const subscription = await appwriteService.subscribe(
-      `databases.${DATABASE_ID}.collections.${COLLECTION_ID}.documents`,
+      `tablesdb.${DATABASE_ID}.tables.${COLLECTION_ID}.rows`,
       (event) => {
         eventsReceived.push(event);
       }
@@ -151,14 +151,14 @@ xdescribe('Appwrite Realtime Document Modification Integration', () => {
     const updateEvents: any[] = [];
 
     const subCreate = await appwriteService.subscribe(
-      `databases.${DATABASE_ID}.collections.${COLLECTION_ID}.documents.*.create`,
+      `tablesdb.${DATABASE_ID}.tables.${COLLECTION_ID}.rows.*.create`,
       (event) => {
         createEvents.push(event);
       }
     );
 
     const subUpdate = await appwriteService.subscribe(
-      `databases.${DATABASE_ID}.collections.${COLLECTION_ID}.documents.*.update`,
+      `tablesdb.${DATABASE_ID}.tables.${COLLECTION_ID}.rows.*.update`,
       (event) => {
         updateEvents.push(event);
       }
@@ -171,6 +171,6 @@ xdescribe('Appwrite Realtime Document Modification Integration', () => {
     expect(subUpdate).toBeDefined();
 
     // Cleanup
-    await Promise.all([subCreate.unsubscribe(), subUpdate.close()]);
+    await Promise.all([subCreate.close(), subUpdate.close()]);
   }, 20000);
 });

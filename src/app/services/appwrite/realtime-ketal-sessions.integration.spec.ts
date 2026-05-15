@@ -8,8 +8,10 @@ import { environment } from '../../../environments/environment';
  * INTEGRATION TEST: Verify Realtime events are received when ketal_sessions are created/modified
  *
  * This test creates a ketal session and verifies Realtime callbacks receive events.
+ *
+ * Channel format for Appwrite v1.9.0: tablesdb.<DB_ID>.tables.<COLLECTION_ID>.rows
  */
-xdescribe('Realtime ketal_sessions Integration', () => {
+describe('Realtime ketal_sessions Integration', () => {
   let appwriteService: AppwriteService;
   let realtimeService: RealtimeService;
 
@@ -18,7 +20,7 @@ xdescribe('Realtime ketal_sessions Integration', () => {
   let testRoomId: string | null = null;
 
   beforeAll(async () => {
-    (environment as any).appwrite.endpoint = 'http://127.0.0.1/v1';
+    // Use environment default - no override needed
   });
 
   beforeEach(() => {
@@ -30,7 +32,7 @@ xdescribe('Realtime ketal_sessions Integration', () => {
   });
 
   afterAll(async () => {
-    (environment as any).appwrite.endpoint = 'http://localhost/v1';
+    // Use environment default - no override needed
   });
 
   /**
@@ -51,7 +53,11 @@ xdescribe('Realtime ketal_sessions Integration', () => {
         if ((doc['name'] as string)?.includes('Test Room for Session')) {
           console.log(`[Test Cleanup] Deleting stale room: ${doc['$id']}`);
           try {
-            await appwriteService.databases.deleteDocument(DATABASE_ID, GAME_ROOMS_COLLECTION_ID, doc['$id']);
+            await appwriteService.databases.deleteDocument({
+              databaseId: DATABASE_ID,
+              collectionId: GAME_ROOMS_COLLECTION_ID,
+              documentId: doc['$id'],
+            });
           } catch (e) {
             console.log(`[Test Cleanup] Failed to delete room ${doc['$id']}: ${e}`);
           }
@@ -82,18 +88,22 @@ xdescribe('Realtime ketal_sessions Integration', () => {
       gamesPlayed: 0,
     };
 
-    const createdDoc = await appwriteService.databases.createDocument(
-      DATABASE_ID,
-      GAME_ROOMS_COLLECTION_ID,
-      testRoomId,
-      roomData
-    );
+    const createdDoc = await appwriteService.databases.createDocument({
+      databaseId: DATABASE_ID,
+      collectionId: GAME_ROOMS_COLLECTION_ID,
+      documentId: testRoomId,
+      data: roomData,
+    });
 
     expect(createdDoc['$id']).toBe(testRoomId);
     console.log(`[Test] Created room: ${testRoomId}`);
     // Cleanup room - this should work as we created it
     try {
-      await appwriteService.databases.deleteDocument(DATABASE_ID, GAME_ROOMS_COLLECTION_ID, testRoomId);
+      await appwriteService.databases.deleteDocument({
+        databaseId: DATABASE_ID,
+        collectionId: GAME_ROOMS_COLLECTION_ID,
+        documentId: testRoomId,
+      });
     } catch (e) {
       console.log(`[Test] Room cleanup skipped or failed: ${e}`);
     }
@@ -110,7 +120,7 @@ xdescribe('Realtime ketal_sessions Integration', () => {
 
     // Subscribe BEFORE creating the session
     const subscription = await appwriteService.subscribe(
-      `databases.${DATABASE_ID}.collections.${SESSION_COLLECTION_ID}.documents.${sessionId}`,
+      `tablesdb.${DATABASE_ID}.tables.${SESSION_COLLECTION_ID}.rows.${sessionId}`,
       (event) => {
         console.log(`[Test Session] Received event:`, JSON.stringify(event));
         eventsReceived.push(event);
@@ -132,12 +142,12 @@ xdescribe('Realtime ketal_sessions Integration', () => {
       withSummary: false,
     };
 
-    const createdDoc = await appwriteService.databases.createDocument(
-      DATABASE_ID,
-      SESSION_COLLECTION_ID,
-      sessionId,
-      sessionData
-    );
+    const createdDoc = await appwriteService.databases.createDocument({
+      databaseId: DATABASE_ID,
+      collectionId: SESSION_COLLECTION_ID,
+      documentId: sessionId,
+      data: sessionData,
+    });
 
     console.log(`[Test Session] Created session:`, createdDoc.$id);
 
@@ -182,11 +192,16 @@ xdescribe('Realtime ketal_sessions Integration', () => {
       withSummary: false,
     };
 
-    await appwriteService.databases.createDocument(DATABASE_ID, SESSION_COLLECTION_ID, sessionId, sessionData);
+    await appwriteService.databases.createDocument({
+      databaseId: DATABASE_ID,
+      collectionId: SESSION_COLLECTION_ID,
+      documentId: sessionId,
+      data: sessionData,
+    });
 
     // Subscribe to the specific session
     const subscription = await appwriteService.subscribe(
-      `databases.${DATABASE_ID}.collections.${SESSION_COLLECTION_ID}.documents.${sessionId}`,
+      `tablesdb.${DATABASE_ID}.tables.${SESSION_COLLECTION_ID}.rows.${sessionId}`,
       (event) => {
         console.log(`[Test Session Update] Received event:`, JSON.stringify(event));
         eventsReceived.push(event);
@@ -196,10 +211,15 @@ xdescribe('Realtime ketal_sessions Integration', () => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // Modify the session
-    await appwriteService.databases.updateDocument(DATABASE_ID, SESSION_COLLECTION_ID, sessionId, {
-      status: 'playing',
-      phase: 'dealing',
-      turn: 1,
+    await appwriteService.databases.updateDocument({
+      databaseId: DATABASE_ID,
+      collectionId: SESSION_COLLECTION_ID,
+      documentId: sessionId,
+      data: {
+        status: 'playing',
+        phase: 'dealing',
+        turn: 1,
+      },
     });
 
     // Wait for realtime event
@@ -232,7 +252,7 @@ xdescribe('Realtime ketal_sessions Integration', () => {
 
     // Subscribe to collection-level updates
     const subscription = await appwriteService.subscribe(
-      `databases.${DATABASE_ID}.collections.${SESSION_COLLECTION_ID}.documents`,
+      `tablesdb.${DATABASE_ID}.tables.${SESSION_COLLECTION_ID}.rows`,
       (event) => {
         console.log(`[Test Collection Event] Received event:`, JSON.stringify(event));
         eventsReceived.push(event);
@@ -254,7 +274,12 @@ xdescribe('Realtime ketal_sessions Integration', () => {
       withSummary: false,
     };
 
-    await appwriteService.databases.createDocument(DATABASE_ID, SESSION_COLLECTION_ID, sessionId, sessionData);
+    await appwriteService.databases.createDocument({
+      databaseId: DATABASE_ID,
+      collectionId: SESSION_COLLECTION_ID,
+      documentId: sessionId,
+      data: sessionData,
+    });
 
     // Wait for event
     await new Promise((resolve) => setTimeout(resolve, 2000));
