@@ -648,6 +648,88 @@ describe('MemberService', () => {
     });
   });
 
+  describe('getMembersByUserId', () => {
+    it('should fetch all members for a userId across all rooms', async () => {
+      const member2Document = {
+        ...mockMemberDocument,
+        $id: 'member789',
+        roomId: 'room999',
+        displayName: 'Player in different room',
+      };
+      mockDatabases.listDocuments.and.resolveTo({
+        documents: [mockMemberDocument, member2Document],
+        total: 2,
+      });
+
+      const result = await service.getMembersByUserId('user789');
+
+      expect(mockDatabases.listDocuments).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_members',
+        queries: jasmine.any(Array),
+      });
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[0].queries as string[];
+      expect(queries.some((q) => q.includes('"userId"') && q.includes('"user789"'))).toBeTrue();
+      expect(queries.some((q) => q.includes('limit') && q.includes('100'))).toBeTrue();
+      expect(result.length).toBe(2);
+      expect(result[0].$id).toBe('member123');
+      expect(result[1].$id).toBe('member789');
+    });
+
+    it('should return empty array when no members found', async () => {
+      mockDatabases.listDocuments.and.resolveTo({
+        documents: [],
+        total: 0,
+      });
+
+      const result = await service.getMembersByUserId('nonexistentUser');
+
+      expect(result).toEqual([]);
+    });
+
+    it('should throw error when query fails', async () => {
+      const error = new Error('User query failed');
+      mockDatabases.listDocuments.and.rejectWith(error);
+
+      await expectAsync(service.getMembersByUserId('user789')).toBeRejectedWithError(
+        'Failed to get members by userId: User query failed'
+      );
+    });
+  });
+
+  describe('updateRoom', () => {
+    it('should update current member when it exists', async () => {
+      service.setCurrentMember(mockMember);
+      mockDatabases.updateDocument.and.resolveTo({
+        ...mockMemberDocument,
+        isOnline: true,
+        lastSeenAt: jasmine.any(String),
+      });
+
+      await service.updateRoom('player');
+
+      expect(mockDatabases.updateDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_members',
+        documentId: 'member123',
+        data: jasmine.objectContaining({
+          isOnline: true,
+          lastSeenAt: jasmine.any(String),
+        }),
+      });
+      expect(service.currentMember()!.isOnline).toBe(true);
+    });
+
+    it('should return early when currentMember is null', async () => {
+      service.setCurrentMember(null);
+
+      await service.updateRoom('player');
+
+      expect(mockDatabases.updateDocument).not.toHaveBeenCalled();
+      expect(service.currentMember()).toBeNull();
+    });
+  });
+
   describe('mapDocumentToMember (via public methods)', () => {
     it('should handle gameStats as JSON string', async () => {
       mockDatabases.listDocuments.and.resolveTo({
