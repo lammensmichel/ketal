@@ -154,11 +154,21 @@ intents:
       commit: "d962e53"
 - id: angular-upgrade-20-to-21
   title: Angular — upgrade 20 → 21
-  status: pending
+  status: completed
   priority: high
   depends_on:
   - angular-upgrade-19-to-20
-  work_items: []
+  completed_at: "2026-05-16T21:35:00Z"
+  completion_message: "WI-004 audit complete: 1078 tests passed, 0 new failures, build success"
+  artifacts:
+  - .specs-fire/artifacts/angular-upgrade-21-wi004.md
+  work_items:
+  - id: wi-004
+    title: Post-Upgrade Audit & Migration
+    status: completed
+    completed_at: "2026-05-16T21:35:00Z"
+    commit: "9de5805a"
+  commit: "9de5805a"
 - id: angular-upgrade-21-to-22
   title: Angular — upgrade 21 → 22
   status: pending

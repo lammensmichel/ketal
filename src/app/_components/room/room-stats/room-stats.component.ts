@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy, computed, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { TranslateModule } from '@ngx-translate/core';
 import { MemberService, GameMember } from '../../../services/member/member.service';
 import { RoomService } from '../../../services/room/room.service';
@@ -30,7 +30,7 @@ export type SortDirection = 'asc' | 'desc';
   templateUrl: './room-stats.component.html',
   styleUrls: ['./room-stats.component.scss'],
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [TranslateModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RoomStatsComponent {
