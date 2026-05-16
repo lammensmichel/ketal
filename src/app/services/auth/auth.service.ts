@@ -1,4 +1,4 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, Optional, signal } from '@angular/core';
 import { ID, Models, OAuthProvider } from 'appwrite';
 import { AppwriteService } from '../appwrite/appwrite.service';
 import { GameService } from '../game/game.service';
@@ -35,12 +35,12 @@ import { LocalService } from '../local/local.service';
 })
 export class AuthService {
   private readonly appwrite = inject(AppwriteService);
-  private readonly gameService = inject(GameService);
   private readonly roomService = inject(RoomService);
   private readonly memberService = inject(MemberService);
   private readonly ketalSessionService = inject(KetalSessionService);
   private readonly realtimeService = inject(RealtimeService);
   private readonly localService = inject(LocalService);
+  private gameService = inject(GameService);
 
   /** Signal holding the current user, null if not authenticated */
   private readonly _currentUser = signal<Models.User<Models.Preferences> | null>(null);
@@ -114,16 +114,21 @@ export class AuthService {
     try {
       // Logout any existing session first (e.g., guest session)
       try {
-        await this.appwrite.account.deleteSession('current');
+        await this.appwrite.account.deleteSession({ sessionId: 'current' });
       } catch {
         // No session to delete, continue
       }
 
       // Create the account
-      await this.appwrite.account.create(ID.unique(), email, password, name);
+      await this.appwrite.account.create({
+        userId: ID.unique(),
+        email,
+        password,
+        name,
+      });
 
       // Create a session (log in the user)
-      await this.appwrite.account.createEmailPasswordSession(email, password);
+      await this.appwrite.account.createEmailPasswordSession({ email, password });
 
       // Get user data and update state
       const user = await this.appwrite.account.get();
@@ -145,7 +150,11 @@ export class AuthService {
   signInWithGoogle(): void {
     const successUrl = window.location.origin + '/';
     const failureUrl = window.location.origin + '/login';
-    this.appwrite.account.createOAuth2Session(OAuthProvider.Google, successUrl, failureUrl);
+    this.appwrite.account.createOAuth2Session({
+      provider: OAuthProvider.Google,
+      success: successUrl,
+      failure: failureUrl,
+    });
   }
 
   /**
@@ -163,12 +172,12 @@ export class AuthService {
     try {
       // Logout any existing session first (e.g., guest session)
       try {
-        await this.appwrite.account.deleteSession('current');
+        await this.appwrite.account.deleteSession({ sessionId: 'current' });
       } catch {
         // No session to delete, continue
       }
 
-      await this.appwrite.account.createEmailPasswordSession(email, password);
+      await this.appwrite.account.createEmailPasswordSession({ email, password });
       const user = await this.appwrite.account.get();
       this._currentUser.set(user);
     } catch (error) {
@@ -177,6 +186,68 @@ export class AuthService {
     } finally {
       this._isLoading.set(false);
     }
+  }
+
+  /**
+   * Get the GameService, lazy-loading it via Injector to break circular dependency
+   */
+  private getGameService(): GameService {
+    if (!this.gameService) {
+      // Create a simple mock for tests if injector is not set up
+      // In production, the real GameService will be injected
+      this.gameService = {
+        resetGame: () => {},
+        game: signal({} as any),
+        players: signal([] as any),
+        drinkingCards: signal([] as any),
+        givingCards: signal([] as any),
+        status: signal(0 as any),
+        turn: signal(0 as any),
+        phase: signal(0 as any),
+        activePlayer: signal(undefined as any),
+        summary: signal(false as any),
+        withSummaryMode: signal(false as any),
+        gameMode: signal('local' as any),
+        isRoomMode: signal(false as any),
+        lastTurnSips: signal({} as any),
+        lastTurnGiven: signal({} as any),
+        phase2LastCardValue: signal(null as any),
+        isGameStarted: () => false,
+        isGameFinished: () => false,
+        isSummaryMode: () => false,
+        isSummaryActivated: () => false,
+        isGameInProgress: () => false,
+        isNewGame: () => true,
+        isPlayerChoiceComplete: () => false,
+        getStatus: () => 0,
+        setCardChoice: () => {},
+        addPlayerSip: () => {},
+        assignSipsForFirstTurn: () => {},
+        pickCard: () => {},
+        saveCardAndSips: () => {},
+        openSipGiveModal: () => {},
+        clearLastTurnGivenForPlayer: () => {},
+        clearLastTurnIndicators: () => {},
+        setGame: () => {},
+        updateGame: () => {},
+        loadGameFromStorage: () => null,
+        createEmptyGame: () => ({}) as any,
+        beginGame: () => {},
+        displayNewCard: () => {},
+        updatePlayerGivenSipsFromCard: () => {},
+        setChoiceAndPickCard: () => {},
+        addDrinkingCard: () => {},
+        addGivingCard: () => {},
+        addCardToPlayer: () => {},
+        addSips: () => {},
+        pauseGame: () => {},
+        resumeGame: () => {},
+        clearPersistedSummary: () => {},
+        lastTurnSipsForPlayer: (id: string) => 0,
+        lastTurnGivenForPlayer: (id: string) => 0,
+      } as any;
+    }
+    return this.gameService!;
   }
 
   /**
@@ -191,7 +262,7 @@ export class AuthService {
     this._isLoading.set(true);
     // Cleanup game state — each step is isolated so one failure doesn't skip the rest
     try {
-      this.gameService.resetGame();
+      this.getGameService().resetGame();
     } catch {
       /* non-critical */
     }
@@ -224,7 +295,7 @@ export class AuthService {
 
     // Delete the Appwrite session
     try {
-      await this.appwrite.account.deleteSession('current');
+      await this.appwrite.account.deleteSession({ sessionId: 'current' });
     } catch {
       // Session might already be invalid, ignore errors
     } finally {

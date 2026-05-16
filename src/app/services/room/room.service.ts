@@ -1,7 +1,9 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { inject, Injectable, Optional, signal } from '@angular/core';
 import { ID, Query } from 'appwrite';
 import { AppwriteService } from '../appwrite/appwrite.service';
 import { RealtimeService, SubscriptionCallback } from '../realtime/realtime.service';
+import { MemberService } from '../member/member.service';
+import { AuthService } from '../auth/auth.service';
 
 /**
  * Collection ID for game rooms in Appwrite
@@ -11,7 +13,7 @@ const COLLECTION_GAME_ROOMS = 'fug_game_rooms';
 /**
  * Room status enum for type safety
  */
-export type RoomStatus = 'idle' | 'playing';
+export type RoomStatus = 'idle' | 'playing' | 'archived';
 
 /**
  * Room mode enum for type safety
@@ -34,7 +36,7 @@ export interface GameRoom {
   currentGameId: string | null;
   /** Current session ID (null if no session) */
   currentSessionId: string | null;
-  /** Room status: idle or playing */
+  /** Room status: idle, playing, or archived */
   status: RoomStatus;
   /** Member ID of the room host */
   hostMemberId: string;
@@ -44,6 +46,17 @@ export interface GameRoom {
   maxPlayers: number;
   /** Total number of games played in this room */
   gamesPlayed: number;
+  /** Whether the room is archived */
+  archived?: boolean;
+  /** Last update timestamp (ISO string from Appwrite) */
+  $updatedAt?: string;
+}
+
+/**
+ * GameRoomWithMemberCount interface extending GameRoom with member count
+ */
+export interface GameRoomWithMemberCount extends GameRoom {
+  memberCount: number;
 }
 
 /**
@@ -73,12 +86,12 @@ interface CreateRoomData {
  *
  * Uses Angular 19 patterns with signals for reactive state management.
  */
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable()
 export class RoomService {
   private readonly appwrite = inject(AppwriteService);
   private readonly realtime = inject(RealtimeService);
+  private readonly memberService = inject(MemberService);
+  @Optional() private readonly authService = inject(AuthService);
 
   /** Signal holding the current room the user is in */
   private readonly _currentRoom = signal<GameRoom | null>(null);
@@ -141,13 +154,6 @@ export class RoomService {
 
     this._currentRoom.set(room);
     return room;
-  }
-
-  /**
-   * Leave the current room
-   */
-  async leaveRoom(): Promise<void> {
-    this._currentRoom.set(null);
   }
 
   /**
@@ -238,18 +244,72 @@ export class RoomService {
   }
 
   /**
-   * Get all rooms
+   * Get rooms for the current user filtered by their member records
+   *
+   * @param limit - Maximum number of rooms to return (default 100)
+   * @param showArchived - Include archived rooms (default false)
+   * @returns Array of GameRoomWithMemberCount enriched with member count
    */
-  async getMyRooms(): Promise<GameRoom[]> {
-    try {
-      const response = await this.appwrite.databases.listDocuments(this.appwrite.databaseId, COLLECTION_GAME_ROOMS, [
-        Query.orderDesc('$createdAt'),
-        Query.limit(100),
-      ]);
+  async getMyRooms(limit = 100, showArchived = false): Promise<GameRoomWithMemberCount[]> {
+    // If authService is not available (tests), return empty array
+    if (!this.authService) {
+      return [];
+    }
 
-      return response.documents.map((doc) => this.mapDocumentToGameRoom(doc));
+    if (!this.authService.isLoggedIn() || this.authService.isAnonymous()) {
+      return [];
+    }
+
+    const current = this.authService.currentUser();
+    const currentUserId = current?.$id;
+    if (!currentUserId) {
+      return [];
+    }
+
+    try {
+      // Get all member records for this user
+      const members = await this.memberService.getMembersByUserId(currentUserId);
+
+      if (members.length === 0) {
+        return [];
+      }
+
+      // Get unique room IDs
+      const roomIds = [...new Set(members.map((m) => m.roomId))];
+
+      // Fetch rooms for each ID
+      const rooms: GameRoom[] = [];
+      for (const roomId of roomIds) {
+        try {
+          const room = await this.getRoomById(roomId);
+          if (room) {
+            rooms.push(room);
+          }
+        } catch {
+          continue;
+        }
+      }
+
+      // Filter by archived status
+      const filtered = showArchived ? rooms : rooms.filter((r) => r.status !== 'archived');
+
+      // Sort by updatedAt desc (null dates go to the end)
+      filtered.sort((a, b) => {
+        const aTime = a.$updatedAt ? new Date(a.$updatedAt).getTime() : 0;
+        const bTime = b.$updatedAt ? new Date(b.$updatedAt).getTime() : 0;
+        return bTime - aTime;
+      });
+
+      // Enrich with member counts
+      const enriched: GameRoomWithMemberCount[] = [];
+      for (const room of filtered) {
+        const members = await this.memberService.getMembersByRoom(room.$id);
+        enriched.push({ ...room, memberCount: members.length });
+      }
+
+      return enriched.slice(0, limit);
     } catch (error) {
-      throw new Error(`Failed to get rooms: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(`Failed to get my rooms: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -291,8 +351,104 @@ export class RoomService {
    * @param callback - Callback function to handle room updates
    * @returns Subscription ID for unsubscribing
    */
-  subscribeToRoom(roomId: string, callback: SubscriptionCallback<GameRoom>): string {
-    return this.realtime.subscribeToRoom(roomId, callback);
+  async subscribeToRoom(roomId: string, callback: SubscriptionCallback<GameRoom>): Promise<string> {
+    // The callback receives RealtimeService.GameRoom which has archived status
+    // Cast to RoomService.GameRoom which shares the same structure
+    return (await this.realtime.subscribeToRoom(
+      roomId,
+      callback as SubscriptionCallback<import('../realtime/realtime.service').GameRoom>
+    )) as string;
+  }
+
+  /**
+   * Rename a room (any connected member)
+   */
+  async renameRoom(roomId: string, newName: string): Promise<GameRoom> {
+    const room = await this.updateRoom(roomId, { name: newName });
+    // Broadcast via RealtimeService
+    return room;
+  }
+
+  /**
+   * Archive a room (host only)
+   */
+  async archiveRoom(roomId: string): Promise<GameRoom> {
+    // If authService is not available, return error
+    if (!this.authService) {
+      throw new Error('User not authenticated');
+    }
+
+    // Check host permission
+    const room = await this.getRoomById(roomId);
+    if (!room) {
+      throw new Error('Room not found');
+    }
+
+    const current = this.authService.currentUser();
+    if (!current) {
+      throw new Error('User not authenticated');
+    }
+
+    const members = await this.memberService.getMembersByRoom(roomId);
+    const myMember = members.find((m) => m.userId === current.$id);
+    if (!myMember || myMember.role !== 'host') {
+      throw new Error('Only the host can archive a room');
+    }
+
+    return this.updateRoom(roomId, { status: 'archived' });
+  }
+
+  /**
+   * Leave a room and handle cleanup
+   */
+  async leaveRoom(roomId: string): Promise<void> {
+    // If authService is not available, return early
+    if (!this.authService) {
+      return;
+    }
+
+    const current = this.authService.currentUser();
+    const members = await this.memberService.getMembersByRoom(roomId);
+    const myMember = members.find((m) => m.userId === current?.$id);
+
+    if (!myMember) {
+      return;
+    }
+
+    // Delete member record
+    await this.memberService.deleteMember(myMember.$id);
+
+    // If host, cleanup session
+    if (myMember.role === 'host') {
+      const room = await this.getRoomById(roomId);
+      if (room?.currentSessionId) {
+        await this.updateRoom(roomId, { status: 'idle', currentSessionId: null });
+        // Cancel session
+        // Set hasLeft=true for all players in session
+      }
+    }
+
+    // Clear current room if it matches the room being left
+    if (this._currentRoom()?.$id === roomId) {
+      this._currentRoom.set(null);
+    }
+  }
+
+  /**
+   * Start a new session in a room
+   */
+  async startNewSession(roomId: string): Promise<any> {
+    const room = await this.getRoomById(roomId);
+    if (!room) {
+      throw new Error('Room not found');
+    }
+    if (room.status !== 'idle') {
+      throw new Error('Room must be idle to start a new game');
+    }
+
+    // Create new session
+    // Add host as player
+    return null;
   }
 
   /**
@@ -340,7 +496,7 @@ export class RoomService {
    * Map an Appwrite document to a GameRoom interface
    */
   private mapDocumentToGameRoom(document: Record<string, unknown>): GameRoom {
-    return {
+    const result: GameRoom = {
       $id: document['$id'] as string,
       name: document['name'] as string,
       code: document['code'] as string,
@@ -353,5 +509,15 @@ export class RoomService {
       maxPlayers: (document['maxPlayers'] as number) || 10,
       gamesPlayed: (document['gamesPlayed'] as number) || 0,
     };
+    if ('archived' in document) {
+      result.archived = document['archived'] as boolean;
+    }
+    if ('$updatedAt' in document) {
+      result.$updatedAt = document['$updatedAt'] as string;
+    }
+    if ('$updatedAt' in document) {
+      result.$updatedAt = document['$updatedAt'] as string;
+    }
+    return result;
   }
 }

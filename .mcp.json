@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "chrome-remote": {
-      "command": "node",
-      "args": ["/home/knabo/.npm/_npx/15c61037b1978c83/node_modules/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js", "--browserUrl", "http://127.0.0.1:9225", "--no-usage-statistics"]
+      "command": "/usr/local/share/nvm/versions/node/v24.14.1/bin/chrome-devtools-mcp",
+      "args": ["--browserUrl", "http://127.0.0.1:9225", "--no-usage-statistics"]
     }
   }
 }

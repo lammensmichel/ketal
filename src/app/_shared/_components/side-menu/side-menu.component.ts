@@ -107,6 +107,12 @@ export class SideMenuComponent {
     this.router.navigate(['/players']);
   }
 
+  /** Navigate to my rooms page */
+  goToRooms(): void {
+    this.closeMenu();
+    this.router.navigate(['/rooms']);
+  }
+
   /** Show quit confirmation dialog */
   showQuitConfirmation(): void {
     this.showQuitConfirm.set(true);
@@ -135,7 +141,7 @@ export class SideMenuComponent {
   async connectToAccount(): Promise<void> {
     this.closeMenu();
     try {
-      await this.appwrite.account.deleteSession('current');
+      await this.appwrite.account.deleteSession({ sessionId: 'current' });
     } catch {
       // Session might already be invalid, continue
     }

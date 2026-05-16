@@ -424,7 +424,7 @@ export class LobbyComponent implements OnInit {
    * Subscribe to realtime member updates for the current room.
    * Includes retry logic for transient subscription failures.
    */
-  private subscribeToMemberUpdates(): void {
+  private async subscribeToMemberUpdates(): Promise<void> {
     const room = this.currentRoom();
     if (!room) {
       return;
@@ -437,14 +437,15 @@ export class LobbyComponent implements OnInit {
     }
 
     try {
-      this.memberSubscriptionId = this.realtimeService.subscribeToMembers(room.$id, (member: RealtimeGameMember) => {
+      const sub = await this.realtimeService.subscribeToMembers(room.$id, (member: RealtimeGameMember) => {
         this.subscriptionRetryCount = 0;
         this.handleRealtimeMemberEvent(member);
       });
+      this.memberSubscriptionId = sub;
       // Reset retry counter on successful subscription creation
       this.subscriptionRetryCount = 0;
     } catch (err) {
-      console.warn('Realtime subscription failed:', err);
+      console.warn('Realtime subscribeToMembers failed:', err);
       this.retrySubscription();
     }
   }
@@ -634,6 +635,12 @@ export class LobbyComponent implements OnInit {
       return;
     }
 
+    const room = this.currentRoom();
+    if (!room) {
+      console.error('No current room to leave');
+      return;
+    }
+
     try {
       this.isLoading.set(true);
       this.error.set(null);
@@ -642,7 +649,7 @@ export class LobbyComponent implements OnInit {
       await this.memberService.deleteMember(member.$id);
 
       // Clear room state
-      await this.roomService.leaveRoom();
+      await this.roomService.leaveRoom(room.$id);
 
       // Navigate to home
       await this.router.navigate(['/']);

@@ -30,6 +30,7 @@ describe('FooterComponent', () => {
   const mockPlayer: PlayerModel = {
     id: '1',
     name: 'Test Player',
+    gender: 'neutral',
     cards: [],
     avatarSrc: '',
     choice: { color: '', plus_or_minus: '', in_out: '', suit: '' },
@@ -456,11 +457,8 @@ describe('FooterComponent', () => {
 
   describe('getReferenceCard', () => {
     function setActivePlayer(player: PlayerModel | undefined): void {
-      // Jasmine spy properties use getter spies; override to return a signal wrapping the player
-      const desc = Object.getOwnPropertyDescriptor(mockGameService, 'activePlayer');
-      if (desc?.get) {
-        (desc.get as jasmine.Spy).and.returnValue(signal(player));
-      }
+      // Set the activePlayer signal directly since it's a WritableSignal
+      mockGameService.activePlayer.set(player);
     }
 
     it('should return the first card of the active player when cards exist', () => {

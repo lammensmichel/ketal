@@ -1,0 +1,149 @@
+project:
+  name: Ketal
+  description: Angular 19 drinking card game
+  created: 2026-05-12T10:00:00Z
+  fire_version: 0.1.8
+workspace:
+  type: brownfield
+  structure: monolith
+  autonomy_bias: balanced
+  run_scope_preference: single
+  run_scope_history: []
+intents: []
+runs:
+    active: []
+    completed:
+      - id: run-ketal-001
+        scope: single
+        work_items:
+          - id: story-1-realtime-foundation
+            intent: appwrite-sdk-v25-migration
+            mode: validate
+            status: completed
+            current_phase: finish
+            checkpoint_state: approved
+            current_checkpoint: report
+            notes: |
+              REALTIME VERIFICATION COMPLETE - STORY 1 SUCCESSFULLY COMPLETED:
+              
+              All tests pass with the Appwrite SDK v25 migration:
+              
+              1. BUILD VERIFICATION:
+                 - ng build --configuration development: PASSED (0 errors)
+                 - No TypeScript errors related to the migration
+                 - All async subscription methods properly typed
+           
+              2. INTEGRATION TESTS (real Appwrite connection at http://127.0.0.1/v1):
+                 - realtime-real.integration.spec.ts: 5/5 tests PASSED
+                   * should receive realtime event when a document is created
+                   * should receive update events when document is modified
+                   * should handleRealtime subscription unsubscribe cleanly
+                   * should handleRealtime subscription close cleanly
+                   * should receive multiple event types via multiple subscriptions
+           
+                 Tests verify:
+                 * WebSocket connection is established
+                 * subscribe() returns Promise<RealtimeSubscription> with async methods
+                 * unsubscribe() and close() complete without errors
+                 * Multiple channels can be subscribed to simultaneously
+           
+              3. APPWRITE SDK TIMING BUG WORKAROUND:
+                 - SDK bug: subscribe() returns before WebSocket is ready to send messages
+                 - Fix: Added waitForRealtimeConnection() in AppwriteService
+                 - The fix polls WebSocket readyState until OPEN or timeout
+                 - Tests pass showing the fix is effective
+           
+              4. FILES MODIFIED (9 total):
+                 - appwrite.service.ts: Added Realtime singleton, async subscribe with timeout
+                 - appwrite.service.ts: Added waitForRealtimeConnection() for timing bug fix
+                 - realtime.service.ts: Added update/close methods, async with timeout
+                 - ketal-session.service.ts: Made subscribeToSession async
+                 - game.service.ts: Made subscribeToSessionUpdates async
+                 - room.service.ts: Made subscribeToRoom async
+                 - lobby.component.ts: Made subscribeToMemberUpdates async
+                 - karma.conf.js: Added ChromiumHeadlessNoSandbox launcher
+                 - test-helpers.ts: Updated mocks for async subscription methods
+              changes:
+                - appwrite.service.ts: Added Realtime singleton, async subscribe with waitForRealtimeConnection()
+                - appwrite.service.ts: Added waitForRealtimeConnection() for timing bug fix
+                - realtime.service.ts: Added update/close methods, wrapped async unsubscribe/close
+                - ketal-session.service.ts: Made subscribeToSession async
+                - game.service.ts: Made subscribeToSessionUpdates async with state sync
+                - room.service.ts: Made subscribeToRoom async with timeout
+                - lobby.component.ts: Made subscribeToMemberUpdates async
+                - karma.conf.js: Added ChromiumHeadlessNoSandbox launcher for Docker
+                - test-helpers.ts: Updated mocks for async subscription methods
+              started: 2026-05-12T08:07:44.747Z
+              completed: 2026-05-13T21:15:00.000Z
+              results:
+                tests: 5/5 passed in integration tests (real Appwrite connectivity)
+                build_errors: 0
+                migrations: 9 files modified
+          - id: story-2-account-api
+            intent: appwrite-sdk-v25-migration
+            mode: confirm
+            status: completed
+            current_phase: finish
+            checkpoint_state: approved
+            current_checkpoint: report
+            notes: |
+              ACCOUNT API MIGRATION COMPLETE - STORY 2 SUCCESSFULLY COMPLETED:
+              
+              All Account service calls migrated to v25 object-based parameters:
+              
+              1. MIGRATED METHODS (6 call sites):
+                 - account.create: positional → object ({ userId, email, password, name })
+                 - account.createEmailPasswordSession: positional → object ({ email, password })
+                 - account.createOAuth2Session: positional → object ({ provider, success, failure })
+                 - account.deleteSession: positional → object ({ sessionId })
+                 - account.createAnonymousSession: no args (unchanged in v25)
+             
+              2. BUILD VERIFICATION:
+                 - ng build --configuration development: PASSED (0 errors)
+                 - No TypeScript errors
+           
+              3. TESTS:
+                 - auth.service.spec.ts: 35/35 tests PASSED
+           
+              4. FILES MODIFIED:
+                 - auth.service.ts: 6 Account API calls refactored
+                 - auth.service.spec.ts: Mocks updated with jasmine.objectContaining
+              changes:
+                - auth.service.ts: account.create, createEmailPasswordSession, createOAuth2Session, deleteSession
+                - auth.service.spec.ts: Test assertions updated for v25 object parameters
+              started: 2026-05-13T17:30:00.000Z
+              completed: 2026-05-13T17:39:00.000Z
+              results:
+                tests: 35/35 passed
+                build_errors: 0
+                migrations: 2 files modified
+          - id: story-3-account-delete-session
+            intent: appwrite-sdk-v25-migration
+            mode: confirm
+            status: completed
+            current_phase: finish
+            checkpoint_state: approved
+            current_checkpoint: report
+            notes: |
+              ACCOUNT DELETESESSION MIGRATION COMPLETE - STORY 3:
+              
+              Migrated remaining Account.deleteSession call outside AuthService:
+              
+              1. MIGRATED:
+                 - src/app/_shared/_components/side-menu/side-menu.component.ts
+                   account.deleteSession('current') → deleteSession({ sessionId: 'current' })
+           
+              2. BUILD VERIFICATION:
+                 - ng build --configuration development: PASSED (0 errors)
+           
+              3. FILES MODIFIED:
+                 - side-menu.component.ts: 1 deleteSession call refactored
+              changes:
+                - side-menu.component.ts: account.deleteSession to v25 object format
+              started: 2026-05-13T17:40:00.000Z
+              completed: 2026-05-13T17:41:00.000Z
+              results:
+                tests: N/A (compilation only)
+                build_errors: 0
+                migrations: 1 file modified
+    pending: []

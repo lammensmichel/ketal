@@ -1,4 +1,4 @@
-import { computed, DestroyRef, effect, inject, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, Optional, signal, DestroyRef } from '@angular/core';
 import { Subject } from 'rxjs';
 import { CardType } from 'src/app/_shared/_models/card-type.model';
 import { Game } from 'src/app/_shared/_models/game.model';
@@ -21,15 +21,13 @@ import { mapGameToSessionUpdate, mapPlayerModelToKetalPlayer, mapSessionToGame }
 /** Game mode type: local (localStorage) or room (Appwrite) */
 export type GameMode = 'local' | 'room';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable()
 export class GameService {
   private readonly localSrv = inject(LocalService);
   private readonly cardSrv = inject(CardService);
   private readonly playerHelper = inject(PlayerHelperService);
   private readonly cardDeckHelperService = inject(CardDeckHelperService);
-  private readonly roomService = inject(RoomService);
+  @Optional() private readonly roomService = inject(RoomService);
   private readonly ketalSessionService = inject(KetalSessionService);
   private readonly memberService = inject(MemberService);
   private readonly soloRoomService = inject(SoloRoomService);
@@ -332,7 +330,7 @@ export class GameService {
    *
    * @param sessionId - The session ID to subscribe to
    */
-  subscribeToSessionUpdates(sessionId: string): void {
+  async subscribeToSessionUpdates(sessionId: string): Promise<void> {
     // Cleanup any existing subscription first
     this.unsubscribeFromSession();
 
@@ -340,11 +338,16 @@ export class GameService {
     this.activeSessionId = sessionId;
 
     // Subscribe via KetalSessionService (handles ketal_sessions + ketal_players + ketal_cards)
-    this.ketalSessionService.subscribeToSession(sessionId, (updatedSession) => {
-      this.handleSessionUpdate(updatedSession);
+    await this.ketalSessionService.subscribeToSession(sessionId, (updatedSession) => {
+      // Callbacks are set up; actual subscription is already established internally
     });
 
     console.debug('[GameService] Subscribed to session updates', { sessionId });
+
+    // Update the game service with whatever current state is available
+    if (sessionId === this.activeSessionId && this.ketalSessionService.currentSession()) {
+      this.handleSessionUpdate(this.ketalSessionService.currentSession()!);
+    }
   }
 
   /**
@@ -589,7 +592,10 @@ export class GameService {
 
     // Clean up solo room state and leave room
     this.soloRoomService.reset();
-    this.roomService.leaveRoom();
+    const room = this.roomService.currentRoom();
+    if (room) {
+      this.roomService.leaveRoom(room.$id);
+    }
 
     this.updateGame((game) => {
       game.givingCards = [];

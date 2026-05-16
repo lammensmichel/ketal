@@ -144,7 +144,9 @@ describe('SideMenuComponent', () => {
     it('should delete anonymous session and navigate to login on connectToAccount', async () => {
       component.openMenu();
       await component.connectToAccount();
-      expect(mockAppwriteService.account.deleteSession).toHaveBeenCalledWith('current');
+      expect(mockAppwriteService.account.deleteSession).toHaveBeenCalledWith(
+        jasmine.objectContaining({ sessionId: 'current' })
+      );
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/login']);
       expect(component.isOpen()).toBeFalse();
       expect(mockAuthService.logout).not.toHaveBeenCalled();

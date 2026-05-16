@@ -117,6 +117,7 @@ export class LocalModeService {
       mode: 'local',
       maxPlayers: 10,
       gamesPlayed: 0,
+      archived: false,
     };
 
     const rooms = this.readFromStorage<GameRoom[]>(STORAGE_KEYS.ROOMS) ?? [];
@@ -300,6 +301,7 @@ export class LocalModeService {
       phase: 'setup',
       turn: 0,
       activePlayerId: players.length > 0 ? players[0].memberId : null,
+      terminatedBy: null,
       players,
       drinkingCards: [],
       givingCards: [],

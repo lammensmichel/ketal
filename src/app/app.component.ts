@@ -64,7 +64,10 @@ export class AppComponent implements OnInit {
 
   /**
    * On init, check for active room + session to resume.
-   * If found, restore game state and navigate to /game.
+   * Routes user based on auth state:
+   * - Active session → /game
+   * - Anonymous → /players
+   * - Logged in, no active session → /home
    */
   async ngOnInit(): Promise<void> {
     try {
@@ -74,18 +77,24 @@ export class AppComponent implements OnInit {
         this.gameSrv.clearPersistedSummary();
       }
 
+      // Check for active session first
       if (this.authService.isLoggedIn()) {
         const activeSession = await this.soloRoomService.checkActiveSession();
         if (activeSession) {
           await this.gameSrv.handleReconnection(activeSession.$id);
           await this.router.navigate(['/game']);
-        } else if (!this.authService.isAnonymous() && this.router.url === '/login') {
-          // Authenticated non-anonymous user with no active game: redirect to home
-          await this.router.navigate(['/home']);
+          return;
         }
       }
+
+      // No active session: route based on auth state
+      if (this.authService.isLoggedIn()) {
+        await this.router.navigate(['/home']);
+      } else if (this.authService.isAnonymous()) {
+        await this.router.navigate(['/players']);
+      }
     } catch {
-      // Auth init or session check failed, continue normally
+      // Auth init failed, continue normally
     }
   }
 

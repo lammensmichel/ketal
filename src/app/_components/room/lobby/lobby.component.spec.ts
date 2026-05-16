@@ -57,6 +57,7 @@ describe('LobbyComponent', () => {
     mode: 'multiplayer',
     maxPlayers: 10,
     gamesPlayed: 0,
+    archived: false,
   };
 
   const mockHostMember: GameMember = {
@@ -67,6 +68,7 @@ describe('LobbyComponent', () => {
     displayName: 'Host Player',
     role: 'host',
     isOnline: true,
+    lastSeenAt: undefined,
     totalSipsGiven: 0,
     totalSipsTaken: 0,
     totalGamesPlayed: 0,
@@ -81,6 +83,7 @@ describe('LobbyComponent', () => {
     displayName: 'Player 2',
     role: 'player',
     isOnline: true,
+    lastSeenAt: undefined,
     totalSipsGiven: 0,
     totalSipsTaken: 0,
     totalGamesPlayed: 0,
@@ -129,7 +132,7 @@ describe('LobbyComponent', () => {
 
     mockRealtimeService = {
       isConnected: signal<boolean>(false),
-      subscribeToMembers: jasmine.createSpy('subscribeToMembers').and.returnValue('sub_123'),
+      subscribeToMembers: jasmine.createSpy('subscribeToMembers').and.resolveTo('sub_123'),
       unsubscribe: jasmine.createSpy('unsubscribe'),
     };
 

@@ -45,6 +45,10 @@ export const routes: Routes = [
     loadComponent: () => import('./_components/game/game/game.component').then((m) => m.GameComponent),
   },
   {
+    path: 'rooms',
+    loadComponent: () => import('./_components/room/rooms-list/rooms-list.component').then((m) => m.RoomsListComponent),
+  },
+  {
     path: 'terms',
     loadComponent: () => import('./_components/legal/terms/terms.component').then((m) => m.TermsComponent),
   },

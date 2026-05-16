@@ -1,61 +1,109 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, ChangeDetectionStrategy, inject, signal, DestroyRef, OnInit } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { RoomService } from '../../services/room/room.service';
+import { RoomService, GameRoomWithMemberCount } from '../../services/room/room.service';
 import { AuthService } from '../../services/auth/auth.service';
+import { RoomTileComponent } from '../room/room-tile/room-tile.component';
 
 /**
  * HomeComponent - Home screen for authenticated (non-anonymous) users.
  *
- * Displays two CTA buttons:
- * - "Créer une partie" → creates a solo room, then navigates to /players
- * - "Rejoindre une partie" → navigates to /room/join
+ * Displays:
+ * - Welcome header with user's name
+ * - Recent rooms carousel (max 3 rooms, sorted by updatedAt desc)
+ * - CTA buttons: "Créer une partie", "Rejoindre une partie"
  *
- * Uses Angular 19 patterns: standalone, signals, inject(), OnPush.
+ * Uses Angular 19 patterns: standalone, signals, inject(), OnPush, destroyRef.
  */
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
   standalone: true,
-  imports: [TranslateModule],
+  imports: [TranslateModule, RouterModule, RoomTileComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly roomService = inject(RoomService);
   private readonly authService = inject(AuthService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  /** Loading state for room creation */
-  readonly isCreating = signal(false);
+  /** Loading state for room data */
+  readonly isLoading = signal(false);
 
   /** Error message signal */
-  readonly error = signal<string | null>(null);
+  readonly errorMsg = signal<string | null>(null);
 
   /** User display name for greeting */
-  readonly userName = computed(() => {
-    const user = this.authService.currentUser();
-    return user?.name || '';
-  });
+  readonly userName = signal<string>('');
+
+  /** Recent rooms (max 3) */
+  readonly recentRooms = signal<GameRoomWithMemberCount[]>([]);
+
+  /** Number of rooms to show in carousel */
+  readonly MAX_ROOMS = 3;
+
+  /** Flag to prevent double-click during room creation */
+  private isCreatingRoom = false;
+
+  /**
+   * Component initialization
+   */
+  async ngOnInit(): Promise<void> {
+    try {
+      // Initialize auth service first
+      await this.authService.init();
+
+      // Set user name for greeting
+      const currentUser = this.authService.currentUser();
+      if (currentUser) {
+        this.userName.set(currentUser.name || currentUser.email.split('@')[0] || 'Invité');
+      }
+
+      // Load recent rooms
+      await this.loadRecentRooms();
+    } catch (err) {
+      console.error('Failed to initialize home component:', err);
+      this.errorMsg.set('home.errors.loadFailed');
+    }
+  }
+
+  /**
+   * Load recent rooms from the server
+   */
+  private async loadRecentRooms(): Promise<void> {
+    this.isLoading.set(true);
+    this.errorMsg.set(null);
+
+    try {
+      const rooms = await this.roomService.getMyRooms(this.MAX_ROOMS, true);
+      this.recentRooms.set(rooms);
+    } catch (err) {
+      console.error('Failed to load recent rooms:', err);
+      this.errorMsg.set('home.errors.loadFailed');
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
 
   /**
    * Create a game room and navigate to /players
    */
   async createGame(): Promise<void> {
-    if (this.isCreating()) {
+    // Prevent double-click
+    if (this.isCreatingRoom) {
       return;
     }
-
-    this.isCreating.set(true);
-    this.error.set(null);
-
+    this.isCreatingRoom = true;
     try {
       await this.roomService.createSoloRoom();
       await this.router.navigate(['/players']);
     } catch (err) {
-      this.error.set(this.getErrorMessage(err));
+      console.error('Failed to create game:', err);
+      this.errorMsg.set('home.errors.createFailed');
     } finally {
-      this.isCreating.set(false);
+      this.isCreatingRoom = false;
     }
   }
 
@@ -64,6 +112,13 @@ export class HomeComponent {
    */
   async joinGame(): Promise<void> {
     await this.router.navigate(['/room/join']);
+  }
+
+  /**
+   * Navigate to rooms list page
+   */
+  async goToRooms(): Promise<void> {
+    await this.router.navigate(['/rooms']);
   }
 
   /**

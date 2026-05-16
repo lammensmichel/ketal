@@ -1,15 +1,23 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { RouterTestingModule } from '@angular/router/testing';
 import { GameComponent } from './game.component';
+import { GameService } from '../../../services/game/game.service';
+import { createMockGameService } from '../../../testing/test-helpers';
 
 describe('GameComponent', () => {
   let component: GameComponent;
   let fixture: ComponentFixture<GameComponent>;
+  let mockGameService: any;
 
   beforeEach(async () => {
+    mockGameService = createMockGameService();
+    mockGameService.isGameInProgress.and.returnValue(true);
+
     await TestBed.configureTestingModule({
-      imports: [GameComponent],
+      imports: [GameComponent, RouterTestingModule],
       schemas: [NO_ERRORS_SCHEMA],
+      providers: [{ provide: GameService, useValue: mockGameService }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(GameComponent);
