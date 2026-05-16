@@ -659,7 +659,7 @@ export class GameService {
 
       // End the session in Appwrite
       if (session) {
-        await this.ketalSessionService.endGame(session.$id);
+        await this.ketalSessionService.endGame(session.$id, room.$id);
         console.debug('[GameService] Session ended', { sessionId: session.$id });
       }
 
@@ -1089,7 +1089,7 @@ export class GameService {
       const ketalPlayers = this.mapPlayersToKetalPlayers();
 
       // Create session in Appwrite (initially status=waiting, phase=setup)
-      const session = await this.ketalSessionService.startGame(room.$id, ketalPlayers, withSummary);
+      const session = await this.ketalSessionService.startGame(room.$id, ketalPlayers, withSummary, room.gamesPlayed);
 
       // Transition session to playing state (status=playing, phase=dealing, turn=1)
       const activeSession = await this.ketalSessionService.updateSession(session.$id, {

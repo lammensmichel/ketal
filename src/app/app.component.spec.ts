@@ -1,7 +1,8 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { Component, Input, NO_ERRORS_SCHEMA, signal } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router, NavigationEnd } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
+import { EMPTY } from 'rxjs';
 import { AppComponent } from './app.component';
 import { AuthService } from './services/auth/auth.service';
 import { GameService } from './services/game/game.service';
@@ -41,6 +42,7 @@ describe('AppComponent', () => {
   let mockPlayerHelperService: jasmine.SpyObj<PlayerHelperService>;
   let mockAuthService: ReturnType<typeof createMockAuthService>;
   let mockSoloRoomService: ReturnType<typeof createMockSoloRoomService>;
+  let mockRouter: jasmine.SpyObj<{ url: string; navigate: (path: string[]) => Promise<boolean> }>;
   beforeEach(async () => {
     // Create writable signals for GameService mock
     const withSummaryModeSignal = signal<boolean>(false);
@@ -59,6 +61,13 @@ describe('AppComponent', () => {
     mockAuthService = createMockAuthService();
     mockSoloRoomService = createMockSoloRoomService();
 
+    // Create mock router with url property and navigate method
+    mockRouter = jasmine.createSpyObj<{ url: string; navigate: (path: string[]) => Promise<boolean> }>(
+      'Router',
+      ['navigate'],
+      { url: '/initial' }
+    );
+
     await TestBed.configureTestingModule({
       imports: [AppComponent, TranslateModule.forRoot()],
       providers: [
@@ -67,6 +76,7 @@ describe('AppComponent', () => {
         { provide: GameService, useValue: mockGameService },
         { provide: PlayerHelperService, useValue: mockPlayerHelperService },
         { provide: SoloRoomService, useValue: mockSoloRoomService },
+        { provide: Router, useValue: mockRouter },
       ],
       schemas: [NO_ERRORS_SCHEMA],
     })
@@ -236,9 +246,49 @@ describe('AppComponent', () => {
   });
 
   describe('isPlayersPage', () => {
+    let originalUrl = '';
+    beforeEach(() => {
+      originalUrl = mockRouter.url;
+    });
+
     it('should return false in test environment (not /players)', () => {
-      // In test environment, pathname is /context.html, not /players
       expect(component.isPlayersPage()).toBeFalse();
+    });
+
+    it('should return true when router url is /players', () => {
+      Object.defineProperty(mockRouter, 'url', {
+        get: () => '/players',
+        configurable: true,
+      });
+      expect(component.isPlayersPage()).toBeTrue();
+      Object.defineProperty(mockRouter, 'url', {
+        get: () => originalUrl,
+        configurable: true,
+      });
+    });
+
+    it('should return true when router url is /players with query params', () => {
+      Object.defineProperty(mockRouter, 'url', {
+        get: () => '/players?id=123',
+        configurable: true,
+      });
+      expect(component.isPlayersPage()).toBeTrue();
+      Object.defineProperty(mockRouter, 'url', {
+        get: () => originalUrl,
+        configurable: true,
+      });
+    });
+
+    it('should return false when router url is not /players', () => {
+      Object.defineProperty(mockRouter, 'url', {
+        get: () => '/game',
+        configurable: true,
+      });
+      expect(component.isPlayersPage()).toBeFalse();
+      Object.defineProperty(mockRouter, 'url', {
+        get: () => originalUrl,
+        configurable: true,
+      });
     });
   });
 

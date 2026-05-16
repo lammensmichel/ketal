@@ -523,27 +523,32 @@ export function createMockAppwriteService(): any & {
   client: any;
   account: any;
   databases: any;
+  realtime: any;
   databaseId: string;
   subscribe: any;
-  setConnected: any;
 } {
   const mockInitialized = signal<boolean>(true);
   const mockConnected = signal<boolean>(true);
-  const mockClient = createMockObj('Client', ['subscribe']);
+  const mockClient = createMockObj('Client', ['setEndpoint', 'setProject']);
   const mockAccount = createMockObj('Account', ['get']);
   const mockDatabases = createMockObj('Databases', ['listDocuments']);
+  const mockRealtime = createMockObj('Realtime', ['subscribe', 'disconnect']);
 
-  const mock = createMockObj('AppwriteService', ['subscribe', 'setConnected'], {
+  const mock = createMockObj('AppwriteService', ['subscribe'], {
     initialized: mockInitialized,
     connected: mockConnected,
     client: mockClient,
     account: mockAccount,
     databases: mockDatabases,
+    realtime: mockRealtime,
     databaseId: 'fug',
   });
 
-  mock.subscribe.and.returnValue(() => {}); // Return unsubscribe function
-  mock.setConnected.and.returnValue(undefined);
+  mock.subscribe.and.resolveTo({
+    unsubscribe: () => Promise.resolve(),
+    update: () => Promise.resolve(),
+    close: () => Promise.resolve(),
+  });
 
   return mock as any & {
     initialized: ReturnType<typeof signal<boolean>>;
@@ -551,8 +556,8 @@ export function createMockAppwriteService(): any & {
     client: any;
     account: any;
     databases: any;
+    realtime: any;
     databaseId: string;
     subscribe: any;
-    setConnected: any;
   };
 }

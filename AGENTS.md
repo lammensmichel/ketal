@@ -85,9 +85,26 @@ With `--poll 2000` the dev server detects code changes automatically. Just refre
 - `src/environments/` — Environment configs
 
 ## Testing
-- Jasmine + Karma
-- `npm test` for unit tests
-- `npm run test:coverage` for coverage
+
+### Unit Tests (Jasmine + Karma)
+
+```bash
+# Run all tests
+npm test
+
+# With explicit Chromium binary inside the dev container
+CHROME_BIN=/usr/bin/chromium npm test -- --no-progress --browsers=ChromeHeadlessNoSandbox
+
+# Watch mode (with --poll equivalent — file changes are polled by Angular dev server)
+npx ng test --watch=true --browsers=ChromeHeadlessNoSandbox
+```
+
+> **[Chromium binary name]** The container has `chromium` (not `chrome`). Karma looks for a binary named `chrome` by default. Set `CHROME_BIN=/usr/bin/chromium` if tests fail with "No binary for Chrome browser".
+>
+> **[headless no-sandbox]** Tests in Docker **must** use `--no-sandbox --disable-dev-shm-usage --headless=new`. A custom launcher `ChromeHeadlessNoSandbox` is defined in `karma.conf.js`. Never use `browsers: ['Chrome']` — it overrides the custom launcher with the default Chrome (which crashes as root). Make sure only one `browsers:` key exists in `karma.conf.js` (a duplicate `['Chrome']` would silently override).
+
+### E2E Tests
+Use Chrome MCP tools for automated browser automation. The host Mac Chrome (debugged on port `9225`) is used — see `AGENTS.md` section "Chrome Remote Debug".
 
 ## Linting & Formatting
 - ESLint + Prettier

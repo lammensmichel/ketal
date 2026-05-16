@@ -12,16 +12,17 @@ module.exports = function (config) {
       require('karma-coverage'),
       require('@angular-devkit/build-angular/plugins/karma')
     ],
+      browserDisconnectTimeout: 60000,
+    browserNoActivityTimeout: 60000,
     customLaunchers: {
       ChromeHeadlessNoSandbox: {
         base: 'Chrome',
-        flags: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--headless=new']
+        flags: ['--no-sandbox', '--disable-dev-shm-usage', '--headless=new']
+       }
       },
-      ChromiumHeadlessNoSandbox: {
-        base: 'Chromium',
-        flags: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--headless=new']
-      }
-    },
+    browsers: ['ChromeHeadlessNoSandbox'],
+    singleRun: true,
+    restartOnFileChange: true,
     client: {
       jasmine: {
         // you can add configuration options for Jasmine here
@@ -55,9 +56,6 @@ module.exports = function (config) {
     port: 9876,
     colors: true,
     logLevel: config.LOG_INFO,
-    autoWatch: true,
-    browsers: ['ChromiumHeadlessNoSandbox'],
-    singleRun: true,
-    restartOnFileChange: true
-  });
+    autoWatch: false,
+    });
 };

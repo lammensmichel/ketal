@@ -64,13 +64,18 @@ describe('RoomService', () => {
       databaseId: 'fug',
     });
 
-    mockRealtimeService = jasmine.createSpyObj('RealtimeService', ['subscribeToRoom', 'unsubscribe']);
+    mockRealtimeService = jasmine.createSpyObj('RealtimeService', [
+      'subscribeToRoom',
+      'unsubscribe',
+      'broadcastToRoom',
+    ]);
     mockMemberService = jasmine.createSpyObj('MemberService', [
       'getMembersByRoom',
       'getMembersByUserId',
       'createMember',
       'updateMember',
       'deleteMember',
+      'currentMember',
     ]);
     mockAuthService = jasmine.createSpyObj(
       'AuthService',
@@ -121,11 +126,11 @@ describe('RoomService', () => {
 
       const result = await service.createRoom('Test Room');
 
-      expect(mockDatabases.createDocument).toHaveBeenCalledWith(
-        'fug',
-        'fug_game_rooms',
-        jasmine.any(String),
-        jasmine.objectContaining({
+      expect(mockDatabases.createDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_rooms',
+        documentId: jasmine.any(String),
+        data: jasmine.objectContaining({
           name: 'Test Room',
           code: jasmine.any(String),
           inviteToken: jasmine.any(String),
@@ -136,8 +141,8 @@ describe('RoomService', () => {
           mode: 'multiplayer',
           maxPlayers: 10,
           gamesPlayed: 0,
-        })
-      );
+        }),
+      });
       expect(result.$id).toBe('room123');
       expect(result.name).toBe('Test Room');
     });
@@ -151,16 +156,16 @@ describe('RoomService', () => {
 
       const result = await service.createRoom('Local Room', 'local', 6);
 
-      expect(mockDatabases.createDocument).toHaveBeenCalledWith(
-        'fug',
-        'fug_game_rooms',
-        jasmine.any(String),
-        jasmine.objectContaining({
+      expect(mockDatabases.createDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_rooms',
+        documentId: jasmine.any(String),
+        data: jasmine.objectContaining({
           name: 'Local Room',
           mode: 'local',
           maxPlayers: 6,
-        })
-      );
+        }),
+      });
       expect(result.mode).toBe('local');
       expect(result.maxPlayers).toBe(6);
     });
@@ -184,10 +189,9 @@ describe('RoomService', () => {
 
       await service.createRoom('Test Room');
 
-      const callArgs = mockDatabases.createDocument.calls.mostRecent().args;
-      const roomData = callArgs[3] as { code: string };
-      expect(roomData.code.length).toBe(6);
-      expect(roomData.code).toMatch(/^[A-Z0-9]+$/);
+      const callArgs = mockDatabases.createDocument.calls.mostRecent().args[0] as { data: { code: string } };
+      expect(callArgs.data.code.length).toBe(6);
+      expect(callArgs.data.code).toMatch(/^[A-Z0-9]+$/);
     });
 
     it('should generate a UUID invite token', async () => {
@@ -195,10 +199,11 @@ describe('RoomService', () => {
 
       await service.createRoom('Test Room');
 
-      const callArgs = mockDatabases.createDocument.calls.mostRecent().args;
-      const roomData = callArgs[3] as { inviteToken: string };
+      const callArgs = mockDatabases.createDocument.calls.mostRecent().args[0] as { data: { inviteToken: string } };
       // UUID v4 format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
-      expect(roomData.inviteToken).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+      expect(callArgs.data.inviteToken).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+      );
     });
   });
 
@@ -208,7 +213,11 @@ describe('RoomService', () => {
 
       await service.deleteRoom('room123');
 
-      expect(mockDatabases.deleteDocument).toHaveBeenCalledWith('fug', 'fug_game_rooms', 'room123');
+      expect(mockDatabases.deleteDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_rooms',
+        documentId: 'room123',
+      });
     });
 
     it('should clear currentRoom signal if deleting current room', async () => {
@@ -248,8 +257,12 @@ describe('RoomService', () => {
 
       const result = await service.getRoomByCode('ABC123');
 
-      expect(mockDatabases.listDocuments).toHaveBeenCalledWith('fug', 'fug_game_rooms', jasmine.any(Array));
-      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      expect(mockDatabases.listDocuments).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_rooms',
+        queries: jasmine.any(Array),
+      });
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[0].queries as string[];
       expect(queries.some((q) => q.includes('"code"') && q.includes('"ABC123"'))).toBeTrue();
       expect(result).toEqual(mockGameRoom);
     });
@@ -261,7 +274,7 @@ describe('RoomService', () => {
 
       await service.getRoomByCode('abc123');
 
-      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[0].queries as string[];
       expect(queries.some((q) => q.includes('"ABC123"'))).toBeTrue();
     });
 
@@ -272,7 +285,7 @@ describe('RoomService', () => {
 
       await service.getRoomByCode('  ABC123  ');
 
-      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[0].queries as string[];
       expect(queries.some((q) => q.includes('"ABC123"'))).toBeTrue();
     });
 
@@ -310,8 +323,12 @@ describe('RoomService', () => {
 
       const result = await service.getRoomByInviteToken('550e8400-e29b-41d4-a716-446655440000');
 
-      expect(mockDatabases.listDocuments).toHaveBeenCalledWith('fug', 'fug_game_rooms', jasmine.any(Array));
-      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      expect(mockDatabases.listDocuments).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_rooms',
+        queries: jasmine.any(Array),
+      });
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[0].queries as string[];
       expect(
         queries.some((q) => q.includes('"inviteToken"') && q.includes('"550e8400-e29b-41d4-a716-446655440000"'))
       ).toBeTrue();
@@ -325,7 +342,7 @@ describe('RoomService', () => {
 
       await service.getRoomByInviteToken('  550E8400-E29B-41D4-A716-446655440000  ');
 
-      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[0].queries as string[];
       expect(queries.some((q) => q.includes('"550e8400-e29b-41d4-a716-446655440000"'))).toBeTrue();
     });
 
@@ -354,7 +371,11 @@ describe('RoomService', () => {
 
       const result = await service.getRoomById('room123');
 
-      expect(mockDatabases.getDocument).toHaveBeenCalledWith('fug', 'fug_game_rooms', 'room123');
+      expect(mockDatabases.getDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_rooms',
+        documentId: 'room123',
+      });
       expect(result).toEqual(mockGameRoom);
     });
 
@@ -410,15 +431,23 @@ describe('RoomService', () => {
       mockMemberService.getMembersByRoom.and.resolveTo([mockMember1]);
 
       const mockRoomDocument2 = { ...mockRoomDocument, $id: 'room456', name: 'Room 2' };
-      mockDatabases.getDocument.and.callFake((dbId: string, collectionId: string, roomId: string) => {
-        return Promise.resolve(roomId === 'room456' ? mockRoomDocument2 : mockRoomDocument);
+      mockDatabases.getDocument.and.callFake((params: { documentId: string }) => {
+        return Promise.resolve(params.documentId === 'room456' ? mockRoomDocument2 : mockRoomDocument);
       });
 
       const result = await service.getMyRooms();
 
       expect(mockMemberService.getMembersByUserId).toHaveBeenCalledWith('user1');
-      expect(mockDatabases.getDocument).toHaveBeenCalledWith('fug', 'fug_game_rooms', 'room123');
-      expect(mockDatabases.getDocument).toHaveBeenCalledWith('fug', 'fug_game_rooms', 'room456');
+      expect(mockDatabases.getDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_rooms',
+        documentId: 'room123',
+      });
+      expect(mockDatabases.getDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_rooms',
+        documentId: 'room456',
+      });
       expect(result.length).toBe(2);
       expect(result[0].$id).toBe('room123');
       expect(result[1].$id).toBe('room456');
@@ -468,9 +497,14 @@ describe('RoomService', () => {
         status: 'playing',
       });
 
-      expect(mockDatabases.updateDocument).toHaveBeenCalledWith('fug', 'fug_game_rooms', 'room123', {
-        name: 'Updated Room',
-        status: 'playing',
+      expect(mockDatabases.updateDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_rooms',
+        documentId: 'room123',
+        data: {
+          name: 'Updated Room',
+          status: 'playing',
+        },
       });
       expect(result.name).toBe('Updated Room');
       expect(result.status).toBe('playing');
@@ -677,6 +711,489 @@ describe('RoomService', () => {
       expect(result?.mode).toBe('multiplayer');
       expect(result?.maxPlayers).toBe(10);
       expect(result?.gamesPlayed).toBe(0);
+    });
+  });
+
+  describe('createSoloRoom', () => {
+    it('should create a solo room with auto-generated name', async () => {
+      const expectedNamePattern = /^Solo-\d+$/;
+      mockDatabases.createDocument.and.callFake((params: { data: any }) => {
+        return Promise.resolve({
+          ...mockRoomDocument,
+          name: params.data.name,
+          mode: 'solo' as RoomMode,
+          maxPlayers: 10,
+        });
+      });
+
+      const result = await service.createSoloRoom();
+
+      expect(result.name).toMatch(expectedNamePattern);
+      expect(result.mode).toBe('solo');
+      expect(result.maxPlayers).toBe(10);
+      expect(mockDatabases.createDocument).toHaveBeenCalled();
+    });
+  });
+
+  describe('startNewSession', () => {
+    it('should start a new session when room is idle', async () => {
+      const mockSession = {
+        $id: 'session123',
+        roomId: 'room123',
+        status: 'active',
+        gamesPlayed: 0,
+      };
+
+      const mockMember: GameMember = {
+        $id: 'member123',
+        roomId: 'room123',
+        userId: 'user123',
+        deviceId: null,
+        displayName: 'Test Player',
+        role: 'host',
+        isOnline: false,
+        totalSipsGiven: 0,
+        totalSipsTaken: 0,
+        totalGamesPlayed: 0,
+        gameStats: {},
+      };
+
+      // Setup room to be idle
+      mockDatabases.getDocument.and.resolveTo({
+        ...mockRoomDocument,
+        status: 'idle' as RoomStatus,
+      });
+
+      // Mock member service currentMember signal
+      (service as any).memberService = mockMemberService;
+      mockMemberService.currentMember.and.returnValue(mockMember);
+
+      // Mock ketalSession startGame
+      (service as any).ketalSession = jasmine.createSpyObj('MockKetalSessionService', ['startGame']);
+      (service as any).ketalSession.startGame = jasmine.createSpy('startGame').and.resolveTo(mockSession);
+
+      // Mock room update
+      mockDatabases.updateDocument.and.resolveTo({
+        ...mockRoomDocument,
+        currentSessionId: 'session123',
+        status: 'playing' as RoomStatus,
+      });
+
+      const result = await service.startNewSession('room123');
+
+      expect(result!.$id).toBe('session123');
+      expect(mockDatabases.getDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_rooms',
+        documentId: 'room123',
+      });
+    });
+
+    it('should throw error when room not found', async () => {
+      mockDatabases.getDocument.and.resolveTo(null);
+
+      await expectAsync(service.startNewSession('nonexistent')).toBeRejectedWithError('Room not found');
+    });
+
+    it('should throw error when room is not idle', async () => {
+      mockDatabases.getDocument.and.resolveTo({
+        ...mockRoomDocument,
+        status: 'playing' as RoomStatus,
+      });
+      (service as any).memberService = mockMemberService;
+      mockMemberService.currentMember.and.returnValue({
+        $id: 'member123',
+        roomId: 'room123',
+        userId: 'user123',
+        deviceId: null,
+        displayName: 'Player',
+        role: 'host' as const,
+        isOnline: false,
+        totalSipsGiven: 0,
+        totalSipsTaken: 0,
+        totalGamesPlayed: 0,
+        gameStats: {},
+      });
+
+      await expectAsync(service.startNewSession('room123')).toBeRejectedWithError(
+        'Room must be idle to start a new game'
+      );
+    });
+
+    it('should throw error when no member context available', async () => {
+      mockDatabases.getDocument.and.resolveTo({
+        ...mockRoomDocument,
+        status: 'idle' as RoomStatus,
+      });
+      (service as any).memberService = mockMemberService;
+      mockMemberService.currentMember.and.returnValue(null);
+
+      await expectAsync(service.startNewSession('room123')).toBeRejectedWithError(
+        'No member context available to start session'
+      );
+    });
+  });
+
+  describe('renameRoom', () => {
+    it('should rename room and broadcast event', async () => {
+      const updatedRoom = { ...mockGameRoom, name: 'New Name' };
+      mockDatabases.updateDocument.and.resolveTo(updatedRoom);
+
+      const result = await service.renameRoom('room123', 'New Name');
+
+      expect(mockDatabases.updateDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_rooms',
+        documentId: 'room123',
+        data: { name: 'New Name' },
+      });
+      expect(result.name).toBe('New Name');
+      expect(mockRealtimeService.broadcastToRoom).toHaveBeenCalledWith('room123', 'room.renamed', {
+        name: 'New Name',
+        roomId: 'room123',
+      });
+    });
+  });
+
+  describe('archiveRoom', () => {
+    it('should archive room when called by host', async () => {
+      (mockAuthService.isLoggedIn as unknown as WritableSignal<boolean>).set(true);
+      (mockAuthService.isAnonymous as unknown as WritableSignal<boolean>).set(false);
+      (mockAuthService.currentUser as unknown as WritableSignal<any>).set({ $id: 'user1' });
+
+      const mockHostMember: GameMember = {
+        $id: 'hostMember1',
+        roomId: 'room123',
+        userId: 'user1',
+        deviceId: null,
+        displayName: 'Host',
+        role: 'host' as const,
+        isOnline: false,
+        totalSipsGiven: 0,
+        totalSipsTaken: 0,
+        totalGamesPlayed: 0,
+        gameStats: {},
+      };
+
+      mockDatabases.getDocument.and.resolveTo({
+        ...mockRoomDocument,
+        status: 'idle' as RoomStatus,
+      });
+      mockMemberService.getMembersByRoom.and.resolveTo([mockHostMember]);
+      mockDatabases.updateDocument.and.resolveTo({
+        ...mockRoomDocument,
+        status: 'archived' as RoomStatus,
+      });
+
+      const result = await service.archiveRoom('room123');
+
+      expect(result.status).toBe('archived');
+      expect(mockDatabases.updateDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_rooms',
+        documentId: 'room123',
+        data: { status: 'archived' },
+      });
+    });
+
+    it('should throw error when called by non-host', async () => {
+      (mockAuthService.isLoggedIn as unknown as WritableSignal<boolean>).set(true);
+      (mockAuthService.isAnonymous as unknown as WritableSignal<boolean>).set(false);
+      (mockAuthService.currentUser as unknown as WritableSignal<any>).set({ $id: 'user1' });
+
+      const mockPlayerMember: GameMember = {
+        $id: 'playerMember1',
+        roomId: 'room123',
+        userId: 'user1',
+        deviceId: null,
+        displayName: 'Player',
+        role: 'player' as const,
+        isOnline: false,
+        totalSipsGiven: 0,
+        totalSipsTaken: 0,
+        totalGamesPlayed: 0,
+        gameStats: {},
+      };
+
+      mockDatabases.getDocument.and.resolveTo(mockRoomDocument);
+      mockMemberService.getMembersByRoom.and.resolveTo([mockPlayerMember]);
+
+      await expectAsync(service.archiveRoom('room123')).toBeRejectedWithError('Only the host can archive a room');
+    });
+
+    it('should throw error when room not found', async () => {
+      (mockAuthService.isLoggedIn as unknown as WritableSignal<boolean>).set(true);
+      (mockAuthService.isAnonymous as unknown as WritableSignal<boolean>).set(false);
+      (mockAuthService.currentUser as unknown as WritableSignal<any>).set({ $id: 'user1' });
+
+      mockDatabases.getDocument.and.resolveTo(null);
+
+      await expectAsync(service.archiveRoom('nonexistent')).toBeRejectedWithError('Room not found');
+    });
+
+    it('should throw error when no auth service available', async () => {
+      // Reconfigure service without auth
+      TestBed.resetTestingModule();
+      mockDatabases = {
+        createDocument: jasmine.createSpy('createDocument'),
+        deleteDocument: jasmine.createSpy('deleteDocument'),
+        getDocument: jasmine.createSpy('getDocument'),
+        listDocuments: jasmine.createSpy('listDocuments'),
+        updateDocument: jasmine.createSpy('updateDocument'),
+      };
+      mockAppwriteService = jasmine.createSpyObj('AppwriteService', [], {
+        databases: mockDatabases,
+        databaseId: 'fug',
+      });
+      mockRealtimeService = jasmine.createSpyObj('RealtimeService', [
+        'subscribeToRoom',
+        'unsubscribe',
+        'broadcastToRoom',
+      ]);
+      mockMemberService = jasmine.createSpyObj('MemberService', [
+        'getMembersByRoom',
+        'getMembersByUserId',
+        'createMember',
+        'updateMember',
+        'deleteMember',
+      ]);
+
+      TestBed.configureTestingModule({
+        providers: [
+          RoomService,
+          { provide: AppwriteService, useValue: mockAppwriteService },
+          { provide: RealtimeService, useValue: mockRealtimeService },
+          { provide: MemberService, useValue: mockMemberService },
+        ],
+      });
+
+      const noAuthService = TestBed.inject(RoomService);
+      await expectAsync(noAuthService.archiveRoom('room123')).toBeRejectedWithError('User not authenticated');
+    });
+  });
+
+  describe('leaveRoom', () => {
+    it('should not crash when no auth service available', async () => {
+      TestBed.resetTestingModule();
+      mockDatabases = {
+        createDocument: jasmine.createSpy('createDocument'),
+        deleteDocument: jasmine.createSpy('deleteDocument'),
+        getDocument: jasmine.createSpy('getDocument'),
+        listDocuments: jasmine.createSpy('listDocuments'),
+        updateDocument: jasmine.createSpy('updateDocument'),
+      };
+      mockAppwriteService = jasmine.createSpyObj('AppwriteService', [], {
+        databases: mockDatabases,
+        databaseId: 'fug',
+      });
+      mockRealtimeService = jasmine.createSpyObj('RealtimeService', [
+        'subscribeToRoom',
+        'unsubscribe',
+        'broadcastToRoom',
+      ]);
+      mockMemberService = jasmine.createSpyObj('MemberService', [
+        'getMembersByRoom',
+        'getMembersByUserId',
+        'createMember',
+        'updateMember',
+        'deleteMember',
+      ]);
+
+      TestBed.configureTestingModule({
+        providers: [
+          RoomService,
+          { provide: AppwriteService, useValue: mockAppwriteService },
+          { provide: RealtimeService, useValue: mockRealtimeService },
+          { provide: MemberService, useValue: mockMemberService },
+        ],
+      });
+
+      const noAuthService = TestBed.inject(RoomService);
+      await expectAsync(noAuthService.leaveRoom('room123')).toBeResolved();
+    });
+
+    it('should handle player leaving (not host)', async () => {
+      (mockAuthService.isLoggedIn as unknown as WritableSignal<boolean>).set(true);
+      (mockAuthService.isAnonymous as unknown as WritableSignal<boolean>).set(false);
+      (mockAuthService.currentUser as unknown as WritableSignal<any>).set({ $id: 'user1' });
+
+      const mockPlayerMember: GameMember = {
+        $id: 'playerMember1',
+        roomId: 'room123',
+        userId: 'user1',
+        deviceId: null,
+        displayName: 'Player',
+        role: 'player' as const,
+        isOnline: false,
+        totalSipsGiven: 0,
+        totalSipsTaken: 0,
+        totalGamesPlayed: 0,
+        gameStats: {},
+      };
+
+      mockDatabases.getDocument.and.resolveTo(mockRoomDocument);
+      mockMemberService.getMembersByRoom.and.resolveTo([mockPlayerMember]);
+      mockMemberService.deleteMember.and.resolveTo();
+
+      await service.leaveRoom('room123');
+
+      expect(mockMemberService.deleteMember).toHaveBeenCalledWith('playerMember1');
+      expect(mockRealtimeService.broadcastToRoom).toHaveBeenCalledWith('room123', 'room.player_left', {
+        roomId: 'room123',
+        playerName: 'Player',
+      });
+      expect(service.currentRoom()).toBeNull();
+    });
+
+    it('should handle host leaving and transfer to remaining player', async () => {
+      (mockAuthService.isLoggedIn as unknown as WritableSignal<boolean>).set(true);
+      (mockAuthService.isAnonymous as unknown as WritableSignal<boolean>).set(false);
+      (mockAuthService.currentUser as unknown as WritableSignal<any>).set({ $id: 'user1' });
+
+      const mockHostMember: GameMember = {
+        $id: 'hostMember1',
+        roomId: 'room123',
+        userId: 'user1',
+        deviceId: null,
+        displayName: 'Host',
+        role: 'host' as const,
+        isOnline: false,
+        totalSipsGiven: 0,
+        totalSipsTaken: 0,
+        totalGamesPlayed: 0,
+        gameStats: {},
+      };
+      const mockPlayerMember: GameMember = {
+        $id: 'playerMember2',
+        roomId: 'room123',
+        userId: 'user2',
+        deviceId: null,
+        displayName: 'Player Two',
+        role: 'player' as const,
+        isOnline: false,
+        totalSipsGiven: 0,
+        totalSipsTaken: 0,
+        totalGamesPlayed: 0,
+        gameStats: {},
+      };
+
+      const roomWithSession = {
+        ...mockRoomDocument,
+        currentSessionId: 'session123',
+        status: 'playing' as RoomStatus,
+      };
+
+      mockDatabases.getDocument.and.resolveTo(roomWithSession);
+      mockMemberService.getMembersByRoom.and
+        .resolveTo([mockHostMember, mockPlayerMember])
+        .and.resolveTo([mockPlayerMember]);
+      mockMemberService.deleteMember.and.resolveTo();
+      mockMemberService.updateMember.and.resolveTo();
+      (service as any).ketalSession = jasmine.createSpyObj('MockKetalSessionService', ['cancelSession']);
+      (service as any).ketalSession.cancelSession = jasmine.createSpy('cancelSession').and.resolveTo();
+
+      const result = await service.leaveRoom('room123');
+
+      expect(mockMemberService.updateMember).toHaveBeenCalledWith('playerMember2', { role: 'host' });
+    });
+
+    it('should archive room when host leaves and no members remain', async () => {
+      (mockAuthService.isLoggedIn as unknown as WritableSignal<boolean>).set(true);
+      (mockAuthService.isAnonymous as unknown as WritableSignal<boolean>).set(false);
+      (mockAuthService.currentUser as unknown as WritableSignal<any>).set({ $id: 'user1' });
+
+      const mockHostMember: GameMember = {
+        $id: 'hostMember1',
+        roomId: 'room123',
+        userId: 'user1',
+        deviceId: null,
+        displayName: 'Host',
+        role: 'host' as const,
+        isOnline: false,
+        totalSipsGiven: 0,
+        totalSipsTaken: 0,
+        totalGamesPlayed: 0,
+        gameStats: {},
+      };
+
+      mockDatabases.getDocument.and.resolveTo(mockRoomDocument);
+      mockMemberService.getMembersByRoom.and.resolveTo([mockHostMember]);
+      mockMemberService.deleteMember.and.resolveTo();
+      mockMemberService.getMembersByRoom.and.resolveTo([]);
+
+      await service.leaveRoom('room123');
+
+      expect(mockDatabases.updateDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_rooms',
+        documentId: 'room123',
+        data: { status: 'archived' },
+      });
+    });
+  });
+
+  describe('private methods', () => {
+    describe('generateRoomCode', () => {
+      it('should generate a 6-character uppercase code', () => {
+        const serviceAny = service as any;
+        const code = serviceAny.generateRoomCode();
+
+        expect(code.length).toBe(6);
+        expect(code).toMatch(/^[A-Z0-9]+$/);
+      });
+    });
+
+    describe('generateInviteToken', () => {
+      it('should generate a valid UUID v4', () => {
+        const serviceAny = service as any;
+        const token = serviceAny.generateInviteToken();
+
+        expect(token).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+      });
+    });
+
+    describe('mapDocumentToGameRoom', () => {
+      it('should handle $updatedAt field', () => {
+        const serviceAny = service as any;
+        const document = {
+          $id: 'room123',
+          name: 'Test',
+          code: 'ABC123',
+          inviteToken: 'token',
+          currentGameId: null,
+          currentSessionId: null,
+          status: 'idle',
+          hostMemberId: 'host1',
+          mode: 'multiplayer',
+          maxPlayers: 10,
+          gamesPlayed: 0,
+          $updatedAt: '2024-01-01T00:00:00.000Z',
+        };
+        const result = serviceAny.mapDocumentToGameRoom(document);
+
+        expect(result.$updatedAt).toBe('2024-01-01T00:00:00.000Z');
+      });
+
+      it('should set archived field when present', () => {
+        const serviceAny = service as any;
+        const document = {
+          $id: 'room123',
+          name: 'Test',
+          code: 'ABC123',
+          inviteToken: 'token',
+          currentGameId: null,
+          currentSessionId: null,
+          status: 'idle',
+          hostMemberId: 'host1',
+          mode: 'multiplayer',
+          maxPlayers: 10,
+          gamesPlayed: 0,
+          archived: true,
+        };
+        const result = serviceAny.mapDocumentToGameRoom(document);
+
+        expect(result.archived).toBeTrue();
+      });
     });
   });
 });

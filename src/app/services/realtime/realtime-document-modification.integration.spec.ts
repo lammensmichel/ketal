@@ -22,7 +22,7 @@ describe('Realtime Document Modification Integration', () => {
   let testRoomId: string | null = null;
 
   beforeAll(async () => {
-    (environment as any).appwrite.endpoint = 'http://127.0.0.1/v1';
+    // Use environment default - no override needed
   });
 
   beforeEach(() => {
@@ -34,14 +34,18 @@ describe('Realtime Document Modification Integration', () => {
   });
 
   afterAll(async () => {
-    (environment as any).appwrite.endpoint = 'http://localhost/v1';
+    // Use environment default - no override needed
   });
 
   /**
    * FIRST: Get rooms from the collection
    */
   it('should get rooms from the collection', async () => {
-    const roomsResponse = await appwriteService.databases.listDocuments(DATABASE_ID, COLLECTION_ID, []);
+    const roomsResponse = await appwriteService.databases.listDocuments({
+      databaseId: DATABASE_ID,
+      collectionId: COLLECTION_ID,
+      total: true,
+    });
 
     expect(roomsResponse.total).toBeGreaterThanOrEqual(0);
 

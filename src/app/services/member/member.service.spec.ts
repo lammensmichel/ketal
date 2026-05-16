@@ -106,17 +106,17 @@ describe('MemberService', () => {
 
       const result = await service.createMember(mockCreateMemberData);
 
-      expect(mockDatabases.createDocument).toHaveBeenCalledWith(
-        'fug',
-        'fug_game_members',
-        jasmine.any(String),
-        jasmine.objectContaining({
+      expect(mockDatabases.createDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_members',
+        documentId: jasmine.any(String),
+        data: jasmine.objectContaining({
           roomId: 'room456',
           userId: 'user789',
           displayName: 'Test Player',
           gameStats: '{}',
-        })
-      );
+        }),
+      });
       expect(result.$id).toBe('newMember123');
       expect(service.members().length).toBe(1);
       expect(service.members()[0].$id).toBe('newMember123');
@@ -134,14 +134,14 @@ describe('MemberService', () => {
 
       await service.createMember(dataWithStats);
 
-      expect(mockDatabases.createDocument).toHaveBeenCalledWith(
-        'fug',
-        'fug_game_members',
-        jasmine.any(String),
-        jasmine.objectContaining({
+      expect(mockDatabases.createDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_members',
+        documentId: jasmine.any(String),
+        data: jasmine.objectContaining({
           gameStats: JSON.stringify(dataWithStats.gameStats),
-        })
-      );
+        }),
+      });
     });
 
     it('should throw error when creation fails', async () => {
@@ -176,8 +176,12 @@ describe('MemberService', () => {
 
       const result = await service.getMembersByRoom('room456');
 
-      expect(mockDatabases.listDocuments).toHaveBeenCalledWith('fug', 'fug_game_members', jasmine.any(Array));
-      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      expect(mockDatabases.listDocuments).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_members',
+        queries: jasmine.any(Array),
+      });
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[0].queries as string[];
       expect(queries.some((q) => q.includes('"roomId"') && q.includes('"room456"'))).toBeTrue();
       expect(queries.some((q) => q.includes('limit') && q.includes('100'))).toBeTrue();
       expect(result.length).toBe(2);
@@ -237,8 +241,12 @@ describe('MemberService', () => {
 
       const result = await service.getMemberByUserOrDevice('room456', 'user789');
 
-      expect(mockDatabases.listDocuments).toHaveBeenCalledWith('fug', 'fug_game_members', jasmine.any(Array));
-      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      expect(mockDatabases.listDocuments).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_members',
+        queries: jasmine.any(Array),
+      });
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[0].queries as string[];
       expect(queries.some((q) => q.includes('"roomId"') && q.includes('"room456"'))).toBeTrue();
       expect(queries.some((q) => q.includes('"userId"') && q.includes('"user789"'))).toBeTrue();
       expect(result).not.toBeNull();
@@ -246,8 +254,8 @@ describe('MemberService', () => {
     });
 
     it('should find member by deviceId when userId search fails', async () => {
-      mockDatabases.listDocuments.and.callFake(async (_db: string, _collection: string, queries: string[]) => {
-        const hasUserId = queries.some((q) => q.includes('"userId"'));
+      mockDatabases.listDocuments.and.callFake(async (params: { queries: string[] }) => {
+        const hasUserId = params.queries.some((q: string) => q.includes('"userId"'));
         if (hasUserId) {
           return { documents: [], total: 0 };
         }
@@ -276,8 +284,12 @@ describe('MemberService', () => {
 
       const result = await service.getMemberByUserOrDevice('room456', undefined, 'device123');
 
-      expect(mockDatabases.listDocuments).toHaveBeenCalledWith('fug', 'fug_game_members', jasmine.any(Array));
-      const queries = mockDatabases.listDocuments.calls.mostRecent().args[2] as string[];
+      expect(mockDatabases.listDocuments).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_members',
+        queries: jasmine.any(Array),
+      });
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[0].queries as string[];
       expect(queries.some((q) => q.includes('"roomId"') && q.includes('"room456"'))).toBeTrue();
       expect(queries.some((q) => q.includes('"deviceId"') && q.includes('"device123"'))).toBeTrue();
       expect(result).not.toBeNull();
@@ -314,8 +326,13 @@ describe('MemberService', () => {
 
       const result = await service.updateMember('member123', { displayName: 'Updated Name' });
 
-      expect(mockDatabases.updateDocument).toHaveBeenCalledWith('fug', 'fug_game_members', 'member123', {
-        displayName: 'Updated Name',
+      expect(mockDatabases.updateDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_members',
+        documentId: 'member123',
+        data: {
+          displayName: 'Updated Name',
+        },
       });
       expect(result.displayName).toBe('Updated Name');
     });
@@ -329,8 +346,13 @@ describe('MemberService', () => {
 
       await service.updateMember('member123', { gameStats: newGameStats });
 
-      expect(mockDatabases.updateDocument).toHaveBeenCalledWith('fug', 'fug_game_members', 'member123', {
-        gameStats: JSON.stringify(newGameStats),
+      expect(mockDatabases.updateDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_members',
+        documentId: 'member123',
+        data: {
+          gameStats: JSON.stringify(newGameStats),
+        },
       });
     });
 
@@ -412,17 +434,21 @@ describe('MemberService', () => {
 
       await service.updateMemberStats('member123', 'ketal', newStats);
 
-      expect(mockDatabases.getDocument).toHaveBeenCalledWith('fug', 'fug_game_members', 'member123');
-      expect(mockDatabases.updateDocument).toHaveBeenCalledWith(
-        'fug',
-        'fug_game_members',
-        'member123',
-        jasmine.objectContaining({
+      expect(mockDatabases.getDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_members',
+        documentId: 'member123',
+      });
+      expect(mockDatabases.updateDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_members',
+        documentId: 'member123',
+        data: jasmine.objectContaining({
           totalSipsGiven: 15,
           totalSipsTaken: 8,
           totalGamesPlayed: 3,
-        })
-      );
+        }),
+      });
     });
 
     it('should calculate deltas correctly from previous stats', async () => {
@@ -438,16 +464,16 @@ describe('MemberService', () => {
       // New: sipsGiven: 15, sipsTaken: 8, gamesPlayed: 3
       // Delta: +5, +3, +1
       // New totals: 10+5=15, 5+3=8, 2+1=3
-      expect(mockDatabases.updateDocument).toHaveBeenCalledWith(
-        'fug',
-        'fug_game_members',
-        'member123',
-        jasmine.objectContaining({
+      expect(mockDatabases.updateDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_members',
+        documentId: 'member123',
+        data: jasmine.objectContaining({
           totalSipsGiven: 15,
           totalSipsTaken: 8,
           totalGamesPlayed: 3,
-        })
-      );
+        }),
+      });
     });
 
     it('should add new game stats when game does not exist', async () => {
@@ -463,16 +489,16 @@ describe('MemberService', () => {
       const newGameStats: GameStats = { sipsGiven: 5, sipsTaken: 3, gamesPlayed: 1 };
       await service.updateMemberStats('member123', 'newGame', newGameStats);
 
-      expect(mockDatabases.updateDocument).toHaveBeenCalledWith(
-        'fug',
-        'fug_game_members',
-        'member123',
-        jasmine.objectContaining({
+      expect(mockDatabases.updateDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_members',
+        documentId: 'member123',
+        data: jasmine.objectContaining({
           totalSipsGiven: 15,
           totalSipsTaken: 8,
           totalGamesPlayed: 3,
-        })
-      );
+        }),
+      });
     });
 
     it('should throw error when get document fails', async () => {
@@ -501,7 +527,11 @@ describe('MemberService', () => {
 
       await service.deleteMember('member123');
 
-      expect(mockDatabases.deleteDocument).toHaveBeenCalledWith('fug', 'fug_game_members', 'member123');
+      expect(mockDatabases.deleteDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_members',
+        documentId: 'member123',
+      });
     });
 
     it('should remove member from members signal', async () => {
@@ -558,8 +588,13 @@ describe('MemberService', () => {
 
       await service.setOnlineStatus('member123', false);
 
-      expect(mockDatabases.updateDocument).toHaveBeenCalledWith('fug', 'fug_game_members', 'member123', {
-        isOnline: false,
+      expect(mockDatabases.updateDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_members',
+        documentId: 'member123',
+        data: {
+          isOnline: false,
+        },
       });
     });
 
@@ -609,6 +644,88 @@ describe('MemberService', () => {
 
       service.clearMembers();
 
+      expect(service.currentMember()).toBeNull();
+    });
+  });
+
+  describe('getMembersByUserId', () => {
+    it('should fetch all members for a userId across all rooms', async () => {
+      const member2Document = {
+        ...mockMemberDocument,
+        $id: 'member789',
+        roomId: 'room999',
+        displayName: 'Player in different room',
+      };
+      mockDatabases.listDocuments.and.resolveTo({
+        documents: [mockMemberDocument, member2Document],
+        total: 2,
+      });
+
+      const result = await service.getMembersByUserId('user789');
+
+      expect(mockDatabases.listDocuments).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_members',
+        queries: jasmine.any(Array),
+      });
+      const queries = mockDatabases.listDocuments.calls.mostRecent().args[0].queries as string[];
+      expect(queries.some((q) => q.includes('"userId"') && q.includes('"user789"'))).toBeTrue();
+      expect(queries.some((q) => q.includes('limit') && q.includes('100'))).toBeTrue();
+      expect(result.length).toBe(2);
+      expect(result[0].$id).toBe('member123');
+      expect(result[1].$id).toBe('member789');
+    });
+
+    it('should return empty array when no members found', async () => {
+      mockDatabases.listDocuments.and.resolveTo({
+        documents: [],
+        total: 0,
+      });
+
+      const result = await service.getMembersByUserId('nonexistentUser');
+
+      expect(result).toEqual([]);
+    });
+
+    it('should throw error when query fails', async () => {
+      const error = new Error('User query failed');
+      mockDatabases.listDocuments.and.rejectWith(error);
+
+      await expectAsync(service.getMembersByUserId('user789')).toBeRejectedWithError(
+        'Failed to get members by userId: User query failed'
+      );
+    });
+  });
+
+  describe('updateRoom', () => {
+    it('should update current member when it exists', async () => {
+      service.setCurrentMember(mockMember);
+      mockDatabases.updateDocument.and.resolveTo({
+        ...mockMemberDocument,
+        isOnline: true,
+        lastSeenAt: jasmine.any(String),
+      });
+
+      await service.updateRoom('player');
+
+      expect(mockDatabases.updateDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_members',
+        documentId: 'member123',
+        data: jasmine.objectContaining({
+          isOnline: true,
+          lastSeenAt: jasmine.any(String),
+        }),
+      });
+      expect(service.currentMember()!.isOnline).toBe(true);
+    });
+
+    it('should return early when currentMember is null', async () => {
+      service.setCurrentMember(null);
+
+      await service.updateRoom('player');
+
+      expect(mockDatabases.updateDocument).not.toHaveBeenCalled();
       expect(service.currentMember()).toBeNull();
     });
   });

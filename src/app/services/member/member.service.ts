@@ -105,12 +105,12 @@ export class MemberService {
         gameStats: JSON.stringify(data.gameStats),
       };
 
-      const document = await this.appwrite.databases.createDocument(
-        this.appwrite.databaseId,
-        COLLECTION_GAME_MEMBERS,
-        ID.unique(),
-        documentData
-      );
+      const document = await this.appwrite.databases.createDocument({
+        databaseId: this.appwrite.databaseId,
+        collectionId: COLLECTION_GAME_MEMBERS,
+        documentId: ID.unique(),
+        data: documentData,
+      });
 
       const member = this.mapDocumentToMember(document);
 
@@ -132,10 +132,11 @@ export class MemberService {
    */
   async getMembersByRoom(roomId: string): Promise<GameMember[]> {
     try {
-      const response = await this.appwrite.databases.listDocuments(this.appwrite.databaseId, COLLECTION_GAME_MEMBERS, [
-        Query.equal('roomId', roomId),
-        Query.limit(100),
-      ]);
+      const response = await this.appwrite.databases.listDocuments({
+        databaseId: this.appwrite.databaseId,
+        collectionId: COLLECTION_GAME_MEMBERS,
+        queries: [Query.equal('roomId', roomId), Query.limit(100)],
+      });
 
       const members = response.documents.map((doc) => this.mapDocumentToMember(doc));
 
@@ -170,11 +171,11 @@ export class MemberService {
 
       // Try to find by userId first if provided
       if (userId) {
-        const userResponse = await this.appwrite.databases.listDocuments(
-          this.appwrite.databaseId,
-          COLLECTION_GAME_MEMBERS,
-          [...queries, Query.equal('userId', userId)]
-        );
+        const userResponse = await this.appwrite.databases.listDocuments({
+          databaseId: this.appwrite.databaseId,
+          collectionId: COLLECTION_GAME_MEMBERS,
+          queries: [...queries, Query.equal('userId', userId)],
+        });
 
         if (userResponse.documents.length > 0) {
           return this.mapDocumentToMember(userResponse.documents[0]);
@@ -183,11 +184,11 @@ export class MemberService {
 
       // Try to find by deviceId if provided and userId search failed
       if (deviceId) {
-        const deviceResponse = await this.appwrite.databases.listDocuments(
-          this.appwrite.databaseId,
-          COLLECTION_GAME_MEMBERS,
-          [...queries, Query.equal('deviceId', deviceId)]
-        );
+        const deviceResponse = await this.appwrite.databases.listDocuments({
+          databaseId: this.appwrite.databaseId,
+          collectionId: COLLECTION_GAME_MEMBERS,
+          queries: [...queries, Query.equal('deviceId', deviceId)],
+        });
 
         if (deviceResponse.documents.length > 0) {
           return this.mapDocumentToMember(deviceResponse.documents[0]);
@@ -216,12 +217,12 @@ export class MemberService {
         documentUpdates['gameStats'] = JSON.stringify(updates.gameStats);
       }
 
-      const document = await this.appwrite.databases.updateDocument(
-        this.appwrite.databaseId,
-        COLLECTION_GAME_MEMBERS,
-        memberId,
-        documentUpdates
-      );
+      const document = await this.appwrite.databases.updateDocument({
+        databaseId: this.appwrite.databaseId,
+        collectionId: COLLECTION_GAME_MEMBERS,
+        documentId: memberId,
+        data: documentUpdates,
+      });
 
       const member = this.mapDocumentToMember(document);
 
@@ -253,11 +254,11 @@ export class MemberService {
   async updateMemberStats(memberId: string, gameId: string, stats: GameStats): Promise<void> {
     try {
       // Get current member data
-      const document = await this.appwrite.databases.getDocument(
-        this.appwrite.databaseId,
-        COLLECTION_GAME_MEMBERS,
-        memberId
-      );
+      const document = await this.appwrite.databases.getDocument({
+        databaseId: this.appwrite.databaseId,
+        collectionId: COLLECTION_GAME_MEMBERS,
+        documentId: memberId,
+      });
 
       const currentMember = this.mapDocumentToMember(document);
 
@@ -301,7 +302,11 @@ export class MemberService {
    */
   async deleteMember(memberId: string): Promise<void> {
     try {
-      await this.appwrite.databases.deleteDocument(this.appwrite.databaseId, COLLECTION_GAME_MEMBERS, memberId);
+      await this.appwrite.databases.deleteDocument({
+        databaseId: this.appwrite.databaseId,
+        collectionId: COLLECTION_GAME_MEMBERS,
+        documentId: memberId,
+      });
 
       // Remove from members signal
       this._members.update((members) => members.filter((m) => m.$id !== memberId));
@@ -335,10 +340,11 @@ export class MemberService {
    */
   async getMembersByUserId(userId: string): Promise<GameMember[]> {
     try {
-      const response = await this.appwrite.databases.listDocuments(this.appwrite.databaseId, COLLECTION_GAME_MEMBERS, [
-        Query.equal('userId', userId),
-        Query.limit(100),
-      ]);
+      const response = await this.appwrite.databases.listDocuments({
+        databaseId: this.appwrite.databaseId,
+        collectionId: COLLECTION_GAME_MEMBERS,
+        queries: [Query.equal('userId', userId), Query.limit(100)],
+      });
       return response.documents.map((doc) => this.mapDocumentToMember(doc));
     } catch (error) {
       throw new Error(`Failed to get members by userId: ${error instanceof Error ? error.message : 'Unknown error'}`);

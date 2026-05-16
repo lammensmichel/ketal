@@ -136,98 +136,10 @@ describe('KetalSessionService', () => {
     ];
 
     beforeEach(() => {
-      mockRoomService.currentRoom.set(createMockGameRoom({ $id: roomId, gamesPlayed: 0 }));
-
       // Mock session doc creation
       appwriteMock.databases.createDocument.and.callFake(
-        (_dbId: string, collectionId: string, _docId: string, _data: Record<string, unknown>) => {
-          if (collectionId === 'ketal_sessions') {
-            return Promise.resolve(
-              createDocResponse({
-                $id: 'session-new',
-                roomId,
-                gameId: 'ketal',
-                gameNumber: 1,
-                status: 'waiting',
-                phase: 'setup',
-                turn: 0,
-                activePlayerId: 'member-1',
-                withSummary: false,
-              })
-            );
-          }
-          if (collectionId === 'ketal_players') {
-            return Promise.resolve(
-              createDocResponse({
-                $id: `player-doc-${_data['memberId']}`,
-                sessionId: 'session-new',
-                memberId: _data['memberId'],
-                displayName: _data['displayName'],
-                order: _data['order'],
-                cards: _data['cards'],
-                choices: _data['choices'],
-                sipsTaken: _data['sipsTaken'],
-                sipsGiven: _data['sipsGiven'],
-                isReady: _data['isReady'],
-              })
-            );
-          }
-          if (collectionId === 'ketal_cards') {
-            return Promise.resolve(
-              createDocResponse({
-                $id: 'cards-doc-1',
-                sessionId: 'session-new',
-                drinkingCards: '[]',
-                givingCards: '[]',
-              })
-            );
-          }
-          return Promise.reject(new Error('Unknown collection'));
-        }
-      );
-
-      mockRoomService.updateRoom.and.resolveTo(createMockGameRoom());
-    });
-
-    it('should create session, player, and cards documents', async () => {
-      const result = await service.startGame(roomId, players, false);
-
-      // 1 session + 2 players + 1 cards = 4 createDocument calls
-      expect(appwriteMock.databases.createDocument).toHaveBeenCalledTimes(4);
-      expect(result).toBeTruthy();
-      expect(result.$id).toBe('session-new');
-    });
-
-    it('should update room with session ID and playing status', async () => {
-      await service.startGame(roomId, players, false);
-
-      expect(mockRoomService.updateRoom).toHaveBeenCalledWith(roomId, {
-        currentSessionId: 'session-new',
-        status: 'playing',
-        gamesPlayed: 1,
-      });
-    });
-
-    it('should set internal signals after starting', async () => {
-      await service.startGame(roomId, players, false);
-
-      expect(service.currentSession()).toBeTruthy();
-      expect(service.currentSession()!.$id).toBe('session-new');
-      expect(service.currentSession()!.players.length).toBe(2);
-    });
-
-    it('should set activePlayerId to first player memberId', async () => {
-      await service.startGame(roomId, players, false);
-
-      expect(service.activePlayerId()).toBe('member-1');
-    });
-
-    it('should increment gameNumber from room gamesPlayed', async () => {
-      mockRoomService.currentRoom.set(createMockGameRoom({ $id: roomId, gamesPlayed: 3 }));
-
-      // Update mock to reflect gameNumber 4
-      appwriteMock.databases.createDocument.and.callFake(
-        (_dbId: string, collectionId: string, _docId: string, data: Record<string, unknown>) => {
+        (params: { collectionId: string; data: Record<string, unknown> }) => {
+          const { collectionId, data } = params;
           if (collectionId === 'ketal_sessions') {
             return Promise.resolve(
               createDocResponse({
@@ -248,25 +160,83 @@ describe('KetalSessionService', () => {
               createDocResponse({
                 $id: `player-doc-${data['memberId']}`,
                 sessionId: 'session-new',
-                ...data,
+                memberId: data['memberId'],
+                displayName: data['displayName'],
+                order: data['order'],
+                cards: data['cards'],
+                choices: data['choices'],
+                sipsTaken: data['sipsTaken'],
+                sipsGiven: data['sipsGiven'],
+                isReady: data['isReady'],
               })
             );
           }
           if (collectionId === 'ketal_cards') {
-            return Promise.resolve(createDocResponse({ $id: 'cards-doc-1', sessionId: 'session-new', ...data }));
+            return Promise.resolve(
+              createDocResponse({
+                $id: 'cards-doc-1',
+                sessionId: 'session-new',
+                drinkingCards: '[]',
+                givingCards: '[]',
+              })
+            );
+          }
+          // Also handle room updates (fug_game_rooms collection)
+          if (collectionId === 'fug_game_rooms') {
+            return Promise.resolve(createDocResponse({ $id: roomId, ...data }));
           }
           return Promise.reject(new Error('Unknown collection'));
         }
       );
+    });
 
-      const result = await service.startGame(roomId, players, false);
+    it('should create session, player, and cards documents', async () => {
+      const result = await service.startGame(roomId, players, false, 0);
+
+      // 1 session + 2 players + 1 cards = 4 createDocument calls
+      expect(appwriteMock.databases.createDocument).toHaveBeenCalledTimes(4);
+      expect(result).toBeTruthy();
+      expect(result.$id).toBe('session-new');
+    });
+
+    it('should update room with session ID and playing status', async () => {
+      await service.startGame(roomId, players, false, 0);
+
+      expect(appwriteMock.databases.updateDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_rooms',
+        documentId: roomId,
+        data: {
+          currentSessionId: 'session-new',
+          status: 'playing',
+          gamesPlayed: 1,
+        },
+      });
+    });
+
+    it('should set internal signals after starting', async () => {
+      await service.startGame(roomId, players, false, 0);
+
+      expect(service.currentSession()).toBeTruthy();
+      expect(service.currentSession()!.$id).toBe('session-new');
+      expect(service.currentSession()!.players.length).toBe(2);
+    });
+
+    it('should set activePlayerId to first player memberId', async () => {
+      await service.startGame(roomId, players, false, 0);
+
+      expect(service.activePlayerId()).toBe('member-1');
+    });
+
+    it('should use provided gamesPlayed to calculate gameNumber', async () => {
+      const result = await service.startGame(roomId, players, false, 3);
       expect(result.gameNumber).toBe(4);
     });
 
     it('should throw an error when session creation fails', async () => {
       appwriteMock.databases.createDocument.and.rejectWith(new Error('Network error'));
 
-      await expectAsync(service.startGame(roomId, players, false)).toBeRejectedWithError(/Failed to start game/);
+      await expectAsync(service.startGame(roomId, players, false, 0)).toBeRejectedWithError(/Failed to start game/);
     });
   });
 
@@ -310,21 +280,22 @@ describe('KetalSessionService', () => {
         turn: 1,
       });
 
-      expect(appwriteMock.databases.updateDocument).toHaveBeenCalledWith(
-        'fug',
-        'ketal_sessions',
-        'session-123',
-        jasmine.objectContaining({ status: 'playing', phase: 'dealing', turn: 1 })
-      );
+      expect(appwriteMock.databases.updateDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'ketal_sessions',
+        documentId: 'session-123',
+        data: jasmine.objectContaining({ status: 'playing', phase: 'dealing', turn: 1 }),
+      });
       expect(result.status).toBe('playing');
     });
 
     it('should update player documents when players are provided', async () => {
       appwriteMock.databases.updateDocument.and.callFake(
-        (_dbId: string, collectionId: string, docId: string, data: Record<string, unknown>) => {
+        (params: { collectionId: string; documentId: string; data: Record<string, unknown> }) => {
+          const { collectionId, documentId, data } = params;
           return Promise.resolve(
             createDocResponse({
-              $id: docId,
+              $id: documentId,
               sessionId: 'session-123',
               memberId: collectionId === 'ketal_players' ? 'member-1' : undefined,
               displayName: 'Player 1',
@@ -357,12 +328,12 @@ describe('KetalSessionService', () => {
 
       await service.updateSession('session-123', { drinkingCards: ['card1', 'card2'] });
 
-      expect(appwriteMock.databases.updateDocument).toHaveBeenCalledWith(
-        'fug',
-        'ketal_cards',
-        'local-cards',
-        jasmine.objectContaining({ drinkingCards: '["card1","card2"]' })
-      );
+      expect(appwriteMock.databases.updateDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'ketal_cards',
+        documentId: 'local-cards',
+        data: jasmine.objectContaining({ drinkingCards: '["card1","card2"]' }),
+      });
     });
 
     it('should update cards document when givingCards are provided', async () => {
@@ -377,12 +348,12 @@ describe('KetalSessionService', () => {
 
       await service.updateSession('session-123', { givingCards: ['cardA'] });
 
-      expect(appwriteMock.databases.updateDocument).toHaveBeenCalledWith(
-        'fug',
-        'ketal_cards',
-        'local-cards',
-        jasmine.objectContaining({ givingCards: '["cardA"]' })
-      );
+      expect(appwriteMock.databases.updateDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'ketal_cards',
+        documentId: 'local-cards',
+        data: jasmine.objectContaining({ givingCards: '["cardA"]' }),
+      });
     });
 
     it('should not call updateDocument when no session-level fields provided', async () => {
@@ -409,7 +380,7 @@ describe('KetalSessionService', () => {
       // Should only update ketal_players, not ketal_sessions
       const sessionCalls = (appwriteMock.databases.updateDocument as jasmine.Spy).calls
         .allArgs()
-        .filter((args: unknown[]) => args[1] === 'ketal_sessions');
+        .filter((args: unknown[]) => (args[0] as { collectionId: string }).collectionId === 'ketal_sessions');
       expect(sessionCalls.length).toBe(0);
     });
 
@@ -433,29 +404,38 @@ describe('KetalSessionService', () => {
       appwriteMock.databases.updateDocument.and.resolveTo(
         createDocResponse({ $id: 'session-123', status: 'finished', phase: 'finished' })
       );
-      mockRoomService.updateRoom.and.resolveTo(createMockGameRoom());
     });
 
     it('should update session status to finished', async () => {
-      await service.endGame('session-123');
+      await service.endGame('session-123', 'room-123');
 
-      expect(appwriteMock.databases.updateDocument).toHaveBeenCalledWith('fug', 'ketal_sessions', 'session-123', {
-        status: 'finished',
-        phase: 'finished',
+      expect(appwriteMock.databases.updateDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'ketal_sessions',
+        documentId: 'session-123',
+        data: {
+          status: 'finished',
+          phase: 'finished',
+        },
       });
     });
 
     it('should clear room currentSessionId and set status to idle', async () => {
-      await service.endGame('session-123');
+      await service.endGame('session-123', 'room-123');
 
-      expect(mockRoomService.updateRoom).toHaveBeenCalledWith('room-123', {
-        currentSessionId: null,
-        status: 'idle',
+      expect(appwriteMock.databases.updateDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_rooms',
+        documentId: 'room-123',
+        data: {
+          currentSessionId: null,
+          status: 'idle',
+        },
       });
     });
 
     it('should clear internal signals', async () => {
-      await service.endGame('session-123');
+      await service.endGame('session-123', 'room-123');
 
       expect(service.currentSession()).toBeNull();
       expect(service.players()).toEqual([]);
@@ -466,7 +446,7 @@ describe('KetalSessionService', () => {
       // Set up subscriptions first
       await service.subscribeToSession('session-123');
 
-      await service.endGame('session-123');
+      await service.endGame('session-123', 'room-123');
 
       expect(mockRealtimeService.unsubscribe).toHaveBeenCalled();
     });
@@ -474,7 +454,7 @@ describe('KetalSessionService', () => {
     it('should throw an error when endGame fails', async () => {
       appwriteMock.databases.updateDocument.and.rejectWith(new Error('End failed'));
 
-      await expectAsync(service.endGame('session-123')).toBeRejectedWithError(/Failed to end game/);
+      await expectAsync(service.endGame('session-123', 'room-123')).toBeRejectedWithError(/Failed to end game/);
     });
   });
 
@@ -498,7 +478,8 @@ describe('KetalSessionService', () => {
         })
       );
 
-      appwriteMock.databases.listDocuments.and.callFake((_dbId: string, collectionId: string) => {
+      appwriteMock.databases.listDocuments.and.callFake((params: { collectionId: string; queries?: unknown[] }) => {
+        const { collectionId } = params;
         if (collectionId === 'ketal_players') {
           return Promise.resolve({
             documents: [

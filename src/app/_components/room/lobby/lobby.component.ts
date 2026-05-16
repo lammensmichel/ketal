@@ -615,7 +615,7 @@ export class LobbyComponent implements OnInit {
         );
 
       // Start the game session
-      await this.ketalSessionService.startGame(room.$id, gamePlayers, true);
+      await this.ketalSessionService.startGame(room.$id, gamePlayers, true, room.gamesPlayed);
 
       // Navigate to game view
       await this.router.navigate(['/game']);

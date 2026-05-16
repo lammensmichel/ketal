@@ -2,7 +2,6 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { ID, Query } from 'appwrite';
 import { AppwriteService } from '../appwrite/appwrite.service';
 import { RealtimeService } from '../realtime/realtime.service';
-import { RoomService } from '../room/room.service';
 
 /**
  * Collection IDs for Ketal in Appwrite
@@ -151,7 +150,6 @@ interface SessionData {
 export class KetalSessionService {
   private readonly appwrite = inject(AppwriteService);
   private readonly realtime = inject(RealtimeService);
-  private readonly roomService = inject(RoomService);
 
   /** Internal split state */
   private readonly _sessionData = signal<SessionData | null>(null);
@@ -196,18 +194,27 @@ export class KetalSessionService {
    * Start a new game in a room
    *
    * Creates documents across 3 collections: session, players, and cards.
+   * @param roomId - Room ID
+   * @param players - Array of players
+   * @param withSummary - Whether to enable summary mode at game end
+   * @param gamesPlayed - Current number of games played in the room (passed to avoid RoomService dependency)
+   * @returns The newly created KetalSession
    */
-  async startGame(roomId: string, players: KetalPlayer[], withSummary: boolean): Promise<KetalSession> {
+  async startGame(
+    roomId: string,
+    players: KetalPlayer[],
+    withSummary: boolean,
+    gamesPlayed: number
+  ): Promise<KetalSession> {
     try {
-      const currentRoom = this.roomService.currentRoom();
-      const gameNumber = (currentRoom?.gamesPlayed ?? 0) + 1;
+      const gameNumber = gamesPlayed + 1;
 
       // 1. Create session document
-      const sessionDoc = await this.appwrite.databases.createDocument(
-        this.appwrite.databaseId,
-        COLLECTION_KETAL_SESSIONS,
-        ID.unique(),
-        {
+      const sessionDoc = await this.appwrite.databases.createDocument({
+        databaseId: this.appwrite.databaseId,
+        collectionId: COLLECTION_KETAL_SESSIONS,
+        documentId: ID.unique(),
+        data: {
           roomId,
           gameId: 'ketal',
           gameNumber,
@@ -217,46 +224,56 @@ export class KetalSessionService {
           activePlayerId: players.length > 0 ? players[0].memberId : null,
           terminatedBy: null,
           withSummary,
-        }
-      );
+        },
+      });
 
       const sessionId = sessionDoc['$id'] as string;
 
       // 2. Create player documents
       const playerDocPromises = players.map((player) =>
-        this.appwrite.databases.createDocument(this.appwrite.databaseId, COLLECTION_KETAL_PLAYERS, ID.unique(), {
-          sessionId,
-          memberId: player.memberId,
-          displayName: player.displayName,
-          order: player.order,
-          cards: JSON.stringify(player.cards),
-          choices: JSON.stringify(player.choices),
-          sipsTaken: player.sipsTaken,
-          sipsGiven: player.sipsGiven,
-          isReady: player.isReady,
-          hasLeft: player.hasLeft ?? false,
+        this.appwrite.databases.createDocument({
+          databaseId: this.appwrite.databaseId,
+          collectionId: COLLECTION_KETAL_PLAYERS,
+          documentId: ID.unique(),
+          data: {
+            sessionId,
+            memberId: player.memberId,
+            displayName: player.displayName,
+            order: player.order,
+            cards: JSON.stringify(player.cards),
+            choices: JSON.stringify(player.choices),
+            sipsTaken: player.sipsTaken,
+            sipsGiven: player.sipsGiven,
+            isReady: player.isReady,
+            hasLeft: player.hasLeft ?? false,
+          },
         })
       );
 
       const playerDocs = await Promise.all(playerDocPromises);
 
       // 3. Create cards document
-      const cardsDoc = await this.appwrite.databases.createDocument(
-        this.appwrite.databaseId,
-        COLLECTION_KETAL_CARDS,
-        ID.unique(),
-        {
+      const cardsDoc = await this.appwrite.databases.createDocument({
+        databaseId: this.appwrite.databaseId,
+        collectionId: COLLECTION_KETAL_CARDS,
+        documentId: ID.unique(),
+        data: {
           sessionId,
           drinkingCards: JSON.stringify([]),
           givingCards: JSON.stringify([]),
-        }
-      );
+        },
+      });
 
       // 4. Update room with current session ID and increment games played
-      await this.roomService.updateRoom(roomId, {
-        currentSessionId: sessionId,
-        status: 'playing',
-        gamesPlayed: gameNumber,
+      await this.appwrite.databases.updateDocument({
+        databaseId: this.appwrite.databaseId,
+        collectionId: 'fug_game_rooms',
+        documentId: roomId,
+        data: {
+          currentSessionId: sessionId,
+          status: 'playing',
+          gamesPlayed: gameNumber,
+        },
       });
 
       // 5. Update internal signals
@@ -299,12 +316,12 @@ export class KetalSessionService {
       }
 
       if (Object.keys(sessionUpdate).length > 0) {
-        const doc = await this.appwrite.databases.updateDocument(
-          this.appwrite.databaseId,
-          COLLECTION_KETAL_SESSIONS,
-          sessionId,
-          sessionUpdate
-        );
+        const doc = await this.appwrite.databases.updateDocument({
+          databaseId: this.appwrite.databaseId,
+          collectionId: COLLECTION_KETAL_SESSIONS,
+          documentId: sessionId,
+          data: sessionUpdate,
+        });
         this._sessionData.set(this.mapRawToSessionData(doc));
       }
 
@@ -329,22 +346,72 @@ export class KetalSessionService {
   }
 
   /**
-   * End the current game
+   * Cancel the current game (mark as cancelled)
+   * @param sessionId - Session ID to cancel
+   * @param roomId - Room ID (passed to avoid RoomService dependency)
    */
-  async endGame(sessionId: string): Promise<void> {
+  async cancelSession(sessionId: string, roomId: string): Promise<void> {
     try {
-      await this.appwrite.databases.updateDocument(this.appwrite.databaseId, COLLECTION_KETAL_SESSIONS, sessionId, {
-        status: 'finished',
-        phase: 'finished',
+      const cancellationFields: Record<string, unknown> = {
+        status: 'cancelled',
+        terminatedBy: this._sessionData()?.activePlayerId ?? null,
+      };
+
+      await this.appwrite.databases.updateDocument({
+        databaseId: this.appwrite.databaseId,
+        collectionId: COLLECTION_KETAL_SESSIONS,
+        documentId: sessionId,
+        data: cancellationFields,
       });
 
-      const roomId = this._sessionData()?.roomId;
-      if (roomId) {
-        await this.roomService.updateRoom(roomId, {
+      // Reset room to idle
+      await this.appwrite.databases.updateDocument({
+        databaseId: this.appwrite.databaseId,
+        collectionId: 'fug_game_rooms',
+        documentId: roomId,
+        data: {
           currentSessionId: null,
           status: 'idle',
-        });
-      }
+        },
+      });
+
+      this.unsubscribe();
+
+      this._sessionData.set(null);
+      this._playerDocs.set([]);
+      this._cardsDoc.set(null);
+      this._onUpdateCallback = null;
+    } catch (error) {
+      throw new Error(`Failed to cancel session: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * End the current game
+   * @param sessionId - Session ID to end
+   * @param roomId - Room ID (passed to avoid RoomService dependency)
+   */
+  async endGame(sessionId: string, roomId: string): Promise<void> {
+    try {
+      await this.appwrite.databases.updateDocument({
+        databaseId: this.appwrite.databaseId,
+        collectionId: COLLECTION_KETAL_SESSIONS,
+        documentId: sessionId,
+        data: {
+          status: 'finished',
+          phase: 'finished',
+        },
+      });
+
+      await this.appwrite.databases.updateDocument({
+        databaseId: this.appwrite.databaseId,
+        collectionId: 'fug_game_rooms',
+        documentId: roomId,
+        data: {
+          currentSessionId: null,
+          status: 'idle',
+        },
+      });
 
       this.unsubscribe();
 
@@ -362,23 +429,23 @@ export class KetalSessionService {
    */
   async getSession(sessionId: string): Promise<KetalSession | null> {
     try {
-      const sessionDoc = await this.appwrite.databases.getDocument(
-        this.appwrite.databaseId,
-        COLLECTION_KETAL_SESSIONS,
-        sessionId
-      );
+      const sessionDoc = await this.appwrite.databases.getDocument({
+        databaseId: this.appwrite.databaseId,
+        collectionId: COLLECTION_KETAL_SESSIONS,
+        documentId: sessionId,
+      });
 
-      const playersResponse = await this.appwrite.databases.listDocuments(
-        this.appwrite.databaseId,
-        COLLECTION_KETAL_PLAYERS,
-        [Query.equal('sessionId', sessionId), Query.orderAsc('order')]
-      );
+      const playersResponse = await this.appwrite.databases.listDocuments({
+        databaseId: this.appwrite.databaseId,
+        collectionId: COLLECTION_KETAL_PLAYERS,
+        queries: [Query.equal('sessionId', sessionId), Query.orderAsc('order')],
+      });
 
-      const cardsResponse = await this.appwrite.databases.listDocuments(
-        this.appwrite.databaseId,
-        COLLECTION_KETAL_CARDS,
-        [Query.equal('sessionId', sessionId)]
-      );
+      const cardsResponse = await this.appwrite.databases.listDocuments({
+        databaseId: this.appwrite.databaseId,
+        collectionId: COLLECTION_KETAL_CARDS,
+        queries: [Query.equal('sessionId', sessionId)],
+      });
 
       this._sessionData.set(this.mapRawToSessionData(sessionDoc));
       this._playerDocs.set(playersResponse.documents.map((d) => this.mapRawToPlayerDoc(d)));
@@ -519,12 +586,17 @@ export class KetalSessionService {
       }
 
       return this.appwrite.databases
-        .updateDocument(this.appwrite.databaseId, COLLECTION_KETAL_PLAYERS, existingDoc.$id, {
-          cards: JSON.stringify(player.cards),
-          choices: JSON.stringify(player.choices),
-          sipsTaken: player.sipsTaken,
-          sipsGiven: player.sipsGiven,
-          isReady: player.isReady,
+        .updateDocument({
+          databaseId: this.appwrite.databaseId,
+          collectionId: COLLECTION_KETAL_PLAYERS,
+          documentId: existingDoc.$id,
+          data: {
+            cards: JSON.stringify(player.cards),
+            choices: JSON.stringify(player.choices),
+            sipsTaken: player.sipsTaken,
+            sipsGiven: player.sipsGiven,
+            isReady: player.isReady,
+          },
         })
         .then((doc) => this.mapRawToPlayerDoc(doc));
     });
@@ -554,12 +626,12 @@ export class KetalSessionService {
     }
 
     if (Object.keys(update).length > 0) {
-      const doc = await this.appwrite.databases.updateDocument(
-        this.appwrite.databaseId,
-        COLLECTION_KETAL_CARDS,
-        cardsDoc.$id,
-        update
-      );
+      const doc = await this.appwrite.databases.updateDocument({
+        databaseId: this.appwrite.databaseId,
+        collectionId: COLLECTION_KETAL_CARDS,
+        documentId: cardsDoc.$id,
+        data: update,
+      });
       this._cardsDoc.set(this.mapRawToCardsDoc(doc));
     }
   }
@@ -594,7 +666,9 @@ export class KetalSessionService {
   // ============================================================================
 
   private getOrderedPlayers(): KetalPlayer[] {
-    return [...this._playerDocs()].sort((a, b) => a.order - b.order).map((doc) => this.mapDocToKetalPlayer(doc));
+    return [...(this._playerDocs() || [])]
+      .sort((a, b) => a.order - b.order)
+      .map((doc) => this.mapDocToKetalPlayer(doc));
   }
 
   private mapRawToSessionData(doc: Record<string, unknown>): SessionData {

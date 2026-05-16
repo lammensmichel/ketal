@@ -83,15 +83,9 @@ export class RoomTileComponent {
 
     if (status === 'playing') {
       this.handleReconnect();
-    } else {
-      // For idle rooms, navigate based on role
-      if (role === 'host') {
-        // Host can start game or join room - for now, don't auto-navigate
-        // Let the button handle the action
-      } else {
-        // Player joins the room
-        this.router.navigate(['/room', room.$id]);
-      }
+    } else if (status === 'idle') {
+      // For idle rooms, navigate for ALL users (host + player)
+      this.router.navigate(['/room', room.$id]);
     }
   }
 

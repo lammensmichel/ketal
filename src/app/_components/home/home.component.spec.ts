@@ -76,15 +76,14 @@ describe('HomeComponent', () => {
     expect(component.isLoading()).toBe(false);
   }));
 
-  it('should set error on createGame failure', fakeAsync(() => {
+  it('should set error on createGame failure', async () => {
     roomService.createSoloRoom.and.returnValue(Promise.reject(new Error('Network error')));
 
-    component.createGame();
-    tick();
+    await component.createGame();
 
     expect(component.errorMsg()).toBe('home.errors.createFailed');
     expect(component.isLoading()).toBe(false);
-  }));
+  });
 
   it('should not allow double-click on createGame', fakeAsync(() => {
     // Simulate slow room creation
