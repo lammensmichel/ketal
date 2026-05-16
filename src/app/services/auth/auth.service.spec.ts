@@ -83,7 +83,19 @@ describe('AuthService', () => {
         { provide: KetalSessionService, useValue: mockKetalSessionService },
         { provide: RealtimeService, useValue: mockRealtimeService },
         { provide: LocalService, useValue: mockLocalService },
-        AuthService,
+        { provide: AuthService, useFactory: (appwrite: AppwriteService, room: RoomService, member: MemberService, ketalSess: KetalSessionService, realtime: RealtimeService, local: LocalService, game: GameService) => {
+            const auth = new AuthService();
+            (auth as any).appwrite = appwrite;
+            (auth as any).roomService = room;
+            (auth as any).memberService = member;
+            (auth as any).ketalSessionService = ketalSess;
+            (auth as any).realtimeService = realtime;
+            (auth as any).localService = local;
+            (auth as any).gameService = game;
+            return auth;
+          },
+          deps: [AppwriteService, RoomService, MemberService, KetalSessionService, RealtimeService, LocalService, GameService],
+        },
       ],
     });
 
