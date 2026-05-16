@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy, computed, inject, OnInit, signal, DestroyRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Router } from '@angular/router';
 import { RoomService, GameRoomWithMemberCount } from '../../../services/room/room.service';
 import { MemberService } from '../../../services/member/member.service';
@@ -18,7 +18,7 @@ import { RoomTileComponent } from '../room-tile/room-tile.component';
   templateUrl: './rooms-list.component.html',
   styleUrls: ['./rooms-list.component.scss'],
   standalone: true,
-  imports: [CommonModule, RoomTileComponent],
+  imports: [RoomTileComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RoomsListComponent implements OnInit {

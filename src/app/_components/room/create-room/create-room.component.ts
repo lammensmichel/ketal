@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy, DestroyRef, inject, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
@@ -24,7 +24,7 @@ import { AuthService } from '../../../services/auth/auth.service';
   templateUrl: './create-room.component.html',
   styleUrls: ['./create-room.component.scss'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule, QRCodeComponent],
+  imports: [ReactiveFormsModule, TranslateModule, QRCodeComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CreateRoomComponent {
