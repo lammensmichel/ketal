@@ -167,7 +167,8 @@ intents:
     title: Post-Upgrade Audit & Migration
     status: completed
     completed_at: "2026-05-16T21:35:00Z"
-    commit: "7add1d4"
+    commit: "9de5805a"
+  commit: "9de5805a"
 - id: angular-upgrade-21-to-22
   title: Angular — upgrade 21 → 22
   status: pending
