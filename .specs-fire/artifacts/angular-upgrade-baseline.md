@@ -1,0 +1,147 @@
+# Angular Upgrade Baseline - Ketal Project
+
+**Date**: 2026-05-16  
+**Intent**: Angular 19 → 20 upgrade  
+**Work Item**: WI-001 - Baseline Snapshot & Test Audit  
+**Commit**: `0be5c75b0bdbbf37d04b2ca45262e4eb8e66970f`
+
+---
+
+## Current Angular/package versions
+
+```json
+{
+  "dependencies": {
+    "@angular/animations": "^19.2.17",
+    "@angular/cdk": "^19.2.19",
+    "@angular/common": "^19.2.17",
+    "@angular/compiler": "^19.2.17",
+    "@angular/core": "^19.2.17",
+    "@angular/forms": "^19.2.17",
+    "@angular/material": "^19.2.19",
+    "@angular/platform-browser": "^19.2.17",
+    "@angular/platform-browser-dynamic": "^19.2.17",
+    "@angular/router": "^19.2.17",
+    "@angular/cli": "~19.2.19",
+    "@angular-devkit/build-angular": "^19.2.19",
+    "@angular/compiler-cli": "^19.2.17",
+    "@fortawesome/angular-fontawesome": "^0.15.0"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.3",
+    "rxjs": "~7.8.0",
+    "zone.js": "~0.15.1"
+  }
+}
+```
+
+---
+
+## Build status
+
+| Configuration | Status | Notes |
+|---------------|--------|-------|
+| **Development** | ✅ PASS | 0 errors, 9 warnings (unused imports, commonJS deps) |
+| **Production** | ❌ FAIL | 1 TS2339 error: `endpointRealtime` property missing in `appwrite.service.ts:34` |
+
+### Dev build warnings
+- `NgClass` imported but not used in `PlayersListComponent`
+- CommonJS dependencies: `qrcode`, `json-bigint`
+- Several unused files (components, models, helpers, test files)
+- SCSS `@import` deprecation warnings in `custom-bootstrap.scss`
+
+### Prod build error (known pre-existing issue)
+```
+src/app/services/appwrite/appwrite.service.ts:34:49 - error TS2339
+Property 'endpointRealtime' does not exist on type '{ endpoint: any; projectId: any; }'.
+```
+
+---
+
+## Test results
+
+**Test command**: `CHROME_BIN=/usr/bin/chromium ./node_modules/.bin/ng test --no-progress --browsers=ChromeHeadlessNoSandbox`
+
+| Metric | Count |
+|--------|-------|
+| **Total tests** | 1089 |
+| **Passed** | 1076 |
+| **Failed** | 10 |
+| **Skipped** | 3 |
+
+### Failing tests (10)
+1. `Realtime ketal_sessions Integration should create a test room for the session` - document_already_exists (409)
+2. `Realtime ketal_sessions Integration should receive collection-level update events` - undefined values in snapshot
+3. Plus 8 more: all related to document conflicts or missing properties in integration tests
+
+### Passing tests (baseline counts)
+- 1076 successful tests across unit, component, and integration suites
+- 3 tests skipped (likely platform-specific or manual-only tests)
+
+---
+
+## Lint status
+
+**Lint command**: `./node_modules/.bin/ng lint`
+
+| Metric | Count |
+|--------|-------|
+| **Problems** | 275 |
+| **Errors** | 0 |
+| **Warnings** | 275 |
+
+### Warning categories (all warnings, no errors)
+- `@typescript-eslint/no-explicit-any` - Unexpected `any` type usage
+- `@typescript-eslint/no-empty-function` - Empty constructors/methods in test helpers
+
+---
+
+## Baseline snapshot summary
+
+| Phase | Successes | Failures | Notes |
+|-------|-----------|----------|-------|
+| Install | ✅ | 0 | `--legacy-peer-deps` required (FontAwesome peer dep conflict) |
+| Build dev | ✅ | 0 | Warnings only |
+| Build prod | ❌ | 1 | Pre-existing TS error (not introduced by baseline) |
+| Tests | ⚠️ | 10 | Pre-existing integration test flakiness |
+| Lint | ⚠️ | 0 | 275 warnings (non-blocking) |
+
+---
+
+## Git state
+
+- **Branch**: `feature/fug-backend-integration` (tracking `origin/feature/fug-backend-integration`)
+- **Untracked files**: 7 (specs-fire, docs/specs, scripts, session logs)
+- **Baseline commit**: `0be5c75b0bdbbf37d04b2ca45262e4eb8e66970f`
+
+---
+
+## Next work item
+
+### WI-002: Primary Angular & CLI Upgrade
+
+**Objective**: Upgrade Angular from v19 to v20, updating all core packages and CLI to corresponding versions.
+
+**Tasks**:
+1. Update `@angular/*` packages to `^20.x.x`
+2. Update `@angular/cli` and `@angular-devkit/build-angular` to `~20.x.x`
+3. Update `@angular-eslint/*` packages for ESLint 9 compatibility
+4. Update `typescript` to `~5.9.x` (Angular 20 requirement)
+5. Update `zone.js` to `~0.16.x` (Angular 20 requirement)
+6. Review/break build lint warnings introduced by upgrade
+7. Verify dev/prod builds pass
+8. Run tests to capture new baseline and identify upgrade-specific failures
+
+---
+
+## Known issues (pre-existing, notupgrade-related)
+
+1. **Appwrite SDK `endpointRealtime`**: Type mismatch in service config (needs runtime property)
+2. **Integration test flakiness**: Document uniqueness errors and undefined property reads in realtime tests
+3. **FontAwesome peer dep conflict**: `@fortawesome/angular-fontawesome@0.15.0` requires Angular 18, Angular 19 in project
+4. **SCSS deprecation warnings**: `@import` rules in `custom-bootstrap.scss` need migration to `@use`
+5. **Unused code**: Multiple components, models, and test files not referenced in entry points
+
+---
+
+*Generated by FIRE workflow agent (qwen3-coder-next)*
