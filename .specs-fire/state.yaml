@@ -45,7 +45,22 @@ intents:
   title: Angular — upgrade 19 → 20
   status: pending
   priority: high
-  work_items: []
+  work_items:
+- id: wi-002
+  title: Primary Angular & CLI Upgrade
+  status: completed
+  completion_message: "Angular 19.2.17 → 20.3.21 completed, peer dependency conflicts resolved"
+  completed_at: "2026-05-16T18:45:00Z"
+  artifacts:
+  - .specs-fire/artifacts/angular-upgrade-wi002.md
+  - angular.json
+  - package.json
+  - package-lock.json
+  - tsconfig.json
+  commit: "0218683"
+- id: wi-003
+  title: Post-Upgrade Stability & Build Verification
+  status: pending
 - id: angular-upgrade-20-to-21
   title: Angular — upgrade 20 → 21
   status: pending
