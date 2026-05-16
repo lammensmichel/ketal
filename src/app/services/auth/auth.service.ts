@@ -40,7 +40,7 @@ export class AuthService {
   private readonly ketalSessionService = inject(KetalSessionService);
   private readonly realtimeService = inject(RealtimeService);
   private readonly localService = inject(LocalService);
-  private gameService = inject(GameService);
+  @Optional() private gameService?: GameService;
 
   /** Signal holding the current user, null if not authenticated */
   private readonly _currentUser = signal<Models.User<Models.Preferences> | null>(null);
@@ -189,65 +189,10 @@ export class AuthService {
   }
 
   /**
-   * Get the GameService, lazy-loading it via Injector to break circular dependency
+   * Lazy injector reference for GameService to break circular dependency
    */
-  private getGameService(): GameService {
-    if (!this.gameService) {
-      // Create a simple mock for tests if injector is not set up
-      // In production, the real GameService will be injected
-      this.gameService = {
-        resetGame: () => {},
-        game: signal({} as any),
-        players: signal([] as any),
-        drinkingCards: signal([] as any),
-        givingCards: signal([] as any),
-        status: signal(0 as any),
-        turn: signal(0 as any),
-        phase: signal(0 as any),
-        activePlayer: signal(undefined as any),
-        summary: signal(false as any),
-        withSummaryMode: signal(false as any),
-        gameMode: signal('local' as any),
-        isRoomMode: signal(false as any),
-        lastTurnSips: signal({} as any),
-        lastTurnGiven: signal({} as any),
-        phase2LastCardValue: signal(null as any),
-        isGameStarted: () => false,
-        isGameFinished: () => false,
-        isSummaryMode: () => false,
-        isSummaryActivated: () => false,
-        isGameInProgress: () => false,
-        isNewGame: () => true,
-        isPlayerChoiceComplete: () => false,
-        getStatus: () => 0,
-        setCardChoice: () => {},
-        addPlayerSip: () => {},
-        assignSipsForFirstTurn: () => {},
-        pickCard: () => {},
-        saveCardAndSips: () => {},
-        openSipGiveModal: () => {},
-        clearLastTurnGivenForPlayer: () => {},
-        clearLastTurnIndicators: () => {},
-        setGame: () => {},
-        updateGame: () => {},
-        loadGameFromStorage: () => null,
-        createEmptyGame: () => ({}) as any,
-        beginGame: () => {},
-        displayNewCard: () => {},
-        updatePlayerGivenSipsFromCard: () => {},
-        setChoiceAndPickCard: () => {},
-        addDrinkingCard: () => {},
-        addGivingCard: () => {},
-        addCardToPlayer: () => {},
-        addSips: () => {},
-        pauseGame: () => {},
-        resumeGame: () => {},
-        clearPersistedSummary: () => {},
-        lastTurnSipsForPlayer: (id: string) => 0,
-        lastTurnGivenForPlayer: (id: string) => 0,
-      } as any;
-    }
-    return this.gameService!;
+  private getGameService(): GameService | undefined {
+    return this.gameService;
   }
 
   /**
@@ -262,7 +207,7 @@ export class AuthService {
     this._isLoading.set(true);
     // Cleanup game state — each step is isolated so one failure doesn't skip the rest
     try {
-      this.getGameService().resetGame();
+      this.getGameService()?.resetGame();
     } catch {
       /* non-critical */
     }
