@@ -1,5 +1,5 @@
 import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
-import { RealtimeResponseEvent, RealtimeSubscription } from 'appwrite';
+import { Channel, RealtimeResponseEvent, RealtimeSubscription } from 'appwrite';
 import { AppwriteService, DATABASE_ID } from '../appwrite/appwrite.service';
 
 /**
@@ -63,11 +63,10 @@ const COLLECTIONS = {
 /**
  * RealtimeService - Manages Appwrite realtime subscriptions.
  *
- * Channels follow the Appwrite 1.9.x format:
- *   tablesdb.<DB_ID>.tables.<TABLE_ID>.rows[.<ROW_ID>]
+ * Channels are built using the Appwrite Channel builder (v24+):
+ *   Channel.tablesdb(<DB_ID>).table(<TABLE_ID>).row(<ROW_ID>)
  *
- * Uses the v25 Realtime class under the hood; subscribe() resolves once the
- * underlying WebSocket is open, so callers don't need to poll for readiness.
+ * Uses the Appwrite Channel class to generate proper channel strings.
  */
 @Injectable({
   providedIn: 'root',
@@ -205,14 +204,14 @@ export class RealtimeService {
     return `sub_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
   }
 
-  /** Channel for a single row: tablesdb.<DB>.tables.<TBL>.rows.<ROW> */
+  /** Channel for a single row, using Appwrite Channel builder */
   private buildDocumentChannel(collectionId: string, documentId: string): string {
-    return `tablesdb.${DATABASE_ID}.tables.${collectionId}.rows.${documentId}`;
+    return Channel.tablesdb(DATABASE_ID).table(collectionId).row(documentId).toString();
   }
 
-  /** Channel for an entire table: tablesdb.<DB>.tables.<TBL>.rows */
+  /** Channel for an entire table, using Appwrite Channel builder */
   private buildCollectionChannel(collectionId: string): string {
-    return `tablesdb.${DATABASE_ID}.tables.${collectionId}.rows`;
+    return Channel.tablesdb(DATABASE_ID).table(collectionId).row().toString();
   }
 
   private updateSubscriptionCount(): void {
