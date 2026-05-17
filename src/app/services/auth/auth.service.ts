@@ -298,7 +298,7 @@ export class AuthService {
       this._currentUser.set(user);
     } catch (error: unknown) {
       // If session already exists, try to use it
-      if (isAppwriteException(error) && error.code === 409) {
+      if (isAppwriteException(error) && getAppwriteErrorCode(error) === 409) {
         try {
           const user = await this.appwrite.account.get();
           this._currentUser.set(user);

@@ -251,7 +251,7 @@ export class RoomService {
       return this.mapDocumentToGameRoom(document);
     } catch (error: unknown) {
       // Return null for 404 (document not found), re-throw other errors
-      if (isAppwriteException(error) && (error as AppwriteException).code === 404) {
+      if (isAppwriteException(error) && getAppwriteErrorCode(error) === 404) {
         return null;
       }
       console.warn('getRoomById failed with unexpected error:', error);
