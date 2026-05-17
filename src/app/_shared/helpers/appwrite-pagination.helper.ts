@@ -1,5 +1,29 @@
 import { Databases, Query } from 'appwrite';
 
+/**
+ * Fetches all documents from an Appwrite collection using cursor-based pagination.
+ *
+ * This helper automatically handles pagination by iterating through pages using
+ * the cursorAfter mechanism, ensuring all documents are returned regardless of
+ * collection size.
+ *
+ * @param databases - Appwrite Databases instance
+ * @param databaseId - Database ID
+ * @param collectionId - Collection ID
+ * @param queries - Optional array of Query strings to filter results
+ * @returns Promise resolving to an object containing all documents in the collection
+ * @throws AppwriteException if the database or collection doesn't exist or permission is denied
+ *
+ * @example
+ * ```typescript
+ * const allMembers = await listAllDocuments(
+ *   databases,
+ *   'fug',
+ *   'members',
+ *   [Query.equal('roomId', 'room-123')]
+ * );
+ * ```
+ */
 export async function listAllDocuments(
   databases: Databases,
   databaseId: string,
