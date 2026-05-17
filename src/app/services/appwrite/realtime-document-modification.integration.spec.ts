@@ -231,7 +231,7 @@ describe('Realtime Document Modification Integration', () => {
   }, 30000);
 
   it('should handle subscription close cleanly', async () => {
-    const testRoomId = `test-close-${Date.now()}`;
+    const testRoomId = ID.unique(); // Use ID.unique() for proper UUID generation
 
     const subscription = await appwriteService.subscribe(
       `tablesdb.${DATABASE_ID}.tables.${COLLECTION_ID}.rows.${testRoomId}`,
