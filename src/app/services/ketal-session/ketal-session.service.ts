@@ -2,6 +2,7 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { ID, Query } from 'appwrite';
 import { AppwriteService } from '../appwrite/appwrite.service';
 import { RealtimeService } from '../realtime/realtime.service';
+import { listAllDocuments } from '../../_shared/helpers/appwrite-pagination.helper';
 
 /**
  * Collection IDs for Ketal in Appwrite
@@ -435,17 +436,19 @@ export class KetalSessionService {
         documentId: sessionId,
       });
 
-      const playersResponse = await this.appwrite.databases.listDocuments({
-        databaseId: this.appwrite.databaseId,
-        collectionId: COLLECTION_KETAL_PLAYERS,
-        queries: [Query.equal('sessionId', sessionId), Query.orderAsc('order')],
-      });
+      const playersResponse = await listAllDocuments(
+        this.appwrite.databases,
+        this.appwrite.databaseId,
+        COLLECTION_KETAL_PLAYERS,
+        [Query.equal('sessionId', sessionId), Query.orderAsc('order')]
+      );
 
-      const cardsResponse = await this.appwrite.databases.listDocuments({
-        databaseId: this.appwrite.databaseId,
-        collectionId: COLLECTION_KETAL_CARDS,
-        queries: [Query.equal('sessionId', sessionId)],
-      });
+      const cardsResponse = await listAllDocuments(
+        this.appwrite.databases,
+        this.appwrite.databaseId,
+        COLLECTION_KETAL_CARDS,
+        [Query.equal('sessionId', sessionId)]
+      );
 
       this._sessionData.set(this.mapRawToSessionData(sessionDoc));
       this._playerDocs.set(playersResponse.documents.map((d) => this.mapRawToPlayerDoc(d)));
