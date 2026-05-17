@@ -7,6 +7,11 @@ import { MemberService } from '../member/member.service';
 import { KetalSessionService } from '../ketal-session/ketal-session.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import { LocalService } from '../local/local.service';
+import {
+  isAppwriteException,
+  getAppwriteErrorCode,
+  getAppwriteMessage,
+} from '../../_shared/helpers/appwrite-exception.helper';
 
 /**
  * AuthService - Authentication service for Appwrite
@@ -90,7 +95,7 @@ export class AuthService {
       );
       const user = await Promise.race([this.appwrite.account.get(), timeoutPromise]);
       this._currentUser.set(user);
-    } catch {
+    } catch (error: unknown) {
       // No valid session exists or Appwrite unavailable, user remains null
       this._currentUser.set(null);
     } finally {
@@ -133,8 +138,13 @@ export class AuthService {
       // Get user data and update state
       const user = await this.appwrite.account.get();
       this._currentUser.set(user);
-    } catch (error) {
+    } catch (error: unknown) {
       this._currentUser.set(null);
+      const appwriteError = getAppwriteMessage(error);
+      const errorCode = getAppwriteErrorCode(error);
+      if (errorCode === 409) {
+        throw new Error(`Email already in use: ${appwriteError || 'User already exists'}`);
+      }
       throw error;
     } finally {
       this._isLoading.set(false);
@@ -180,8 +190,16 @@ export class AuthService {
       await this.appwrite.account.createEmailPasswordSession({ email, password });
       const user = await this.appwrite.account.get();
       this._currentUser.set(user);
-    } catch (error) {
+    } catch (error: unknown) {
       this._currentUser.set(null);
+      const appwriteError = getAppwriteMessage(error);
+      const errorCode = getAppwriteErrorCode(error);
+      if (errorCode === 401) {
+        throw new Error(`Invalid credentials: ${appwriteError || 'Please check your email and password'}`);
+      }
+      if (errorCode === 409) {
+        throw new Error(`Email not verified: ${appwriteError || 'Please verify your email first'}`);
+      }
       throw error;
     } finally {
       this._isLoading.set(false);
@@ -280,7 +298,7 @@ export class AuthService {
       this._currentUser.set(user);
     } catch (error: unknown) {
       // If session already exists, try to use it
-      if (error instanceof Error && error.message.includes('session is active')) {
+      if (isAppwriteException(error) && error.code === 409) {
         try {
           const user = await this.appwrite.account.get();
           this._currentUser.set(user);
@@ -320,16 +338,16 @@ export class AuthService {
       const user = await this.appwrite.account.get();
       this._currentUser.set(user);
       return user;
-    } catch {
+    } catch (error: unknown) {
       // No existing session, create anonymous
       try {
         await this.appwrite.account.createAnonymousSession();
         const user = await this.appwrite.account.get();
         this._currentUser.set(user);
         return user;
-      } catch (error) {
+      } catch (error2: unknown) {
         this._currentUser.set(null);
-        throw error;
+        throw error2;
       }
     } finally {
       this._isLoading.set(false);
