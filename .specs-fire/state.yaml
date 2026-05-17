@@ -56,9 +56,14 @@ intents:
   work_items: []
 - id: tests-realtime-integration-hygiene
   title: Tests — fix realtime integration spec hygiene (ID.unique + cleanup)
-  status: pending
+  status: in-progress
   priority: medium
-  work_items: []
+  work_items:
+    - id: wi-004
+      title: Verification: Idempotence & Hygiene Audit
+      status: in-progress
+      mode: autopilot
+      started: "2026-05-17T00:00:00Z"
 - id: appwrite-sdk-v25-readiness-watch
   title: Appwrite — watch for SDK v25 / server message-based subscribe support
   status: pending

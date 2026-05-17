@@ -87,7 +87,7 @@ describe('RealtimeService Realtime Integration', () => {
       documentId: testRoomId,
       data: {
         status: 'playing',
-        name: `Updated Room Name ${Date.now()}`,
+        name: `Updated Room Name ${ID.unique()}`,
       },
     });
 
@@ -142,7 +142,7 @@ describe('RealtimeService Realtime Integration', () => {
       documentId: roomId,
       data: {
         status: 'playing',
-        name: `Collection Sub Test ${Date.now()}`,
+        name: `Collection Sub Test ${ID.unique()}`,
       },
     });
 
