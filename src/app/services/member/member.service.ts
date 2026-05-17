@@ -1,6 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { ID, Query } from 'appwrite';
 import { AppwriteService } from '../appwrite/appwrite.service';
+import { listAllDocuments } from '../../_shared/helpers/appwrite-pagination.helper';
 
 /**
  * Collection ID for game members in Appwrite
@@ -132,11 +133,9 @@ export class MemberService {
    */
   async getMembersByRoom(roomId: string): Promise<GameMember[]> {
     try {
-      const response = await this.appwrite.databases.listDocuments({
-        databaseId: this.appwrite.databaseId,
-        collectionId: COLLECTION_GAME_MEMBERS,
-        queries: [Query.equal('roomId', roomId), Query.limit(100)],
-      });
+      const response = await listAllDocuments(this.appwrite.databases, this.appwrite.databaseId, COLLECTION_GAME_MEMBERS, [
+        Query.equal('roomId', roomId),
+      ]);
 
       const members = response.documents.map((doc) => this.mapDocumentToMember(doc));
 
@@ -340,11 +339,9 @@ export class MemberService {
    */
   async getMembersByUserId(userId: string): Promise<GameMember[]> {
     try {
-      const response = await this.appwrite.databases.listDocuments({
-        databaseId: this.appwrite.databaseId,
-        collectionId: COLLECTION_GAME_MEMBERS,
-        queries: [Query.equal('userId', userId), Query.limit(100)],
-      });
+      const response = await listAllDocuments(this.appwrite.databases, this.appwrite.databaseId, COLLECTION_GAME_MEMBERS, [
+        Query.equal('userId', userId),
+      ]);
       return response.documents.map((doc) => this.mapDocumentToMember(doc));
     } catch (error) {
       throw new Error(`Failed to get members by userId: ${error instanceof Error ? error.message : 'Unknown error'}`);
