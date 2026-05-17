@@ -23,6 +23,7 @@ describe('Realtime ketal_sessions Integration', () => {
   const SESSION_COLLECTION_ID = 'ketal_sessions';
   const GAME_ROOMS_COLLECTION_ID = 'fug_game_rooms';
   let testRoomId: string | null = null;
+  const createdResourceIds: string[] = [];
 
   beforeAll(async () => {
     // Use environment default - no override needed
@@ -36,8 +37,26 @@ describe('Realtime ketal_sessions Integration', () => {
     realtimeService = TestBed.inject(RealtimeService);
   });
 
-  afterAll(async () => {
-    // Use environment default - no override needed
+  /**
+   * Cleanup after each test to prevent document accumulation
+   */
+  afterEach(async () => {
+    // Cleanup sessions
+    for (const docId of createdResourceIds) {
+      try {
+        await appwriteService.databases.deleteDocument({
+          databaseId: DATABASE_ID,
+          collectionId: SESSION_COLLECTION_ID,
+          documentId: docId,
+        });
+        console.log(`[Cleanup] Deleted session: ${docId}`);
+      } catch (error) {
+        console.warn(`[Cleanup] Failed to delete session ${docId}:`, error);
+        // Don't throw - cleanup failures shouldn't mask test failures
+      }
+    }
+    // Clear tracker for next test
+    createdResourceIds.length = 0;
   });
 
   /**
@@ -102,16 +121,8 @@ describe('Realtime ketal_sessions Integration', () => {
 
     expect(createdDoc['$id']).toBe(testRoomId);
     console.log(`[Test] Created room: ${testRoomId}`);
-    // Cleanup room - this should work as we created it
-    try {
-      await appwriteService.databases.deleteDocument({
-        databaseId: DATABASE_ID,
-        collectionId: GAME_ROOMS_COLLECTION_ID,
-        documentId: testRoomId,
-      });
-    } catch (e) {
-      console.log(`[Test] Room cleanup skipped or failed: ${e}`);
-    }
+    createdResourceIds.push(testRoomId); // TRACK THE ID
+    // Cleanup will be handled by afterEach hook
   }, 20000);
 
   it('should create a session and receive Realtime event', async () => {
@@ -155,6 +166,7 @@ describe('Realtime ketal_sessions Integration', () => {
     });
 
     console.log(`[Test Session] Created session:`, createdDoc.$id);
+    createdResourceIds.push(sessionId); // TRACK THE ID
 
     // Wait for realtime event to be received
     await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -169,10 +181,7 @@ describe('Realtime ketal_sessions Integration', () => {
     expect(firstEvent['payload']['roomId']).toBe(testRoomId);
     expect(firstEvent['payload']['status']).toBe('waiting');
 
-    // Cleanup - skip due to permission errors with deleteDocument from Web SDK
-    // await subscription.unsubscribe();
-    // await appwriteService.databases.deleteDocument(DATABASE_ID, SESSION_COLLECTION_ID, sessionId);
-    // await appwriteService.databases.deleteDocument(DATABASE_ID, GAME_ROOMS_COLLECTION_ID, testRoomId);
+    // Cleanup will be handled by afterEach hook
   }, 30000);
 
   it('should receive update events when session is modified', async () => {
@@ -203,6 +212,7 @@ describe('Realtime ketal_sessions Integration', () => {
       documentId: sessionId,
       data: sessionData,
     });
+    createdResourceIds.push(sessionId); // TRACK THE ID
 
     // Subscribe to the specific session
     const subscription = await appwriteService.subscribe(
@@ -240,10 +250,7 @@ describe('Realtime ketal_sessions Integration', () => {
     expect(lastEvent['payload']['phase']).toBe('dealing');
     expect(lastEvent['payload']['turn']).toBe(1);
 
-    // Cleanup - skip due to permission errors with deleteDocument from Web SDK
-    // await subscription.unsubscribe();
-    // await appwriteService.databases.deleteDocument(DATABASE_ID, SESSION_COLLECTION_ID, sessionId);
-    // await appwriteService.databases.deleteDocument(DATABASE_ID, GAME_ROOMS_COLLECTION_ID, testRoomId);
+    // Cleanup will be handled by afterEach hook
   }, 30000);
 
   it('should receive collection-level update events', async () => {
@@ -285,6 +292,7 @@ describe('Realtime ketal_sessions Integration', () => {
       documentId: sessionId,
       data: sessionData,
     });
+    createdResourceIds.push(sessionId); // TRACK THE ID
 
     // Wait for event
     await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -301,9 +309,8 @@ describe('Realtime ketal_sessions Integration', () => {
     const payload = typeof createEvent === 'string' ? JSON.parse(createEvent)['payload'] : createEvent?.['payload'];
     expect(payload?.['$id']).toBe(sessionId);
 
-    // Cleanup - skip due to permission errors with deleteDocument from Web SDK
-    // await subscription.unsubscribe();
-    // await appwriteService.databases.deleteDocument(DATABASE_ID, SESSION_COLLECTION_ID, sessionId);
-    // await appwriteService.databases.deleteDocument(DATABASE_ID, GAME_ROOMS_COLLECTION_ID, testRoomId);
+    // Cleanup will be handled by afterEach hook
   }, 30000);
+
+  // afterEach hook handles cleanup after each test
 });

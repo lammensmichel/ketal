@@ -22,6 +22,7 @@ function generateUUID(): string {
 describe('Realtime Document Modification Integration', () => {
   let appwriteService: AppwriteService;
   const COLLECTION_ID = 'fug_game_rooms'; // Pre-existing collection with Realtime enabled
+  const createdResourceIds: string[] = [];
 
   beforeAll(async () => {
     // Clean up old test documents that might have non-unique IDs from previous runs
@@ -39,6 +40,25 @@ describe('Realtime Document Modification Integration', () => {
       providers: [AppwriteService],
     });
     appwriteService = TestBed.inject(AppwriteService);
+  });
+
+  afterEach(async () => {
+    // Cleanup after each test to prevent document accumulation
+    for (const docId of createdResourceIds) {
+      try {
+        await appwriteService.databases.deleteDocument({
+          databaseId: DATABASE_ID,
+          collectionId: COLLECTION_ID,
+          documentId: docId,
+        });
+        console.log(`[Cleanup] Deleted document: ${docId}`);
+      } catch (error) {
+        console.warn(`[Cleanup] Failed to delete document ${docId}:`, error);
+        // Don't throw - cleanup failures shouldn't mask test failures
+      }
+    }
+    // Clear tracker for next test
+    createdResourceIds.length = 0;
   });
 
   afterAll(async () => {
@@ -85,6 +105,7 @@ describe('Realtime Document Modification Integration', () => {
     });
 
     console.log(`[Test] Created document:`, createdDoc.$id);
+    createdResourceIds.push(testRoomId); // TRACK THE ID
 
     // Wait for realtime event to be received
     await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -101,11 +122,6 @@ describe('Realtime Document Modification Integration', () => {
 
     // Cleanup
     await subscription.close();
-    await appwriteService.databases.deleteDocument({
-      databaseId: DATABASE_ID,
-      collectionId: COLLECTION_ID,
-      documentId: testRoomId,
-    });
   }, 30000);
 
   it('should receive update events when document is modified', async () => {
@@ -132,6 +148,7 @@ describe('Realtime Document Modification Integration', () => {
       documentId: testRoomId,
       data: roomData,
     });
+    createdResourceIds.push(testRoomId); // TRACK THE ID
 
     // Subscribe to the specific document
     const subscription = await appwriteService.subscribe(
@@ -169,11 +186,6 @@ describe('Realtime Document Modification Integration', () => {
 
     // Cleanup
     await subscription.close();
-    await appwriteService.databases.deleteDocument({
-      databaseId: DATABASE_ID,
-      collectionId: COLLECTION_ID,
-      documentId: testRoomId,
-    });
   }, 30000);
 
   it('should handle subscription unsubscribe cleanly', async () => {
@@ -219,6 +231,7 @@ describe('Realtime Document Modification Integration', () => {
     console.log(`[Test] Events after unsubscribe:`, eventsReceived.length);
 
     // Cleanup the document regardless
+    createdResourceIds.push(testRoomId); // TRACK THE ID
     try {
       await appwriteService.databases.deleteDocument({
         databaseId: DATABASE_ID,
@@ -254,4 +267,20 @@ describe('Realtime Document Modification Integration', () => {
       // Document might not exist
     }
   }, 20000);
+
+  // Cleanup all tracked resources after all tests
+  afterAll(async () => {
+    for (const docId of createdResourceIds) {
+      try {
+        await appwriteService.databases.deleteDocument({
+          databaseId: DATABASE_ID,
+          collectionId: COLLECTION_ID,
+          documentId: docId,
+        });
+        console.log(`[Cleanup] Deleted document: ${docId}`);
+      } catch (e) {
+        console.log(`[Cleanup] Failed to delete document ${docId}: ${e}`);
+      }
+    }
+  });
 });
