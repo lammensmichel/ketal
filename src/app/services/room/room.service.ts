@@ -1,10 +1,16 @@
 import { inject, Injectable, Optional, signal } from '@angular/core';
-import { ID, Query } from 'appwrite';
+import { ID, Query, AppwriteException } from 'appwrite';
 import { AppwriteService } from '../appwrite/appwrite.service';
 import { RealtimeService, SubscriptionCallback } from '../realtime/realtime.service';
 import { MemberService } from '../member/member.service';
 import { AuthService } from '../auth/auth.service';
 import { KetalSessionService, KetalPlayer } from '../ketal-session/ketal-session.service';
+import {
+  isAppwriteException,
+  getAppwriteMessage,
+  getAppwriteErrorCode,
+  getAppwriteType,
+} from '../../_shared/helpers/appwrite-exception.helper';
 
 /**
  * Collection ID for game rooms in Appwrite
@@ -139,8 +145,9 @@ export class RoomService {
       const room = this.mapDocumentToGameRoom(document);
       this._currentRoom.set(room);
       return room;
-    } catch (error) {
-      throw new Error(`Failed to create room: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (error: unknown) {
+      const msg = getAppwriteMessage(error) ?? 'Unknown error';
+      throw new Error(`Failed to create room: ${msg}`);
     }
   }
 
@@ -172,8 +179,9 @@ export class RoomService {
       if (this._currentRoom()?.$id === roomId) {
         this._currentRoom.set(null);
       }
-    } catch (error) {
-      throw new Error(`Failed to delete room: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (error: unknown) {
+      const msg = getAppwriteMessage(error) ?? 'Unknown error';
+      throw new Error(`Failed to delete room: ${msg}`);
     }
   }
 
@@ -199,8 +207,9 @@ export class RoomService {
       }
 
       return this.mapDocumentToGameRoom(response.documents[0]);
-    } catch (error) {
-      throw new Error(`Failed to find room by code: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (error: unknown) {
+      const msg = getAppwriteMessage(error) ?? 'Unknown error';
+      throw new Error(`Failed to find room by code: ${msg}`);
     }
   }
 
@@ -222,10 +231,9 @@ export class RoomService {
       }
 
       return this.mapDocumentToGameRoom(response.documents[0]);
-    } catch (error) {
-      throw new Error(
-        `Failed to find room by invite token: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
+    } catch (error: unknown) {
+      const msg = getAppwriteMessage(error) ?? 'Unknown error';
+      throw new Error(`Failed to find room by invite token: ${msg}`);
     }
   }
 
@@ -243,11 +251,12 @@ export class RoomService {
       return this.mapDocumentToGameRoom(document);
     } catch (error: unknown) {
       // Return null for 404 (document not found), re-throw other errors
-      if (error instanceof Object && 'code' in error && (error as { code: number }).code === 404) {
+      if (isAppwriteException(error) && getAppwriteErrorCode(error) === 404) {
         return null;
       }
       console.warn('getRoomById failed with unexpected error:', error);
-      throw new Error(`Failed to get room: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      const msg = getAppwriteMessage(error) ?? 'Unknown error';
+      throw new Error(`Failed to get room: ${msg}`);
     }
   }
 
@@ -293,7 +302,8 @@ export class RoomService {
           if (room) {
             rooms.push(room);
           }
-        } catch {
+        } catch (err: unknown) {
+          // Silently skip rooms that fail to load (permission issues, etc.)
           continue;
         }
       }
@@ -316,8 +326,9 @@ export class RoomService {
       }
 
       return enriched.slice(0, limit);
-    } catch (error) {
-      throw new Error(`Failed to get my rooms: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (error: unknown) {
+      const msg = getAppwriteMessage(error) ?? 'Unknown error';
+      throw new Error(`Failed to get my rooms: ${msg}`);
     }
   }
 
@@ -340,8 +351,9 @@ export class RoomService {
       }
 
       return room;
-    } catch (error) {
-      throw new Error(`Failed to update room: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (error: unknown) {
+      const msg = getAppwriteMessage(error) ?? 'Unknown error';
+      throw new Error(`Failed to update room: ${msg}`);
     }
   }
 

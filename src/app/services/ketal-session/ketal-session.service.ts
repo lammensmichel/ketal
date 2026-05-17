@@ -3,6 +3,11 @@ import { ID, Query } from 'appwrite';
 import { AppwriteService } from '../appwrite/appwrite.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import { listAllDocuments } from '../../_shared/helpers/appwrite-pagination.helper';
+import {
+  isAppwriteException,
+  getAppwriteMessage,
+  getAppwriteErrorCode,
+} from '../../_shared/helpers/appwrite-exception.helper';
 
 /**
  * Collection IDs for Ketal in Appwrite
@@ -283,9 +288,11 @@ export class KetalSessionService {
       this._cardsDoc.set(this.mapRawToCardsDoc(cardsDoc));
 
       return this.currentSession()!;
-    } catch (error) {
-      console.error('[KetalSessionService] startGame failed - partial docs may exist in Appwrite');
-      throw new Error(`Failed to start game: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (error: unknown) {
+      const appwriteError = getAppwriteMessage(error);
+      throw new Error(
+        `Failed to start game: ${appwriteError || (error instanceof Error ? error.message : 'Unknown error')}`
+      );
     }
   }
 
@@ -341,8 +348,11 @@ export class KetalSessionService {
         throw new Error('Session state is null after update');
       }
       return session;
-    } catch (error) {
-      throw new Error(`Failed to update session: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (error: unknown) {
+      const appwriteError = getAppwriteMessage(error);
+      throw new Error(
+        `Failed to update session: ${appwriteError || (error instanceof Error ? error.message : 'Unknown error')}`
+      );
     }
   }
 
@@ -382,8 +392,11 @@ export class KetalSessionService {
       this._playerDocs.set([]);
       this._cardsDoc.set(null);
       this._onUpdateCallback = null;
-    } catch (error) {
-      throw new Error(`Failed to cancel session: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (error: unknown) {
+      const appwriteError = getAppwriteMessage(error);
+      throw new Error(
+        `Failed to cancel session: ${appwriteError || (error instanceof Error ? error.message : 'Unknown error')}`
+      );
     }
   }
 
@@ -420,8 +433,11 @@ export class KetalSessionService {
       this._playerDocs.set([]);
       this._cardsDoc.set(null);
       this._onUpdateCallback = null;
-    } catch (error) {
-      throw new Error(`Failed to end game: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (error: unknown) {
+      const appwriteError = getAppwriteMessage(error);
+      throw new Error(
+        `Failed to end game: ${appwriteError || (error instanceof Error ? error.message : 'Unknown error')}`
+      );
     }
   }
 
@@ -455,11 +471,18 @@ export class KetalSessionService {
       this._cardsDoc.set(cardsResponse.documents.length > 0 ? this.mapRawToCardsDoc(cardsResponse.documents[0]) : null);
 
       return this.currentSession();
-    } catch (error) {
+    } catch (error: unknown) {
+      if (isAppwriteException(error) && error.code === 404) {
+        return null;
+      }
+      // Fall back to message-based check for non-Appwrite errors (for tests)
       if (error instanceof Error && error.message.includes('not found')) {
         return null;
       }
-      throw new Error(`Failed to get session: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      const appwriteError = getAppwriteMessage(error);
+      throw new Error(
+        `Failed to get session: ${appwriteError || (error instanceof Error ? error.message : 'Unknown error')}`
+      );
     }
   }
 

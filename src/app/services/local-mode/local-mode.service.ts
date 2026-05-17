@@ -2,6 +2,7 @@ import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core'
 import { GameMember, MemberService } from '../member/member.service';
 import { GameRoom, RoomService } from '../room/room.service';
 import { KetalPlayer, KetalSession } from '../ketal-session/ketal-session.service';
+import { isAppwriteException, getAppwriteMessage } from '../../_shared/helpers/appwrite-exception.helper';
 
 /**
  * LocalStorage keys for local mode data
@@ -524,8 +525,11 @@ export class LocalModeService {
 
     try {
       localStorage.setItem(key, JSON.stringify(value));
-    } catch (error) {
-      console.error(`Failed to write to localStorage: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (error: unknown) {
+      const appwriteError = getAppwriteMessage(error);
+      console.error(
+        `Failed to write to localStorage: ${appwriteError || (error instanceof Error ? error.message : 'Unknown error')}`
+      );
     }
   }
 }

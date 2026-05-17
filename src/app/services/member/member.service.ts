@@ -2,6 +2,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { ID, Query } from 'appwrite';
 import { AppwriteService } from '../appwrite/appwrite.service';
 import { listAllDocuments } from '../../_shared/helpers/appwrite-pagination.helper';
+import { isAppwriteException, getAppwriteMessage } from '../../_shared/helpers/appwrite-exception.helper';
 
 /**
  * Collection ID for game members in Appwrite
@@ -119,7 +120,15 @@ export class MemberService {
       this._members.update((members) => [...members, member]);
 
       return member;
-    } catch (error) {
+    } catch (error: unknown) {
+      const appwriteError = getAppwriteMessage(error);
+      const errorCode = isAppwriteException(error) ? error.code : null;
+      if (errorCode === 400) {
+        throw new Error(`Failed to create member: ${appwriteError || 'Invalid member data'}`);
+      }
+      if (errorCode === 409) {
+        throw new Error(`Failed to create member: ${appwriteError || 'Member already exists'}`);
+      }
       throw new Error(`Failed to create member: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -133,9 +142,12 @@ export class MemberService {
    */
   async getMembersByRoom(roomId: string): Promise<GameMember[]> {
     try {
-      const response = await listAllDocuments(this.appwrite.databases, this.appwrite.databaseId, COLLECTION_GAME_MEMBERS, [
-        Query.equal('roomId', roomId),
-      ]);
+      const response = await listAllDocuments(
+        this.appwrite.databases,
+        this.appwrite.databaseId,
+        COLLECTION_GAME_MEMBERS,
+        [Query.equal('roomId', roomId)]
+      );
 
       const members = response.documents.map((doc) => this.mapDocumentToMember(doc));
 
@@ -143,8 +155,11 @@ export class MemberService {
       this._members.set(members);
 
       return members;
-    } catch (error) {
-      throw new Error(`Failed to get members for room: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (error: unknown) {
+      const appwriteError = getAppwriteMessage(error);
+      throw new Error(
+        `Failed to get members for room: ${appwriteError || (error instanceof Error ? error.message : 'Unknown error')}`
+      );
     }
   }
 
@@ -195,8 +210,11 @@ export class MemberService {
       }
 
       return null;
-    } catch (error) {
-      throw new Error(`Failed to find member: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (error: unknown) {
+      const appwriteError = getAppwriteMessage(error);
+      throw new Error(
+        `Failed to find member: ${appwriteError || (error instanceof Error ? error.message : 'Unknown error')}`
+      );
     }
   }
 
@@ -234,8 +252,11 @@ export class MemberService {
       }
 
       return member;
-    } catch (error) {
-      throw new Error(`Failed to update member: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (error: unknown) {
+      const appwriteError = getAppwriteMessage(error);
+      throw new Error(
+        `Failed to update member: ${appwriteError || (error instanceof Error ? error.message : 'Unknown error')}`
+      );
     }
   }
 
@@ -288,8 +309,11 @@ export class MemberService {
       };
 
       await this.updateMember(memberId, updates);
-    } catch (error) {
-      throw new Error(`Failed to update member stats: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (error: unknown) {
+      const appwriteError = getAppwriteMessage(error);
+      throw new Error(
+        `Failed to update member stats: ${appwriteError || (error instanceof Error ? error.message : 'Unknown error')}`
+      );
     }
   }
 
@@ -314,8 +338,11 @@ export class MemberService {
       if (this._currentMember()?.$id === memberId) {
         this._currentMember.set(null);
       }
-    } catch (error) {
-      throw new Error(`Failed to delete member: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (error: unknown) {
+      const appwriteError = getAppwriteMessage(error);
+      throw new Error(
+        `Failed to delete member: ${appwriteError || (error instanceof Error ? error.message : 'Unknown error')}`
+      );
     }
   }
 
@@ -329,8 +356,11 @@ export class MemberService {
   async setOnlineStatus(memberId: string, isOnline: boolean): Promise<void> {
     try {
       await this.updateMember(memberId, { isOnline });
-    } catch (error) {
-      throw new Error(`Failed to set online status: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (error: unknown) {
+      const appwriteError = getAppwriteMessage(error);
+      throw new Error(
+        `Failed to set online status: ${appwriteError || (error instanceof Error ? error.message : 'Unknown error')}`
+      );
     }
   }
 
@@ -339,12 +369,18 @@ export class MemberService {
    */
   async getMembersByUserId(userId: string): Promise<GameMember[]> {
     try {
-      const response = await listAllDocuments(this.appwrite.databases, this.appwrite.databaseId, COLLECTION_GAME_MEMBERS, [
-        Query.equal('userId', userId),
-      ]);
+      const response = await listAllDocuments(
+        this.appwrite.databases,
+        this.appwrite.databaseId,
+        COLLECTION_GAME_MEMBERS,
+        [Query.equal('userId', userId)]
+      );
       return response.documents.map((doc) => this.mapDocumentToMember(doc));
-    } catch (error) {
-      throw new Error(`Failed to get members by userId: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (error: unknown) {
+      const appwriteError = getAppwriteMessage(error);
+      throw new Error(
+        `Failed to get members by userId: ${appwriteError || (error instanceof Error ? error.message : 'Unknown error')}`
+      );
     }
   }
 

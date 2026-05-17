@@ -17,6 +17,11 @@ import { MemberService } from '../member/member.service';
 import { RoomService } from '../room/room.service';
 import { SoloRoomService } from '../solo-room/solo-room.service';
 import { mapGameToSessionUpdate, mapPlayerModelToKetalPlayer, mapSessionToGame } from './game-mappers';
+import {
+  isAppwriteException,
+  getAppwriteMessage,
+  getAppwriteErrorCode,
+} from '../../_shared/helpers/appwrite-exception.helper';
 
 /** Game mode type: local (localStorage) or room (Appwrite) */
 export type GameMode = 'local' | 'room';
@@ -278,7 +283,7 @@ export class GameService {
         turn: game.turn,
         playerCount: game.players.length,
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(
         '[GameService] Failed to sync to Appwrite:',
         error instanceof Error ? error.message : JSON.stringify(error)
@@ -395,7 +400,7 @@ export class GameService {
         phase: game.phase,
         turn: game.turn,
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(
         '[GameService] Failed to handle session update:',
         error instanceof Error ? error.message : JSON.stringify(error)
@@ -442,7 +447,7 @@ export class GameService {
         phase: game.phase,
         turn: game.turn,
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(
         '[GameService] handleReconnection - failed:',
         error instanceof Error ? error.message : JSON.stringify(error)
@@ -665,7 +670,7 @@ export class GameService {
 
       // Unsubscribe from realtime updates after game ends
       this.unsubscribeFromSession();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(
         '[GameService] Failed to finalize game stats:',
         error instanceof Error ? error.message : JSON.stringify(error)
@@ -1061,9 +1066,12 @@ export class GameService {
     if (this.gameMode() === 'room') {
       try {
         await this.startGameInRoom(withSummaryMode);
-      } catch (error) {
+      } catch (error: unknown) {
         console.warn('[GameService] Appwrite session may be orphaned - will need cleanup on reconnection');
-        console.warn('[GameService] Room mode failed, falling back to local mode:', error);
+        console.warn(
+          '[GameService] Room mode failed, falling back to local mode:',
+          error instanceof Error ? error.message : 'Unknown error'
+        );
         this.startGameLocally(withSummaryMode);
       }
     } else {
@@ -1107,7 +1115,7 @@ export class GameService {
       this._game.set(game);
 
       console.debug('[GameService] Game started in room mode', { sessionId: activeSession.$id });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(
         '[GameService] Failed to start game in room:',
         error instanceof Error ? error.message : JSON.stringify(error)
