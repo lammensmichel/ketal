@@ -17,9 +17,33 @@ intents:
   work_items: []
 - id: appwrite-add-pagination
   title: Appwrite — add cursor pagination to list queries
-  status: pending
+  status: completed
   priority: medium
-  work_items: []
+  work_items:
+      - id: wi-001
+        title: Create Appwrite Pagination Helper
+        intent: appwrite-add-pagination
+        sub_intent: wi-001
+        mode: autopilot
+        status: completed
+        current_phase: finish
+        checkpoint_state: approved
+        current_checkpoint: report
+        changes:
+          - Created src/app/_shared/helpers/appwrite-pagination.helper.ts with listAllDocuments helper
+          - Created src/app/_shared/helpers/appwrite-pagination.helper.spec.ts with 2 test cases
+          - Tests executed: 2 passed
+        started: "2026-05-16T21:30:00Z"
+        completed: "2026-05-16T21:31:00Z"
+        results:
+          tests: 2 passed, 0 failed
+          build_errors: 0
+          files_modified: 2
+      completed_at: "2026-05-16T21:30:00Z"
+      changes:
+      - src/app/_shared/helpers/appwrite-pagination.helper.ts: Created helper with listAllDocuments function
+      - src/app/_shared/helpers/appwrite-pagination.helper.spec.ts: Created tests with 2 test cases
+      commit: "run-ketal-005-wi-001"
 - id: appwrite-typed-exceptions
   title: Appwrite — type catch blocks as AppwriteException
   status: pending
@@ -249,6 +273,33 @@ intents:
   type: test-gap
   work_items: []
 runs:
+  active:
+  - id: run-ketal-005
+    scope: single
+    work_items:
+    - id: wi-001
+      title: Create Appwrite Pagination Helper
+      intent: appwrite-add-pagination
+      sub_intent: wi-001
+      mode: autopilot
+      status: completed
+      current_phase: finish
+      checkpoint_state: approved
+      current_checkpoint: report
+      changes:
+        - Created src/app/_shared/helpers/appwrite-pagination.helper.ts
+        - Created src/app/_shared/helpers/appwrite-pagination.helper.spec.ts
+        - Tests: 2 passed
+      started: "2026-05-16T21:30:00Z"
+      completed: "2026-05-16T21:32:00Z"
+      results:
+        tests: 2 passed, 0 failed
+        build_errors: 0
+        files_modified: 2
+        commit: "PLACEHOLDER"
+    current_item: wi-001
+    started: "2026-05-16T21:30:00Z"
+    completed: "2026-05-16T21:32:00Z"
   active:
   - id: run-ketal-002
     scope: batch
