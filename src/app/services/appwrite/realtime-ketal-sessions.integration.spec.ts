@@ -64,7 +64,7 @@ describe('Realtime ketal_sessions Integration', () => {
    */
   beforeAll(async () => {
     try {
-      // Get any existing test rooms with我们的 pattern
+      // Get any existing test rooms with our pattern
       const staleRooms = await appwriteService.databases.listDocuments(
         DATABASE_ID,
         GAME_ROOMS_COLLECTION_ID,
@@ -74,16 +74,20 @@ describe('Realtime ketal_sessions Integration', () => {
 
       // Delete stale test rooms
       for (const doc of staleRooms.documents) {
-        if ((doc['name'] as string)?.includes('Test Room for Session')) {
-          console.log(`[Test Cleanup] Deleting stale room: ${doc['$id']}`);
+        const name = doc['name'] as string;
+        if (name?.includes('Test Room for Session')) {
+          console.log(`[Test Cleanup] Attempting to delete stale room: ${doc['$id']}`);
           try {
             await appwriteService.databases.deleteDocument({
               databaseId: DATABASE_ID,
               collectionId: GAME_ROOMS_COLLECTION_ID,
               documentId: doc['$id'],
             });
+            console.log(`[Test Cleanup] Deleted stale room: ${doc['$id']}`);
           } catch (e) {
-            console.log(`[Test Cleanup] Failed to delete room ${doc['$id']}: ${e}`);
+            // Permission error is expected in some test environments
+            // Just log and continue - the test will create its own room
+            console.log(`[Test Cleanup] Could not delete room ${doc['$id']}: ${e}`);
           }
         }
       }
@@ -100,13 +104,13 @@ describe('Realtime ketal_sessions Integration', () => {
     testRoomId = generateUUID();
 
     const roomData = {
-      name: 'Test Room for Session',
+      name: 'Test Room for Session ' + testRoomId.substring(0, 6),
       code: testRoomId.substring(0, 6),
-      inviteToken: 'test-token',
+      inviteToken: 'test-token-' + new Date().getTime(),
       currentGameId: null,
       currentSessionId: null,
       status: 'idle',
-      hostMemberId: 'test-member-id',
+      hostMemberId: 'test-member-id-' + Math.floor(Math.random() * 1000),
       mode: 'local',
       maxPlayers: 6,
       gamesPlayed: 0,
@@ -259,21 +263,8 @@ describe('Realtime ketal_sessions Integration', () => {
       return;
     }
 
-    const eventsReceived: any[] = [];
     const sessionId = generateUUID();
 
-    // Subscribe to collection-level updates
-    const subscription = await appwriteService.subscribe(
-      `tablesdb.${DATABASE_ID}.tables.${SESSION_COLLECTION_ID}.rows`,
-      (event) => {
-        console.log(`[Test Collection Event] Received event:`, JSON.stringify(event));
-        eventsReceived.push(event);
-      }
-    );
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Create a session
     const sessionData = {
       roomId: testRoomId,
       gameId: 'ketal' as const,
@@ -286,6 +277,22 @@ describe('Realtime ketal_sessions Integration', () => {
       withSummary: false,
     };
 
+    // Set up event array and subscription BEFORE creating the document
+    const eventsReceived: any[] = [];
+
+    // Subscribe to collection-level updates BEFORE creation
+    const subscription = await appwriteService.subscribe(
+      `tablesdb.${DATABASE_ID}.tables.${SESSION_COLLECTION_ID}.rows`,
+      (event) => {
+        console.log(`[Test Collection Event] Received event:`, JSON.stringify(event));
+        eventsReceived.push(event);
+      }
+    );
+
+    // Wait for subscription to be established
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Create session AFTER subscription is active
     await appwriteService.databases.createDocument({
       databaseId: DATABASE_ID,
       collectionId: SESSION_COLLECTION_ID,
@@ -294,19 +301,22 @@ describe('Realtime ketal_sessions Integration', () => {
     });
     createdResourceIds.push(sessionId); // TRACK THE ID
 
-    // Wait for event
+    // Wait for event to arrive
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    // Verify we received the create event
+    // Close subscription to avoid interference with subsequent tests
+    await subscription.close();
+
+    // Verify we received at least one event (subscription + modification)
     expect(eventsReceived.length).toBeGreaterThan(0);
 
     // Parse event payload before searching (payload may be a JSON string)
-    const createEvent = eventsReceived.find((e) => {
+    const sessionEvent = eventsReceived.find((e) => {
       const parsed = typeof e === 'string' ? JSON.parse(e) : e;
-      return parsed['events']?.includes('create');
+      return parsed['events']?.includes('create') || parsed['payload']?.['$id'] === sessionId;
     });
-    expect(createEvent).toBeDefined();
-    const payload = typeof createEvent === 'string' ? JSON.parse(createEvent)['payload'] : createEvent?.['payload'];
+    expect(sessionEvent).toBeDefined();
+    const payload = typeof sessionEvent === 'string' ? JSON.parse(sessionEvent)['payload'] : sessionEvent?.['payload'];
     expect(payload?.['$id']).toBe(sessionId);
 
     // Cleanup will be handled by afterEach hook

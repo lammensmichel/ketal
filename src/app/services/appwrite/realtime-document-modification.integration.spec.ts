@@ -63,6 +63,19 @@ describe('Realtime Document Modification Integration', () => {
 
   afterAll(async () => {
     // Use environment default - no override needed
+    // Final cleanup for any remaining tracked resources
+    for (const docId of createdResourceIds) {
+      try {
+        await appwriteService.databases.deleteDocument({
+          databaseId: DATABASE_ID,
+          collectionId: COLLECTION_ID,
+          documentId: docId,
+        });
+        console.log(`[Cleanup] Deleted document (final): ${docId}`);
+      } catch (e) {
+        console.log(`[Cleanup] Failed to delete document ${docId} (final): ${e}`);
+      }
+    }
   });
 
   it('should create a document and receive Realtime event', async () => {
@@ -85,13 +98,13 @@ describe('Realtime Document Modification Integration', () => {
 
     // Create the document
     const roomData = {
-      name: 'Test Room',
+      name: 'Test Room ' + testRoomId.substring(0, 6),
       code: testRoomId.substring(0, 6),
-      inviteToken: 'test-token',
+      inviteToken: 'test-token-' + new Date().getTime(),
       currentGameId: null,
       currentSessionId: null,
       status: 'idle',
-      hostMemberId: 'test-member-id',
+      hostMemberId: 'test-member-id-' + Math.floor(Math.random() * 1000),
       mode: 'local',
       maxPlayers: 6,
       gamesPlayed: 0,
@@ -117,7 +130,7 @@ describe('Realtime Document Modification Integration', () => {
     const firstEvent = eventsReceived[0];
     expect(firstEvent['payload']).toBeDefined();
     expect(firstEvent['payload']['$id']).toBe(testRoomId);
-    expect(firstEvent['payload']['name']).toBe('Test Room');
+    expect(firstEvent['payload']['name']).toBe('Test Room ' + testRoomId.substring(0, 6));
     expect(firstEvent['payload']['status']).toBe('idle');
 
     // Cleanup
@@ -126,17 +139,18 @@ describe('Realtime Document Modification Integration', () => {
 
   it('should receive update events when document is modified', async () => {
     const eventsReceived: any[] = [];
+    // Use a NEW UUID for this test - the previous test's cleanup may have failed
     const testRoomId = generateUUID();
 
     // Create document first
     const roomData = {
-      name: 'Initial Name',
+      name: 'Initial Name ' + testRoomId.substring(0, 6), // Unique name to avoid conflicts
       code: testRoomId.substring(0, 6),
-      inviteToken: 'test-token',
+      inviteToken: 'test-token-' + new Date().getTime(), // Unique token
       currentGameId: null,
       currentSessionId: null,
       status: 'idle',
-      hostMemberId: 'test-member-id',
+      hostMemberId: 'test-member-id-' + Math.floor(Math.random() * 1000),
       mode: 'local',
       maxPlayers: 6,
       gamesPlayed: 0,
@@ -190,6 +204,7 @@ describe('Realtime Document Modification Integration', () => {
 
   it('should handle subscription unsubscribe cleanly', async () => {
     const eventsReceived: any[] = [];
+    // Use a unique ID for this test
     const testRoomId = generateUUID();
 
     const subscription = await appwriteService.subscribe(
@@ -204,13 +219,13 @@ describe('Realtime Document Modification Integration', () => {
 
     // Try to create a document after unsubscribe - should not receive event
     const roomData = {
-      name: 'After Unsubscribe',
+      name: 'After Unsubscribe ' + testRoomId.substring(0, 6),
       code: testRoomId.substring(0, 6),
-      inviteToken: 'test-token',
+      inviteToken: 'test-token-' + new Date().getTime(),
       currentGameId: null,
       currentSessionId: null,
       status: 'idle',
-      hostMemberId: 'test-member-id',
+      hostMemberId: 'test-member-id-' + Math.floor(Math.random() * 1000),
       mode: 'local',
       maxPlayers: 6,
       gamesPlayed: 0,
@@ -244,7 +259,7 @@ describe('Realtime Document Modification Integration', () => {
   }, 30000);
 
   it('should handle subscription close cleanly', async () => {
-    const testRoomId = ID.unique(); // Use ID.unique() for proper UUID generation
+    const testRoomId = generateUUID(); // Use crypto.randomUUID() for consistency
 
     const subscription = await appwriteService.subscribe(
       `tablesdb.${DATABASE_ID}.tables.${COLLECTION_ID}.rows.${testRoomId}`,
@@ -256,7 +271,8 @@ describe('Realtime Document Modification Integration', () => {
     // Close should complete without error
     await expectAsync(subscription.close()).toBeResolved();
 
-    // Cleanup
+    // Track and cleanup
+    createdResourceIds.push(testRoomId);
     try {
       await appwriteService.databases.deleteDocument({
         databaseId: DATABASE_ID,
