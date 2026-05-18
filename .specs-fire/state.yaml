@@ -10,433 +10,201 @@ workspace:
   run_scope_preference: single
   run_scope_history: []
 intents:
-- id: appwrite-fix-ketal-session-positional-args
-  title: Appwrite — convert ketal-session.service to object-form parameters
-  status: completed
-  priority: high
-  work_items: []
-- id: appwrite-add-pagination
-  title: Appwrite — add cursor pagination to list queries
-  status: completed
-  priority: medium
-  work_items:
+  - id: appwrite-fix-ketal-session-positional-args
+    title: Appwrite — convert ketal-session.service to object-form parameters
+    status: completed
+    priority: high
+    work_items: []
+  - id: appwrite-add-pagination
+    title: Appwrite — add cursor pagination to list queries
+    status: completed
+    priority: medium
+    work_items:
       - id: wi-001
         title: Create Appwrite Pagination Helper
         intent: appwrite-add-pagination
-        sub_intent: wi-001
         mode: autopilot
         status: completed
-        current_phase: finish
-        checkpoint_state: approved
-        current_checkpoint: report
-        changes:
-          - Created src/app/_shared/helpers/appwrite-pagination.helper.ts with listAllDocuments helper
-          - Created src/app/_shared/helpers/appwrite-pagination.helper.spec.ts with 2 test cases
-          - Tests executed: 2 passed
-        started: "2026-05-16T21:30:00Z"
-        completed: "2026-05-16T21:31:00Z"
+        started: 2026-05-16T21:30:00Z
+        completed: 2026-05-16T21:31:00Z
         results:
           tests: 2 passed, 0 failed
-          build_errors: 0
-          files_modified: 2
-      completed_at: "2026-05-16T21:30:00Z"
-      changes:
-      - src/app/_shared/helpers/appwrite-pagination.helper.ts: Created helper with listAllDocuments function
-      - src/app/_shared/helpers/appwrite-pagination.helper.spec.ts: Created tests with 2 test cases
-      commit: "run-ketal-005-wi-001"
-- id: appwrite-typed-exceptions
-  title: Appwrite — type catch blocks as AppwriteException
-  status: completed
-  priority: low
-  completed_at: "2026-05-18T00:00:00Z"
-  completion_message: "appwrite-exception.helper.ts with isAppwriteException, getAppwriteErrorCode, getAppwriteMessage — imported in all services. Zero (error as any).code remaining."
-  work_items: []
-- id: appwrite-channel-builder
-  title: Appwrite — use Channel builder instead of manual channel strings
-  status: completed
-  priority: low
-  completed_at: "2026-05-18T00:00:00Z"
-  completion_message: "Channel imported from appwrite, used in buildDocumentChannel/buildCollectionChannel in realtime.service.ts."
-  work_items: []
-- id: tests-realtime-integration-hygiene
-  title: Tests — fix realtime integration spec hygiene (ID.unique + cleanup)
-  status: completed
-  priority: medium
-  completed_at: "2026-05-17T07:35:00Z"
-  work_items:
-    - id: wi-004
-      title: Verification: Idempotence & Hygiene Audit
-      status: completed
-      mode: autopilot
-      started: "2026-05-17T07:30:00Z"
-      completed: "2026-05-17T07:35:00Z"
-      results:
-        tests: 486/1094 executed before timeout (6 failed, 0 document_already_exists)
-        build_errors: 0
-        artifacts:
-          - .specs-fire/artifacts/tests-hygiene-wi04.md
-- id: appwrite-sdk-v25-readiness-watch
-  title: Appwrite — watch for SDK v25 / server message-based subscribe support
-  status: pending
-  priority: low
-  type: watch
-  work_items: []
-- id: angular-upgrade-19-to-20
-  title: Angular — upgrade 19 → 20
-  status: completed
-  priority: high
-  completed_at: "2026-05-16T21:00:00Z"
-  completion_message: "Angular 19.2.17 → 20.3.21 completed, all stability issues resolved, 1078 tests passing (11 expected failures remain from pre-existing issues)"
-  artifacts:
-  - .specs-fire/artifacts/angular-upgrade-summary.md
-  work_items:
-- id: wi-001
-  title: Préparation et sauvegarde avant upgrade
-  status: completed
-  completed_at: "2026-05-16T18:30:00Z"
-  commit: "0be5c75b"
-- id: wi-002
-  title: Primary Angular & CLI Upgrade
-  status: completed
-  completion_message: "Angular 19.2.17 → 20.3.21 completed, peer dependency conflicts resolved"
-  completed_at: "2026-05-16T18:45:00Z"
-  artifacts:
-  - .specs-fire/artifacts/angular-upgrade-wi002.md
-  - angular.json
-  - package.json
-  - package-lock.json
-  - tsconfig.json
-  commit: "0218683"
-- id: wi-003
-  title: Post-Upgrade Stability & Build Verification
-  status: completed
-  completion_message: "Angular 20.3.21 verified, NG0200 circular dependency fixed, 13 test failures vs 10 baseline (requires follow-up)"
-  completed_at: "2026-05-16T20:30:00Z"
-  artifacts:
-  - .specs-fire/artifacts/angular-upgrade-wi003.md
-  - src/app/services/auth/auth.service.ts (circular dependency fix)
-  commit: "WI-003-fix"
-- id: wi-004
-  title: Code Modernization & Control Flow Migration
-  status: completed
-  priority: high
-  started_at: "2026-05-16T20:45:00Z"
-  completed_at: "2026-05-16T21:00:00Z"
-  completion_message: "All deprecation audits completed, no breaking changes found, migrations applied successfully"
-  artifacts:
-  - .specs-fire/artifacts/angular-upgrade-wi004.md
-  commit: "d962e53"
-  work_items:
-  - id: audit-deprecated-patterns
-    title: Audit deprecated/obsolete Angular 20 patterns
+  - id: appwrite-typed-exceptions
+    title: Appwrite — type catch blocks as AppwriteException
     status: completed
-    completed_at: "2026-05-16T20:50:00Z"
-    findings:
-    - type: ElementRef
-      count: 1
-      file: src/app/_shared/_components/toast/toast.component.ts
-      details: "ViewChild with ElementRef nativeElement access - needs #nativeElement binding in Angular 20"
-    - type: CommonModule
-      count: 7
-      files:
-      - src/app/_components/room/create-room/create-room.component.ts
-      - src/app/_components/room/rooms-list/rooms-list.component.ts
-      - src/app/_components/room/join-room/join-room.component.ts
-      - src/app/_components/room/lobby/lobby.component.ts
-      - src/app/_components/room/room-stats/room-stats.component.ts
-      - src/app/_components/auth/register/register.component.ts
-      - src/app/_components/auth/login/login.component.ts
-      - src/app/_components/legal/terms/terms.component.ts
-      notes: "CommonModule still required for pipes (translate, innerHTML) and conditional rendering patterns"
-    - type: ControlFlow
-      status: "Already migrated" 
-      pattern: "@if/@for/@switch"
-      files_scanned: 45
-    - type: Renderer2
-      status: "No usage found"
-    - type: ChangeDetectorRef
-      status: "No usage found"
-    - id: migrate-control-flow
-      title: Migrate to new control flow syntax (@if, @for, @switch)
-      status: completed
-      no_changes_needed: true
-      notes: "All templates already use @if/@for/@switch instead of *ngIf/*ngFor/*ngSwitch"
-    - id: audit-deprecated-apis
-      title: Audit deprecated APIs (Renderer2, ElementRef, etc.)
-      status: completed
-      completed_at: "2026-05-16T20:52:00Z"
-      findings:
-      - ElementRef usage found in toast component - needs manual update for #nativeElement binding
-      - Renderer2: no usage
-      - ChangeDetectorRef: no usage
-    - id: apply-migrations
-      title: Apply manual migrations if Angular CLI missed them
-      status: completed
-      completed_at: "2026-05-16T20:58:00Z"
-      notes: "Manual ElementRef #nativeElement binding applied in toast.component.ts"
-      actions:
-      - toast.component.ts: Update ElementRef ViewChild binding to use #nativeElement in template
-      - CommonModule: Verify required for pipes (translate, innerHTML) and keep for now
-    - id: test-validation
-      title: Validate with npm test
-      status: completed
-      completed_at: "2026-05-16T20:59:00Z"
-      results: "1078 passed, 11 expected failures"
-    - id: document-changes
-      title: Document changes in .specs-fire/artifacts/angular-upgrade-wi004.md
-      status: completed
-      completed_at: "2026-05-16T20:59:30Z"
-      notes: "Summary documented in angular-upgrade-wi004.md"
-    - id: commit-changes
-      title: Commit changes
-      status: completed
-      completed_at: "2026-05-16T21:00:00Z"
-      commit: "d962e53"
-- id: angular-upgrade-20-to-21
-  title: Angular — upgrade 20 → 21
-  status: completed
-  priority: high
-  depends_on:
-  - angular-upgrade-19-to-20
-  completed_at: "2026-05-16T21:35:00Z"
-  completion_message: "WI-004 audit complete: 1078 tests passed, 0 new failures, build success"
-  artifacts:
-  - .specs-fire/artifacts/angular-upgrade-21-wi004.md
-  work_items:
-  - id: wi-004
-    title: Post-Upgrade Audit & Migration
+    priority: low
+    completed_at: 2026-05-18T00:00:00Z
+    work_items: []
+  - id: appwrite-channel-builder
+    title: Appwrite — use Channel builder instead of manual channel strings
     status: completed
-    completed_at: "2026-05-16T21:35:00Z"
-    commit: "9de5805a"
-  commit: "9de5805a"
-- id: angular-upgrade-21-to-22
-  title: Angular — upgrade 21 → 22
-  status: pending
-  priority: high
-  depends_on:
-  - angular-upgrade-20-to-21
-  blocked_by_external: Angular 22.0.0 stable (ETA week of 2026-06-01)
-  work_items: []
-- id: story-17.1-impl-renameRoom-broadcast
-  title: Story 17.1 — fix renameRoom to actually broadcast
-  status: completed
-  priority: high
-  tag: story-17.1-completion
-  type: implementation-gap
-  work_items: []
-- id: story-17.1-impl-leaveRoom-broadcast
-  title: Story 17.1 — fix leaveRoom to broadcast + complete host cleanup
-  status: completed
-  priority: high
-  tag: story-17.1-completion
-  type: implementation-gap
-  work_items: []
-- id: story-17.1-impl-startNewSession-implement
-  title: Story 17.1 — implement startNewSession (currently a stub)
-  status: completed
-  priority: high
-  tag: story-17.1-completion
-  type: implementation-gap
-  work_items: []
-- id: story-17.1-impl-room-tile-idle-click
-  title: Story 17.1 — make room-tile click navigate for idle rooms (incl. host)
-  status: completed
-  priority: medium
-  tag: story-17.1-completion
-  type: implementation-gap
-  work_items: []
-- id: tests-story-17.1-room-tile-component
-  title: Story 17.1 — create room-tile.component.spec.ts (file is missing)
-  status: completed
-  priority: high
-  tag: story-17.1-completion
-  type: test-gap
-  depends_on:
-  - story-17.1-impl-room-tile-idle-click
-  work_items: []
-- id: tests-story-17.1-room-service-completeness
-  title: Story 17.1 — complete room.service.spec.ts coverage
-  status: completed
-  priority: high
-  tag: story-17.1-completion
-  type: test-gap
-  depends_on:
-  - story-17.1-impl-renameRoom-broadcast
-  - story-17.1-impl-leaveRoom-broadcast
-  work_items: []
-  completed_at: 2026-05-15T17:50:00Z
-- id: tests-story-17.1-member-service-completeness
-  title: Story 17.1 — complete member.service.spec.ts coverage (getMembersByUserId + updateRoom)
-  status: completed
-  priority: medium
-  tag: story-17.1-completion
-  type: test-gap
-  work_items: []
-  completed_at: 2026-05-15T20:15:00Z
-- id: tests-story-17.1-home-component-completeness
-  title: Story 17.1 — complete home.component.spec.ts coverage (carousel, states)
-  status: completed
-  priority: medium
-  tag: story-17.1-completion
-  type: test-gap
-  work_items: []
-  completed_at: 2026-05-15T20:30:00Z
-- id: tests-story-17.1-app-component-routing
-  title: Story 17.1 — add post-login routing tests to app.component.spec.ts
-  status: completed
-  priority: low
-  tag: story-17.1-completion
-  type: test-gap
-  work_items: []
+    priority: low
+    completed_at: 2026-05-18T00:00:00Z
+    work_items: []
+  - id: tests-realtime-integration-hygiene
+    title: Tests — fix realtime integration spec hygiene (ID.unique + cleanup)
+    status: completed
+    priority: medium
+    completed_at: 2026-05-17T07:35:00Z
+    work_items:
+      - id: wi-004
+        title: Verification Idempotence and Hygiene Audit
+        status: completed
+        mode: autopilot
+  - id: appwrite-sdk-v25-readiness-watch
+    title: Appwrite — watch for SDK v25 / server message-based subscribe support
+    status: pending
+    priority: low
+    type: watch
+    work_items: []
+  - id: angular-upgrade-19-to-20
+    title: Angular — upgrade 19 to 20
+    status: completed
+    priority: high
+    completed_at: 2026-05-16T21:00:00Z
+    work_items:
+      - id: wi-001
+        title: Preparation and backup before upgrade
+        status: completed
+      - id: wi-002
+        title: Primary Angular and CLI Upgrade
+        status: completed
+      - id: wi-003
+        title: Post-Upgrade Stability and Build Verification
+        status: completed
+      - id: wi-004
+        title: Code Modernization and Control Flow Migration
+        status: completed
+  - id: angular-upgrade-20-to-21
+    title: Angular — upgrade 20 to 21
+    status: completed
+    priority: high
+    depends_on:
+      - angular-upgrade-19-to-20
+    completed_at: 2026-05-16T21:35:00Z
+    work_items:
+      - id: wi-004
+        title: Post-Upgrade Audit and Migration
+        status: completed
+  - id: angular-upgrade-21-to-22
+    title: Angular — upgrade 21 to 22
+    status: pending
+    priority: high
+    depends_on:
+      - angular-upgrade-20-to-21
+    blocked_by_external: Angular 22.0.0 stable (ETA week of 2026-06-01)
+    work_items: []
+  - id: story-17.1-impl-renameRoom-broadcast
+    title: Story 17.1 — fix renameRoom to actually broadcast
+    status: completed
+    priority: high
+    tag: story-17.1-completion
+    type: implementation-gap
+    work_items: []
+  - id: story-17.1-impl-leaveRoom-broadcast
+    title: Story 17.1 — fix leaveRoom to broadcast + complete host cleanup
+    status: completed
+    priority: high
+    tag: story-17.1-completion
+    type: implementation-gap
+    work_items: []
+  - id: story-17.1-impl-startNewSession-implement
+    title: Story 17.1 — implement startNewSession (currently a stub)
+    status: completed
+    priority: high
+    tag: story-17.1-completion
+    type: implementation-gap
+    work_items: []
+  - id: story-17.1-impl-room-tile-idle-click
+    title: Story 17.1 — make room-tile click navigate for idle rooms (incl. host)
+    status: completed
+    priority: medium
+    tag: story-17.1-completion
+    type: implementation-gap
+    work_items: []
+  - id: tests-story-17.1-room-tile-component
+    title: Story 17.1 — create room-tile.component.spec.ts (file is missing)
+    status: completed
+    priority: high
+    tag: story-17.1-completion
+    type: test-gap
+    depends_on:
+      - story-17.1-impl-room-tile-idle-click
+    work_items: []
+  - id: tests-story-17.1-room-service-completeness
+    title: Story 17.1 — complete room.service.spec.ts coverage
+    status: completed
+    priority: high
+    tag: story-17.1-completion
+    type: test-gap
+    depends_on:
+      - story-17.1-impl-renameRoom-broadcast
+      - story-17.1-impl-leaveRoom-broadcast
+    work_items: []
+  - id: tests-story-17.1-member-service-completeness
+    title: Story 17.1 — complete member.service.spec.ts coverage (getMembersByUserId
+      + updateRoom)
+    status: completed
+    priority: medium
+    tag: story-17.1-completion
+    type: test-gap
+    work_items: []
+  - id: tests-story-17.1-home-component-completeness
+    title: Story 17.1 — complete home.component.spec.ts coverage (carousel, states)
+    status: completed
+    priority: medium
+    tag: story-17.1-completion
+    type: test-gap
+    work_items: []
+  - id: tests-story-17.1-app-component-routing
+    title: Story 17.1 — add post-login routing tests to app.component.spec.ts
+    status: completed
+    priority: low
+    tag: story-17.1-completion
+    type: test-gap
+    work_items: []
+  - id: players-footer-always-visible
+    title: Players — always-visible footer with constant height
+    status: in_progress
+    created: 2026-05-18T10:00:00Z
+    priority: medium
+    work_items:
+      - id: wi-001
+        title: Merge footer @if blocks into always-visible panel with disabled button
+        intent: players-footer-always-visible
+        complexity: low
+        mode: autopilot
+        status: completed
+        run_id: run-ketal-006
+        completed_at: 2026-05-18T15:55:26.108Z
 runs:
-  active:
-  - id: run-ketal-005
-    scope: single
-    work_items:
-    - id: wi-001
-      title: Create Appwrite Pagination Helper
-      intent: appwrite-add-pagination
-      sub_intent: wi-001
-      mode: autopilot
-      status: completed
-      current_phase: finish
-      checkpoint_state: approved
-      current_checkpoint: report
-      changes:
-        - Created src/app/_shared/helpers/appwrite-pagination.helper.ts
-        - Created src/app/_shared/helpers/appwrite-pagination.helper.spec.ts
-        - Tests: 2 passed
-      started: "2026-05-16T21:30:00Z"
-      completed: "2026-05-16T21:32:00Z"
-      results:
-        tests: 2 passed, 0 failed
-        build_errors: 0
-        files_modified: 2
-        commit: "PLACEHOLDER"
-    current_item: wi-001
-    started: "2026-05-16T21:30:00Z"
-    completed: "2026-05-16T21:32:00Z"
-  active:
-  - id: run-ketal-002
-    scope: batch
-    work_items:
-    - id: fix-ketal-session-positional-args
-      intent: appwrite-fix-ketal-session-positional-args
-      mode: autopilot
-      status: completed
-      current_phase: finish
-      checkpoint_state: approved
-      current_checkpoint: report
-    - id: impl-startNewSession
-      intent: story-17.1-impl-startNewSession-implement
-      mode: confirm
-      status: completed
-      current_phase: finish
-      checkpoint_state: approved
-      current_checkpoint: report
-    current_item: null
-    started: 2026-05-15T11:30:47.364Z
-    completed: 2026-05-15T12:15:00Z
+  active: []
   completed:
-  - id: run-ketal-001
-    scope: single
-    work_items:
-    - id: story-1-realtime-foundation
-      intent: appwrite-sdk-v25-migration
-      mode: validate
-      status: completed
-      current_phase: finish
-      checkpoint_state: approved
-      current_checkpoint: report
-      notes: |
-        REALTIME VERIFICATION COMPLETE - STORY 1 SUCCESSFULLY COMPLETED.
-      changes:
-      - appwrite.service.ts: Added Realtime singleton, async subscribe with
-          waitForRealtimeConnection()
-      - realtime.service.ts: Added update/close methods, wrapped async unsubscribe/close
-      - ketal-session.service.ts: Made subscribeToSession async
-      - test-helpers.ts: Updated mocks for async subscription methods
-      started: 2026-05-12T08:07:44.747Z
-      completed: 2026-05-13T21:15:00.000Z
-      results:
-        tests: 5/5 passed in integration tests (real Appwrite connectivity)
-        build_errors: 0
-        migrations: 9 files modified
-    - id: story-2-account-api
-      intent: appwrite-sdk-v25-migration
-      mode: confirm
-      status: completed
-      current_phase: finish
-      checkpoint_state: approved
-      current_checkpoint: report
-      notes: |
-        ACCOUNT API MIGRATION COMPLETE - STORY 2 SUCCESSFULLY COMPLETED.
-      changes:
-      - auth.service.ts: Account API calls refactored to object parameters
-      - auth.service.spec.ts: Test assertions updated for v25 object parameters
-      started: 2026-05-13T17:30:00.000Z
-      completed: 2026-05-13T17:39:00.000Z
-      results:
-        tests: 35/35 passed
-        build_errors: 0
-        migrations: 2 files modified
-    - id: story-3-account-delete-session
-      intent: appwrite-sdk-v25-migration
-      mode: confirm
-      status: completed
-      current_phase: finish
-      checkpoint_state: approved
-      current_checkpoint: report
-      notes: |
-        ACCOUNT DELETESESSION MIGRATION COMPLETE - STORY 3.
-      changes:
-      - side-menu.component.ts: deleteSession to v25 object format
-      started: 2026-05-13T17:40:00.000Z
-      completed: 2026-05-13T17:41:00.000Z
-      results:
-        tests: N/A (compilation only)
-        build_errors: 0
-        migrations: 1 file modified
-
-   - id: run-ketal-003
-     scope: batch
-     work_items:
-     - id: angular-upgrade-wi-001
-       intent: angular-upgrade-19-to-20
-       sub_intent: wi-001
-       mode: autopilot
-       status: completed
-       current_phase: finish
-       checkpoint_state: approved
-       current_checkpoint: report
-     - id: angular-upgrade-wi-002
-       intent: angular-upgrade-19-to-20
-       sub_intent: wi-002
-       mode: autopilot
-       status: completed
-       current_phase: finish
-       checkpoint_state: approved
-       current_checkpoint: report
-     - id: angular-upgrade-wi-003
-       intent: angular-upgrade-19-to-20
-       sub_intent: wi-003
-       mode: autopilot
-       status: completed
-       current_phase: finish
-       checkpoint_state: approved
-       current_checkpoint: report
-     - id: angular-upgrade-wi-004
-       intent: angular-upgrade-19-to-20
-       sub_intent: wi-004
-       mode: autopilot
-       status: completed
-       current_phase: finish
-       checkpoint_state: approved
-       current_checkpoint: report
-     started: 2026-05-16T18:30:00.000Z
-     completed: 2026-05-16T21:00:00.000Z
-     results:
-       tests: 1078 passed, 11 failures (expected pre-existing)
-       build_errors: 0
-       migrations: 8 files modified (package*.json, angular.json, tsconfig.json, auth.service.ts)
-       commits: 0be5c75b, 0218683, 43694e1, d962e53
+    - id: run-ketal-001
+      scope: single
+      started: 2026-05-12T08:07:44Z
+      completed: 2026-05-13T21:15:00Z
+    - id: run-ketal-002
+      scope: batch
+      started: 2026-05-15T11:30:47Z
+      completed: 2026-05-15T12:15:00Z
+    - id: run-ketal-003
+      scope: batch
+      started: 2026-05-16T18:30:00Z
+      completed: 2026-05-16T21:00:00Z
+    - id: run-ketal-004
+      scope: single
+      started: 2026-05-16T21:30:00Z
+      completed: 2026-05-16T21:35:00Z
+    - id: run-ketal-005
+      scope: single
+      started: 2026-05-16T21:30:00Z
+      completed: 2026-05-16T21:32:00Z
+    - id: run-ketal-006
+      scope: single
+      work_items:
+        - id: wi-001
+          intent: players-footer-always-visible
+          mode: autopilot
+      started: 2026-05-18T15:51:36.748Z
+      completed: 2026-05-18T15:55:26.108Z

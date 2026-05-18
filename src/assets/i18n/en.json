@@ -237,12 +237,9 @@
       "correct": "Prediction correct",
       "incorrect": "Prediction incorrect"
     },
-<<<<<<< Updated upstream
-    "phase2": {
-      "drawPile": "Draw pile"
-    },
-=======
->>>>>>> Stashed changes
+      "phase2": {
+        "drawPile": "Draw pile"
+      },
     "progress": {
       "phase1": "Phase 1: Predictions",
       "phase2": "Phase 2: Distribution",
