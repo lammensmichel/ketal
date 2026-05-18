@@ -364,20 +364,21 @@
       </div>
     }
 
-    <!-- Button to start game -->
-    @if (hasPlayers() && gameSrv.isNewGame() && isPlayersPage()) {
+    <!-- Button to start game — always visible on /players during setup -->
+    @if (gameSrv.isNewGame() && isPlayersPage()) {
       <div class="prediction-panel">
         <button
           type="button"
           class="prediction-btn prediction-btn--start"
+          [disabled]="!hasPlayers()"
           (click)="beginGame()"
           [translate]="'Button_BeginGame'"
         ></button>
-      </div>
-    }
-    @if (needsMorePlayers() && gameSrv.isNewGame() && isPlayersPage()) {
-      <div class="prediction-panel">
-        <small class="text-muted" [translate]="'Label_MinimumPlayers'"></small>
+        <small
+          class="minimum-players-hint"
+          [class.minimum-players-hint--hidden]="hasPlayers()"
+          [translate]="'Label_MinimumPlayers'"
+        ></small>
       </div>
     }
   }
