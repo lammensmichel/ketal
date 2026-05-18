@@ -1,7 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { AppwriteService, DATABASE_ID } from './appwrite.service';
 import { ID } from 'appwrite';
-import { environment } from '../../../environments/environment';
+
+const TEST_USER_EMAIL = 'test+integration@fug.app';
+const TEST_USER_PASSWORD = 'K3tal-Test!2026';
 
 // Use crypto.randomUUID() for proper UUID v4 generation
 function generateUUID(): string {
@@ -11,11 +13,8 @@ function generateUUID(): string {
 /**
  * INTEGRATION TEST: Verify Realtime events are received when documents are created/modified
  *
- * This test:
- * 1. Creates a test document in a collection
- * 2. Subscribes to Realtime events for that document
- * 3. Modifies the document
- * 4. Verifies the callback receives the correct events with payloads
+ * This test creates fug_game_rooms documents and verifies realtime callbacks receive events.
+ * Authenticated as integration_test_bot (fug-backend migration 040).
  *
  * Channel format for Appwrite v1.9.0: tablesdb.<DB_ID>.tables.<COLLECTION_ID>.rows
  */
@@ -25,56 +24,61 @@ describe('Realtime Document Modification Integration', () => {
   const createdResourceIds: string[] = [];
 
   beforeAll(async () => {
-    // Clean up old test documents that might have non-unique IDs from previous runs
-    try {
-      // Note: We can't use appwriteService here because it's not yet injected
-      // The cleanup will be handled by the Appwrite instance in tests
-    } catch (e) {
-      console.log(`[Cleanup] Could not list stale documents: ${e}`);
-    }
-    // Use environment default - no override needed
-  });
-
-  beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [AppwriteService],
     });
     appwriteService = TestBed.inject(AppwriteService);
+
+    try {
+      await appwriteService.account.createEmailPasswordSession({
+        email: TEST_USER_EMAIL,
+        password: TEST_USER_PASSWORD,
+      });
+      console.log('[Realtime DocMod] Authenticated as integration_test_bot');
+    } catch (e) {
+      console.warn('[Realtime DocMod] Could not authenticate test user:', e);
+    }
   });
 
+  beforeEach(() => {
+    appwriteService = TestBed.inject(AppwriteService);
+  });
+
+  /**
+   * Cleanup after each test — batch delete via transactions for speed
+   */
   afterEach(async () => {
-    // Cleanup after each test to prevent document accumulation
-    for (const docId of createdResourceIds) {
-      try {
-        await appwriteService.databases.deleteDocument({
-          databaseId: DATABASE_ID,
-          collectionId: COLLECTION_ID,
-          documentId: docId,
-        });
-        console.log(`[Cleanup] Deleted document: ${docId}`);
-      } catch (error) {
-        console.warn(`[Cleanup] Failed to delete document ${docId}:`, error);
-        // Don't throw - cleanup failures shouldn't mask test failures
-      }
+    if (createdResourceIds.length === 0) {
+      return;
     }
-    // Clear tracker for next test
+    try {
+      const tx = await appwriteService.databases.createTransaction({ ttl: 30 });
+      try {
+        await appwriteService.databases.createOperations({
+          transactionId: tx.$id,
+          operations: createdResourceIds.map((docId) => ({
+            action: 'delete',
+            databaseId: DATABASE_ID,
+            collectionId: COLLECTION_ID,
+            documentId: docId,
+          })),
+        });
+        console.log(`[Cleanup] Batch-deleted ${createdResourceIds.length} document(s)`);
+      } finally {
+        await appwriteService.databases.deleteTransaction({ transactionId: tx.$id });
+      }
+    } catch (error) {
+      console.warn('[Cleanup] Failed to batch-delete:', error);
+    }
+
     createdResourceIds.length = 0;
   });
 
   afterAll(async () => {
-    // Use environment default - no override needed
-    // Final cleanup for any remaining tracked resources
-    for (const docId of createdResourceIds) {
-      try {
-        await appwriteService.databases.deleteDocument({
-          databaseId: DATABASE_ID,
-          collectionId: COLLECTION_ID,
-          documentId: docId,
-        });
-        console.log(`[Cleanup] Deleted document (final): ${docId}`);
-      } catch (e) {
-        console.log(`[Cleanup] Failed to delete document ${docId} (final): ${e}`);
-      }
+    try {
+      appwriteService.account.deleteSession({ sessionId: 'current' });
+    } catch {
+      /* ignore */
     }
   });
 
@@ -283,20 +287,4 @@ describe('Realtime Document Modification Integration', () => {
       // Document might not exist
     }
   }, 20000);
-
-  // Cleanup all tracked resources after all tests
-  afterAll(async () => {
-    for (const docId of createdResourceIds) {
-      try {
-        await appwriteService.databases.deleteDocument({
-          databaseId: DATABASE_ID,
-          collectionId: COLLECTION_ID,
-          documentId: docId,
-        });
-        console.log(`[Cleanup] Deleted document: ${docId}`);
-      } catch (e) {
-        console.log(`[Cleanup] Failed to delete document ${docId}: ${e}`);
-      }
-    }
-  });
 });

@@ -1,7 +1,9 @@
 import { TestBed } from '@angular/core/testing';
-import { RealtimeService, GameRoom, Subscription } from './realtime.service';
+import { RealtimeService, GameRoom } from './realtime.service';
 import { AppwriteService, DATABASE_ID } from '../appwrite/appwrite.service';
-import { environment } from '../../../environments/environment';
+
+const TEST_USER_EMAIL = 'test+integration@fug.app';
+const TEST_USER_PASSWORD = 'K3tal-Test!2026';
 
 /**
  * INTEGRATION TEST: Verify Realtime events are received when documents are modified
@@ -11,8 +13,7 @@ import { environment } from '../../../environments/environment';
  * 2. Modify the document (create or update)
  * 3. Verify the callback receives the correct event with payload
  *
- * Since Web SDK cannot create collections, this test uses an EXISTING collection
- * and modifies a document that we know exists.
+ * Authenticated as integration_test_bot (fug-backend migration 040).
  */
 describe('Realtime Document Modification Integration', () => {
   let realtimeService: RealtimeService;
@@ -22,19 +23,34 @@ describe('Realtime Document Modification Integration', () => {
   let testRoomId: string | null = null;
 
   beforeAll(async () => {
-    // Use environment default - no override needed
-  });
-
-  beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [RealtimeService, AppwriteService],
     });
-    realtimeService = TestBed.inject(RealtimeService);
     appwriteService = TestBed.inject(AppwriteService);
+    realtimeService = TestBed.inject(RealtimeService);
+
+    try {
+      await appwriteService.account.createEmailPasswordSession({
+        email: TEST_USER_EMAIL,
+        password: TEST_USER_PASSWORD,
+      });
+      console.log('[Realtime DocMod2] Authenticated as integration_test_bot');
+    } catch (e) {
+      console.warn('[Realtime DocMod2] Could not authenticate test user:', e);
+    }
+  });
+
+  beforeEach(() => {
+    appwriteService = TestBed.inject(AppwriteService);
+    realtimeService = TestBed.inject(RealtimeService);
   });
 
   afterAll(async () => {
-    // Use environment default - no override needed
+    try {
+      appwriteService.account.deleteSession({ sessionId: 'current' });
+    } catch {
+      /* ignore */
+    }
   });
 
   /**

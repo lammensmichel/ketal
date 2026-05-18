@@ -1,36 +1,45 @@
 import { TestBed } from '@angular/core/testing';
 import { AppwriteService, DATABASE_ID } from './appwrite.service';
-import { environment } from '../../../environments/environment';
+
+const TEST_USER_EMAIL = 'test+integration@fug.app';
+const TEST_USER_PASSWORD = 'K3tal-Test!2026';
 
 /**
  * INTEGRATION TEST: Verify Realtime events are received when documents are modified
  *
- * This test creates a temporary room, verifies that Realtime events flow correctly
- * when the room is created and updated.
- *
- * The test works because:
- * 1. RoomService.createRoom() creates a document in fug_game_rooms collection
- * 2. Appwrite automatically emits Realtime events when documents are created/updated
- * 3. Our RealtimeService subscribes to these events and broadcasts via callbacks
- * 4. The test verifies the event callback receives the correct payload
+ * Authenticated as integration_test_bot (fug-backend migration 040).
  */
 describe('Appwrite Realtime Document Modification Integration', () => {
   let appwriteService: AppwriteService;
   const COLLECTION_ID = 'fug_game_rooms';
 
   beforeAll(async () => {
-    // Use environment default - no override needed
-  });
-
-  beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [AppwriteService],
     });
     appwriteService = TestBed.inject(AppwriteService);
+
+    try {
+      await appwriteService.account.createEmailPasswordSession({
+        email: TEST_USER_EMAIL,
+        password: TEST_USER_PASSWORD,
+      });
+      console.log('[Realtime Real] Authenticated as integration_test_bot');
+    } catch (e) {
+      console.warn('[Realtime Real] Could not authenticate test user:', e);
+    }
+  });
+
+  beforeEach(() => {
+    appwriteService = TestBed.inject(AppwriteService);
   });
 
   afterAll(async () => {
-    // Use environment default - no override needed
+    try {
+      appwriteService.account.deleteSession({ sessionId: 'current' });
+    } catch {
+      /* ignore */
+    }
   });
 
   it('should receive realtime event when a document is created', async () => {

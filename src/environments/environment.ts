@@ -8,7 +8,6 @@ export const environment = {
   appwrite: {
     // Use environment variable if set (via angular.json fileReplacements or window config)
     endpoint: (window as any)._env_?.APPWRITE_ENDPOINT || 'http://127.0.0.1/v1',
-    endpointRealtime: (window as any)._env_?.APPWRITE_ENDPOINT_REALTIME || 'ws://127.0.0.1/v1',
     projectId: 'fug',
     databaseId: 'fug',
   },

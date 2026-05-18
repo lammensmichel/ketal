@@ -2,7 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { AppwriteService, DATABASE_ID } from './appwrite.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import { ID } from 'appwrite';
-import { environment } from '../../../environments/environment';
+
+const TEST_USER_EMAIL = 'test+integration@fug.app';
+const TEST_USER_PASSWORD = 'K3tal-Test!2026';
 
 // Use crypto.randomUUID() for proper UUID v4 generation
 function generateUUID(): string {
@@ -33,19 +35,35 @@ describe('RealtimeService Realtime Integration', () => {
   const ROOMS_COLLECTION_ID = 'fug_game_rooms';
 
   beforeAll(async () => {
-    // Use environment default - no override needed
-  });
-
-  beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [AppwriteService, RealtimeService],
     });
     appwriteService = TestBed.inject(AppwriteService);
     realtimeService = TestBed.inject(RealtimeService);
+
+    // Authenticate as dedicated test user (migration 040)
+    try {
+      await appwriteService.account.createEmailPasswordSession({
+        email: TEST_USER_EMAIL,
+        password: TEST_USER_PASSWORD,
+      });
+      console.log('[Test RS] Authenticated as integration_test_bot');
+    } catch (e) {
+      console.warn('[Test RS] Could not authenticate test user:', e);
+    }
+  });
+
+  beforeEach(() => {
+    // Re-inject per-test
+    realtimeService = TestBed.inject(RealtimeService);
   });
 
   afterAll(async () => {
-    // Use environment default - no override needed
+    try {
+      appwriteService.account.deleteSession({ sessionId: 'current' });
+    } catch {
+      /* ignore */
+    }
   });
 
   it('should receive events via RealtimeService.subscribeToRoom', async () => {

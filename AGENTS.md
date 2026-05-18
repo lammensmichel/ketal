@@ -86,6 +86,23 @@ With `--poll 2000` the dev server detects code changes automatically. Just refre
 
 ## Testing
 
+### Dedicated Test User for Appwrite Integration Tests
+
+All integration specs (files ending in `.integration.spec.ts`) **MUST** authenticate as the dedicated test user before performing any Appwrite database operations. Anonymous sessions lack permissions on game-related collections and will cause 401 failures during teardown.
+
+```typescript
+const TEST_USER_EMAIL = 'test+integration@fug.app';
+const TEST_USER_PASSWORD = 'K3tal-Test!2026';
+
+// In beforeAll():
+await appwriteService.account.createEmailPasswordSession({ email: TEST_USER_EMAIL, password: TEST_USER_PASSWORD });
+
+// In afterAll() (optional cleanup):
+appwriteService.account.deleteSession({ sessionId: 'current' });
+```
+
+This user is provisioned by fug-backend migration `040_create_test_user.js` with full CRUD permissions on all collections. It is **persistent** — do not create ephemeral users in individual specs unless required.
+
 ### Unit Tests (Jasmine + Karma)
 
 ```bash

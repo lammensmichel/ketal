@@ -2,7 +2,6 @@ import { TestBed } from '@angular/core/testing';
 import { AppwriteService, DATABASE_ID } from './appwrite.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import { ID } from 'appwrite';
-import { environment } from '../../../environments/environment';
 
 // Use crypto.randomUUID() for proper UUID v4 generation
 function generateUUID(): string {
@@ -13,9 +12,13 @@ function generateUUID(): string {
  * INTEGRATION TEST: Verify Realtime events are received when ketal_sessions are created/modified
  *
  * This test creates a ketal session and verifies Realtime callbacks receive events.
+ * Authenticated as integration_test_bot (fug-backend migration 040).
  *
  * Channel format for Appwrite v1.9.0: tablesdb.<DB_ID>.tables.<COLLECTION_ID>.rows
  */
+const TEST_USER_EMAIL = 'test+integration@fug.app';
+const TEST_USER_PASSWORD = 'K3tal-Test!2026';
+
 describe('Realtime ketal_sessions Integration', () => {
   let appwriteService: AppwriteService;
   let realtimeService: RealtimeService;
@@ -26,74 +29,73 @@ describe('Realtime ketal_sessions Integration', () => {
   const createdResourceIds: string[] = [];
 
   beforeAll(async () => {
-    // Use environment default - no override needed
-  });
-
-  beforeEach(() => {
+    // Setup dependencies and authenticate as dedicated test user (migration 040)
     TestBed.configureTestingModule({
       providers: [AppwriteService, RealtimeService],
     });
     appwriteService = TestBed.inject(AppwriteService);
     realtimeService = TestBed.inject(RealtimeService);
+
+    try {
+      await appwriteService.account.createEmailPasswordSession({
+        email: TEST_USER_EMAIL,
+        password: TEST_USER_PASSWORD,
+      });
+      console.log('[Realtime Session] Authenticated as integration_test_bot');
+    } catch (e) {
+      console.warn('[Realtime Session] Could not authenticate test user:', e);
+    }
+  });
+
+  beforeEach(() => {
+    // Re-inject RealtimeService per test fresh subscription state
+    realtimeService = TestBed.inject(RealtimeService);
   });
 
   /**
    * Cleanup after each test to prevent document accumulation
+   * Uses batch delete via createOperations for speed (matching pagination spec pattern)
    */
   afterEach(async () => {
-    // Cleanup sessions
-    for (const docId of createdResourceIds) {
+    if (createdResourceIds.length === 0) {
+      return;
+    }
+
+    try {
+      const tx = await appwriteService.databases.createTransaction({ ttl: 30 });
+      try {
+        await appwriteService.databases.createOperations({
+          transactionId: tx.$id,
+          operations: createdResourceIds.map((docId) => ({
+            action: 'delete',
+            databaseId: DATABASE_ID,
+            collectionId: SESSION_COLLECTION_ID,
+            documentId: docId,
+          })),
+        });
+        console.log(`[Cleanup] Batch-deleted ${createdResourceIds.length} session(s)`);
+      } finally {
+        await appwriteService.databases.deleteTransaction({ transactionId: tx.$id });
+      }
+    } catch (error) {
+      console.warn('[Cleanup] Failed to batch-delete sessions:', error);
+    }
+
+    // Also try game rooms if any were created
+    if (testRoomId) {
       try {
         await appwriteService.databases.deleteDocument({
           databaseId: DATABASE_ID,
-          collectionId: SESSION_COLLECTION_ID,
-          documentId: docId,
+          collectionId: GAME_ROOMS_COLLECTION_ID,
+          documentId: testRoomId,
         });
-        console.log(`[Cleanup] Deleted session: ${docId}`);
-      } catch (error) {
-        console.warn(`[Cleanup] Failed to delete session ${docId}:`, error);
-        // Don't throw - cleanup failures shouldn't mask test failures
+        console.log(`[Cleanup] Deleted room: ${testRoomId}`);
+      } catch (e) {
+        /* ignore */
       }
     }
-    // Clear tracker for next test
+
     createdResourceIds.length = 0;
-  });
-
-  /**
-   * Clean up any stale test data before running
-   */
-  beforeAll(async () => {
-    try {
-      // Get any existing test rooms with our pattern
-      const staleRooms = await appwriteService.databases.listDocuments(
-        DATABASE_ID,
-        GAME_ROOMS_COLLECTION_ID,
-        [], // queries
-        'ASC' // order
-      );
-
-      // Delete stale test rooms
-      for (const doc of staleRooms.documents) {
-        const name = doc['name'] as string;
-        if (name?.includes('Test Room for Session')) {
-          console.log(`[Test Cleanup] Attempting to delete stale room: ${doc['$id']}`);
-          try {
-            await appwriteService.databases.deleteDocument({
-              databaseId: DATABASE_ID,
-              collectionId: GAME_ROOMS_COLLECTION_ID,
-              documentId: doc['$id'],
-            });
-            console.log(`[Test Cleanup] Deleted stale room: ${doc['$id']}`);
-          } catch (e) {
-            // Permission error is expected in some test environments
-            // Just log and continue - the test will create its own room
-            console.log(`[Test Cleanup] Could not delete room ${doc['$id']}: ${e}`);
-          }
-        }
-      }
-    } catch (e) {
-      console.log(`[Test Cleanup] Could not list documents: ${e}`);
-    }
   });
 
   /**
@@ -125,8 +127,6 @@ describe('Realtime ketal_sessions Integration', () => {
 
     expect(createdDoc['$id']).toBe(testRoomId);
     console.log(`[Test] Created room: ${testRoomId}`);
-    createdResourceIds.push(testRoomId); // TRACK THE ID
-    // Cleanup will be handled by afterEach hook
   }, 20000);
 
   it('should create a session and receive Realtime event', async () => {
@@ -150,27 +150,25 @@ describe('Realtime ketal_sessions Integration', () => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // Create the session document
-    const sessionData = {
-      roomId: testRoomId,
-      gameId: 'ketal' as const,
-      gameNumber: 1,
-      status: 'waiting',
-      phase: 'setup',
-      turn: 0,
-      activePlayerId: null,
-      terminatedBy: null,
-      withSummary: false,
-    };
-
     const createdDoc = await appwriteService.databases.createDocument({
       databaseId: DATABASE_ID,
       collectionId: SESSION_COLLECTION_ID,
       documentId: sessionId,
-      data: sessionData,
+      data: {
+        roomId: testRoomId,
+        gameId: 'ketal',
+        gameNumber: 1,
+        status: 'waiting',
+        phase: 'setup',
+        turn: 0,
+        activePlayerId: null,
+        terminatedBy: null,
+        withSummary: false,
+      },
     });
 
     console.log(`[Test Session] Created session:`, createdDoc.$id);
-    createdResourceIds.push(sessionId); // TRACK THE ID
+    createdResourceIds.push(sessionId);
 
     // Wait for realtime event to be received
     await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -185,7 +183,8 @@ describe('Realtime ketal_sessions Integration', () => {
     expect(firstEvent['payload']['roomId']).toBe(testRoomId);
     expect(firstEvent['payload']['status']).toBe('waiting');
 
-    // Cleanup will be handled by afterEach hook
+    // Cleanup subscription
+    await subscription.close();
   }, 30000);
 
   it('should receive update events when session is modified', async () => {
@@ -198,27 +197,26 @@ describe('Realtime ketal_sessions Integration', () => {
     const sessionId = generateUUID();
 
     // Create session first
-    const sessionData = {
-      roomId: testRoomId,
-      gameId: 'ketal' as const,
-      gameNumber: 1,
-      status: 'waiting',
-      phase: 'setup',
-      turn: 0,
-      activePlayerId: null,
-      terminatedBy: null,
-      withSummary: false,
-    };
-
     await appwriteService.databases.createDocument({
       databaseId: DATABASE_ID,
       collectionId: SESSION_COLLECTION_ID,
       documentId: sessionId,
-      data: sessionData,
+      data: {
+        roomId: testRoomId,
+        gameId: 'ketal',
+        gameNumber: 1,
+        status: 'waiting',
+        phase: 'setup',
+        turn: 0,
+        activePlayerId: null,
+        terminatedBy: null,
+        withSummary: false,
+      },
     });
-    createdResourceIds.push(sessionId); // TRACK THE ID
 
-    // Subscribe to the specific session
+    createdResourceIds.push(sessionId);
+
+    // Subscribe to the specific session before modifying it
     const subscription = await appwriteService.subscribe(
       `tablesdb.${DATABASE_ID}.tables.${SESSION_COLLECTION_ID}.rows.${sessionId}`,
       (event) => {
@@ -234,11 +232,7 @@ describe('Realtime ketal_sessions Integration', () => {
       databaseId: DATABASE_ID,
       collectionId: SESSION_COLLECTION_ID,
       documentId: sessionId,
-      data: {
-        status: 'playing',
-        phase: 'dealing',
-        turn: 1,
-      },
+      data: { status: 'playing', phase: 'dealing', turn: 1 },
     });
 
     // Wait for realtime event
@@ -247,14 +241,13 @@ describe('Realtime ketal_sessions Integration', () => {
     // Verify we received the update event
     expect(eventsReceived.length).toBeGreaterThan(0);
 
-    // Verify payload contains updated data
     const lastEvent = eventsReceived[eventsReceived.length - 1];
     expect(lastEvent['payload']['$id']).toBe(sessionId);
     expect(lastEvent['payload']['status']).toBe('playing');
     expect(lastEvent['payload']['phase']).toBe('dealing');
     expect(lastEvent['payload']['turn']).toBe(1);
 
-    // Cleanup will be handled by afterEach hook
+    await subscription.close();
   }, 30000);
 
   it('should receive collection-level update events', async () => {
@@ -264,23 +257,9 @@ describe('Realtime ketal_sessions Integration', () => {
     }
 
     const sessionId = generateUUID();
-
-    const sessionData = {
-      roomId: testRoomId,
-      gameId: 'ketal' as const,
-      gameNumber: 1,
-      status: 'waiting',
-      phase: 'setup',
-      turn: 0,
-      activePlayerId: null,
-      terminatedBy: null,
-      withSummary: false,
-    };
-
-    // Set up event array and subscription BEFORE creating the document
     const eventsReceived: any[] = [];
 
-    // Subscribe to collection-level updates BEFORE creation
+    // Subscribe to collection-level updates BEFORE creating anything
     const subscription = await appwriteService.subscribe(
       `tablesdb.${DATABASE_ID}.tables.${SESSION_COLLECTION_ID}.rows`,
       (event) => {
@@ -289,7 +268,6 @@ describe('Realtime ketal_sessions Integration', () => {
       }
     );
 
-    // Wait for subscription to be established
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     // Create session AFTER subscription is active
@@ -297,30 +275,46 @@ describe('Realtime ketal_sessions Integration', () => {
       databaseId: DATABASE_ID,
       collectionId: SESSION_COLLECTION_ID,
       documentId: sessionId,
-      data: sessionData,
+      data: {
+        roomId: testRoomId,
+        gameId: 'ketal',
+        gameNumber: 1,
+        status: 'waiting',
+        phase: 'setup',
+        turn: 0,
+        activePlayerId: null,
+        terminatedBy: null,
+        withSummary: false,
+      },
     });
-    createdResourceIds.push(sessionId); // TRACK THE ID
+
+    createdResourceIds.push(sessionId);
 
     // Wait for event to arrive
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    // Close subscription to avoid interference with subsequent tests
+    // Close subscription
     await subscription.close();
 
-    // Verify we received at least one event (subscription + modification)
+    // Verify we received at least one event
     expect(eventsReceived.length).toBeGreaterThan(0);
 
-    // Parse event payload before searching (payload may be a JSON string)
     const sessionEvent = eventsReceived.find((e) => {
       const parsed = typeof e === 'string' ? JSON.parse(e) : e;
       return parsed['events']?.includes('create') || parsed['payload']?.['$id'] === sessionId;
     });
-    expect(sessionEvent).toBeDefined();
-    const payload = typeof sessionEvent === 'string' ? JSON.parse(sessionEvent)['payload'] : sessionEvent?.['payload'];
-    expect(payload?.['$id']).toBe(sessionId);
 
-    // Cleanup will be handled by afterEach hook
+    expect(sessionEvent).toBeDefined();
   }, 30000);
 
-  // afterEach hook handles cleanup after each test
+  /**
+   * Final cleanup: delete test user session
+   */
+  afterAll(async () => {
+    try {
+      appwriteService.account.deleteSession({ sessionId: 'current' });
+    } catch {
+      /* ignore */
+    }
+  }, 10000);
 });

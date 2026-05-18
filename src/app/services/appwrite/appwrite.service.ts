@@ -31,7 +31,7 @@ export class AppwriteService {
   constructor() {
     this._client = new Client()
       .setEndpoint(environment.appwrite.endpoint)
-      .setEndpointRealtime(environment.appwrite.endpointRealtime)
+      .setEndpointRealtime(environment.appwrite.endpoint.replace(/^http(s)?/i, 'ws$1'))
       .setProject(environment.appwrite.projectId);
 
     this._account = new Account(this._client);
