@@ -2,70 +2,73 @@
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 1rem;
+  padding: var(--space-4);
 }
 
 .login-card {
   width: 100%;
   max-width: 400px;
-  padding: 2rem;
-  background-color: #fff;
-  border-radius: 0.5rem;
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  padding: var(--space-12);
+  background-color: var(--color-bg-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
 }
 
 .branding {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: var(--space-10);
 
   .app-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: #212529;
-    margin-bottom: 0.25rem;
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-1);
     letter-spacing: 0.1em;
   }
 
   .app-subtitle {
-    font-size: 0.9rem;
-    color: #6c757d;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
     margin-bottom: 0;
   }
 }
 
 .login-form {
   .form-group {
-    margin-bottom: 1rem;
+    margin-bottom: var(--space-4);
   }
 
   .input-group-text {
-    background-color: #f8f9fa;
+    background-color: var(--color-bg-elevated);
     border-right: none;
+    color: var(--color-text-secondary);
   }
 
   .form-control {
     border-left: none;
+    background-color: var(--color-bg-elevated);
+    color: var(--color-text-primary);
 
     &:focus {
-      border-color: #ced4da;
-      box-shadow: none;
+      border-color: var(--color-accent-primary);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent-primary) 25%, transparent);
     }
 
     &.is-invalid {
-      border-color: #dc3545;
+      border-color: var(--color-error);
     }
   }
 
   .input-group .btn {
     border-left: none;
-    border-color: #ced4da;
+    border-color: var(--color-border);
     background-color: transparent;
-    color: #6c757d;
+    color: var(--color-text-secondary);
     z-index: 3;
 
     &:hover {
-      background-color: #f8f9fa;
-      color: #495057;
+      background-color: var(--color-bg-surface);
+      color: var(--color-text-primary);
     }
 
     &:focus {
@@ -75,18 +78,20 @@
   }
 
   .invalid-feedback {
-    font-size: 0.8rem;
-    margin-top: 0.25rem;
+    font-size: var(--font-size-xs);
+    margin-top: var(--space-1);
+    color: var(--color-error);
   }
 }
 
 .forgot-password {
   text-align: right;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-6);
 
   a {
-    font-size: 0.875rem;
+    font-size: var(--font-size-sm);
     text-decoration: none;
+    color: var(--color-accent-primary);
 
     &:hover {
       text-decoration: underline;
@@ -96,8 +101,8 @@
 
 .btn-login {
   width: 100%;
-  padding: 0.75rem;
-  font-weight: 500;
+  padding: var(--space-3);
+  font-weight: var(--font-weight-medium);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -105,34 +110,37 @@
 .divider {
   display: flex;
   align-items: center;
-  margin: 1.5rem 0;
+  margin: var(--space-6) 0;
 
   &::before,
   &::after {
     content: '';
     flex: 1;
     height: 1px;
-    background-color: #dee2e6;
+    background-color: var(--color-divider);
   }
 
   span {
-    padding: 0 1rem;
-    color: #6c757d;
-    font-size: 0.875rem;
+    padding: 0 var(--space-4);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
   }
 }
 
 .btn-social {
   width: 100%;
-  padding: 0.75rem;
-  margin-bottom: 0.75rem;
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
+  background-color: var(--color-bg-elevated);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
 
   &:hover {
-    background-color: #f8f9fa;
+    background-color: var(--color-bg-surface);
   }
 
   svg {
@@ -142,13 +150,14 @@
 
 .signup-link {
   text-align: center;
-  margin-top: 1.5rem;
-  font-size: 0.9rem;
-  color: #6c757d;
+  margin-top: var(--space-6);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 
   a {
+    color: var(--color-accent-primary);
     text-decoration: none;
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
 
     &:hover {
       text-decoration: underline;
@@ -158,13 +167,13 @@
 
 .legal-disclaimer {
   text-align: center;
-  margin-top: 1.25rem;
-  padding-top: 1rem;
-  border-top: 1px solid #dee2e6;
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
 
   p {
-    font-size: 0.75rem;
-    color: #999;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
     margin: 0;
     font-style: italic;
   }
@@ -173,18 +182,18 @@
 // Responsive adjustments
 @media (max-width: 576px) {
   .login-container {
-    padding: 0.5rem;
+    padding: var(--space-2);
   }
 
   .login-card {
-    padding: 1.5rem;
+    padding: var(--space-10);
     box-shadow: none;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--color-border);
   }
 
   .branding {
     .app-title {
-      font-size: 2rem;
+      font-size: var(--font-size-2xl);
     }
   }
 }
