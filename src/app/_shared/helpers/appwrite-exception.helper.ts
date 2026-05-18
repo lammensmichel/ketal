@@ -18,6 +18,13 @@ export function getAppwriteErrorCode(error: unknown): number | null {
   if (isAppwriteException(error)) {
     return error.code;
   }
+  // Fallback: some environments serialize Appwrite errors as plain objects with a .code property
+  if (typeof error === 'object' && error !== null && 'code' in error) {
+    const c = (error as any).code;
+    if (typeof c === 'number') {
+      return c;
+    }
+  }
   return null;
 }
 
@@ -29,6 +36,16 @@ export function getAppwriteErrorCode(error: unknown): number | null {
 export function getAppwriteMessage(error: unknown): string | null {
   if (isAppwriteException(error)) {
     return error.message;
+  }
+  // Fallback: extract .message from any Error-like object (plain Error thrown in tests / catch-all)
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const m = (error as any).message;
+    if (typeof m === 'string') {
+      return m;
+    }
   }
   return null;
 }

@@ -8,6 +8,11 @@ import { FontAwesomeIconsModule } from '../../../font-awesome.module';
 import { AppwriteService } from '../../../services/appwrite/appwrite.service';
 import { AuthService } from '../../../services/auth/auth.service';
 import { GameService } from '../../../services/game/game.service';
+import { RoomService } from '../../../services/room/room.service';
+import { MemberService } from '../../../services/member/member.service';
+import { KetalSessionService } from '../../../services/ketal-session/ketal-session.service';
+import { RealtimeService } from '../../../services/realtime/realtime.service';
+import { LocalService } from '../../../services/local/local.service';
 import { LanguageService } from '../../_helpers/language.helper';
 import { Language } from '../../_models/language.model';
 
@@ -29,7 +34,23 @@ export class SideMenuComponent {
   private readonly authService = inject(AuthService);
   private readonly translate = inject(TranslateService);
   private readonly languageService = inject(LanguageService);
-  readonly gameSrv = inject(GameService);
+  private readonly gameSrv = inject(GameService);
+  private readonly roomSrv = inject(RoomService);
+  private readonly memberSrv = inject(MemberService);
+  private readonly sessionSrv = inject(KetalSessionService);
+  private readonly realtimeSrv = inject(RealtimeService);
+  private readonly localSrv = inject(LocalService);
+
+  /** Business-layer cleanup: called before every auth logout to clear all domain state */
+  private cleanupState(): void {
+    this.gameSrv.resetGame();
+    this.roomSrv.setCurrentRoom(null);
+    this.memberSrv.clearMembers();
+    this.sessionSrv.setCurrentSession(null);
+    this.realtimeSrv.unsubscribeAll();
+    this.localSrv.removeData('game');
+    this.localSrv.removeData('players');
+  }
 
   /** Whether the side menu is open */
   readonly isOpen = signal(false);
@@ -148,9 +169,10 @@ export class SideMenuComponent {
     await this.router.navigate(['/login']);
   }
 
-  /** Quit the game entirely: full logout with game cleanup (anonymous users only) */
+  /** Quit the game entirely: full logout with cleanup (anonymous users only) */
   async quitGame(): Promise<void> {
     this.closeMenu();
+    this.cleanupState();
     await this.authService.logout();
     await this.router.navigate(['/login']);
   }
@@ -158,6 +180,7 @@ export class SideMenuComponent {
   /** Logout the current user */
   async logout(): Promise<void> {
     this.closeMenu();
+    this.cleanupState();
     await this.authService.logout();
     await this.router.navigate(['/']);
   }

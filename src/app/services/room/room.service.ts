@@ -1,4 +1,4 @@
-import { inject, Injectable, Optional, signal } from '@angular/core';
+import { inject, Injector, Injectable, signal } from '@angular/core';
 import { ID, Query, AppwriteException } from 'appwrite';
 import { AppwriteService } from '../appwrite/appwrite.service';
 import { RealtimeService, SubscriptionCallback } from '../realtime/realtime.service';
@@ -93,13 +93,26 @@ interface CreateRoomData {
  *
  * Uses Angular 19 patterns with signals for reactive state management.
  */
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class RoomService {
   private readonly appwrite = inject(AppwriteService);
   private readonly realtime = inject(RealtimeService);
   private readonly memberService = inject(MemberService);
   private readonly ketalSession = inject(KetalSessionService);
-  @Optional() private readonly authService = inject(AuthService);
+  // Lazy injector to break Angular 21 NG0200 circular dependency:
+  // GameService → SoloRoomService → RoomService → AuthService.
+  // Using Injector so AuthService is only resolved on first property access,
+  // AFTER all class constructors have completed (no more cycle).
+  private _authService: AuthService | null | undefined = undefined;
+  private readonly injector = inject(Injector);
+
+  /** Lazy-loaded AuthService — resolves on first property access only. Returns null if not in DI tree. */
+  private get authService(): AuthService | null {
+    if (this._authService === undefined) {
+      this._authService = this.injector.get(AuthService, null);
+    }
+    return this._authService;
+  }
 
   /** Signal holding the current room the user is in */
   private readonly _currentRoom = signal<GameRoom | null>(null);
@@ -248,10 +261,13 @@ export class RoomService {
         documentId: roomId,
       });
 
+      if (!document) {
+        return null;
+      }
       return this.mapDocumentToGameRoom(document);
     } catch (error: unknown) {
       // Return null for 404 (document not found), re-throw other errors
-      if (isAppwriteException(error) && getAppwriteErrorCode(error) === 404) {
+      if (getAppwriteErrorCode(error) === 404) {
         return null;
       }
       console.warn('getRoomById failed with unexpected error:', error);

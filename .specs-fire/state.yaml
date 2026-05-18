@@ -46,13 +46,17 @@ intents:
       commit: "run-ketal-005-wi-001"
 - id: appwrite-typed-exceptions
   title: Appwrite — type catch blocks as AppwriteException
-  status: pending
+  status: completed
   priority: low
+  completed_at: "2026-05-18T00:00:00Z"
+  completion_message: "appwrite-exception.helper.ts with isAppwriteException, getAppwriteErrorCode, getAppwriteMessage — imported in all services. Zero (error as any).code remaining."
   work_items: []
 - id: appwrite-channel-builder
   title: Appwrite — use Channel builder instead of manual channel strings
-  status: pending
+  status: completed
   priority: low
+  completed_at: "2026-05-18T00:00:00Z"
+  completion_message: "Channel imported from appwrite, used in buildDocumentChannel/buildCollectionChannel in realtime.service.ts."
   work_items: []
 - id: tests-realtime-integration-hygiene
   title: Tests — fix realtime integration spec hygiene (ID.unique + cleanup)

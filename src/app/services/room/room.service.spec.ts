@@ -932,14 +932,14 @@ describe('RoomService', () => {
     });
 
     it('should throw error when no auth service available', async () => {
-      // Reconfigure service without auth
+      // Reconfigure service without auth — add getDocument mock so service reaches auth check
       TestBed.resetTestingModule();
       mockDatabases = {
         createDocument: jasmine.createSpy('createDocument'),
         deleteDocument: jasmine.createSpy('deleteDocument'),
-        getDocument: jasmine.createSpy('getDocument'),
+        getDocument: jasmine.createSpy('getDocument').and.resolveTo(mockRoomDocument),
         listDocuments: jasmine.createSpy('listDocuments'),
-        updateDocument: jasmine.createSpy('updateDocument'),
+        updateDocument: jasmine.createSpy('updateDocument').and.resolveTo({ ...mockRoomDocument, status: 'archived' }),
       };
       mockAppwriteService = jasmine.createSpyObj('AppwriteService', [], {
         databases: mockDatabases,
@@ -957,6 +957,8 @@ describe('RoomService', () => {
         'updateMember',
         'deleteMember',
       ]);
+      // Mock getMembersByRoom to return a host member so we pass the room-not-found gate
+      mockMemberService.getMembersByRoom.and.resolveTo([]);
 
       TestBed.configureTestingModule({
         providers: [
@@ -978,9 +980,9 @@ describe('RoomService', () => {
       mockDatabases = {
         createDocument: jasmine.createSpy('createDocument'),
         deleteDocument: jasmine.createSpy('deleteDocument'),
-        getDocument: jasmine.createSpy('getDocument'),
+        getDocument: jasmine.createSpy('getDocument').and.resolveTo(mockRoomDocument),
         listDocuments: jasmine.createSpy('listDocuments'),
-        updateDocument: jasmine.createSpy('updateDocument'),
+        updateDocument: jasmine.createSpy('updateDocument').and.resolveTo({ ...mockRoomDocument, status: 'archived' }),
       };
       mockAppwriteService = jasmine.createSpyObj('AppwriteService', [], {
         databases: mockDatabases,
@@ -998,6 +1000,8 @@ describe('RoomService', () => {
         'updateMember',
         'deleteMember',
       ]);
+      // Mock getMembersByRoom so .find() doesn't crash on undefined
+      mockMemberService.getMembersByRoom.and.resolveTo([]);
 
       TestBed.configureTestingModule({
         providers: [
@@ -1084,10 +1088,18 @@ describe('RoomService', () => {
       };
 
       mockDatabases.getDocument.and.resolveTo(roomWithSession);
-      mockMemberService.getMembersByRoom.and
-        .resolveTo([mockHostMember, mockPlayerMember])
-        .and.resolveTo([mockPlayerMember]);
+      mockDatabases.updateDocument.and.resolveTo({ ...mockRoomDocument });
+      // First call = initial member lookup (host + player), second call = after host deleted (player only)
+      mockMemberService.getMembersByRoom.calls.reset();
+      let gmCallCount = 0;
+      mockMemberService.getMembersByRoom.and.callFake(() => {
+        return gmCallCount++ === 0
+          ? Promise.resolve([mockHostMember, mockPlayerMember])
+          : Promise.resolve([mockPlayerMember]);
+      });
+      mockMemberService.deleteMember.calls.reset();
       mockMemberService.deleteMember.and.resolveTo();
+      mockMemberService.updateMember.calls.reset();
       mockMemberService.updateMember.and.resolveTo();
       (service as any).ketalSession = jasmine.createSpyObj('MockKetalSessionService', ['cancelSession']);
       (service as any).ketalSession.cancelSession = jasmine.createSpy('cancelSession').and.resolveTo();
@@ -1117,9 +1129,17 @@ describe('RoomService', () => {
       };
 
       mockDatabases.getDocument.and.resolveTo(mockRoomDocument);
-      mockMemberService.getMembersByRoom.and.resolveTo([mockHostMember]);
+      mockDatabases.updateDocument.and.callFake((params: { data: any }) =>
+        Promise.resolve({ ...mockRoomDocument, ...params.data })
+      );
+      // First call = initial member lookup (host only), second call = after host deleted (empty = room should archive)
+      mockMemberService.getMembersByRoom.calls.reset();
+      let gmCallCount2 = 0;
+      mockMemberService.getMembersByRoom.and.callFake(() => {
+        return gmCallCount2++ === 0 ? Promise.resolve([mockHostMember]) : Promise.resolve([]);
+      });
+      mockMemberService.deleteMember.calls.reset();
       mockMemberService.deleteMember.and.resolveTo();
-      mockMemberService.getMembersByRoom.and.resolveTo([]);
 
       await service.leaveRoom('room123');
 

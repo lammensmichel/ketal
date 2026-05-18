@@ -2,22 +2,10 @@ import { TestBed } from '@angular/core/testing';
 import { Models } from 'appwrite';
 import { AuthService } from './auth.service';
 import { AppwriteService } from '../appwrite/appwrite.service';
-import { GameService } from '../game/game.service';
-import { RoomService } from '../room/room.service';
-import { MemberService } from '../member/member.service';
-import { KetalSessionService } from '../ketal-session/ketal-session.service';
-import { RealtimeService } from '../realtime/realtime.service';
-import { LocalService } from '../local/local.service';
 
 describe('AuthService', () => {
   let service: AuthService;
   let mockAppwriteService: jasmine.SpyObj<AppwriteService>;
-  let mockGameService: jasmine.SpyObj<GameService>;
-  let mockRoomService: jasmine.SpyObj<RoomService>;
-  let mockMemberService: jasmine.SpyObj<MemberService>;
-  let mockKetalSessionService: jasmine.SpyObj<KetalSessionService>;
-  let mockRealtimeService: jasmine.SpyObj<RealtimeService>;
-  let mockLocalService: jasmine.SpyObj<LocalService>;
   let mockAccount: {
     get: jasmine.Spy;
     create: jasmine.Spy;
@@ -67,54 +55,8 @@ describe('AuthService', () => {
       account: mockAccount,
     });
 
-    mockGameService = jasmine.createSpyObj('GameService', ['resetGame']);
-    mockRoomService = jasmine.createSpyObj('RoomService', ['setCurrentRoom']);
-    mockMemberService = jasmine.createSpyObj('MemberService', ['clearMembers']);
-    mockKetalSessionService = jasmine.createSpyObj('KetalSessionService', ['setCurrentSession']);
-    mockRealtimeService = jasmine.createSpyObj('RealtimeService', ['unsubscribeAll']);
-    mockLocalService = jasmine.createSpyObj('LocalService', ['saveData', 'getData', 'removeData', 'clearData']);
-
     TestBed.configureTestingModule({
-      providers: [
-        { provide: GameService, useValue: mockGameService },
-        { provide: AppwriteService, useValue: mockAppwriteService },
-        { provide: RoomService, useValue: mockRoomService },
-        { provide: MemberService, useValue: mockMemberService },
-        { provide: KetalSessionService, useValue: mockKetalSessionService },
-        { provide: RealtimeService, useValue: mockRealtimeService },
-        { provide: LocalService, useValue: mockLocalService },
-        {
-          provide: AuthService,
-          useFactory: (
-            appwrite: AppwriteService,
-            room: RoomService,
-            member: MemberService,
-            ketalSess: KetalSessionService,
-            realtime: RealtimeService,
-            local: LocalService,
-            game: GameService
-          ) => {
-            const auth = new AuthService();
-            (auth as any).appwrite = appwrite;
-            (auth as any).roomService = room;
-            (auth as any).memberService = member;
-            (auth as any).ketalSessionService = ketalSess;
-            (auth as any).realtimeService = realtime;
-            (auth as any).localService = local;
-            (auth as any).gameService = game;
-            return auth;
-          },
-          deps: [
-            AppwriteService,
-            RoomService,
-            MemberService,
-            KetalSessionService,
-            RealtimeService,
-            LocalService,
-            GameService,
-          ],
-        },
-      ],
+      providers: [{ provide: AppwriteService, useValue: mockAppwriteService }, AuthService],
     });
 
     service = TestBed.inject(AuthService);
@@ -293,70 +235,6 @@ describe('AuthService', () => {
       expect(service.currentUser()).toBeNull();
       expect(service.isLoading()).toBeFalse();
     });
-
-    it('should reset game state on logout', async () => {
-      mockAccount.deleteSession.and.resolveTo({});
-
-      await service.logout();
-
-      expect(mockGameService.resetGame).toHaveBeenCalled();
-    });
-
-    it('should clear room state on logout', async () => {
-      mockAccount.deleteSession.and.resolveTo({});
-
-      await service.logout();
-
-      expect(mockRoomService.setCurrentRoom).toHaveBeenCalledWith(null);
-    });
-
-    it('should clear member state on logout', async () => {
-      mockAccount.deleteSession.and.resolveTo({});
-
-      await service.logout();
-
-      expect(mockMemberService.clearMembers).toHaveBeenCalled();
-    });
-
-    it('should clear ketal session state on logout', async () => {
-      mockAccount.deleteSession.and.resolveTo({});
-
-      await service.logout();
-
-      expect(mockKetalSessionService.setCurrentSession).toHaveBeenCalledWith(null);
-    });
-
-    it('should unsubscribe from all realtime subscriptions on logout', async () => {
-      mockAccount.deleteSession.and.resolveTo({});
-
-      await service.logout();
-
-      expect(mockRealtimeService.unsubscribeAll).toHaveBeenCalled();
-    });
-
-    it('should clear localStorage game data on logout', async () => {
-      mockAccount.deleteSession.and.resolveTo({});
-
-      await service.logout();
-
-      expect(mockLocalService.removeData).toHaveBeenCalledWith('game');
-      expect(mockLocalService.removeData).toHaveBeenCalledWith('players');
-    });
-
-    it('should clear all state even if Appwrite session deletion fails', async () => {
-      mockAccount.deleteSession.and.rejectWith(new Error('Network error'));
-
-      await service.logout();
-
-      expect(mockGameService.resetGame).toHaveBeenCalled();
-      expect(mockRoomService.setCurrentRoom).toHaveBeenCalledWith(null);
-      expect(mockMemberService.clearMembers).toHaveBeenCalled();
-      expect(mockKetalSessionService.setCurrentSession).toHaveBeenCalledWith(null);
-      expect(mockRealtimeService.unsubscribeAll).toHaveBeenCalled();
-      expect(mockLocalService.removeData).toHaveBeenCalledWith('game');
-      expect(mockLocalService.removeData).toHaveBeenCalledWith('players');
-      expect(service.currentUser()).toBeNull();
-    });
   });
 
   describe('createAnonymousSession', () => {
@@ -376,7 +254,7 @@ describe('AuthService', () => {
       const error = new Error('Failed to create session');
       mockAccount.createAnonymousSession.and.rejectWith(error);
 
-      await expectAsync(service.createAnonymousSession()).toBeRejectedWith(error);
+      await expectAsync(service.createAnonymousSession()).toBeRejectedWithError('Failed to create session');
 
       expect(service.currentUser()).toBeNull();
     });

@@ -26,7 +26,7 @@ import {
 /** Game mode type: local (localStorage) or room (Appwrite) */
 export type GameMode = 'local' | 'room';
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class GameService {
   private readonly localSrv = inject(LocalService);
   private readonly cardSrv = inject(CardService);

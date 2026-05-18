@@ -1,6 +1,6 @@
 ---
 description: FIRE orchestrator - Fast Intent-Run Engineering main entry point
-agent: orchestrator
+agent: build
 ---
 
 # Activate FIRE
