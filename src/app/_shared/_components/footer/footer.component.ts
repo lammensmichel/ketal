@@ -160,7 +160,9 @@ export class FooterComponent implements OnDestroy {
 
   /** Check if current route is a page where game footer should be hidden */
   isHiddenPage(): boolean {
-    return HIDDEN_ROUTES.some((route) => this.router.url.startsWith(route));
+    const result = HIDDEN_ROUTES.some((route) => this.router.url.startsWith(route));
+    // console.log('[Footer] isHiddenPage:', result, 'router.url:', this.router.url, 'HIDDEN_ROUTES:', HIDDEN_ROUTES);
+    return result;
   }
 
   /** Check if current route is the players page (where local game start UI should be visible) */
@@ -406,6 +408,7 @@ export class FooterComponent implements OnDestroy {
   }
 
   async beginGame(): Promise<void> {
+    // console.log('[Footer] beginGame() called - isNewGame:', this.gameSrv.isNewGame(), 'status:', this.gameSrv.status());
     if (this._beginGameInProgress) {
       return;
     }
