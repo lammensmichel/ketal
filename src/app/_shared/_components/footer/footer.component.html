@@ -1,385 +1,383 @@
 <div class="footer-wrapper">
-  @if (!isHiddenPage()) {
-    <!-- Phase 1: Prediction Panel -->
-    @if (gameSrv.isGameStarted() && ([1, 2, 3, 4].includes(gameSrv.turn()) || isAnimationLocked())) {
-      <div class="prediction-panel" [ngClass]="{ 'prediction-panel--animating': isAnimationLocked() }">
-        @if (displayPlayer(); as activePlayer) {
-          <div class="prediction-panel__player prediction-panel__player--desktop">
-            <img
-              class="prediction-panel__avatar"
-              [src]="activePlayer.avatarSrc"
-              [alt]="activePlayer.name"
-              width="36"
-              height="36"
-            />
-            <span class="prediction-panel__name">{{ activePlayer.name }}</span>
+  <!-- Phase 1: Prediction Panel -->
+  @if (gameSrv.isGameStarted() && ([1, 2, 3, 4].includes(gameSrv.turn()) || isAnimationLocked())) {
+    <div class="prediction-panel" [ngClass]="{ 'prediction-panel--animating': isAnimationLocked() }">
+      @if (displayPlayer(); as activePlayer) {
+        <div class="prediction-panel__player prediction-panel__player--desktop">
+          <img
+            class="prediction-panel__avatar"
+            [src]="activePlayer.avatarSrc"
+            [alt]="activePlayer.name"
+            width="36"
+            height="36"
+          />
+          <span class="prediction-panel__name">{{ activePlayer.name }}</span>
+        </div>
+      }
+
+      <!-- Turn content with transition wrapper -->
+      <div
+        class="prediction-panel__choices"
+        [ngClass]="{
+          'turn-slide-out': animationPhase() === 'transitioning',
+          'turn-slide-in': turnTransitioning() && animationPhase() === 'idle',
+        }"
+      >
+        <!-- Show animating turn during animation, otherwise current turn -->
+        @let displayTurn = isAnimationLocked() && animatingTurn() !== null ? animatingTurn() : gameSrv.turn();
+
+        @if (displayTurn === 1) {
+          <div class="prediction-panel__choices-row">
+            <button
+              [attr.aria-label]="'game.turn1.red' | translate"
+              class="prediction-btn prediction-btn--red"
+              [ngClass]="{
+                'prediction-btn--selected': selectedChoice() === 'red',
+                'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'red',
+              }"
+              [disabled]="isAnimationLocked()"
+              (click)="chooseColor('red')"
+            >
+              <span class="prediction-btn__icon">&hearts;</span>
+              <span class="prediction-btn__label" [translate]="'game.turn1.red'"></span>
+            </button>
+            <button
+              [attr.aria-label]="'game.turn1.black' | translate"
+              class="prediction-btn prediction-btn--black"
+              [ngClass]="{
+                'prediction-btn--selected': selectedChoice() === 'black',
+                'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'black',
+              }"
+              [disabled]="isAnimationLocked()"
+              (click)="chooseColor('black')"
+            >
+              <span class="prediction-btn__icon">&spades;</span>
+              <span class="prediction-btn__label" [translate]="'game.turn1.black'"></span>
+            </button>
+          </div>
+        }
+        @if (displayTurn === 2) {
+          <div class="prediction-panel__choices-row">
+            <button
+              [attr.aria-label]="'game.turn2.higher' | translate"
+              class="prediction-btn"
+              [ngClass]="{
+                'prediction-btn--selected': selectedChoice() === 'plus',
+                'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'plus',
+              }"
+              [disabled]="isAnimationLocked()"
+              (click)="plusOrMinus('plus')"
+            >
+              <span class="prediction-btn__icon prediction-btn__icon--up">&uarr;</span>
+              <span class="prediction-btn__label" [translate]="'game.turn2.higher'"></span>
+            </button>
+            <button
+              [attr.aria-label]="'game.turn2.lower' | translate"
+              class="prediction-btn"
+              [ngClass]="{
+                'prediction-btn--selected': selectedChoice() === 'minus',
+                'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'minus',
+              }"
+              [disabled]="isAnimationLocked()"
+              (click)="plusOrMinus('minus')"
+            >
+              <span class="prediction-btn__icon prediction-btn__icon--down">&darr;</span>
+              <span class="prediction-btn__label" [translate]="'game.turn2.lower'"></span>
+            </button>
+            @if (getReferenceCard(); as refCard) {
+              <div class="prediction-panel__reference">
+                <span class="prediction-panel__reference-label" [translate]="'game.turn2.referenceHint'"></span>
+                <app-playing-card [card]="refCard"></app-playing-card>
+              </div>
+            }
+          </div>
+        }
+        @if (displayTurn === 3) {
+          @let inOutRefCards = displayPlayer()?.cards?.slice(0, 2) ?? [];
+          <div class="prediction-panel__choices-row">
+            <button
+              [attr.aria-label]="'game.turn3.in' | translate"
+              class="prediction-btn prediction-btn--inout"
+              [ngClass]="{
+                'prediction-btn--selected': selectedChoice() === 'in',
+                'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'in',
+              }"
+              [disabled]="isAnimationLocked()"
+              (click)="inOut('in')"
+            >
+              @for (card of inOutRefCards; track $index; let i = $index) {
+                <div class="inout-card-wrapper">
+                  <app-playing-card [card]="card"></app-playing-card>
+                  @if (i === 0) {
+                    <span class="inout-caret">
+                      <fa-icon [icon]="['fas', 'caret-right']"></fa-icon>
+                      <fa-icon [icon]="['fas', 'caret-left']"></fa-icon>
+                    </span>
+                  }
+                </div>
+              }
+            </button>
+            <button
+              [attr.aria-label]="'game.turn3.out' | translate"
+              class="prediction-btn prediction-btn--inout"
+              [ngClass]="{
+                'prediction-btn--selected': selectedChoice() === 'out',
+                'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'out',
+              }"
+              [disabled]="isAnimationLocked()"
+              (click)="inOut('out')"
+            >
+              @for (card of inOutRefCards; track $index; let i = $index) {
+                <div class="inout-card-wrapper">
+                  @if (i === 0) {
+                    <span class="inout-caret"><fa-icon [icon]="['fas', 'caret-left']"></fa-icon></span>
+                  }
+                  <app-playing-card [card]="card"></app-playing-card>
+                  @if (i === 1) {
+                    <span class="inout-caret"><fa-icon [icon]="['fas', 'caret-right']"></fa-icon></span>
+                  }
+                </div>
+              }
+            </button>
+          </div>
+        }
+        @if (displayTurn === 4) {
+          <div class="prediction-panel__choices-row">
+            <button
+              [attr.aria-label]="'game.turn4.hearts' | translate"
+              class="prediction-btn prediction-btn--suit"
+              [ngClass]="{
+                'prediction-btn--selected': selectedChoice() === 'hearts',
+                'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'hearts',
+              }"
+              [disabled]="isAnimationLocked()"
+              (click)="chooseSuit('hearts')"
+            >
+              <span class="prediction-btn__suit-icon prediction-btn__suit-icon--red">&hearts;</span>
+            </button>
+            <button
+              [attr.aria-label]="'game.turn4.diamonds' | translate"
+              class="prediction-btn prediction-btn--suit"
+              [ngClass]="{
+                'prediction-btn--selected': selectedChoice() === 'diams',
+                'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'diams',
+              }"
+              [disabled]="isAnimationLocked()"
+              (click)="chooseSuit('diams')"
+            >
+              <span class="prediction-btn__suit-icon prediction-btn__suit-icon--red">&diams;</span>
+            </button>
+            <button
+              [attr.aria-label]="'game.turn4.spades' | translate"
+              class="prediction-btn prediction-btn--suit"
+              [ngClass]="{
+                'prediction-btn--selected': selectedChoice() === 'spades',
+                'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'spades',
+              }"
+              [disabled]="isAnimationLocked()"
+              (click)="chooseSuit('spades')"
+            >
+              <span class="prediction-btn__suit-icon">&spades;</span>
+            </button>
+            <button
+              [attr.aria-label]="'game.turn4.clubs' | translate"
+              class="prediction-btn prediction-btn--suit"
+              [ngClass]="{
+                'prediction-btn--selected': selectedChoice() === 'clubs',
+                'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'clubs',
+              }"
+              [disabled]="isAnimationLocked()"
+              (click)="chooseSuit('clubs')"
+            >
+              <span class="prediction-btn__suit-icon">&clubs;</span>
+            </button>
           </div>
         }
 
-        <!-- Turn content with transition wrapper -->
-        <div
-          class="prediction-panel__choices"
-          [ngClass]="{
-            'turn-slide-out': animationPhase() === 'transitioning',
-            'turn-slide-in': turnTransitioning() && animationPhase() === 'idle',
-          }"
-        >
-          <!-- Show animating turn during animation, otherwise current turn -->
-          @let displayTurn = isAnimationLocked() && animatingTurn() !== null ? animatingTurn() : gameSrv.turn();
-
-          @if (displayTurn === 1) {
-            <div class="prediction-panel__choices-row">
-              <button
-                [attr.aria-label]="'game.turn1.red' | translate"
-                class="prediction-btn prediction-btn--red"
-                [ngClass]="{
-                  'prediction-btn--selected': selectedChoice() === 'red',
-                  'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'red',
-                }"
-                [disabled]="isAnimationLocked()"
-                (click)="chooseColor('red')"
-              >
-                <span class="prediction-btn__icon">&hearts;</span>
-                <span class="prediction-btn__label" [translate]="'game.turn1.red'"></span>
-              </button>
-              <button
-                [attr.aria-label]="'game.turn1.black' | translate"
-                class="prediction-btn prediction-btn--black"
-                [ngClass]="{
-                  'prediction-btn--selected': selectedChoice() === 'black',
-                  'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'black',
-                }"
-                [disabled]="isAnimationLocked()"
-                (click)="chooseColor('black')"
-              >
-                <span class="prediction-btn__icon">&spades;</span>
-                <span class="prediction-btn__label" [translate]="'game.turn1.black'"></span>
-              </button>
-            </div>
-          }
-          @if (displayTurn === 2) {
-            <div class="prediction-panel__choices-row">
-              <button
-                [attr.aria-label]="'game.turn2.higher' | translate"
-                class="prediction-btn"
-                [ngClass]="{
-                  'prediction-btn--selected': selectedChoice() === 'plus',
-                  'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'plus',
-                }"
-                [disabled]="isAnimationLocked()"
-                (click)="plusOrMinus('plus')"
-              >
-                <span class="prediction-btn__icon prediction-btn__icon--up">&uarr;</span>
-                <span class="prediction-btn__label" [translate]="'game.turn2.higher'"></span>
-              </button>
-              <button
-                [attr.aria-label]="'game.turn2.lower' | translate"
-                class="prediction-btn"
-                [ngClass]="{
-                  'prediction-btn--selected': selectedChoice() === 'minus',
-                  'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'minus',
-                }"
-                [disabled]="isAnimationLocked()"
-                (click)="plusOrMinus('minus')"
-              >
-                <span class="prediction-btn__icon prediction-btn__icon--down">&darr;</span>
-                <span class="prediction-btn__label" [translate]="'game.turn2.lower'"></span>
-              </button>
-              @if (getReferenceCard(); as refCard) {
-                <div class="prediction-panel__reference">
-                  <span class="prediction-panel__reference-label" [translate]="'game.turn2.referenceHint'"></span>
-                  <app-playing-card [card]="refCard"></app-playing-card>
-                </div>
-              }
-            </div>
-          }
-          @if (displayTurn === 3) {
-            @let inOutRefCards = displayPlayer()?.cards?.slice(0, 2) ?? [];
-            <div class="prediction-panel__choices-row">
-              <button
-                [attr.aria-label]="'game.turn3.in' | translate"
-                class="prediction-btn prediction-btn--inout"
-                [ngClass]="{
-                  'prediction-btn--selected': selectedChoice() === 'in',
-                  'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'in',
-                }"
-                [disabled]="isAnimationLocked()"
-                (click)="inOut('in')"
-              >
-                @for (card of inOutRefCards; track $index; let i = $index) {
-                  <div class="inout-card-wrapper">
-                    <app-playing-card [card]="card"></app-playing-card>
-                    @if (i === 0) {
-                      <span class="inout-caret">
-                        <fa-icon [icon]="['fas', 'caret-right']"></fa-icon>
-                        <fa-icon [icon]="['fas', 'caret-left']"></fa-icon>
-                      </span>
-                    }
-                  </div>
-                }
-              </button>
-              <button
-                [attr.aria-label]="'game.turn3.out' | translate"
-                class="prediction-btn prediction-btn--inout"
-                [ngClass]="{
-                  'prediction-btn--selected': selectedChoice() === 'out',
-                  'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'out',
-                }"
-                [disabled]="isAnimationLocked()"
-                (click)="inOut('out')"
-              >
-                @for (card of inOutRefCards; track $index; let i = $index) {
-                  <div class="inout-card-wrapper">
-                    @if (i === 0) {
-                      <span class="inout-caret"><fa-icon [icon]="['fas', 'caret-left']"></fa-icon></span>
-                    }
-                    <app-playing-card [card]="card"></app-playing-card>
-                    @if (i === 1) {
-                      <span class="inout-caret"><fa-icon [icon]="['fas', 'caret-right']"></fa-icon></span>
-                    }
-                  </div>
-                }
-              </button>
-            </div>
-          }
-          @if (displayTurn === 4) {
-            <div class="prediction-panel__choices-row">
-              <button
-                [attr.aria-label]="'game.turn4.hearts' | translate"
-                class="prediction-btn prediction-btn--suit"
-                [ngClass]="{
-                  'prediction-btn--selected': selectedChoice() === 'hearts',
-                  'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'hearts',
-                }"
-                [disabled]="isAnimationLocked()"
-                (click)="chooseSuit('hearts')"
-              >
-                <span class="prediction-btn__suit-icon prediction-btn__suit-icon--red">&hearts;</span>
-              </button>
-              <button
-                [attr.aria-label]="'game.turn4.diamonds' | translate"
-                class="prediction-btn prediction-btn--suit"
-                [ngClass]="{
-                  'prediction-btn--selected': selectedChoice() === 'diams',
-                  'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'diams',
-                }"
-                [disabled]="isAnimationLocked()"
-                (click)="chooseSuit('diams')"
-              >
-                <span class="prediction-btn__suit-icon prediction-btn__suit-icon--red">&diams;</span>
-              </button>
-              <button
-                [attr.aria-label]="'game.turn4.spades' | translate"
-                class="prediction-btn prediction-btn--suit"
-                [ngClass]="{
-                  'prediction-btn--selected': selectedChoice() === 'spades',
-                  'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'spades',
-                }"
-                [disabled]="isAnimationLocked()"
-                (click)="chooseSuit('spades')"
-              >
-                <span class="prediction-btn__suit-icon">&spades;</span>
-              </button>
-              <button
-                [attr.aria-label]="'game.turn4.clubs' | translate"
-                class="prediction-btn prediction-btn--suit"
-                [ngClass]="{
-                  'prediction-btn--selected': selectedChoice() === 'clubs',
-                  'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'clubs',
-                }"
-                [disabled]="isAnimationLocked()"
-                (click)="chooseSuit('clubs')"
-              >
-                <span class="prediction-btn__suit-icon">&clubs;</span>
-              </button>
-            </div>
-          }
-
-          <!-- Card reveal after prediction -->
-          @if (['revealing', 'result', 'transitioning'].includes(animationPhase())) {
+        <!-- Card reveal after prediction -->
+        @if (['revealing', 'result', 'transitioning'].includes(animationPhase())) {
+          <div
+            class="card-reveal"
+            [ngClass]="{
+              'card-reveal--correct': animationPhase() === 'result' && predictionCorrect(),
+              'card-reveal--incorrect': animationPhase() === 'result' && predictionIncorrect(),
+              'card-reveal--shake': animationPhase() === 'result' && predictionIncorrect(),
+            }"
+          >
             <div
-              class="card-reveal"
-              [ngClass]="{
-                'card-reveal--correct': animationPhase() === 'result' && predictionCorrect(),
-                'card-reveal--incorrect': animationPhase() === 'result' && predictionIncorrect(),
-                'card-reveal--shake': animationPhase() === 'result' && predictionIncorrect(),
-              }"
+              class="card-reveal__flip"
+              [ngClass]="{ 'card-reveal__flip--revealed': animationPhase() !== 'revealing' }"
             >
-              <div
-                class="card-reveal__flip"
-                [ngClass]="{ 'card-reveal__flip--revealed': animationPhase() !== 'revealing' }"
-              >
-                <div class="card-reveal__back"></div>
-                <div class="card-reveal__front">
-                  @if (revealedCard(); as card) {
-                    <img [src]="card.img" [alt]="(card.value ?? '') + ' ' + (card.suit ?? '')" />
-                  }
-                </div>
+              <div class="card-reveal__back"></div>
+              <div class="card-reveal__front">
+                @if (revealedCard(); as card) {
+                  <img [src]="card.img" [alt]="(card.value ?? '') + ' ' + (card.suit ?? '')" />
+                }
               </div>
             </div>
-            <!-- Screen reader announcement for prediction result -->
-            @if (animationPhase() === 'result') {
-              <div class="visually-hidden" aria-live="polite">
-                {{
-                  predictionCorrect()
-                    ? ('game.prediction.correct' | translate)
-                    : ('game.prediction.incorrect' | translate)
-                }}
-              </div>
-            }
-          }
-        </div>
-      </div>
-    }
-
-    <!-- Phase 2: Draw Pile + Split Lane (visually hidden while a Phase 1 animation is
-          still running so the draw pile state is preserved across the transition) -->
-    @if (gameSrv.phase() === 2) {
-      <div class="prediction-panel prediction-panel--phase2" [class.prediction-panel--locked]="isAnimationLocked()">
-        @if (gameSrv.isGameStarted() || gameSrv.isGameFinished()) {
-          <!-- Phase 2 guidance (only shown when sips remain to distribute).
-               The drink/give counts are surfaced by the per-lane labels with icons
-               below — no need to duplicate them here. -->
-          @if (!phase2DistributionDone() && gameSrv.isNotAllSipsGiven()) {
-            <div class="phase2-header">
-              <div class="phase2-header__guidance">
-                <span [translate]="'Phase2_Sip_Guidance'"></span>
-              </div>
-            </div>
-          }
-          @if (!phase2Complete()) {
-            <div class="draw-layout">
-              <!-- Left lane: drink cards (red) -->
-              <div class="draw-lane draw-lane--drink">
-                <span class="draw-lane__label draw-lane__label--drink">
-                  <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon>
-                  {{ gameSrv.drinkingCards().length }}/6
-                </span>
-                <div class="draw-lane__cards">
-                  @for (card of gameSrv.drinkingCards(); track $index) {
-                    <app-playing-card
-                      [card]="card"
-                      [faceDown]="true"
-                      [flipped]="true"
-                      [glowColor]="'red'"
-                      [leftOverlap]="$index !== 0"
-                    ></app-playing-card>
-                  }
-                </div>
-              </div>
-
-              <!-- Center: draw pile -->
-              <div class="draw-pile">
-                <button
-                  class="draw-pile__btn"
-                  [disabled]="revealingPhase2()"
-                  (click)="onDrawPhase2Card()"
-                  [ngClass]="{
-                    'draw-pile__btn--drink': nextIsDrink(),
-                    'draw-pile__btn--give': !nextIsDrink(),
-                  }"
-                >
-                  <!-- Stacked card backs for depth effect -->
-                  <div class="draw-pile__stack">
-                    @if (cardsRemaining() > 2) {
-                      <div class="draw-pile__card draw-pile__card--3"></div>
-                    }
-                    @if (cardsRemaining() > 1) {
-                      <div class="draw-pile__card draw-pile__card--2"></div>
-                    }
-                    <div class="draw-pile__card draw-pile__card--1">
-                      @if (revealingPhase2() && lastDrawnCard(); as drawn) {
-                        <app-playing-card
-                          [card]="drawn"
-                          [faceDown]="true"
-                          [flipped]="true"
-                          [glowColor]="lastDrawnIsDrink() ? 'red' : 'green'"
-                        ></app-playing-card>
-                      } @else {
-                        <img src="assets/images/cards/svg/blue_back.svg" alt="draw pile" />
-                      }
-                    </div>
-                  </div>
-                  <span
-                    class="draw-pile__sip-badge"
-                    [ngClass]="{
-                      'draw-pile__sip-badge--drink': nextIsDrink(),
-                      'draw-pile__sip-badge--give': !nextIsDrink(),
-                    }"
-                  >
-                    <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon>
-                    <span class="draw-pile__sip-badge-value">{{ nextSipValue() }}</span>
-                  </span>
-                </button>
-              </div>
-
-              <!-- Right lane: give cards (green) -->
-              <div class="draw-lane draw-lane--give">
-                <span class="draw-lane__label draw-lane__label--give">
-                  <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon>
-                  {{ gameSrv.givingCards().length }}/6
-                </span>
-                <div class="draw-lane__cards">
-                  @for (card of gameSrv.givingCards(); track $index) {
-                    <app-playing-card
-                      [card]="card"
-                      [faceDown]="true"
-                      [flipped]="true"
-                      [glowColor]="'green'"
-                      [leftOverlap]="$index !== 0"
-                    ></app-playing-card>
-                  }
-                </div>
-              </div>
-            </div>
-          } @else if (!phase2DistributionDone()) {
-            <!-- Cards all drawn but sips still owed: prompt user to finish distribution -->
-            <div class="phase2-pending-distribution">
-              <p class="phase2-pending-distribution__message" [translate]="'Phase2_Sip_Guidance'"></p>
-              <p class="phase2-pending-distribution__hint">
-                Touche le badge rose <span class="phase2-pending-distribution__pill">+N 🍷</span> sur la fiche d'un
-                joueur pour rouvrir la distribution.
-              </p>
-            </div>
-          } @else {
-            <!-- End of round: clean full-width actions panel -->
-            <div class="phase2-actions">
-              <button
-                type="button"
-                class="prediction-btn prediction-btn--start"
-                (click)="restartGame()"
-                [translate]="'Button_Restart'"
-              ></button>
-              @if (gameSrv.isGameFinished() && gameSrv.isSummaryActivated() && !gameSrv.isSummaryMode()) {
-                <button
-                  type="button"
-                  class="prediction-btn prediction-btn--start"
-                  (click)="displaySummary()"
-                  [translate]="'Button_Display_Summary'"
-                ></button>
-              }
+          </div>
+          <!-- Screen reader announcement for prediction result -->
+          @if (animationPhase() === 'result') {
+            <div class="visually-hidden" aria-live="polite">
+              {{
+                predictionCorrect()
+                  ? ('game.prediction.correct' | translate)
+                  : ('game.prediction.incorrect' | translate)
+              }}
             </div>
           }
         }
       </div>
-    }
+    </div>
+  }
 
-    @if (gameSrv.isNewGame() && isPlayersPage()) {
-      <div class="prediction-panel">
-        <button
-          type="button"
-          class="prediction-btn prediction-btn--start"
-          [disabled]="!hasPlayers()"
-          (click)="beginGame()"
-          [translate]="'Button_BeginGame'"
-        ></button>
-        <small
-          class="minimum-players-hint"
-          [class.minimum-players-hint--hidden]="hasPlayers()"
-          [translate]="'Label_MinimumPlayers'"
-        ></small>
-      </div>
-    }
+  <!-- Phase 2: Draw Pile + Split Lane (visually hidden while a Phase 1 animation is
+          still running so the draw pile state is preserved across the transition) -->
+  @if (gameSrv.phase() === 2) {
+    <div class="prediction-panel prediction-panel--phase2" [class.prediction-panel--locked]="isAnimationLocked()">
+      @if (gameSrv.isGameStarted() || gameSrv.isGameFinished()) {
+        <!-- Phase 2 guidance (only shown when sips remain to distribute).
+               The drink/give counts are surfaced by the per-lane labels with icons
+               below — no need to duplicate them here. -->
+        @if (!phase2DistributionDone() && gameSrv.isNotAllSipsGiven()) {
+          <div class="phase2-header">
+            <div class="phase2-header__guidance">
+              <span [translate]="'Phase2_Sip_Guidance'"></span>
+            </div>
+          </div>
+        }
+        @if (!phase2Complete()) {
+          <div class="draw-layout">
+            <!-- Left lane: drink cards (red) -->
+            <div class="draw-lane draw-lane--drink">
+              <span class="draw-lane__label draw-lane__label--drink">
+                <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon>
+                {{ gameSrv.drinkingCards().length }}/6
+              </span>
+              <div class="draw-lane__cards">
+                @for (card of gameSrv.drinkingCards(); track $index) {
+                  <app-playing-card
+                    [card]="card"
+                    [faceDown]="true"
+                    [flipped]="true"
+                    [glowColor]="'red'"
+                    [leftOverlap]="$index !== 0"
+                  ></app-playing-card>
+                }
+              </div>
+            </div>
+
+            <!-- Center: draw pile -->
+            <div class="draw-pile">
+              <button
+                class="draw-pile__btn"
+                [disabled]="revealingPhase2()"
+                (click)="onDrawPhase2Card()"
+                [ngClass]="{
+                  'draw-pile__btn--drink': nextIsDrink(),
+                  'draw-pile__btn--give': !nextIsDrink(),
+                }"
+              >
+                <!-- Stacked card backs for depth effect -->
+                <div class="draw-pile__stack">
+                  @if (cardsRemaining() > 2) {
+                    <div class="draw-pile__card draw-pile__card--3"></div>
+                  }
+                  @if (cardsRemaining() > 1) {
+                    <div class="draw-pile__card draw-pile__card--2"></div>
+                  }
+                  <div class="draw-pile__card draw-pile__card--1">
+                    @if (revealingPhase2() && lastDrawnCard(); as drawn) {
+                      <app-playing-card
+                        [card]="drawn"
+                        [faceDown]="true"
+                        [flipped]="true"
+                        [glowColor]="lastDrawnIsDrink() ? 'red' : 'green'"
+                      ></app-playing-card>
+                    } @else {
+                      <img src="assets/images/cards/svg/blue_back.svg" alt="draw pile" />
+                    }
+                  </div>
+                </div>
+                <span
+                  class="draw-pile__sip-badge"
+                  [ngClass]="{
+                    'draw-pile__sip-badge--drink': nextIsDrink(),
+                    'draw-pile__sip-badge--give': !nextIsDrink(),
+                  }"
+                >
+                  <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon>
+                  <span class="draw-pile__sip-badge-value">{{ nextSipValue() }}</span>
+                </span>
+              </button>
+            </div>
+
+            <!-- Right lane: give cards (green) -->
+            <div class="draw-lane draw-lane--give">
+              <span class="draw-lane__label draw-lane__label--give">
+                <fa-icon [icon]="['fas', 'wine-glass']"></fa-icon>
+                {{ gameSrv.givingCards().length }}/6
+              </span>
+              <div class="draw-lane__cards">
+                @for (card of gameSrv.givingCards(); track $index) {
+                  <app-playing-card
+                    [card]="card"
+                    [faceDown]="true"
+                    [flipped]="true"
+                    [glowColor]="'green'"
+                    [leftOverlap]="$index !== 0"
+                  ></app-playing-card>
+                }
+              </div>
+            </div>
+          </div>
+        } @else if (!phase2DistributionDone()) {
+          <!-- Cards all drawn but sips still owed: prompt user to finish distribution -->
+          <div class="phase2-pending-distribution">
+            <p class="phase2-pending-distribution__message" [translate]="'Phase2_Sip_Guidance'"></p>
+            <p class="phase2-pending-distribution__hint">
+              Touche le badge rose <span class="phase2-pending-distribution__pill">+N 🍷</span> sur la fiche d'un joueur
+              pour rouvrir la distribution.
+            </p>
+          </div>
+        } @else {
+          <!-- End of round: clean full-width actions panel -->
+          <div class="phase2-actions">
+            <button
+              type="button"
+              class="prediction-btn prediction-btn--start"
+              (click)="restartGame()"
+              [translate]="'Button_Restart'"
+            ></button>
+            @if (gameSrv.isGameFinished() && gameSrv.isSummaryActivated() && !gameSrv.isSummaryMode()) {
+              <button
+                type="button"
+                class="prediction-btn prediction-btn--start"
+                (click)="displaySummary()"
+                [translate]="'Button_Display_Summary'"
+              ></button>
+            }
+          </div>
+        }
+      }
+    </div>
+  }
+
+  @if (gameSrv.isNewGame() && isPlayersPage()) {
+    <div class="prediction-panel">
+      <button
+        type="button"
+        class="prediction-btn prediction-btn--start"
+        [disabled]="!hasPlayers()"
+        (click)="beginGame()"
+        [translate]="'Button_BeginGame'"
+      ></button>
+      <small
+        class="minimum-players-hint"
+        [class.minimum-players-hint--hidden]="hasPlayers()"
+        [translate]="'Label_MinimumPlayers'"
+      ></small>
+    </div>
   }
 </div>
 <app-toast #notAllSipsGiven [titleMessage]="'Warning'" [bodyMessage]="'Assign_All_Sips'"></app-toast>
