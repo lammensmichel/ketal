@@ -203,17 +203,17 @@ export class FooterComponent implements OnDestroy {
 
   // === Template debug helpers (called from HTML @let _ = ...) ===
   logFooterDebug(): void {
-    console.log('[DEBUG] footer rendering:', { 
-      url: window.location.pathname, 
+    console.log('[DEBUG] footer rendering:', {
+      url: window.location.pathname,
       isLoggedIn: this.authService.isLoggedIn(),
       isGameStarted: this.gameSrv.isGameStarted(),
-      isTurn1: [1,2,3,4].includes(this.gameSrv.turn()),
+      isTurn1: [1, 2, 3, 4].includes(this.gameSrv.turn()),
       isAnimationLocked: this.isAnimationLocked(),
       isNewGame: this.gameSrv.isNewGame(),
       status: this.gameSrv.status(),
       isPlayersPage: this.isPlayersPage(),
       playerCount: this.playerHelper.getPlayers().length,
-      hasPlayers: this.hasPlayers()
+      hasPlayers: this.hasPlayers(),
     });
   }
 
@@ -225,7 +225,7 @@ export class FooterComponent implements OnDestroy {
     console.log('[DEBUG] setup button rendering', {
       isNewGame: this.gameSrv.isNewGame(),
       isPlayersPage: this.isPlayersPage(),
-      hasPlayers: this.hasPlayers()
+      hasPlayers: this.hasPlayers(),
     });
   }
 
