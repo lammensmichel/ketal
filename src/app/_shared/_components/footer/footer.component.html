@@ -140,6 +140,28 @@
                   </div>
                 }
               </button>
+              <button
+                [attr.aria-label]="'game.turn3.out' | translate"
+                class="prediction-btn prediction-btn--inout"
+                [ngClass]="{
+                  'prediction-btn--selected': selectedChoice() === 'out',
+                  'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'out',
+                }"
+                [disabled]="isAnimationLocked()"
+                (click)="inOut('out')"
+              >
+                @for (card of inOutRefCards; track $index; let i = $index) {
+                  <div class="inout-card-wrapper">
+                    @if (i === 0) {
+                      <span class="inout-caret"><fa-icon [icon]="['fas', 'caret-left']"></fa-icon></span>
+                    }
+                    <app-playing-card [card]="card"></app-playing-card>
+                    @if (i === 1) {
+                      <span class="inout-caret"><fa-icon [icon]="['fas', 'caret-right']"></fa-icon></span>
+                    }
+                  </div>
+                }
+              </button>
             </div>
           }
           @if (displayTurn === 4) {
@@ -364,9 +386,9 @@
       </div>
     }
 
-    <!-- Button to start game — visible when game hasn't started -->
-    @if (!gameSrv.isGameStarted()) {
-      <div class="prediction-panel prediction-panel--start">
+    <!-- Button to start game — always visible on /players during setup -->
+    @if (gameSrv.isNewGame() && isPlayersPage()) {
+      <div class="prediction-panel">
         <button
           type="button"
           class="prediction-btn prediction-btn--start"
@@ -375,8 +397,9 @@
           [translate]="'Button_BeginGame'"
         ></button>
         <small
-          [translate]="'Label_MinimumPlayers'"
+          class="minimum-players-hint"
           [class.minimum-players-hint--hidden]="hasPlayers()"
+          [translate]="'Label_MinimumPlayers'"
         ></small>
       </div>
     }
