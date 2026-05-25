@@ -160,14 +160,78 @@ export class FooterComponent implements OnDestroy {
 
   /** Check if current route is a page where game footer should be hidden */
   isHiddenPage(): boolean {
-    const result = HIDDEN_ROUTES.some((route) => this.router.url.startsWith(route));
-    // console.log('[Footer] isHiddenPage:', result, 'router.url:', this.router.url, 'HIDDEN_ROUTES:', HIDDEN_ROUTES);
+    const urlPath = this.router.url.split('?')[0].split('#')[0];
+    // Check if any hidden route prefix matches the current URL path
+    const result = HIDDEN_ROUTES.some((route) => urlPath.startsWith(route));
+    console.log(
+      '[Footer] isHiddenPage:',
+      result,
+      'router.url:',
+      this.router.url,
+      'HIDDEN_ROUTES:',
+      HIDDEN_ROUTES,
+      'urlPath:',
+      urlPath,
+      'isPlayersPage:',
+      this.isPlayersPage() ? 'YES' : 'NO',
+      'urlMatchesRoute:',
+      HIDDEN_ROUTES.map((r) => ({ route: r, matches: urlPath.startsWith(r) }))
+    );
     return result;
   }
 
   /** Check if current route is the players page (where local game start UI should be visible) */
   isPlayersPage(): boolean {
-    return this.router.url.split('?')[0] === '/players';
+    const result = this.router.url.split('?')[0] === '/players';
+    console.log('[DEBUG footer] isPlayersPage():', result, 'url:', this.router.url);
+    return result;
+  }
+
+  /** Debug wrapper for gameSrv.isNewGame() */
+  isNewGame(): boolean {
+    const result = this.gameSrv.isNewGame();
+    console.log('[DEBUG footer] isNewGame():', result, 'status:', this.gameSrv.status());
+    return result;
+  }
+
+  hasPlayers(): boolean {
+    const count = this.playerHelper?.getPlayers()?.length ?? 0;
+    const result = count > 1;
+    console.log('[DEBUG footer] hasPlayers():', result, 'count:', count);
+    return result;
+  }
+
+  // === Template debug helpers (called from HTML @let _ = ...) ===
+  logFooterDebug(): void {
+    console.log('[DEBUG] footer rendering:', { 
+      url: window.location.pathname, 
+      isLoggedIn: this.authService.isLoggedIn(),
+      isGameStarted: this.gameSrv.isGameStarted(),
+      isTurn1: [1,2,3,4].includes(this.gameSrv.turn()),
+      isAnimationLocked: this.isAnimationLocked(),
+      isNewGame: this.gameSrv.isNewGame(),
+      status: this.gameSrv.status(),
+      isPlayersPage: this.isPlayersPage(),
+      playerCount: this.playerHelper.getPlayers().length,
+      hasPlayers: this.hasPlayers()
+    });
+  }
+
+  logActivePlayerDebug(player: PlayerModel | null): void {
+    console.log('[DEBUG] activePlayer rendering:', player);
+  }
+
+  logSetupButtonDebug(): void {
+    console.log('[DEBUG] setup button rendering', {
+      isNewGame: this.gameSrv.isNewGame(),
+      isPlayersPage: this.isPlayersPage(),
+      hasPlayers: this.hasPlayers()
+    });
+  }
+
+  needsMorePlayers(): boolean {
+    const count = this.playerHelper?.getPlayers()?.length ?? 0;
+    return count > 0 && count < 2;
   }
 
   chooseColor(color: string) {
@@ -396,15 +460,6 @@ export class FooterComponent implements OnDestroy {
       this.lastDrawnCard.set(null);
       this.openSipGiveModal(newCard);
     }, flipDelay);
-  }
-
-  hasPlayers(): boolean {
-    return this.playerHelper?.getPlayers()?.length > 1;
-  }
-
-  needsMorePlayers(): boolean {
-    const count = this.playerHelper?.getPlayers()?.length ?? 0;
-    return count > 0 && count < 2;
   }
 
   async beginGame(): Promise<void> {
