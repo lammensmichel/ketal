@@ -219,30 +219,24 @@ export class GameService {
     return this.loadFromLocalStorage();
   }
 
-  // ========================
-  // LocalStorage Persistence
-  // ========================
-
   /**
-   * Save game state to localStorage
-   * Used in local mode for offline play
+   * Load game state from localStorage (public for manual reloads).
+   * Used in local mode for offline play.
    */
-  private saveToLocalStorage(game: Game): void {
-    this.localSrv.saveData('game', JSON.stringify(game));
-  }
-
-  /**
-   * Load game state from localStorage
-   * Used in local mode for offline play
-   */
-  private loadFromLocalStorage(): Game | null {
+  public loadFromLocalStorage(): Game | null {
     const data = this.localSrv.getData('game');
     return data ? JSON.parse(data) : null;
   }
 
-  // ========================
-  // Appwrite Persistence
-  // ========================
+  /**
+   * Save game state to localStorage.
+   * Used in local mode for offline play.
+   */
+  public saveToLocalStorage(game: Game): void {
+    const gameData = JSON.stringify(JSON.parse(JSON.stringify(game)));
+    this.localSrv.saveData('game', gameData);
+    console.log('[GameService] saveToLocalStorage saved with status:', game.status, 'data:', gameData.substring(0, 200));
+  }
 
   /**
    * Save game state to Appwrite via KetalSessionService.
@@ -472,8 +466,10 @@ export class GameService {
   private updateGame(updater: (game: Game) => void): void {
     const currentGame = this._game();
     if (currentGame) {
-      updater(currentGame);
-      this.saveAndNotify(currentGame);
+      // Create a deep clone to ensure mutation is detected by Angular's change detection
+      const gameClone = JSON.parse(JSON.stringify(currentGame));
+      updater(gameClone);
+      this.saveAndNotify(gameClone);
     }
   }
 
@@ -505,6 +501,11 @@ export class GameService {
 
     // Deep clone to ensure signal detects changes in nested objects
     this._game.set(JSON.parse(JSON.stringify(game)));
+    
+    // Log to verify persistence - check actual localStorage value
+    const saved = this.localSrv.getData('game');
+    const savedObj = saved ? JSON.parse(saved) : null;
+    console.log('[GameService] saveAndNotify - localStorage game status:', savedObj?.status, 'signal status:', this.status(), 'passed game status:', game.status);
   }
 
   /**
@@ -618,6 +619,10 @@ export class GameService {
 
       this.playerHelper.savePlayerToStorage(game.players);
     });
+    
+    // Log after updateGame completes to verify persistence
+    const saved = this.localSrv.getData('game');
+    console.log('[GameService] resetGame() completed, localStorage status:', saved ? JSON.parse(saved).status : 'null', 'signal status:', this.status());
   }
 
   setStatus(status: number): void {
