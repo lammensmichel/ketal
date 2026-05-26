@@ -20,6 +20,9 @@ type AnimationPhase = 'idle' | 'selected' | 'revealing' | 'result' | 'transition
 /** Routes where the game footer should be hidden */
 const HIDDEN_ROUTES = ['/login', '/register', '/forgot-password', '/room', '/home'];
 
+/** Special case: /players should always show footer even when connected */
+const PLAYERS_ROUTES = ['/players'];
+
 /** Key used to store pending summary flag in localStorage */
 const PENDING_SUMMARY_KEY = 'pendingSummary';
 
@@ -161,6 +164,10 @@ export class FooterComponent implements OnDestroy {
   /** Check if current route is a page where game footer should be hidden */
   isHiddenPage(): boolean {
     const urlPath = this.router.url.split('?')[0].split('#')[0];
+    // /players is NOT a hidden route - always show footer
+    if (urlPath === '/players' || urlPath.startsWith('/players/')) {
+      return false;
+    }
     // Check if any hidden route prefix matches the current URL path
     const result = HIDDEN_ROUTES.some((route) => urlPath.startsWith(route));
     console.log(

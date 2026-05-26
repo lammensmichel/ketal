@@ -12,8 +12,12 @@ if [ ! -z "$pids" ]; then
 fi
 
 # Démarrer le serveur
+# setsid : crée un nouveau session group → survit à la mort du parent shell
+# (utile quand le script est lancé par un sub-agent opencode dont les bg processes
+# sont killés à la fin du tour)
 echo "▶  Démarrage de Angular (port 4200, polling 2s) ..."
-nohup npx ng serve --host 0.0.0.0 --port 4200 --disable-host-check --poll 2000 > /tmp/ng-serve.log 2>&1 &
+setsid nohup npx ng serve --host 0.0.0.0 --port 4200 --disable-host-check --poll 2000 </dev/null > /tmp/ng-serve.log 2>&1 &
+disown
 
 # Attendre la compilation
 echo "⏳ Attente de la compilation..."
