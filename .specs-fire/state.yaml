@@ -177,6 +177,60 @@ intents:
         status: completed
         run_id: run-ketal-006
         completed_at: 2026-05-18T15:55:26.108Z
+  - id: friends-and-persistent-rooms
+    title: Amis & rooms persistantes
+    status: in_progress
+    created: 2026-05-30T00:00:00Z
+    priority: high
+    type: feature
+    work_items:
+      - id: wi-001
+        title: Room connectée persistante & visible dans /rooms
+        intent: friends-and-persistent-rooms
+        complexity: medium
+        mode: confirm
+        status: pending
+        depends_on: []
+      - id: wi-002
+        title: Migration backend — nickname utilisateur + collection friendships
+        intent: friends-and-persistent-rooms
+        complexity: high
+        mode: validate
+        status: pending
+        depends_on: []
+      - id: wi-003
+        title: FriendService (frontend) — favoris, recherche pseudo + QR
+        intent: friends-and-persistent-rooms
+        complexity: medium
+        mode: confirm
+        status: pending
+        depends_on:
+          - wi-002
+      - id: wi-004
+        title: Écran de gestion des amis
+        intent: friends-and-persistent-rooms
+        complexity: medium
+        mode: confirm
+        status: pending
+        depends_on:
+          - wi-003
+      - id: wi-005
+        title: Sélection d'amis + soi-même dans /players
+        intent: friends-and-persistent-rooms
+        complexity: medium
+        mode: confirm
+        status: pending
+        depends_on:
+          - wi-003
+          - wi-001
+      - id: wi-006
+        title: Stats agrégées par utilisateur enregistré (userId)
+        intent: friends-and-persistent-rooms
+        complexity: high
+        mode: validate
+        status: pending
+        depends_on:
+          - wi-002
 runs:
   active: []
   completed:
