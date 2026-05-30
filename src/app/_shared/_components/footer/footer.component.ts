@@ -175,44 +175,12 @@ export class FooterComponent implements OnDestroy {
 
   /** Check if current route is the players page (where local game start UI should be visible) */
   isPlayersPage(): boolean {
-    const result = this.router.url.split('?')[0] === '/players';
-    console.log('[DEBUG footer] isPlayersPage():', result, 'url:', this.router.url);
-    return result;
+    return this.router.url.split('?')[0] === '/players';
   }
 
   hasPlayers(): boolean {
     const count = this.playerHelper?.getPlayers()?.length ?? 0;
-    const result = count > 1;
-    console.log('[DEBUG footer] hasPlayers():', result, 'count:', count);
-    return result;
-  }
-
-  // === Template debug helpers (called from HTML @let _ = ...) ===
-  logFooterDebug(): void {
-    console.log('[DEBUG] footer rendering:', {
-      url: window.location.pathname,
-      isLoggedIn: this.authService.isLoggedIn(),
-      isGameStarted: this.gameSrv.isGameStarted(),
-      isTurn1: [1, 2, 3, 4].includes(this.gameSrv.turn()),
-      isAnimationLocked: this.isAnimationLocked(),
-      isNewGame: this.gameSrv.isNewGame(),
-      status: this.gameSrv.status(),
-      isPlayersPage: this.isPlayersPage(),
-      playerCount: this.playerHelper.getPlayers().length,
-      hasPlayers: this.hasPlayers(),
-    });
-  }
-
-  logActivePlayerDebug(player: PlayerModel | null): void {
-    console.log('[DEBUG] activePlayer rendering:', player);
-  }
-
-  logSetupButtonDebug(): void {
-    console.log('[DEBUG] setup button rendering', {
-      isNewGame: this.gameSrv.isNewGame(),
-      isPlayersPage: this.isPlayersPage(),
-      hasPlayers: this.hasPlayers(),
-    });
+    return count > 1;
   }
 
   needsMorePlayers(): boolean {
@@ -449,7 +417,6 @@ export class FooterComponent implements OnDestroy {
   }
 
   async beginGame(): Promise<void> {
-    // console.log('[Footer] beginGame() called - isNewGame:', this.gameSrv.isNewGame(), 'status:', this.gameSrv.status());
     if (this._beginGameInProgress) {
       return;
     }

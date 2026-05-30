@@ -23,6 +23,7 @@ import {
   faRightFromBracket,
   faPause,
   faRotateRight,
+  faFolder,
 } from '@fortawesome/free-solid-svg-icons';
 
 @NgModule({
@@ -52,7 +53,8 @@ export class FontAwesomeIconsModule {
       faDoorOpen,
       faRightFromBracket,
       faPause,
-      faRotateRight
+      faRotateRight,
+      faFolder
     );
   }
 }

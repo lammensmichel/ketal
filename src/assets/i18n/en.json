@@ -177,6 +177,7 @@
   },
   "menu": {
     "connect": "Log in",
+    "myRooms": "My games",
     "quitGame": "Quit game"
   },
   "userMenu": {

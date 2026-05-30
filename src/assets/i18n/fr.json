@@ -178,6 +178,7 @@
   },
   "menu": {
     "connect": "Se connecter",
+    "myRooms": "Mes parties",
     "quitGame": "Quitter la partie"
   },
   "userMenu": {

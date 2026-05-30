@@ -613,10 +613,6 @@ export class GameService {
 
       this.playerHelper.savePlayerToStorage(game.players);
     });
-    
-    // Log after updateGame completes to verify persistence
-    const saved = this.localSrv.getData('game');
-    console.log('[GameService] resetGame() completed, localStorage status:', saved ? JSON.parse(saved).status : 'null', 'signal status:', this.status());
   }
 
   setStatus(status: number): void {
