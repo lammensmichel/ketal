@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Output, signal, computed, DestroyRef, OnInit } from '@angular/core';
+import { Component, EventEmitter, inject, Output, signal, computed, DestroyRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { NgClass } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -20,7 +20,7 @@ import { PlayerListPlayerComponent } from '../player-list-player/player-list-pla
   standalone: true,
   imports: [NgClass, ReactiveFormsModule, TranslateModule, PlayerListPlayerComponent, QRCodeComponent],
 })
-export class PlayersListComponent implements OnInit {
+export class PlayersListComponent {
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
   private readonly localService = inject(LocalService);
@@ -82,31 +82,6 @@ export class PlayersListComponent implements OnInit {
         clearTimeout(this.successTimeoutId);
       }
     });
-  }
-
-  ngOnInit(): void {
-    // Reset game status when navigating to /players page.
-    // This ensures the footer can show the "Begin Game" button when no game is in progress.
-    // Without this, if a previous game had status 1 or 2, the footer would have no visible content
-    // because:
-    // - isGameStarted() would be false (turn not 1-4, not animating)
-    // - phase would not be 2
-    // - isNewGame() would be false (status not 0)
-    console.log('[PlayersListComponent] ngInit - resetting game');
-    
-    // Reset game directly (this saves to localStorage and updates the signal)
-    this.gameSrv.resetGame();
-    
-    // Verify localStorage state after reset
-    const reloaded = this.gameSrv.loadFromLocalStorage();
-    console.log('[PlayersListComponent] After reset - localStorage status:', reloaded?.status, 'signal status:', this.gameSrv.status());
-    
-    // Reload players from storage since resetGame() may have saved an empty player list
-    const localPlayer = JSON.parse(this.localService.getData('players') as string);
-    if (localPlayer) {
-      this.playerHelper.players = localPlayer;
-    }
-    console.log('[PlayersListComponent] ngInit done');
   }
 
   public addPlayer() {
@@ -192,5 +167,9 @@ export class PlayersListComponent implements OnInit {
     } catch {
       // Clipboard API may not be available
     }
+  }
+
+  ngOnInit(): void {
+    // No-op: removed resetGame() that was causing regression
   }
 }

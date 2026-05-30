@@ -235,7 +235,6 @@ export class GameService {
   public saveToLocalStorage(game: Game): void {
     const gameData = JSON.stringify(JSON.parse(JSON.stringify(game)));
     this.localSrv.saveData('game', gameData);
-    console.log('[GameService] saveToLocalStorage saved with status:', game.status, 'data:', gameData.substring(0, 200));
   }
 
   /**
@@ -501,11 +500,6 @@ export class GameService {
 
     // Deep clone to ensure signal detects changes in nested objects
     this._game.set(JSON.parse(JSON.stringify(game)));
-    
-    // Log to verify persistence - check actual localStorage value
-    const saved = this.localSrv.getData('game');
-    const savedObj = saved ? JSON.parse(saved) : null;
-    console.log('[GameService] saveAndNotify - localStorage game status:', savedObj?.status, 'signal status:', this.status(), 'passed game status:', game.status);
   }
 
   /**

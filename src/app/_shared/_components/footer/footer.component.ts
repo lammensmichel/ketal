@@ -170,20 +170,6 @@ export class FooterComponent implements OnDestroy {
     }
     // Check if any hidden route prefix matches the current URL path
     const result = HIDDEN_ROUTES.some((route) => urlPath.startsWith(route));
-    console.log(
-      '[Footer] isHiddenPage:',
-      result,
-      'router.url:',
-      this.router.url,
-      'HIDDEN_ROUTES:',
-      HIDDEN_ROUTES,
-      'urlPath:',
-      urlPath,
-      'isPlayersPage:',
-      this.isPlayersPage() ? 'YES' : 'NO',
-      'urlMatchesRoute:',
-      HIDDEN_ROUTES.map((r) => ({ route: r, matches: urlPath.startsWith(r) }))
-    );
     return result;
   }
 
@@ -191,13 +177,6 @@ export class FooterComponent implements OnDestroy {
   isPlayersPage(): boolean {
     const result = this.router.url.split('?')[0] === '/players';
     console.log('[DEBUG footer] isPlayersPage():', result, 'url:', this.router.url);
-    return result;
-  }
-
-  /** Debug wrapper for gameSrv.isNewGame() */
-  isNewGame(): boolean {
-    const result = this.gameSrv.isNewGame();
-    console.log('[DEBUG footer] isNewGame():', result, 'status:', this.gameSrv.status());
     return result;
   }
 
