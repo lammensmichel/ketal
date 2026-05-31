@@ -73,7 +73,9 @@
 
   .empty-subtext {
     font-size: 0.9rem;
-    opacity: 0.7;
+    opacity: 0.8;
+    font-weight: 400;
+    color: var(--bs-body-color);
   }
 }
 
