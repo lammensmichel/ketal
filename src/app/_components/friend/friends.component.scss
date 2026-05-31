@@ -27,7 +27,7 @@
       color 0.2s;
 
     &:hover {
-      color: var(--bs-heading-color);
+      color: #1e293b;
       border-bottom-color: var(--bs-primary);
     }
 
@@ -60,17 +60,17 @@
   text-align: center;
 
   .fa-lock {
-    color: var(--bs-secondary-color);
+    color: #475569;
     margin-bottom: 1.5rem;
   }
 
   h3 {
-    color: var(--bs-heading-color);
+    color: #1e293b;
     margin-bottom: 0.5rem;
   }
 
   p {
-    color: var(--bs-secondary-color);
+    color: #475569;
     margin-bottom: 1.5rem;
   }
 

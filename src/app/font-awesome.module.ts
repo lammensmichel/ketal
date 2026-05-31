@@ -31,6 +31,7 @@ import {
   faSpinner,
   faCamera,
   faUserMinus,
+  faCopy,
 } from '@fortawesome/free-solid-svg-icons';
 
 @NgModule({
@@ -68,7 +69,8 @@ export class FontAwesomeIconsModule {
       faSearch,
       faSpinner,
       faCamera,
-      faUserMinus
+      faUserMinus,
+      faCopy
     );
   }
 }

@@ -11,12 +11,12 @@
 
   h2 {
     font-size: 1.5rem;
-    color: var(--bs-heading-color);
+    color: #1e293b;
     margin: 0;
 
     .friend-count {
       font-size: 1rem;
-      color: var(--bs-secondary-color);
+      color: #64748b;
       font-weight: 400;
       margin-left: 0.5rem;
     }
@@ -76,7 +76,7 @@
 
   .empty-subtext {
     font-size: 0.9rem;
-    color: #555555;
+    color: #475569;
     opacity: 0.9;
     font-weight: 400;
   }
