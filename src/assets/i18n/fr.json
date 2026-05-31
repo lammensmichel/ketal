@@ -179,6 +179,7 @@
   "menu": {
     "connect": "Se connecter",
     "myRooms": "Mes parties",
+    "friends": "Mes amis",
     "quitGame": "Quitter la partie"
   },
   "userMenu": {
@@ -255,5 +256,35 @@
       }
     }
   },
-  "Label_GameInProgress": "Partie en cours"
+  "Label_GameInProgress": "Partie en cours",
+  "friends": {
+    "title": "Mes amis",
+    "tabFriends": "Mes amis",
+    "tabAdd": "Ajouter",
+    "tabQr": "QR Code",
+    "loginRequired": "Connexion requise",
+    "loginRequiredDesc": "Veuillez vous connecter pour gérer vos amis",
+    "searchPlaceholder": "Rechercher des amis...",
+    "empty": "Aucun ami pour le moment",
+    "emptySubtext": "Ajoutez des amis pour les voir ici",
+    "remove": "Supprimer",
+    "addFriend": "Ajouter un ami",
+    "addByNickname": "Ajouter par pseudo",
+    "searchNickname": "Entrez le pseudo à rechercher",
+    "search": "Rechercher",
+    "searching": "Recherche en cours",
+    "resultsFound": "résultat(s) trouvé(s)",
+    "noResults": "Aucun utilisateur trouvé avec ce pseudo",
+    "currentFriends": "Vos amis",
+    "noFriendsYet": "Vous n'avez pas encore ajouté d'amis",
+    "loading": "Chargement",
+    "scanQr": "Scanner le code QR",
+    "scanHint": "Pointez votre caméra vers un code QR",
+    "startScan": "Démarrer le scan",
+    "scanSuccess": "Scan réussi !",
+    "scanSuccessDesc": "Ami ajouté avec succès",
+    "myQr": "Mon code QR",
+    "copy": "Copier",
+    "copied": "Copié !"
+  }
 }

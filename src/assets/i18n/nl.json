@@ -101,6 +101,7 @@
   "menu": {
     "connect": "Inloggen",
     "myRooms": "Mijn spellen",
+    "friends": "Mijn vrienden",
     "quitGame": "Spel verlaten"
   },
   "userMenu": {
@@ -150,5 +151,35 @@
         "suit": "Exacte Kleur"
       }
     }
+  },
+  "friends": {
+    "title": "Mijn vrienden",
+    "tabFriends": "Mijn vrienden",
+    "tabAdd": "Toevoegen",
+    "tabQr": "QR-code",
+    "loginRequired": "Inloggen vereist",
+    "loginRequiredDesc": "Log in om je vrienden te beheren",
+    "searchPlaceholder": "Vrienden zoeken...",
+    "empty": "Nog geen vrienden",
+    "emptySubtext": "Voeg vrienden toe om ze hier te zien",
+    "remove": "Vriend verwijderen",
+    "addFriend": "Vriend toevoegen",
+    "addByNickname": "Op naam toevoegen",
+    "searchNickname": "Voer de naam in om te zoeken",
+    "search": "Zoeken",
+    "searching": "Zoeken...",
+    "resultsFound": "resultaten gevonden",
+    "noResults": "Geen gebruikers gevonden met die naam",
+    "currentFriends": "Je vrienden",
+    "noFriendsYet": "Je hebt nog geen vrienden toegevoegd",
+    "loading": "Laden",
+    "scanQr": "QR-code scannen",
+    "scanHint": "Richt je camera op een QR-code",
+    "startScan": "Start scan",
+    "scanSuccess": "Scan succesvol!",
+    "scanSuccessDesc": "Vriend succesvol toegevoegd",
+    "myQr": "Mijn QR-code",
+    "copy": "Kopiëren",
+    "copied": "Gekopieerd!"
   }
 }
