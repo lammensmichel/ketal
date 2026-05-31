@@ -1,4 +1,4 @@
-import { Component, signal, OnInit, inject, DestroyRef, TemplateRef, ViewChild } from '@angular/core';
+import { Component, signal, computed, OnInit, inject, DestroyRef, TemplateRef, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgClass } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
@@ -34,7 +34,14 @@ export class FriendsComponent implements OnInit {
   readonly searchFilter = signal('');
 
   /** Computed list of friends matching search filter */
-  filteredFriendList = signal<FriendProfile[]>([]);
+  readonly filteredFriendList = computed(() => {
+    const profiles = this.friendProfiles();
+    const filter = this.searchFilter().toLowerCase().trim();
+    if (!filter) {
+      return profiles;
+    }
+    return profiles.filter((p: FriendProfile) => p.name.toLowerCase().includes(filter));
+  });
 
   /** Avatar error state */
   avatarError = false;
@@ -68,16 +75,6 @@ export class FriendsComponent implements OnInit {
     if (this.authService.isLoggedIn()) {
       this.friendSrv.getFriends();
     }
-
-    // Update filtered list when search filter changes
-    this.friendProfiles.subscribe((profiles) => {
-      const filter = this.searchFilter().toLowerCase().trim();
-      if (!filter) {
-        this.filteredFriendList.set(profiles);
-      } else {
-        this.filteredFriendList.set(profiles.filter((p: FriendProfile) => p.name.toLowerCase().includes(filter)));
-      }
-    });
   }
 
   /** Get friend's avatar URL or fallback */
@@ -117,7 +114,7 @@ export class FriendsComponent implements OnInit {
     this.searchResults.set([]);
     this.isLoaded.set(false);
 
-    // Show modal (requires ng-bootstrap modal)
+    // TODO: Show modal (requires ng-bootstrap modal)
     // this.modalRef = this.modalService.show(this.addModal);
   }
 
@@ -127,6 +124,7 @@ export class FriendsComponent implements OnInit {
     if (currentUser?.$id) {
       this.friendQrUrl.set(JSON.stringify({ type: 'friend_add', userId: currentUser.$id }));
     }
+    // TODO: Show modal
     // this.qrModalRef = this.modalService.show(this.qrModal);
   }
 
@@ -146,12 +144,12 @@ export class FriendsComponent implements OnInit {
       .searchUsersByNickname(query)
       .then((users) => {
         this.isSearching.set(false);
-        this.searchResults.set(users);
+        this.searchResults.set(users as FriendProfile[]);
       })
       .catch((error: any) => {
         console.error('[FriendsComponent] Search failed:', error);
         this.isSearching.set(false);
-        this.searchError.set(error instanceof Error ? error.message : 'Search failed');
+        this.scanError.set(error instanceof Error ? error.message : 'Search failed');
       });
   }
 

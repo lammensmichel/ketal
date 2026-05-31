@@ -1,4 +1,4 @@
-<!-- Friends list with add button and QR modal -->
+<!-- Friends list -->
 <div class="app-friends">
   @if (isLoggedIn()) {
     <!-- Header with search and action buttons -->
@@ -104,190 +104,49 @@
   }
 </div>
 
-<!-- Add friend modal -->
-<ng-template #addModal>
-  <div class="modal-header">
-    <h4 class="modal-title">
-      <fa-icon [icon]="['fas', 'user-plus']"></fa-icon>
-      {{ 'friends.addFriend' | translate }}
-    </h4>
-    <button type="button" class="btn-close" (click)="modalRef?.hide()"></button>
-  </div>
-  <div class="modal-body">
-    <!-- Add by nickname -->
-    <div class="friend-add-section">
-      <h5>{{ 'friends.addByNickname' | translate }}</h5>
+<!-- Placeholder for Add Friend Modal -->
+<div class="friend-modal-placeholder" style="display: none">
+  <!-- Add friend modal -->
+  <ng-template #addModal>
+    <div class="modal-header">
+      <h4 class="modal-title">
+        <fa-icon [icon]="['fas', 'user-plus']"></fa-icon>
+        {{ 'friends.addFriend' | translate }}
+      </h4>
+      <button type="button" class="btn-close" (click)="modalRef?.hide()"></button>
+    </div>
+    <div class="modal-body">
+      <p>Friend search and QR scan features coming soon...</p>
+    </div>
+  </ng-template>
 
-      <div class="friend-add-search">
-        <div class="input-group">
-          <input
-            type="text"
-            [placeholder]="'friends.searchNickname' | translate"
-            [value]="searchQuery()"
-            (input)="searchQuery.set($event.target.value)"
-            [disabled]="isSearching()"
-            class="form-control"
-            (keydown.enter)="searchQuery() && searchUsers(searchQuery())"
-          />
-          <button
-            (click)="searchQuery() && searchUsers(searchQuery())"
-            [disabled]="isSearching() || !searchQuery().trim()"
-            class="btn btn-primary"
-          >
-            <fa-icon [icon]="['fas', 'search']"></fa-icon>
-            @if (!isSearching()) {
-              <span>{{ 'friends.search' | translate }}</span>
-            } @else {
-              <fa-icon [icon]="['fas', 'spinner']" class="fa-spin"></fa-icon>
-            }
+  <!-- QR Code modal -->
+  <ng-template #qrModal>
+    <div class="modal-header">
+      <h4 class="modal-title">
+        <fa-icon [icon]="['fas', 'qrcode']"></fa-icon>
+        {{ 'friends.myQr' | translate }}
+      </h4>
+      <button type="button" class="btn-close" (click)="qrModalRef?.hide()"></button>
+    </div>
+    <div class="modal-body">
+      @if (friendQrUrl()) {
+        <div class="qr-code-display">
+          <div class="qr-placeholder">
+            <fa-icon [icon]="['fas', 'qrcode']" size="4x"></fa-icon>
+            <p class="qr-code-desc">{{ 'friends.myQrDesc' | translate }}</p>
+          </div>
+          <button (click)="copyQrCode()" class="btn btn-outline-primary">
+            <fa-icon [icon]="['fas', 'copy']"></fa-icon>
+            {{ 'friends.copyQr' | translate }}
           </button>
         </div>
-      </div>
-
-      <!-- Search results -->
-      @if (isSearching()) {
-        <div class="friend-add-results friend-add-results--loading">
-          <p>{{ 'friends.searching' | translate }}...</p>
-        </div>
-      } @else if (searchResults().length > 0) {
-        <div class="friend-add-results">
-          <p class="results-count">{{ searchResults().length }} {{ 'friends.resultsFound' | translate }}</p>
-          <div class="friend-add-grid">
-            @for (user of searchResults(); track user.userId) {
-              <div class="friend-add-card">
-                <div class="friend-add-card__avatar-wrapper">
-                  <img
-                    [src]="getAvatarUrl(user)"
-                    [alt]="user.name"
-                    class="friend-add-card__avatar"
-                    (error)="avatarError = true"
-                  />
-                </div>
-                <div class="friend-add-card__info">
-                  <span class="friend-add-card__name">{{ user.name }}</span>
-                </div>
-                <div class="friend-add-card__actions">
-                  <button (click)="addFriendByNickname(user.name)" class="btn btn-primary btn-sm">
-                    <fa-icon [icon]="['fas', 'user-plus']"></fa-icon>
-                    {{ 'friends.add' | translate }}
-                  </button>
-                </div>
-              </div>
-            }
-          </div>
-        </div>
-      } @else if (searchQuery().trim() && !isSearching()) {
-        <div class="friend-add-results friend-add-results--no-results">
-          <p>{{ 'friends.noResults' | translate }}</p>
-        </div>
-      }
-
-      <!-- Current friends list -->
-      @if (isLoaded()) {
-        <div class="friend-add-friends">
-          <h5>{{ 'friends.currentFriends' | translate }}</h5>
-
-          @if (friends().length === 0) {
-            <p class="no-friends">{{ 'friends.noFriendsYet' | translate }}</p>
-          } @else {
-            <div class="friend-add-friends-grid">
-              @for (friend of friends(); track friend.$id) {
-                <div class="friend-add-friend">
-                  <span class="friend-add-friend__name">{{ friend.name }}</span>
-                </div>
-              }
-            </div>
-          }
-        </div>
       } @else {
-        <div class="friend-add-friends friend-add-friends--loading">
-          <p>{{ 'friends.loading' | translate }}...</p>
+        <div class="qr-loading">
           <fa-icon [icon]="['fas', 'spinner']" class="fa-spin" size="2x"></fa-icon>
+          <p>{{ 'friends.loading' | translate }}...</p>
         </div>
       }
     </div>
-
-    <!-- QR Scan section -->
-    <div class="friend-add-qr-section">
-      <h5>{{ 'friends.scanQr' | translate }}</h5>
-
-      <div class="qr-scanner">
-        @if (isScanning()) {
-          <div class="qr-scanner--active">
-            <div class="qr-scanner--scanner">
-              <div class="qr-scanner--corner top-left"></div>
-              <div class="qr-scanner--corner top-right"></div>
-              <div class="qr-scanner--corner bottom-left"></div>
-              <div class="qr-scanner--corner bottom-right"></div>
-              <div class="qr-scanner--scan-line"></div>
-            </div>
-
-            @if (scanError()) {
-              <div class="qr-scanner--error">
-                <fa-icon [icon]="['fas', 'exclamation-triangle']" size="2x"></fa-icon>
-                <p>{{ scanError() }}</p>
-              </div>
-            } @else {
-              <p class="qr-scanner--hint">{{ 'friends.scanHint' | translate }}</p>
-            }
-          </div>
-        } @else {
-          <div class="qr-scanner--idle">
-            <div class="qr-scanner--placeholder">
-              <fa-icon [icon]="['fas', 'qrcode']" size="4x"></fa-icon>
-            </div>
-            <p class="qr-scanner--hint">{{ 'friends.scanPlacehold' | translate }}</p>
-            <button (click)="isScanning.set(true)" class="btn btn-primary">
-              <fa-icon [icon]="['fas', 'camera']"></fa-icon>
-              {{ 'friends.startScan' | translate }}
-            </button>
-          </div>
-        }
-      </div>
-
-      @if (scanResult()) {
-        <div class="qr-scanner--result">
-          <h5>{{ 'friends.scanSuccess' | translate }}</h5>
-          <p>
-            <strong>{{ scanResult() }}</strong>
-          </p>
-          <p>{{ 'friends.scanSuccessDesc' | translate }}</p>
-        </div>
-      }
-    </div>
-  </div>
-</ng-template>
-
-<!-- QR Code modal -->
-<ng-template #qrModal>
-  <div class="modal-header">
-    <h4 class="modal-title">
-      <fa-icon [icon]="['fas', 'qrcode']"></fa-icon>
-      {{ 'friends.myQr' | translate }}
-    </h4>
-    <button type="button" class="btn-close" (click)="qrModalRef?.hide()"></button>
-  </div>
-  <div class="modal-body">
-    @if (friendQrUrl()) {
-      <div class="qr-code-display">
-        <qrcode
-          [qrdata]="friendQrUrl()!"
-          [scale]="qrScale"
-          [width]="qrWidth"
-          [errorCorrectionLevel]="qrErrorCorrectionLevel"
-          class="qr-code"
-        ></qrcode>
-        <p class="qr-code-desc">{{ 'friends.myQrDesc' | translate }}</p>
-        <button (click)="copyQrCode()" class="btn btn-outline-primary">
-          <fa-icon [icon]="['fas', 'copy']"></fa-icon>
-          {{ 'friends.copyQr' | translate }}
-        </button>
-      </div>
-    } @else {
-      <div class="qr-loading">
-        <fa-icon [icon]="['fas', 'spinner']" class="fa-spin" size="2x"></fa-icon>
-        <p>{{ 'friends.loading' | translate }}...</p>
-      </div>
-    }
-  </div>
-</ng-template>
+  </ng-template>
+</div>
