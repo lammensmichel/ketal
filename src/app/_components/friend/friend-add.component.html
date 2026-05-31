@@ -1,0 +1,102 @@
+<!-- Friend add header -->
+<div class="friend-add-header">
+  <h2>
+    <fa-icon [icon]="['fas', 'user-plus']"></fa-icon>
+    {{ 'friends.addFriend' | translate }}
+  </h2>
+</div>
+
+<!-- Add friend section -->
+<div class="friend-add-section">
+  <h4>{{ 'friends.addByNickname' | translate }}</h4>
+
+  <div class="friend-add-search">
+    <div class="input-group">
+      <input
+        type="text"
+        [placeholder]="'friends.searchNickname' | translate"
+        [value]="searchQuery()"
+        (input)="searchQuery.set($event.target.value)"
+        [disabled]="isSearching()"
+        class="form-control"
+        (keydown.enter)="searchQuery() && searchUsers(searchQuery())"
+      />
+      <button
+        (click)="searchQuery() && searchUsers(searchQuery())"
+        [disabled]="isSearching() || !searchQuery().trim()"
+        class="btn btn-primary"
+      >
+        <fa-icon [icon]="['fas', 'search']"></fa-icon>
+        @if (!isSearching()) {
+          <span>{{ 'friends.search' | translate }}</span>
+        } @else {
+          <fa-icon [icon]="['fas', 'spinner']" class="fa-spin"></fa-icon>
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- Search results -->
+  @if (isSearching()) {
+    <div class="friend-add-results friend-add-results--loading">
+      <p>{{ 'friends.searching' | translate }}...</p>
+    </div>
+  } @else if (searchResults().length > 0) {
+    <div class="friend-add-results">
+      <p class="results-count">{{ searchResults().length }} {{ 'friends.resultsFound' | translate }}</p>
+      <div class="friend-add-grid">
+        @for (user of searchResults(); track user.userId) {
+          <div class="friend-add-card">
+            <div class="friend-add-card__avatar-wrapper">
+              <img
+                [src]="getAvatarUrl(user)"
+                [alt]="user.name"
+                class="friend-add-card__avatar"
+                (error)="avatarError = true"
+              />
+            </div>
+            <div class="friend-add-card__info">
+              <span class="friend-add-card__name">{{ user.name }}</span>
+            </div>
+            <div class="friend-add-card__actions">
+              <button (click)="addFriendByNickname(user.name)" class="btn btn-primary btn-sm">
+                <fa-icon [icon]="['fas', 'user-plus']"></fa-icon>
+                {{ 'friends.add' | translate }}
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  } @else if (searchQuery().trim() && !isSearching()) {
+    <div class="friend-add-results friend-add-results--no-results">
+      <p>{{ 'friends.noResults' | translate }}</p>
+    </div>
+  }
+
+  <!-- Current friends list -->
+  @if (isLoaded()) {
+    <div class="friend-add-friends">
+      <h4>{{ 'friends.currentFriends' | translate }}</h4>
+
+      @if (friends().length === 0) {
+        <p class="no-friends">{{ 'friends.noFriendsYet' | translate }}</p>
+      } @else {
+        <div class="friend-add-friends-grid">
+          @for (friend of friends(); track friend.$id) {
+            <!-- TODO: Display actual friend profiles from friendProfiles signal -->
+            <div class="friend-add-friend" style="opacity: 0.6">
+              <span class="friend-add-friend__name">?</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  } @else {
+    <!-- Loading state -->
+    <div class="friend-add-friends friend-add-friends--loading">
+      <p>{{ 'friends.loading' | translate }}...</p>
+      <fa-icon [icon]="['fas', 'spinner']" class="fa-spin" size="2x"></fa-icon>
+    </div>
+  }
+</div>

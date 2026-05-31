@@ -1,0 +1,81 @@
+<!-- QR Scanner Section -->
+<div class="qr-scanner-section">
+  <h4>{{ 'friends.scanQr' | translate }}</h4>
+
+  <div class="qr-scanner-content">
+    <!-- QR Code Scanner -->
+    <div class="qr-scanner">
+      @if (isScanning()) {
+        <!-- Scanning state -->
+        <div class="qr-scanner--active">
+          <div class="qr-scanner--scanner">
+            <div class="qr-scanner--corner top-left"></div>
+            <div class="qr-scanner--corner top-right"></div>
+            <div class="qr-scanner--corner bottom-left"></div>
+            <div class="qr-scanner--corner bottom-right"></div>
+            <div class="qr-scanner--scan-line"></div>
+          </div>
+
+          @if (scanError()) {
+            <div class="qr-scanner--error">
+              <fa-icon [icon]="['fas', 'exclamation-triangle']" size="2x"></fa-icon>
+              <p>{{ scanError() }}</p>
+            </div>
+          } @else {
+            <p class="qr-scanner--hint">{{ 'friends.scanHint' | translate }}</p>
+          }
+        </div>
+      } @else {
+        <!-- Idle state -->
+        <div class="qr-scanner--idle">
+          <div class="qr-scanner--placeholder">
+            <fa-icon [icon]="['fas', 'qrcode']" size="4x"></fa-icon>
+          </div>
+          <p class="qr-scanner--hint">{{ 'friends.scanPlacehold' | translate }}</p>
+          <button (click)="isScanning.set(true)" class="btn btn-primary">
+            <fa-icon [icon]="['fas', 'camera']"></fa-icon>
+            {{ 'friends.startScan' | translate }}
+          </button>
+        </div>
+      }
+    </div>
+
+    <!-- Scan Result -->
+    @if (scanResult()) {
+      <div class="qr-scanner--result">
+        <h5>{{ 'friends.scanSuccess' | translate }}</h5>
+        <p>
+          <strong>{{ scanResult() }}</strong>
+        </p>
+        <p>{{ 'friends.scanSuccessDesc' | translate }}</p>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- My QR Code Section -->
+<div class="my-qr-section">
+  <h4>{{ 'friends.myQr' | translate }}</h4>
+
+  <div class="my-qr-content">
+    @if (friendQrUrl()) {
+      <div class="my-qr-code">
+        <qrcode
+          [qrdata]="friendQrUrl()!"
+          [scale]="qrScale"
+          [width]="qrWidth"
+          [errorCorrectionLevel]="qrErrorCorrectionLevel"
+          class="qr-code"
+        ></qrcode>
+      </div>
+
+      <div class="my-qr-actions">
+        <p class="my-qr-desc">{{ 'friends.myQrDesc' | translate }}</p>
+        <button (click)="copyQrCode()" class="btn btn-outline-secondary">
+          <fa-icon [icon]="['fas', 'copy']"></fa-icon>
+          {{ 'friends.copyQr' | translate }}
+        </button>
+      </div>
+    }
+  </div>
+</div>

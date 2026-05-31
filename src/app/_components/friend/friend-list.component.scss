@@ -1,0 +1,170 @@
+/* Friend list styles */
+.app-friend-list {
+  padding: 1rem;
+}
+
+.friend-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+
+  h2 {
+    font-size: 1.5rem;
+    color: var(--bs-heading-color);
+    margin: 0;
+
+    .friend-count {
+      font-size: 1rem;
+      color: var(--bs-secondary-color);
+      font-weight: 400;
+      margin-left: 0.5rem;
+    }
+
+    .fa-users {
+      color: var(--bs-primary);
+      margin-right: 0.5rem;
+    }
+  }
+}
+
+.friend-list-search {
+  position: relative;
+  margin-bottom: 1.5rem;
+
+  .form-control {
+    width: 100%;
+    padding-right: 3rem;
+    padding-left: 1rem;
+    font-size: 1rem;
+  }
+
+  .search-icon {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--bs-secondary-color);
+    pointer-events: none;
+  }
+}
+
+.friend-list {
+  min-height: 200px;
+}
+
+.friend-list-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: var(--bs-secondary-color);
+
+  .fa-users {
+    color: var(--bs-secondary-color);
+    margin-bottom: 1rem;
+  }
+
+  p {
+    margin: 0.5rem 0;
+    text-align: center;
+  }
+
+  .empty-subtext {
+    font-size: 0.9rem;
+    opacity: 0.7;
+  }
+}
+
+.friend-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.friend-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--bs-card-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.friend-card__header {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  gap: 1rem;
+}
+
+.friend-card__avatar-wrapper {
+  position: relative;
+
+  .friend-card__avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--bs-border-color);
+  }
+
+  .friend-card__avatar-status {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--bs-card-bg);
+
+    &--online {
+      background-color: var(--bs-success);
+    }
+  }
+}
+
+.friend-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.friend-card__name {
+  font-weight: 600;
+  color: var(--bs-heading-color);
+  font-size: 1rem;
+}
+
+.friend-card__status {
+  font-size: 0.75rem;
+  color: var(--bs-primary);
+  font-weight: 600;
+}
+
+.friend-card__actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--bs-border-color);
+
+  .friend-card__remove-btn {
+    padding: 0.25rem 0.5rem;
+    color: var(--bs-danger);
+
+    &:hover {
+      color: var(--bs-danger);
+      text-decoration: none;
+    }
+  }
+}

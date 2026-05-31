@@ -178,6 +178,7 @@
   "menu": {
     "connect": "Log in",
     "myRooms": "My games",
+    "friends": "My Friends",
     "quitGame": "Quit game"
   },
   "userMenu": {
@@ -254,5 +255,44 @@
       }
     }
   },
-  "Label_GameInProgress": "Game in progress"
+  "Label_GameInProgress": "Game in progress",
+  "common": {
+    "login": "Log in",
+    "logout": "Log out",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  },
+  "friends": {
+    "title": "My Friends",
+    "searchPlaceholder": "Search friends...",
+    "empty": "No friends yet",
+    "emptySubtext": "Add friends to see them here",
+    "statusOnline": "Online",
+    "statusOffline": "Offline",
+    "remove": "Remove friend",
+    "addFriend": "Add Friends",
+    "addByNickname": "Add by nickname",
+    "searchNickname": "Enter nickname to search",
+    "search": "Search",
+    "searching": "Searching",
+    "resultsFound": "results found",
+    "noResults": "No users found with that nickname",
+    "currentFriends": "Your Friends",
+    "noFriendsYet": "You haven't added any friends yet",
+    "loading": "Loading",
+    "scanQr": "Scan QR Code",
+    "scanHint": "Point your camera at a QR code",
+    "scanPlacehold": "Tap Start Scan to use your camera",
+    "startScan": "Start Scan",
+    "scanSuccess": "Scan successful!",
+    "scanSuccessDesc": "Friend added successfully",
+    "myQr": "My QR Code",
+    "myQrDesc": "Share your QR code so others can add you as a friend",
+    "copyQr": "Copy QR Code",
+    "tabFriends": "Friends",
+    "tabAdd": "Add Friends",
+    "tabQr": "QR Code",
+    "loginRequired": "Login Required",
+    "loginRequiredDesc": "Please log in to access your friends list"
+  }
 }

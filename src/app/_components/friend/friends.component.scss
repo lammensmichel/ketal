@@ -1,0 +1,80 @@
+/* Friends component styles */
+.app-friends {
+  padding: 1rem;
+}
+
+.friends-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid var(--bs-border-color);
+  padding-bottom: 0.5rem;
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--bs-secondary-color);
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition:
+      border-color 0.2s,
+      color 0.2s;
+
+    &:hover {
+      color: var(--bs-heading-color);
+      border-bottom-color: var(--bs-primary);
+    }
+
+    &.active {
+      color: var(--bs-primary);
+      border-bottom-color: var(--bs-primary);
+    }
+
+    .fa-users,
+    .fa-user-plus,
+    .fa-qrcode {
+      margin-right: 0.5rem;
+    }
+  }
+}
+
+.friends-content {
+  background: var(--bs-body-bg);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  min-height: 400px;
+}
+
+.friends-not-logged-in {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+
+  .fa-lock {
+    color: var(--bs-secondary-color);
+    margin-bottom: 1.5rem;
+  }
+
+  h3 {
+    color: var(--bs-heading-color);
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    color: var(--bs-secondary-color);
+    margin-bottom: 1.5rem;
+  }
+
+  .btn {
+    white-space: nowrap;
+  }
+}

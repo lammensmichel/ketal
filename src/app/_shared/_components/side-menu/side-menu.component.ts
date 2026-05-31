@@ -134,6 +134,12 @@ export class SideMenuComponent {
     this.router.navigate(['/rooms']);
   }
 
+  /** Navigate to friends page */
+  goToFriends(): void {
+    this.closeMenu();
+    this.router.navigate(['/friends']);
+  }
+
   /** Show quit confirmation dialog */
   showQuitConfirmation(): void {
     this.showQuitConfirm.set(true);

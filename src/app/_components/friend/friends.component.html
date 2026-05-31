@@ -1,0 +1,37 @@
+<!-- Friends container -->
+<div class="app-friends">
+  @if (isLoggedIn()) {
+    <!-- Tab navigation -->
+    <div class="friends-tabs">
+      @for (tab of tabs; track tab.id) {
+        <button [ngClass]="getTabClass(tab.id)" (click)="switchTab(tab.id)">
+          <fa-icon [icon]="tab.icon"></fa-icon>
+          <span>{{ tab.label | translate }}</span>
+        </button>
+      }
+    </div>
+
+    <!-- Tab content -->
+    <div class="friends-content">
+      @if (activeTab() === 'list') {
+        <app-friend-list></app-friend-list>
+      }
+      @if (activeTab() === 'add') {
+        <app-friend-add></app-friend-add>
+      }
+      @if (activeTab() === 'qr') {
+        <app-qr-scanner></app-qr-scanner>
+      }
+    </div>
+  } @else {
+    <!-- Not logged in state -->
+    <div class="friends-not-logged-in">
+      <fa-icon [icon]="['fas', 'lock']" size="4x"></fa-icon>
+      <h3>{{ 'friends.loginRequired' | translate }}</h3>
+      <p>{{ 'friends.loginRequiredDesc' | translate }}</p>
+      <button routerLink="/login" class="btn btn-primary">
+        {{ 'common.login' | translate }}
+      </button>
+    </div>
+  }
+</div>
