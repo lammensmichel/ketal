@@ -210,17 +210,21 @@ intents:
         intent: friends-and-persistent-rooms
         complexity: medium
         mode: confirm
-        status: pending
+        status: completed
         depends_on:
           - wi-002
+        run_id: run-ketal-010
+        completed_at: 2026-05-31T13:45:00.000Z
       - id: wi-004
         title: Écran de gestion des amis
         intent: friends-and-persistent-rooms
         complexity: medium
         mode: confirm
-        status: pending
+        status: completed
         depends_on:
           - wi-003
+        run_id: run-ketal-010
+        completed_at: 2026-05-31T14:00:00.000Z
       - id: wi-005
         title: Sélection d'amis + soi-même dans /players
         intent: friends-and-persistent-rooms
