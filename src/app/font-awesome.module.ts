@@ -61,7 +61,8 @@ export class FontAwesomeIconsModule {
       faFolder,
       faUsers,
       faUserPlus,
-      faQrcode
+      faQrcode,
+      faSearch
     );
   }
 }
