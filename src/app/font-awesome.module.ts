@@ -28,6 +28,9 @@ import {
   faUserPlus,
   faQrcode,
   faSearch,
+  faSpinner,
+  faCamera,
+  faUserMinus,
 } from '@fortawesome/free-solid-svg-icons';
 
 @NgModule({
@@ -62,7 +65,10 @@ export class FontAwesomeIconsModule {
       faUsers,
       faUserPlus,
       faQrcode,
-      faSearch
+      faSearch,
+      faSpinner,
+      faCamera,
+      faUserMinus
     );
   }
 }

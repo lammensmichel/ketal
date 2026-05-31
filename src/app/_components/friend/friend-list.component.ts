@@ -40,24 +40,15 @@ export class FriendListComponent implements OnInit {
   /** Avatar error state */
   avatarError = false;
 
-  /** Load friends on init */
-  ngOnInit(): void {
-    // Load friends when component initializes
-    // Only if user is authenticated
-    if (this.authService.isLoggedIn()) {
-      this.loadFriends();
-    }
-
-    // Re-load when auth state changes
-    effect(
-      () => {
-        if (this.authService.isLoggedIn()) {
-          this.loadFriends();
-        }
-      },
-      { allowSignalWrites: true }
-    );
-  }
+  /** Effect to reload friends when auth state changes */
+  private readonly authEffect = effect(
+    () => {
+      if (this.authService.isLoggedIn()) {
+        this.loadFriends();
+      }
+    },
+    { allowSignalWrites: true }
+  );
 
   /** Load friends from service */
   loadFriends(): void {
@@ -65,6 +56,13 @@ export class FriendListComponent implements OnInit {
       console.error('[FriendListComponent] Failed to load friends:', error);
       // TODO: Show error toast
     });
+  }
+
+  ngOnInit(): void {
+    // Load friends when component initializes
+    if (this.authService.isLoggedIn()) {
+      this.loadFriends();
+    }
   }
 
   /** Remove friend from list */
