@@ -144,7 +144,7 @@ export class FriendsComponent implements OnInit {
       .searchUsersByNickname(query)
       .then((users) => {
         this.isSearching.set(false);
-        this.searchResults.set(users as FriendProfile[]);
+        this.searchResults.set(users as unknown as FriendProfile[]);
       })
       .catch((error: any) => {
         console.error('[FriendsComponent] Search failed:', error);
