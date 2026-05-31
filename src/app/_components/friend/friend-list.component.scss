@@ -69,13 +69,15 @@
   p {
     margin: 0.5rem 0;
     text-align: center;
+    color: #333333;
+    font-weight: 500;
   }
 
   .empty-subtext {
     font-size: 0.9rem;
-    opacity: 0.8;
+    color: #555555;
+    opacity: 0.9;
     font-weight: 400;
-    color: var(--bs-body-color);
   }
 }
 

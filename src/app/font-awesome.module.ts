@@ -27,6 +27,7 @@ import {
   faUsers,
   faUserPlus,
   faQrcode,
+  faSearch,
 } from '@fortawesome/free-solid-svg-icons';
 
 @NgModule({
