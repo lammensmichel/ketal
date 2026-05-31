@@ -2,7 +2,7 @@ import { inject, Injector, Injectable, signal } from '@angular/core';
 import { ID, Query, AppwriteException } from 'appwrite';
 import { AppwriteService } from '../appwrite/appwrite.service';
 import { RealtimeService, SubscriptionCallback } from '../realtime/realtime.service';
-import { MemberService } from '../member/member.service';
+import { MemberService, CreateMemberData } from '../member/member.service';
 import { AuthService } from '../auth/auth.service';
 import { KetalSessionService, KetalPlayer } from '../ketal-session/ketal-session.service';
 import {
@@ -124,6 +124,7 @@ export class RoomService {
    * Create a solo room for backend-first game sessions.
    * Auto-generates a name, uses 'solo' mode, no invite needed.
    * Called in background after login while user adds player names.
+   * Uses createRoom() which handles reuse logic.
    */
   async createSoloRoom(): Promise<GameRoom> {
     const name = `Solo-${Date.now()}`;
@@ -131,9 +132,38 @@ export class RoomService {
   }
 
   /**
-   * Create a new game room
+   * Create a new game room or reuse an existing idle room
+   *
+   * For authenticated users in solo mode: checks for existing idle solo room
+   * For anonymous users or other modes: always creates a new room
    */
   async createRoom(name: string, mode: RoomMode = 'multiplayer', maxPlayers = 10): Promise<GameRoom> {
+    // For authenticated users in solo mode, reuse existing idle room
+    if (mode === 'solo') {
+      const current = this.authService?.currentUser();
+      const currentUserId = current?.$id;
+      if (currentUserId && this.authService?.isLoggedIn() && !this.authService?.isAnonymous()) {
+        try {
+          const members = await this.memberService.getMembersByUserId(currentUserId);
+          if (members.length > 0) {
+            for (const member of members) {
+              try {
+                const room = await this.getRoomById(member.roomId);
+                if (room && room.status === 'idle' && room.mode === 'solo') {
+                  this._currentRoom.set(room);
+                  return room;
+                }
+              } catch {
+                continue;
+              }
+            }
+          }
+        } catch {
+          // Fall through to creating new room
+        }
+      }
+    }
+
     const roomData: CreateRoomData = {
       name,
       code: this.generateRoomCode(),
@@ -156,6 +186,40 @@ export class RoomService {
       });
 
       const room = this.mapDocumentToGameRoom(document);
+
+      // If authenticated user, create host member and update room with hostMemberId
+      if (this.authService?.isLoggedIn() && !this.authService.isAnonymous()) {
+        const user = this.authService.currentUser();
+        if (user && user.$id) {
+          // Check if host member already exists for idempotency
+          const existingMember = await this.memberService.getMemberByUserOrDevice(room.$id, user.$id, undefined);
+
+          if (!existingMember) {
+            // Create new host member
+            const memberData: CreateMemberData = {
+              roomId: room.$id,
+              userId: user.$id,
+              deviceId: null,
+              displayName: user.name || 'Host',
+              role: 'host',
+              isOnline: true,
+              totalSipsGiven: 0,
+              totalSipsTaken: 0,
+              totalGamesPlayed: 0,
+              gameStats: {},
+            };
+
+            const member = await this.memberService.createMember(memberData);
+            await this.updateRoom(room.$id, { hostMemberId: member.$id });
+            room.hostMemberId = member.$id;
+          } else {
+            // Member exists, update room to reference it (idempotency)
+            await this.updateRoom(room.$id, { hostMemberId: existingMember.$id });
+            room.hostMemberId = existingMember.$id;
+          }
+        }
+      }
+
       this._currentRoom.set(room);
       return room;
     } catch (error: unknown) {

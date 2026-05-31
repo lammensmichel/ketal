@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "chrome-remote": {
-      "command": "/usr/local/share/nvm/versions/node/v24.14.1/bin/chrome-devtools-mcp",
-      "args": ["--browserUrl", "http://127.0.0.1:9225", "--no-usage-statistics"]
+      "command": "npx",
+      "args": ["-y", "chrome-devtools-mcp", "--browserUrl", "http://127.0.0.1:9225", "--no-usage-statistics"]
     }
   }
 }

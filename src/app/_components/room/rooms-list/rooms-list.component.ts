@@ -1,6 +1,15 @@
-import { Component, ChangeDetectionStrategy, computed, inject, OnInit, signal, DestroyRef } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  computed,
+  inject,
+  OnInit,
+  signal,
+  DestroyRef,
+} from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 
-import { Router } from '@angular/router';
 import { RoomService, GameRoomWithMemberCount } from '../../../services/room/room.service';
 import { MemberService } from '../../../services/member/member.service';
 import { RoomTileComponent } from '../room-tile/room-tile.component';
@@ -25,7 +34,9 @@ export class RoomsListComponent implements OnInit {
   private readonly roomService = inject(RoomService);
   private readonly memberService = inject(MemberService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly changeDetectorRef = inject(ChangeDetectorRef);
 
   /** Loading state */
   readonly isLoading = signal(false);
@@ -48,13 +59,6 @@ export class RoomsListComponent implements OnInit {
   });
 
   /**
-   * On init: load user's rooms
-   */
-  async ngOnInit(): Promise<void> {
-    await this.loadRooms();
-  }
-
-  /**
    * Load user's rooms from service
    */
   private async loadRooms(): Promise<void> {
@@ -69,6 +73,20 @@ export class RoomsListComponent implements OnInit {
     } finally {
       this.isLoading.set(false);
     }
+  }
+
+  /**
+   * On init: load user's rooms
+   */
+  async ngOnInit(): Promise<void> {
+    await this.loadRooms();
+  }
+
+  /**
+   * Public method to force reload rooms (called by RoomTileComponent after delete/archive)
+   */
+  async reloadRooms(): Promise<void> {
+    await this.loadRooms();
   }
 
   /**

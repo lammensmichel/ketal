@@ -341,17 +341,17 @@ describe('RoomTileComponent', () => {
       expect(button?.disabled).toBeTrue();
     });
 
-    it('should call deleteRoom and navigate away when clicking Supprimer button (without disabled check)', fakeAsync(() => {
+    it('should call deleteRoom and navigate with reload=true query param when clicking Supprimer button', fakeAsync(() => {
       // Manually trigger handleDelete to test the functionality
       // Since the button is disabled for archived rooms, we can't click it
       createComponent(mockRoomArchived, 'host');
       fixture.detectChanges();
 
-      component.handleAction();
+      component.handleDelete();
       tick();
 
       expect(mockRoomService.deleteRoom).toHaveBeenCalledWith('archived-789');
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/rooms']);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/rooms'], { queryParams: { reload: 'true' } });
     }));
   });
 
@@ -365,7 +365,7 @@ describe('RoomTileComponent', () => {
       expect(button?.textContent?.trim()).toBe('Quitter');
     });
 
-    it('should call leaveRoom when clicking Quitter button', fakeAsync(() => {
+    it('should call leaveRoom and navigate with reload=true query param when clicking Quitter button', fakeAsync(() => {
       createComponent(mockRoomIdle, 'player');
       fixture.detectChanges();
 
@@ -375,6 +375,7 @@ describe('RoomTileComponent', () => {
       tick();
 
       expect(mockRoomService.leaveRoom).toHaveBeenCalledWith('room123');
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/rooms'], { queryParams: { reload: 'true' } });
     }));
   });
 

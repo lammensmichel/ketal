@@ -168,8 +168,4 @@ export class PlayersListComponent {
       // Clipboard API may not be available
     }
   }
-
-  ngOnInit(): void {
-    // No-op: removed resetGame() that was causing regression
-  }
 }

@@ -1,7 +1,7 @@
 project:
   name: Ketal
   description: Angular 19 drinking card game
-  created: 2026-05-12T10:00:00Z
+  created: 2026-05-12T10:00:00.000Z
   fire_version: 0.1.8
 workspace:
   type: brownfield
@@ -25,27 +25,27 @@ intents:
         intent: appwrite-add-pagination
         mode: autopilot
         status: completed
-        started: 2026-05-16T21:30:00Z
-        completed: 2026-05-16T21:31:00Z
+        started: 2026-05-16T21:30:00.000Z
+        completed: 2026-05-16T21:31:00.000Z
         results:
           tests: 2 passed, 0 failed
   - id: appwrite-typed-exceptions
     title: Appwrite — type catch blocks as AppwriteException
     status: completed
     priority: low
-    completed_at: 2026-05-18T00:00:00Z
+    completed_at: 2026-05-18T00:00:00.000Z
     work_items: []
   - id: appwrite-channel-builder
     title: Appwrite — use Channel builder instead of manual channel strings
     status: completed
     priority: low
-    completed_at: 2026-05-18T00:00:00Z
+    completed_at: 2026-05-18T00:00:00.000Z
     work_items: []
   - id: tests-realtime-integration-hygiene
     title: Tests — fix realtime integration spec hygiene (ID.unique + cleanup)
     status: completed
     priority: medium
-    completed_at: 2026-05-17T07:35:00Z
+    completed_at: 2026-05-17T07:35:00.000Z
     work_items:
       - id: wi-004
         title: Verification Idempotence and Hygiene Audit
@@ -61,7 +61,7 @@ intents:
     title: Angular — upgrade 19 to 20
     status: completed
     priority: high
-    completed_at: 2026-05-16T21:00:00Z
+    completed_at: 2026-05-16T21:00:00.000Z
     work_items:
       - id: wi-001
         title: Preparation and backup before upgrade
@@ -81,7 +81,7 @@ intents:
     priority: high
     depends_on:
       - angular-upgrade-19-to-20
-    completed_at: 2026-05-16T21:35:00Z
+    completed_at: 2026-05-16T21:35:00.000Z
     work_items:
       - id: wi-004
         title: Post-Upgrade Audit and Migration
@@ -166,7 +166,7 @@ intents:
   - id: players-footer-always-visible
     title: Players — always-visible footer with constant height
     status: in_progress
-    created: 2026-05-18T10:00:00Z
+    created: 2026-05-18T10:00:00.000Z
     priority: medium
     work_items:
       - id: wi-001
@@ -180,7 +180,7 @@ intents:
   - id: friends-and-persistent-rooms
     title: Amis & rooms persistantes
     status: in_progress
-    created: 2026-05-30T00:00:00Z
+    created: 2026-05-30T00:00:00.000Z
     priority: high
     type: feature
     work_items:
@@ -189,15 +189,22 @@ intents:
         intent: friends-and-persistent-rooms
         complexity: medium
         mode: confirm
-        status: pending
-        depends_on: []
+        status: completed
+        run_id: run-ketal-007
+        completed_at: 2026-05-30T13:43:53.468Z
       - id: wi-002
         title: Migration backend — nickname utilisateur + collection friendships
         intent: friends-and-persistent-rooms
         complexity: high
         mode: validate
-        status: pending
-        depends_on: []
+        status: completed
+        run_id: run-ketal-009
+        completed_at: 2026-05-31T12:20:00.000Z
+        results:
+          migration: 042_add_nickname_and_friendships applied
+          schema:
+            - attribute: nickname (string, 50 chars, optional)
+            - collection: friendships (ownerUserId, friendUserId, createdAt)
       - id: wi-003
         title: FriendService (frontend) — favoris, recherche pseudo + QR
         intent: friends-and-persistent-rooms
@@ -232,28 +239,27 @@ intents:
         depends_on:
           - wi-002
 runs:
-  active: []
   completed:
     - id: run-ketal-001
       scope: single
-      started: 2026-05-12T08:07:44Z
-      completed: 2026-05-13T21:15:00Z
+      started: 2026-05-12T08:07:44.000Z
+      completed: 2026-05-13T21:15:00.000Z
     - id: run-ketal-002
       scope: batch
-      started: 2026-05-15T11:30:47Z
-      completed: 2026-05-15T12:15:00Z
+      started: 2026-05-15T11:30:47.000Z
+      completed: 2026-05-15T12:15:00.000Z
     - id: run-ketal-003
       scope: batch
-      started: 2026-05-16T18:30:00Z
-      completed: 2026-05-16T21:00:00Z
+      started: 2026-05-16T18:30:00.000Z
+      completed: 2026-05-16T21:00:00.000Z
     - id: run-ketal-004
       scope: single
-      started: 2026-05-16T21:30:00Z
-      completed: 2026-05-16T21:35:00Z
+      started: 2026-05-16T21:30:00.000Z
+      completed: 2026-05-16T21:35:00.000Z
     - id: run-ketal-005
       scope: single
-      started: 2026-05-16T21:30:00Z
-      completed: 2026-05-16T21:32:00Z
+      started: 2026-05-16T21:30:00.000Z
+      completed: 2026-05-16T21:32:00.000Z
     - id: run-ketal-006
       scope: single
       work_items:
@@ -262,3 +268,53 @@ runs:
           mode: autopilot
       started: 2026-05-18T15:51:36.748Z
       completed: 2026-05-18T15:55:26.108Z
+    - id: run-ketal-008
+      scope: single
+      work_items:
+        - id: wi-001
+          intent: friends-and-persistent-rooms
+          mode: confirm
+      started: 2026-05-30T17:50:00.000Z
+      completed: 2026-05-30T18:00:00.000Z
+    - id: run-ketal-007
+      scope: single
+      work_items:
+        - id: wi-001
+          intent: friends-and-persistent-rooms
+          mode: confirm
+      started: 2026-05-30T13:00:00.000Z
+      completed: 2026-05-30T13:43:53.468Z
+  active:
+    - id: run-ketal-010
+      scope: wide
+      work_items:
+        - id: wi-003
+          intent: friends-and-persistent-rooms
+          mode: confirm
+          status: in_progress
+          current_phase: plan
+          checkpoint_state: none
+          current_checkpoint: plan
+        - id: wi-004
+          intent: friends-and-persistent-rooms
+          mode: confirm
+          status: pending
+          current_phase: null
+          checkpoint_state: none
+          current_checkpoint: null
+        - id: wi-005
+          intent: friends-and-persistent-rooms
+          mode: confirm
+          status: pending
+          current_phase: null
+          checkpoint_state: none
+          current_checkpoint: null
+        - id: wi-006
+          intent: friends-and-persistent-rooms
+          mode: validate
+          status: pending
+          current_phase: null
+          checkpoint_state: none
+          current_checkpoint: null
+      current_item: wi-003
+      started: 2026-05-31T12:25:15.883Z

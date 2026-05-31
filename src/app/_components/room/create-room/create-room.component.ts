@@ -142,28 +142,36 @@ export class CreateRoomComponent {
       // Get current user info
       const user = this.authService.currentUser();
       const displayName = user?.name || 'Host';
+      const userId = user?.$id;
 
-      // Create host member
-      const memberData: CreateMemberData = {
-        roomId: room.$id,
-        userId: user?.$id || null,
-        deviceId: user ? null : this.getDeviceId(),
-        displayName,
-        role: 'host',
-        isOnline: true,
-        totalSipsGiven: 0,
-        totalSipsTaken: 0,
-        totalGamesPlayed: 0,
-        gameStats: {},
-      };
+      // Check if member already exists (idempotency for authenticated users)
+      let member = await this.memberService.getMemberByUserOrDevice(room.$id, userId);
 
-      const member = await this.memberService.createMember(memberData);
+      if (!member) {
+        // Create host member only if it doesn't exist
+        const memberData: CreateMemberData = {
+          roomId: room.$id,
+          userId: userId || null,
+          deviceId: userId ? null : this.getDeviceId(),
+          displayName,
+          role: 'host',
+          isOnline: true,
+          totalSipsGiven: 0,
+          totalSipsTaken: 0,
+          totalGamesPlayed: 0,
+          gameStats: {},
+        };
+
+        member = await this.memberService.createMember(memberData);
+      }
 
       // Set as current member
       this.memberService.setCurrentMember(member);
 
-      // Update room with host member ID
-      await this.roomService.updateRoom(room.$id, { hostMemberId: member.$id });
+      // Update room with host member ID if not already set
+      if (!room.hostMemberId) {
+        await this.roomService.updateRoom(room.$id, { hostMemberId: member.$id });
+      }
 
       // Navigate to lobby
       await this.router.navigate(['/room', room.$id]);
