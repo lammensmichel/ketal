@@ -148,8 +148,8 @@ export class RoomTileComponent {
     const room = this.room();
     try {
       await this.roomService.deleteRoom(room.$id);
-      // Navigate away since room is deleted
-      await this.router.navigate(['/rooms']);
+      // Force full page reload to refresh room list immediately
+      window.location.href = '/rooms';
     } catch (err) {
       console.error('Failed to delete room:', err);
     }
@@ -162,7 +162,8 @@ export class RoomTileComponent {
     const room = this.room();
     try {
       await this.roomService.leaveRoom(room.$id);
-      await this.router.navigate(['/rooms']);
+      // Force full page reload to refresh room list immediately
+      window.location.href = '/rooms';
     } catch (err) {
       console.error('Failed to leave room:', err);
     }

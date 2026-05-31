@@ -88,8 +88,9 @@ export class AppComponent implements OnInit {
       }
 
       // No active session: route based on auth state
-      if (this.authService.isLoggedIn()) {
-        await this.router.navigate(['/home']);
+      // Si on est déjà sur /rooms, ne pas rediriger
+      if (this.router.url !== '/rooms' && this.authService.isLoggedIn()) {
+        await this.router.navigate(['/rooms']);
       } else if (this.authService.isAnonymous()) {
         await this.router.navigate(['/players']);
       }
