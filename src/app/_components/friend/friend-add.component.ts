@@ -1,7 +1,6 @@
 import { Component, signal, effect, OnInit, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { NgClass, NgFor, NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { FontAwesomeIconsModule } from '../../font-awesome.module';
 import { AuthService } from '../../services/auth/auth.service';
@@ -12,7 +11,7 @@ import { FriendService, FriendProfile } from '../../services/friend/friend.servi
   templateUrl: './friend-add.component.html',
   styleUrls: ['./friend-add.component.scss'],
   standalone: true,
-  imports: [FormsModule, NgClass, NgFor, NgIf, TranslateModule, FontAwesomeIconsModule],
+  imports: [FormsModule, TranslateModule, FontAwesomeIconsModule],
 })
 export class FriendAddComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);

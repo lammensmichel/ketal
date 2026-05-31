@@ -1,18 +1,19 @@
 import { Component, signal, effect, OnInit, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { NgClass, NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { FontAwesomeIconsModule } from '../../font-awesome.module';
 import { FriendService } from '../../services/friend/friend.service';
 import { QRCodeComponent } from 'angularx-qrcode';
+
+type QRErrorCorrectionLevel = 'L' | 'M' | 'Q' | 'H';
 
 @Component({
   selector: 'app-qr-scanner',
   templateUrl: './qr-scanner.component.html',
   styleUrls: ['./qr-scanner.component.scss'],
   standalone: true,
-  imports: [FormsModule, NgClass, NgIf, TranslateModule, FontAwesomeIconsModule, QRCodeComponent],
+  imports: [FormsModule, TranslateModule, FontAwesomeIconsModule, QRCodeComponent],
 })
 export class QrScannerComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
@@ -36,7 +37,7 @@ export class QrScannerComponent implements OnInit {
   /** QR code config */
   readonly qrScale = 5;
   readonly qrWidth = 200;
-  readonly qrErrorCorrectionLevel: 'L' | 'M' | 'Q' | 'H' = 'M';
+  readonly qrErrorCorrectionLevel: QRErrorCorrectionLevel = 'M';
 
   ngOnInit(): void {
     // Generate QR code for current user's userId when component initializes

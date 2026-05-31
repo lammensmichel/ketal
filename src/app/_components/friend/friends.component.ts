@@ -1,6 +1,6 @@
 import { Component, signal, OnInit, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NgIf, NgClass } from '@angular/common';
+import { NgClass } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { FontAwesomeIconsModule } from '../../font-awesome.module';
 import { AuthService } from '../../services/auth/auth.service';
@@ -22,7 +22,6 @@ interface Tab {
   styleUrls: ['./friends.component.scss'],
   standalone: true,
   imports: [
-    NgIf,
     NgClass,
     TranslateModule,
     FontAwesomeIconsModule,
