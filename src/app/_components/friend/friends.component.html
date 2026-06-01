@@ -116,7 +116,43 @@
       <button type="button" class="btn-close" (click)="modalRef?.close()"></button>
     </div>
     <div class="modal-body">
-      <p>Friend search and QR scan features coming soon...</p>
+      <div class="friend-modal-search">
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          [placeholder]="'friends.searchNickname' | translate"
+          class="form-control"
+          (keyup.enter)="searchUsers(searchQuery())"
+        />
+        <button (click)="searchUsers(searchQuery())" class="btn btn-primary mt-2" [disabled]="isSearching()">
+          @if (isSearching()) {
+            <fa-icon [icon]="['fas', 'spinner']" class="fa-spin"></fa-icon>
+            {{ 'friends.searching' | translate }}
+          } @else {
+            {{ 'friends.search' | translate }}
+          }
+        </button>
+      </div>
+
+      @if (isLoaded()) {
+        <div class="friend-modal-results">
+          @if (searchResults().length > 0) {
+            <div class="search-results-list">
+              @for (result of searchResults(); track result.userId) {
+                <div class="search-result-item">
+                  <span class="search-result-name">{{ result.name }}</span>
+                  <button (click)="addFriendByNickname(result.name)" class="btn btn-sm btn-outline-primary">
+                    <fa-icon [icon]="['fas', 'user-plus']"></fa-icon>
+                    {{ 'friends.add' | translate }}
+                  </button>
+                </div>
+              }
+            </div>
+          } @else if (searchQuery()) {
+            <p class="no-results">{{ 'friends.noResults' | translate }}</p>
+          }
+        </div>
+      }
     </div>
   </ng-template>
 

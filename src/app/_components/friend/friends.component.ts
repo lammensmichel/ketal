@@ -1,4 +1,5 @@
 import { Component, signal, computed, OnInit, inject, DestroyRef, TemplateRef, ViewChild } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgClass } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
@@ -12,7 +13,7 @@ import { FriendService, FriendProfile } from '../../services/friend/friend.servi
   templateUrl: './friends.component.html',
   styleUrls: ['./friends.component.scss'],
   standalone: true,
-  imports: [TranslateModule, FontAwesomeIconsModule, NgbModule],
+  imports: [TranslateModule, FontAwesomeIconsModule, NgbModule, FormsModule],
 })
 export class FriendsComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
