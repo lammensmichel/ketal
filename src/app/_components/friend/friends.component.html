@@ -113,7 +113,7 @@
         <fa-icon [icon]="['fas', 'user-plus']"></fa-icon>
         {{ 'friends.addFriend' | translate }}
       </h4>
-      <button type="button" class="btn-close" (click)="modalRef?.hide()"></button>
+      <button type="button" class="btn-close" (click)="modalRef?.close()"></button>
     </div>
     <div class="modal-body">
       <p>Friend search and QR scan features coming soon...</p>
@@ -127,7 +127,7 @@
         <fa-icon [icon]="['fas', 'qrcode']"></fa-icon>
         {{ 'friends.myQr' | translate }}
       </h4>
-      <button type="button" class="btn-close" (click)="qrModalRef?.hide()"></button>
+      <button type="button" class="btn-close" (click)="qrModalRef?.close()"></button>
     </div>
     <div class="modal-body">
       @if (friendQrUrl()) {
