@@ -12,7 +12,7 @@ import { FriendService, FriendProfile } from '../../services/friend/friend.servi
   templateUrl: './friends.component.html',
   styleUrls: ['./friends.component.scss'],
   standalone: true,
-  imports: [NgClass, TranslateModule, FontAwesomeIconsModule, NgbModule],
+  imports: [TranslateModule, FontAwesomeIconsModule, NgbModule],
 })
 export class FriendsComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
