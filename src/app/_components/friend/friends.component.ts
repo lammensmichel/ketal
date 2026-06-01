@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgClass } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { FontAwesomeIconsModule } from '../../font-awesome.module';
+import { NgbModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { AuthService } from '../../services/auth/auth.service';
 import { FriendService, FriendProfile } from '../../services/friend/friend.service';
 
@@ -11,12 +12,13 @@ import { FriendService, FriendProfile } from '../../services/friend/friend.servi
   templateUrl: './friends.component.html',
   styleUrls: ['./friends.component.scss'],
   standalone: true,
-  imports: [NgClass, TranslateModule, FontAwesomeIconsModule],
+  imports: [NgClass, TranslateModule, FontAwesomeIconsModule, NgbModule],
 })
 export class FriendsComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly authService = inject(AuthService);
   private readonly friendSrv = inject(FriendService);
+  private readonly modalService = inject(NgbModal);
 
   /** Current user */
   readonly currentUser = this.authService.currentUser();
@@ -114,8 +116,7 @@ export class FriendsComponent implements OnInit {
     this.searchResults.set([]);
     this.isLoaded.set(false);
 
-    // TODO: Show modal (requires ng-bootstrap modal)
-    // this.modalRef = this.modalService.show(this.addModal);
+    this.modalRef = this.modalService.open(this.addModal);
   }
 
   openQrModal(): void {
@@ -124,8 +125,7 @@ export class FriendsComponent implements OnInit {
     if (currentUser?.$id) {
       this.friendQrUrl.set(JSON.stringify({ type: 'friend_add', userId: currentUser.$id }));
     }
-    // TODO: Show modal
-    // this.qrModalRef = this.modalService.show(this.qrModal);
+    this.qrModalRef = this.modalService.open(this.qrModal);
   }
 
   onSearchInput(event: Event): void {
