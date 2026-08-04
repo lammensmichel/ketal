@@ -175,6 +175,14 @@
       "roomNotFound": "Room not found"
     }
   },
+  "accountPromo": {
+    "title": "Get more with a free account",
+    "summary": "Detailed end-of-game summary",
+    "stats": "Stats and game history",
+    "friends": "Friend list, to find your group again",
+    "rooms": "Online games across several devices",
+    "cta": "Create an account"
+  },
   "menu": {
     "home": "Home",
     "connect": "Log in",

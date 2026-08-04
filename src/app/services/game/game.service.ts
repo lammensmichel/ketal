@@ -126,6 +126,32 @@ export class GameService {
   /** Signal for summary mode - persisted in localStorage */
   readonly withSummaryMode = signal<boolean>(localStorage.getItem(GameService.SUMMARY_MODE_KEY) === 'true');
 
+  /**
+   * Une preference etait-elle deja stockee au demarrage ?
+   *
+   * Indispensable pour distinguer "jamais choisi" de "choisi a false" : la
+   * lecture ci-dessus confond les deux. Et l'effect de persistance du
+   * constructeur ecrit la cle des le premier tick, donc tester l'absence de la
+   * cle plus tard ne dirait plus rien.
+   */
+  private readonly _hadStoredSummaryPreference = localStorage.getItem(GameService.SUMMARY_MODE_KEY) !== null;
+
+  /** Garde-fou : le defaut ne s'applique qu'une fois par session. */
+  private _summaryDefaultApplied = false;
+
+  /**
+   * Active le resume par defaut pour un compte connecte, tant que
+   * l'utilisateur n'a jamais exprime de choix. Un choix explicite est
+   * respecte, y compris "desactive".
+   */
+  enableSummaryByDefaultIfUnset(): void {
+    if (this._summaryDefaultApplied || this._hadStoredSummaryPreference) {
+      return;
+    }
+    this._summaryDefaultApplied = true;
+    this.withSummaryMode.set(true);
+  }
+
   /** Subject for modal events */
   private readonly openSipGiveModalEvent = new Subject<PlayerModel>();
   readonly openSipGiveModalEvent$ = this.openSipGiveModalEvent.asObservable();

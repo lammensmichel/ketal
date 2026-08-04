@@ -176,6 +176,14 @@
       "roomNotFound": "Room introuvable"
     }
   },
+  "accountPromo": {
+    "title": "Va plus loin avec un compte gratuit",
+    "summary": "Résumé détaillé en fin de partie",
+    "stats": "Statistiques et historique de tes parties",
+    "friends": "Liste d'amis, pour retrouver ton groupe",
+    "rooms": "Parties en ligne à plusieurs appareils",
+    "cta": "Créer un compte"
+  },
   "menu": {
     "home": "Accueil",
     "connect": "Se connecter",

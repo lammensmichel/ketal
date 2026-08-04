@@ -136,3 +136,52 @@ h2 {
   border-color: var(--color-border) !important;
   color: var(--color-text-primary);
 }
+
+// Promo compte, affichee a la place du toggle de resume pour les invites.
+// Bouton et non div : toute la carte est cliquable et doit rester atteignable
+// au clavier.
+.account-promo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  margin: var(--space-3) 0;
+  padding: var(--space-3);
+  text-align: left;
+  background: var(--color-bg-elevated);
+  border: 1px dashed var(--color-border);
+  border-radius: 0.5rem;
+  color: var(--color-text-primary);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--color-accent-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-accent-primary);
+    outline-offset: 2px;
+  }
+}
+
+.account-promo__title {
+  font-weight: bold;
+}
+
+.account-promo__list {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+
+  li + li {
+    margin-top: 0.15rem;
+  }
+}
+
+.account-promo__cta {
+  align-self: flex-start;
+  color: var(--color-accent-primary);
+  font-weight: bold;
+  font-size: 0.95rem;
+}

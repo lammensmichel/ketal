@@ -98,6 +98,14 @@
       "createFailed": "Spiel konnte nicht erstellt werden"
     }
   },
+  "accountPromo": {
+    "title": "Mehr mit einem kostenlosen Konto",
+    "summary": "Detaillierte Zusammenfassung am Spielende",
+    "stats": "Statistiken und Spielverlauf",
+    "friends": "Freundesliste, um deine Gruppe wiederzufinden",
+    "rooms": "Online-Spiele auf mehreren Geräten",
+    "cta": "Konto erstellen"
+  },
   "menu": {
     "home": "Startseite",
     "connect": "Anmelden",

@@ -38,6 +38,7 @@ describe('AppComponent', () => {
     isNewGame: jasmine.Spy;
     handleReconnection: jasmine.Spy;
     clearPersistedSummary: jasmine.Spy;
+    enableSummaryByDefaultIfUnset: jasmine.Spy;
   };
   let mockPlayerHelperService: jasmine.SpyObj<PlayerHelperService>;
   let mockAuthService: ReturnType<typeof createMockAuthService>;
@@ -54,6 +55,7 @@ describe('AppComponent', () => {
       isNewGame: jasmine.createSpy('isNewGame').and.returnValue(true),
       handleReconnection: jasmine.createSpy('handleReconnection').and.resolveTo(undefined),
       clearPersistedSummary: jasmine.createSpy('clearPersistedSummary'),
+      enableSummaryByDefaultIfUnset: jasmine.createSpy('enableSummaryByDefaultIfUnset'),
     };
 
     mockPlayerHelperService = jasmine.createSpyObj('PlayerHelperService', ['getPlayerNumber']);

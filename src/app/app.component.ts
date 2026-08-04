@@ -1,4 +1,4 @@
-import { Component, computed, OnInit, Signal, inject } from '@angular/core';
+import { Component, computed, effect, OnInit, Signal, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterOutlet } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -59,6 +59,15 @@ export class AppComponent implements OnInit {
       const summaryMode = this.gameSrv.withSummaryMode();
       const gameSummary = this.gameSrv.summary();
       return this.playerSrv.getPlayerNumber() > 1 ? summaryMode || gameSummary : summaryMode;
+    });
+
+    // Le resume est active par defaut pour un compte connecte. En effect et non
+    // dans ngOnInit, afin de couvrir aussi la connexion en cours de session :
+    // ngOnInit ne se rejoue pas apres un login.
+    effect(() => {
+      if (this.authService.isLoggedIn() && !this.authService.isAnonymous()) {
+        this.gameSrv.enableSummaryByDefaultIfUnset();
+      }
     });
   }
 

@@ -98,6 +98,14 @@
       "createFailed": "Kan spel niet aanmaken"
     }
   },
+  "accountPromo": {
+    "title": "Meer met een gratis account",
+    "summary": "Gedetailleerde samenvatting aan het einde",
+    "stats": "Statistieken en spelgeschiedenis",
+    "friends": "Vriendenlijst, om je groep terug te vinden",
+    "rooms": "Online spellen op meerdere apparaten",
+    "cta": "Account aanmaken"
+  },
   "menu": {
     "home": "Start",
     "connect": "Inloggen",

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Output, signal, computed, DestroyRef } from '@angular/core';
+import { Component, EventEmitter, inject, Output, signal, computed, DestroyRef, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { NgClass } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -12,13 +12,21 @@ import { GameService } from '../../../services/game/game.service';
 import { RoomService } from '../../../services/room/room.service';
 import { AuthService } from '../../../services/auth/auth.service';
 import { PlayerListPlayerComponent } from '../player-list-player/player-list-player.component';
+import { AccountGateModalComponent } from '../../auth/account-gate-modal/account-gate-modal.component';
 
 @Component({
   selector: 'app-players-list',
   templateUrl: './players-list.component.html',
   styleUrls: ['./players-list.component.scss'],
   standalone: true,
-  imports: [NgClass, ReactiveFormsModule, TranslateModule, PlayerListPlayerComponent, QRCodeComponent],
+  imports: [
+    NgClass,
+    ReactiveFormsModule,
+    TranslateModule,
+    PlayerListPlayerComponent,
+    QRCodeComponent,
+    AccountGateModalComponent,
+  ],
 })
 export class PlayersListComponent {
   private readonly router = inject(Router);
@@ -124,6 +132,30 @@ export class PlayersListComponent {
    *   user can't flip the mode mid-round. */
   canShowSummaryToggle(): boolean {
     return this.authService.isLoggedIn() && !this.authService.isAnonymous() && this.gameSrv.isNewGame();
+  }
+
+  @ViewChild('accountGateModal') accountGateModal: AccountGateModalComponent | undefined;
+
+  /**
+   * Pendant du toggle ci-dessus : un invite ou un utilisateur deconnecte ne
+   * voit aucune trace des fonctionnalites liees au compte, et n'a donc aucune
+   * raison d'en creer un. On affiche a la place ce qu'un compte apporte.
+   */
+  canShowAccountPromo(): boolean {
+    return !this.canShowSummaryToggle() && this.gameSrv.isNewGame();
+  }
+
+  /** Reutilise la modale de gate deja utilisee par le footer. */
+  openAccountPromo(): void {
+    this.accountGateModal?.show();
+  }
+
+  onGateCreateAccount(): void {
+    this.router.navigate(['/register']);
+  }
+
+  onGateLogin(): void {
+    this.router.navigate(['/login']);
   }
 
   onSummaryToggle(event: Event): void {

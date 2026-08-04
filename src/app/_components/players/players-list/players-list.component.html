@@ -112,6 +112,19 @@
       </label>
       <span class="toggle-label" [translate]="'Summary_Mode_Selection'"></span>
     </div>
+  } @else if (canShowAccountPromo()) {
+    <!-- Sans compte, rien ne laissait deviner l'existence de ces
+         fonctionnalites : le toggle du resume est simplement absent. -->
+    <button type="button" class="account-promo" (click)="openAccountPromo()">
+      <span class="account-promo__title" [translate]="'accountPromo.title'"></span>
+      <ul class="account-promo__list">
+        <li [translate]="'accountPromo.summary'"></li>
+        <li [translate]="'accountPromo.stats'"></li>
+        <li [translate]="'accountPromo.friends'"></li>
+        <li [translate]="'accountPromo.rooms'"></li>
+      </ul>
+      <span class="account-promo__cta" [translate]="'accountPromo.cta'"></span>
+    </button>
   }
   <div class="players-tiles">
     @for (player of getPlayers(); track player.id) {
@@ -119,3 +132,8 @@
     }
   </div>
 </div>
+<app-account-gate-modal
+  #accountGateModal
+  (createAccount)="onGateCreateAccount()"
+  (login)="onGateLogin()"
+></app-account-gate-modal>

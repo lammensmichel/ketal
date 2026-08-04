@@ -185,6 +185,7 @@ export function createMockGameService(): any & {
       'clearLastTurnGivenForPlayer',
       'clearPersistedSummary',
       'clearLastTurnIndicators',
+      'enableSummaryByDefaultIfUnset',
       'addDrinkingCard',
       'addGivingCard',
       'addCardToPlayer',
