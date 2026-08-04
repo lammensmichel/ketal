@@ -23,10 +23,19 @@ COPY . .
 RUN npx ng build --configuration production
 
 FROM nginx:alpine
+# openssl n'est pas dans nginx:alpine et sert au certificat auto-signe
+RUN apk add --no-cache openssl
+
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
-# Génère env.js au démarrage à partir de $APPWRITE_ENDPOINT
+# Corps partage entre les ecouteurs 80 et 443. Volontairement HORS de conf.d/ :
+# nginx.conf inclut conf.d/*.conf automatiquement, et ce fichier n'a pas de bloc
+# server — charge seul, ses `location` feraient echouer le demarrage.
+COPY docker/nginx-app.conf /etc/nginx/app-common.conf
+
+# Certificat auto-signe puis env.js, dans cet ordre (30 avant 40)
+COPY docker/30-selfsigned-cert.sh /docker-entrypoint.d/30-selfsigned-cert.sh
 COPY docker/40-appwrite-env.sh /docker-entrypoint.d/40-appwrite-env.sh
-RUN chmod +x /docker-entrypoint.d/40-appwrite-env.sh
+RUN chmod +x /docker-entrypoint.d/30-selfsigned-cert.sh /docker-entrypoint.d/40-appwrite-env.sh
 # outputPath = dist/ketal (builder :browser, fichiers à plat)
 COPY --from=build /app/dist/ketal/ /usr/share/nginx/html/
 EXPOSE 80

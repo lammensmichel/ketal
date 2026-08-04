@@ -24,12 +24,20 @@ services:
     ports:
       # Exposé sur toutes les interfaces pour être joignable depuis le LAN
       - '4211:80'
+      # HTTPS auto-signé. Pas 443 : le traefik d'Appwrite occupe déjà ce port
+      # sur le Mac. Nécessaire pour le partage, le presse-papier et la caméra,
+      # indisponibles sur http:// depuis une IP privée.
+      - '4443:443'
     environment:
       # Vide = same-origin : nginx proxifie /v1 vers Appwrite, donc la même
       # image marche en LAN et via Tailscale sans rien changer.
       # À ne renseigner que pour viser un backend Appwrite externe.
       APPWRITE_ENDPOINT: ${APPWRITE_ENDPOINT:-}
       APPWRITE_PROJECT_ID: fug
+      # IP/hostnames à inclure dans le SAN du certificat auto-signé. Sans une
+      # entrée IP: correspondante, le navigateur rejette le certificat même
+      # après acceptation de l'exception.
+      HTTPS_SAN_HOSTS: ${HTTPS_SAN_HOSTS:-192.168.1.81}
     networks:
       - gateway
 
