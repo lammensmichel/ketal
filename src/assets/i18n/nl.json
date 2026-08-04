@@ -99,6 +99,16 @@
       "createFailed": "Kan spel niet aanmaken"
     }
   },
+  "lobby": {
+    "rename": "Naam wijzigen",
+    "renameLabel": "Spel {{name}} een andere naam geven",
+    "renamePlaceholder": "Spelnaam",
+    "renameSave": "Opslaan",
+    "renameCancel": "Annuleren",
+    "renamed": "Naam bijgewerkt!",
+    "renameEmpty": "De naam mag niet leeg zijn",
+    "renameError": "Kan het spel geen andere naam geven"
+  },
   "accountPromo": {
     "title": "Meer met een gratis account",
     "summary": "Gedetailleerde samenvatting aan het einde",

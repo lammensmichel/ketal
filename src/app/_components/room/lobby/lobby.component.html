@@ -5,7 +5,74 @@
         <!-- Room Header -->
         @if (currentRoom(); as room) {
           <div class="room-header">
-            <h2 class="room-name">{{ room.name }}</h2>
+            @if (isRenaming()) {
+              <div class="rename-form">
+                <input
+                  #renameInput
+                  type="text"
+                  class="rename-input"
+                  maxlength="60"
+                  [value]="renameDraft()"
+                  [disabled]="isRenameSaving()"
+                  (input)="renameDraft.set(renameInput.value)"
+                  (keydown.enter)="submitRename()"
+                  (keydown.escape)="cancelRename()"
+                  [attr.placeholder]="'lobby.renamePlaceholder' | translate"
+                  [attr.aria-label]="'lobby.renamePlaceholder' | translate"
+                />
+                <button
+                  type="button"
+                  class="btn btn-sm btn-primary rename-save"
+                  (click)="submitRename()"
+                  [disabled]="isRenameSaving()"
+                  [attr.aria-label]="'lobby.renameSave' | translate"
+                >
+                  @if (isRenameSaving()) {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  }
+                  {{ 'lobby.renameSave' | translate }}
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-secondary rename-cancel"
+                  (click)="cancelRename()"
+                  [disabled]="isRenameSaving()"
+                  [attr.aria-label]="'lobby.renameCancel' | translate"
+                >
+                  {{ 'lobby.renameCancel' | translate }}
+                </button>
+              </div>
+            } @else {
+              <div class="room-title-row">
+                <h2 class="room-name">{{ room.name }}</h2>
+                @if (isHost()) {
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary btn-rename"
+                    (click)="startRename()"
+                    [attr.aria-label]="'lobby.renameLabel' | translate: { name: room.name }"
+                    [title]="'lobby.rename' | translate"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="14"
+                      height="14"
+                      fill="currentColor"
+                      viewBox="0 0 16 16"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"
+                      />
+                      <path
+                        fill-rule="evenodd"
+                        d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"
+                      />
+                    </svg>
+                  </button>
+                }
+              </div>
+            }
             <div class="room-code-container">
               <span class="room-code-label">{{ 'lobby.code' | translate }}:</span>
               <button

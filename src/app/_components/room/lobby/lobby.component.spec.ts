@@ -19,6 +19,7 @@ describe('LobbyComponent', () => {
     getRoomById: jasmine.Spy;
     setCurrentRoom: jasmine.Spy;
     leaveRoom: jasmine.Spy;
+    renameRoom: jasmine.Spy;
   };
   let mockMemberService: {
     members: ReturnType<typeof signal<GameMember[]>>;
@@ -118,6 +119,7 @@ describe('LobbyComponent', () => {
       getRoomById: jasmine.createSpy('getRoomById').and.resolveTo(mockRoom),
       setCurrentRoom: jasmine.createSpy('setCurrentRoom'),
       leaveRoom: jasmine.createSpy('leaveRoom').and.resolveTo(),
+      renameRoom: jasmine.createSpy('renameRoom').and.resolveTo(mockRoom),
     };
 
     mockMemberService = {
@@ -478,6 +480,110 @@ describe('LobbyComponent', () => {
       expect(component.isNewlyJoined('member-new')).toBe(true);
       expect(component.isNewlyJoined(mockPlayerMember.$id)).toBe(false);
       expect(component.joinedToast()).toBe('Newbie');
+    }));
+  });
+
+  describe('room rename', () => {
+    it('shows the rename action to the host only', () => {
+      createComponent('room123', true);
+      mockMemberService.members.set([mockHostMember, mockPlayerMember]);
+      mockMemberService.currentMember.set(mockHostMember);
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('.btn-rename')).toBeTruthy();
+
+      mockMemberService.currentMember.set(mockPlayerMember);
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('.btn-rename')).toBeNull();
+    });
+
+    it('pre-fills the draft with the current room name when opening the form', () => {
+      createComponent('room123', true);
+      mockMemberService.currentMember.set(mockHostMember);
+
+      component.startRename();
+
+      expect(component.isRenaming()).toBe(true);
+      expect(component.renameDraft()).toBe('Test Room');
+    });
+
+    it('does not open the form for a non-host member', () => {
+      createComponent('room123', true);
+      mockMemberService.currentMember.set(mockPlayerMember);
+
+      component.startRename();
+
+      expect(component.isRenaming()).toBe(false);
+    });
+
+    it('calls renameRoom with the room id and the trimmed name', fakeAsync(() => {
+      createComponent('room123', true);
+      mockMemberService.currentMember.set(mockHostMember);
+
+      component.startRename();
+      component.renameDraft.set('  Nouvelle Room  ');
+      component.submitRename();
+      tick();
+
+      expect(mockRoomService.renameRoom).toHaveBeenCalledWith('room123', 'Nouvelle Room');
+      expect(component.isRenaming()).toBe(false);
+      expect(component.feedback()).toBe('lobby.renamed');
+      tick(2000);
+    }));
+
+    it('rejects an empty name without calling the service', fakeAsync(() => {
+      createComponent('room123', true);
+      mockMemberService.currentMember.set(mockHostMember);
+
+      component.startRename();
+      component.renameDraft.set('   ');
+      component.submitRename();
+      tick();
+
+      expect(mockRoomService.renameRoom).not.toHaveBeenCalled();
+      expect(component.feedback()).toBe('lobby.renameEmpty');
+      expect(component.isRenaming()).toBe(true);
+      tick(2000);
+    }));
+
+    it('ignores a submit from a non-host member', fakeAsync(() => {
+      createComponent('room123', true);
+      mockMemberService.currentMember.set(mockPlayerMember);
+
+      component.renameDraft.set('Hijack');
+      component.submitRename();
+      tick();
+
+      expect(mockRoomService.renameRoom).not.toHaveBeenCalled();
+    }));
+
+    it('keeps the form open and reports an error when the rename fails', fakeAsync(() => {
+      mockRoomService.renameRoom.and.rejectWith(new Error('network down'));
+      createComponent('room123', true);
+      mockMemberService.currentMember.set(mockHostMember);
+
+      component.startRename();
+      component.renameDraft.set('Nouvelle Room');
+      component.submitRename();
+      tick();
+
+      expect(component.feedback()).toBe('lobby.renameError');
+      expect(component.isRenaming()).toBe(true);
+      expect(component.isRenameSaving()).toBe(false);
+      tick(2000);
+    }));
+
+    it('closes the form without a network call when the name is unchanged', fakeAsync(() => {
+      createComponent('room123', true);
+      mockMemberService.currentMember.set(mockHostMember);
+
+      component.startRename();
+      component.submitRename();
+      tick();
+
+      expect(mockRoomService.renameRoom).not.toHaveBeenCalled();
+      expect(component.isRenaming()).toBe(false);
     }));
   });
 });

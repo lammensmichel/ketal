@@ -1,4 +1,15 @@
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  ElementRef,
+  inject,
+  OnInit,
+  signal,
+  viewChild,
+} from '@angular/core';
 
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
@@ -31,6 +42,7 @@ const RESIZE_DEBOUNCE_MS = 150;
  *
  * Features:
  * - Display room name and join code
+ * - Rename the room (host only)
  * - List all members with role and online status
  * - Role management (host only)
  * - Start game button (host only, min 2 players required)
@@ -129,6 +141,26 @@ export class LobbyComponent implements OnInit {
 
   /** Toggle QR code visibility */
   readonly showQrCode = signal(false);
+
+  /** Whether the rename form replaces the room title (host only) */
+  readonly isRenaming = signal(false);
+
+  /** Draft value of the rename input */
+  readonly renameDraft = signal('');
+
+  /** Whether a rename request is in flight */
+  readonly isRenameSaving = signal(false);
+
+  private readonly renameInputRef = viewChild<ElementRef<HTMLInputElement>>('renameInput');
+
+  constructor() {
+    // Le champ n'est rendu qu'une fois isRenaming vrai : on attend son insertion dans le DOM pour le focus.
+    effect(() => {
+      if (this.isRenaming()) {
+        this.renameInputRef()?.nativeElement.focus();
+      }
+    });
+  }
 
   /** Responsive QR size in px (mobile 220, tablet 260, desktop 280+) */
   readonly qrSize = signal<number>(this.computeInitialQrSize());
@@ -657,6 +689,67 @@ export class LobbyComponent implements OnInit {
       this.error.set(this.getErrorMessage(err));
     } finally {
       this.isLoading.set(false);
+    }
+  }
+
+  /**
+   * Open the rename form, pre-filled with the current room name (host only)
+   */
+  startRename(): void {
+    if (!this.isHost()) {
+      return;
+    }
+    this.renameDraft.set(this.currentRoom()?.name ?? '');
+    this.isRenaming.set(true);
+  }
+
+  /**
+   * Close the rename form without saving
+   */
+  cancelRename(): void {
+    this.isRenaming.set(false);
+    this.renameDraft.set('');
+  }
+
+  /**
+   * Persist the new room name (host only)
+   */
+  async submitRename(): Promise<void> {
+    if (!this.isHost() || this.isRenameSaving()) {
+      return;
+    }
+
+    const room = this.currentRoom();
+    if (!room) {
+      return;
+    }
+
+    const newName = this.renameDraft().trim();
+
+    // L'attribut `name` est requis côté Appwrite : on refuse avant l'appel réseau.
+    if (!newName) {
+      this.showFeedback('lobby.renameEmpty');
+      return;
+    }
+
+    if (newName === room.name) {
+      this.cancelRename();
+      return;
+    }
+
+    try {
+      this.isRenameSaving.set(true);
+      this.error.set(null);
+      await this.roomService.renameRoom(room.$id, newName);
+      this.isRenaming.set(false);
+      this.renameDraft.set('');
+      this.showFeedback('lobby.renamed');
+    } catch (err) {
+      console.warn('Failed to rename room:', err);
+      // On garde le formulaire ouvert pour laisser l'hôte retenter sans resaisir le nom.
+      this.showFeedback('lobby.renameError');
+    } finally {
+      this.isRenameSaving.set(false);
     }
   }
 

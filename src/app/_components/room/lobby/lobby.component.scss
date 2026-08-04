@@ -176,6 +176,76 @@
     margin-bottom: 0.5rem;
   }
 
+  .room-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    margin-bottom: 0.5rem;
+
+    @include desktop {
+      justify-content: flex-start;
+    }
+
+    .room-name {
+      margin-bottom: 0;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .btn-rename {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+
+    &:hover {
+      background-color: var(--color-bg-elevated);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-accent-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  .rename-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    margin-bottom: 0.5rem;
+
+    @include desktop {
+      justify-content: flex-start;
+    }
+  }
+
+  .rename-input {
+    flex: 1 1 12rem;
+    min-width: 0;
+    padding: var(--space-2) var(--space-3);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    background-color: var(--color-bg-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+
+    &:focus-visible {
+      outline: 2px solid var(--color-accent-primary);
+      outline-offset: 1px;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+    }
+  }
+
   .room-code-container {
     display: flex;
     flex-wrap: wrap;

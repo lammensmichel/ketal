@@ -99,6 +99,16 @@
       "createFailed": "Spiel konnte nicht erstellt werden"
     }
   },
+  "lobby": {
+    "rename": "Umbenennen",
+    "renameLabel": "Spiel {{name}} umbenennen",
+    "renamePlaceholder": "Spielname",
+    "renameSave": "Speichern",
+    "renameCancel": "Abbrechen",
+    "renamed": "Name aktualisiert!",
+    "renameEmpty": "Der Name darf nicht leer sein",
+    "renameError": "Spiel konnte nicht umbenannt werden"
+  },
   "accountPromo": {
     "title": "Mehr mit einem kostenlosen Konto",
     "summary": "Detaillierte Zusammenfassung am Spielende",
