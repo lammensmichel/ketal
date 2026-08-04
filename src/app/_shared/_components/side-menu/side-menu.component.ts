@@ -128,6 +128,12 @@ export class SideMenuComponent {
     this.router.navigate(['/players']);
   }
 
+  /** Navigate to the home page (create / join a game) */
+  goHome(): void {
+    this.closeMenu();
+    this.router.navigate(['/home']);
+  }
+
   /** Navigate to my rooms page */
   goToRooms(): void {
     this.closeMenu();

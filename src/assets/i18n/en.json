@@ -176,6 +176,7 @@
     }
   },
   "menu": {
+    "home": "Home",
     "connect": "Log in",
     "myRooms": "My games",
     "friends": "My Friends",

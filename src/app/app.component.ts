@@ -87,16 +87,38 @@ export class AppComponent implements OnInit {
         }
       }
 
-      // No active session: route based on auth state
-      // Si on est déjà sur /rooms, ne pas rediriger
-      if (this.router.url !== '/rooms' && this.authService.isLoggedIn()) {
-        await this.router.navigate(['/rooms']);
-      } else if (this.authService.isAnonymous()) {
-        await this.router.navigate(['/players']);
+      // Pas de session active : on route selon l'état d'authentification, mais
+      // uniquement depuis un point d'entrée neutre. Sinon l'utilisateur qui
+      // ouvre une URL ciblée — typiquement /room/join/<code> scanné sur un QR
+      // d'invitation — se faisait rediriger vers /rooms et perdait le lien.
+      if (this.isNeutralEntryUrl()) {
+        if (this.authService.isLoggedIn()) {
+          await this.router.navigate(['/rooms']);
+        } else if (this.authService.isAnonymous()) {
+          await this.router.navigate(['/players']);
+        }
       }
     } catch {
       // Auth init failed, continue normally
     }
+  }
+
+  /**
+   * Les seules URL depuis lesquelles la redirection automatique est autorisée.
+   * Toute autre URL est un lien profond volontaire (invitation scannée, partage
+   * de room, lien envoyé par un ami) et doit être respectée.
+   *
+   * On lit window.location.pathname plutôt que router.url : quand ce ngOnInit
+   * s'exécute, la navigation initiale du router n'est pas nécessairement
+   * terminée (les routes utilisent loadComponent), et router.url peut encore
+   * valoir '/' alors que l'URL réelle est déjà /room/join/<code>.
+   */
+  private isNeutralEntryUrl(): boolean {
+    if (typeof window === 'undefined') {
+      return true;
+    }
+    const path = window.location.pathname.replace(/\/+$/, '');
+    return path === '' || path === '/login' || path === '/home';
   }
 
   onSummaryModeCheckChange(event: Event): void {

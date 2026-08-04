@@ -99,6 +99,7 @@
     }
   },
   "menu": {
+    "home": "Start",
     "connect": "Inloggen",
     "myRooms": "Mijn spellen",
     "friends": "Mijn vrienden",

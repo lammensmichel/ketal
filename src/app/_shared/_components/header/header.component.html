@@ -1,11 +1,13 @@
 <header class="compact-header">
-  <h1 class="compact-header-title" [translate]="'Label_App_Title'"></h1>
-  <button
-    type="button"
-    class="btn-hamburger"
-    (click)="openSideMenu()"
-    aria-label="Open menu"
-  >
+  <h1 class="compact-header-title">
+    <!-- Le titre est cliquable : c'est le retour vers l'accueil depuis n'importe
+         quel ecran. Bouton et non lien, pour rester coherent avec la navigation
+         programmatique du reste de l'app. -->
+    <button type="button" class="header-home-btn" (click)="goHome()" [attr.aria-label]="'menu.home' | translate">
+      <span [translate]="'Label_App_Title'"></span>
+    </button>
+  </h1>
+  <button type="button" class="btn-hamburger" (click)="openSideMenu()" aria-label="Open menu">
     <fa-icon [icon]="['fas', 'bars']"></fa-icon>
   </button>
 </header>

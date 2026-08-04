@@ -99,6 +99,7 @@
     }
   },
   "menu": {
+    "home": "Startseite",
     "connect": "Anmelden",
     "myRooms": "Meine Spiele",
     "friends": "Meine Freunde",

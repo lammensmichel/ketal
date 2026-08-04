@@ -33,7 +33,11 @@
         <span [translate]="'menu.connect'"></span>
       </button>
     } @else if (isLoggedIn()) {
-      <!-- Connected user (email/Google): show My Rooms, Friends + Logout -->
+      <!-- Connected user (email/Google): show Home, My Rooms, Friends + Logout -->
+      <button type="button" class="side-menu-item" (click)="goHome()">
+        <fa-icon [icon]="['fas', 'home']" class="side-menu-icon"></fa-icon>
+        <span [translate]="'menu.home'"></span>
+      </button>
       <button type="button" class="side-menu-item" (click)="goToRooms()">
         <fa-icon [icon]="['fas', 'folder']" class="side-menu-icon"></fa-icon>
         <span [translate]="'menu.myRooms'"></span>

@@ -177,6 +177,7 @@
     }
   },
   "menu": {
+    "home": "Accueil",
     "connect": "Se connecter",
     "myRooms": "Mes parties",
     "friends": "Mes amis",
