@@ -59,7 +59,12 @@
   @if (!isLoading() && hasRooms()) {
     <div class="rooms-grid">
       @for (room of visibleRooms(); track room.$id) {
-        <app-room-tile [room]="room" [currentRole]="getRoomRole(room.$id)" [membersCount]="room.memberCount" />
+        <app-room-tile
+          [room]="room"
+          [currentRole]="getRoomRole(room.$id)"
+          [membersCount]="room.memberCount"
+          (roomsChanged)="reloadRooms()"
+        />
       } @empty {
         <div class="empty-state">
           <p class="empty-text">Aucune room affichée</p>

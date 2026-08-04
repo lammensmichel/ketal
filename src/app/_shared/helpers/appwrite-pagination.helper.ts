@@ -33,11 +33,26 @@ export async function listAllDocuments(
   const allDocuments: import('appwrite').Models.Document[] = [];
   let cursor: string | null = null;
 
+  // Sans limite explicite, Appwrite applique sa valeur par defaut (25), ce qui
+  // multiplie inutilement les allers-retours. Les deux specs de MemberService
+  // assertent deja la presence de limit=100 : la limite avait donc ete perdue.
+  //
+  // Si l'appelant fournit sa propre limite, on la traite comme un PLAFOND
+  // volontaire et on ne renvoie que cette page — c'est l'usage de FriendService,
+  // qui passe Query.limit(20) pour borner une recherche. Paginer par-dessus
+  // reviendrait a ignorer le plafond demande.
+  const callerSetsLimit = (queries ?? []).some((q) => q.includes('"limit"') || q.includes("'limit'"));
+  const pageSize = 100;
+
   do {
     // Only add cursor query if we have a valid cursor from previous page
     const pageQueries: string[] = queries
       ? queries.slice() // Make a copy
       : [];
+
+    if (!callerSetsLimit) {
+      pageQueries.push(Query.limit(pageSize));
+    }
 
     // Add cursor after the existing queries (if we have one)
     if (cursor) {
@@ -51,7 +66,13 @@ export async function listAllDocuments(
     });
 
     allDocuments.push(...response.documents);
-    cursor = response.documents.length > 0 ? response.documents[response.documents.length - 1].$id : null;
+
+    // On s'arrete des qu'une page est incomplete, et non seulement quand elle est
+    // vide : sans cela un resultat tenant exactement en N pages coute une requete
+    // supplementaire a chaque appel. Et si le serveur renvoyait indefiniment la
+    // meme page, la boucle ne terminerait jamais.
+    const lastPageFull = !callerSetsLimit && response.documents.length === pageSize;
+    cursor = lastPageFull ? response.documents[response.documents.length - 1].$id : null;
   } while (cursor);
 
   return { documents: allDocuments };

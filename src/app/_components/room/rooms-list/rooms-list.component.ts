@@ -8,7 +8,7 @@ import {
   signal,
   DestroyRef,
 } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Router } from '@angular/router';
 
 import { RoomService, GameRoomWithMemberCount } from '../../../services/room/room.service';
 import { MemberService } from '../../../services/member/member.service';
@@ -34,7 +34,6 @@ export class RoomsListComponent implements OnInit {
   private readonly roomService = inject(RoomService);
   private readonly memberService = inject(MemberService);
   private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly changeDetectorRef = inject(ChangeDetectorRef);
 

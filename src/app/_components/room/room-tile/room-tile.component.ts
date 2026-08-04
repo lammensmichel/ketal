@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, computed, inject, input } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, inject, input, output } from '@angular/core';
 import { Router } from '@angular/router';
 import { RoomService, GameRoom, RoomStatus } from '../../../services/room/room.service';
 import { GameService } from '../../../services/game/game.service';
@@ -34,6 +34,22 @@ export class RoomTileComponent {
 
   /** Number of members in this room */
   readonly membersCount = input.required<number>();
+
+  /**
+   * Emis apres une action qui modifie la liste (archivage, suppression, depart),
+   * pour que le parent recharge.
+   *
+   * Remplace un `window.location.href = '/rooms'` : le cablage prevu n'avait
+   * jamais ete termine — RoomsListComponent expose bien `reloadRooms()`,
+   * documentee « called by RoomTileComponent after delete/archive », mais
+   * aucun output ne l'atteignait. Le rechargement complet de page comblait le
+   * trou, au prix d'un ecran blanc, de la perte de l'etat applicatif, et d'un
+   * navigateur tue en test (Karma coupait le transport).
+   *
+   * Effet de bord corrige au passage : l'archivage ne rafraichissait pas la
+   * liste du tout, faute d'appel de rechargement.
+   */
+  readonly roomsChanged = output<void>();
 
   /** Computed: display status for UI */
   readonly displayStatus = computed(() => this.room().status as 'idle' | 'playing' | 'archived');
@@ -136,6 +152,7 @@ export class RoomTileComponent {
     const room = this.room();
     try {
       await this.roomService.archiveRoom(room.$id);
+      this.roomsChanged.emit();
     } catch (err) {
       console.error('Failed to archive room:', err);
     }
@@ -148,8 +165,7 @@ export class RoomTileComponent {
     const room = this.room();
     try {
       await this.roomService.deleteRoom(room.$id);
-      // Force full page reload to refresh room list immediately
-      window.location.href = '/rooms';
+      this.roomsChanged.emit();
     } catch (err) {
       console.error('Failed to delete room:', err);
     }
@@ -162,8 +178,7 @@ export class RoomTileComponent {
     const room = this.room();
     try {
       await this.roomService.leaveRoom(room.$id);
-      // Force full page reload to refresh room list immediately
-      window.location.href = '/rooms';
+      this.roomsChanged.emit();
     } catch (err) {
       console.error('Failed to leave room:', err);
     }

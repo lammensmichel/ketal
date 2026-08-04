@@ -123,7 +123,7 @@ describe('RoomsListComponent', () => {
     const mockKetalSessionService = {};
 
     await TestBed.configureTestingModule({
-      imports: [RouterTestingModule, RoomsListComponent],
+      imports: [RoomsListComponent],
       schemas: [NO_ERRORS_SCHEMA],
       providers: [
         { provide: Router, useValue: mockRouter },
