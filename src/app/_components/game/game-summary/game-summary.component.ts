@@ -80,6 +80,12 @@ export class GameSummaryComponent {
 
   replay(): void {
     this.gameSrv.resetGame();
+    // resetGame() remet le statut a 0 et quitte la room. Sans navigation on
+    // restait sur /game, ou les trois @if de main-game (isGameStarted,
+    // isGameFinished, isSummaryMode) testent les statuts 1, 2 et 3 : plus rien
+    // ne s'affichait, d'ou l'ecran noir et l'impossibilite de relancer une
+    // partie. Meme enchainement que restartGame() dans le footer.
+    this.router.navigate(['/players']);
   }
 
   exit(): void {

@@ -184,6 +184,13 @@ describe('GameSummaryComponent', () => {
       component.replay();
       expect(mockGameService.resetGame).toHaveBeenCalled();
     });
+
+    it('should navigate to the players list on replay', () => {
+      // resetGame() remet le statut a 0 : sans navigation, /game n'affiche plus
+      // rien (ecran noir) et aucune nouvelle partie n'est possible.
+      component.replay();
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/players']);
+    });
   });
 
   describe('exit action', () => {
