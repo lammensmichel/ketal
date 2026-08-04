@@ -39,6 +39,12 @@ export class PlayerCardComponent implements OnInit {
   @ViewChild(PlayerGivenSipsSelectionComponent)
   private playerGivenSipsModal: PlayerGivenSipsSelectionComponent | undefined;
 
+  /**
+   * Solde de gorgees a distribuer au tick precedent. `null` = effect pas encore
+   * passe, ce qui evite d'ouvrir la modale au montage (ngOnInit s'en charge).
+   */
+  private _prevPendingGiven: number | null = null;
+
   /** NOTE on reactivity: `player` is a plain `@Input` (not an `input()` signal), yet
    * the computeds below read `this.player.sips` / `this.player.cards`. Re-evaluation
    * relies on `gameSrv.game()` ticking whenever player data changes — which is
@@ -197,6 +203,38 @@ export class PlayerCardComponent implements OnInit {
         }
         this.matchHighlight.set(true);
         this.matchTimer = setTimeout(() => this.matchHighlight.set(false), 2000);
+      }
+    });
+
+    // Ouverture de la modale de distribution pilotee par l'ETAT, et non par
+    // l'emission locale du footer.
+    //
+    // openSipGiveModal() du footer ne s'execute que sur l'appareil qui tire la
+    // carte. En multi-appareils, le joueur qui doit donner ne recoit l'etat que
+    // par la synchro realtime de KetalSession — il n'entre jamais dans
+    // displayNewCard() — et sa modale ne s'ouvrait donc jamais. Meme raison qui
+    // avait deja impose un effect pour les badges par tirage.
+    effect(() => {
+      const players = this.gameSrv.players();
+      const me = players.find((p) => p.id === this.player?.id);
+      const pending = me ? this.playerSrv.getTotalGivenSips(me) : 0;
+
+      const previous = this._prevPendingGiven;
+      this._prevPendingGiven = pending;
+
+      // Premier passage : on memorise seulement. L'ouverture au montage (apres
+      // un F5 avec des gorgees en attente) reste geree par ngOnInit, sans quoi
+      // la modale s'ouvrirait deux fois.
+      if (previous === null) {
+        return;
+      }
+
+      // Front montant uniquement : sinon la modale se reouvrirait a chaque
+      // distribution partielle, tant que le solde reste positif.
+      if (previous === 0 && pending > 0 && me) {
+        // Differe d'un tick : @ViewChild n'est pas encore resolu au premier
+        // passage de l'effect.
+        setTimeout(() => this.openPlayerGivenSipsModal(me), 0);
       }
     });
 
