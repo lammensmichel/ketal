@@ -1,10 +1,10 @@
 import { Component, signal, computed, OnInit, inject, DestroyRef, TemplateRef, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NgClass } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { FontAwesomeIconsModule } from '../../font-awesome.module';
 import { NgbModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { QRCodeComponent } from 'angularx-qrcode';
 import { AuthService } from '../../services/auth/auth.service';
 import { FriendService, FriendProfile } from '../../services/friend/friend.service';
 
@@ -13,7 +13,7 @@ import { FriendService, FriendProfile } from '../../services/friend/friend.servi
   templateUrl: './friends.component.html',
   styleUrls: ['./friends.component.scss'],
   standalone: true,
-  imports: [TranslateModule, FontAwesomeIconsModule, NgbModule, FormsModule],
+  imports: [TranslateModule, FontAwesomeIconsModule, NgbModule, FormsModule, QRCodeComponent],
 })
 export class FriendsComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
@@ -121,10 +121,10 @@ export class FriendsComponent implements OnInit {
   }
 
   openQrModal(): void {
-    // Generate QR URL for current user
+    // Generate QR URL for current user pointing to add friend endpoint
     const currentUser = this.authService.currentUser();
     if (currentUser?.$id) {
-      this.friendQrUrl.set(JSON.stringify({ type: 'friend_add', userId: currentUser.$id }));
+      this.friendQrUrl.set(`https://ketal.app/friend/add?userId=${currentUser.$id}`);
     }
     this.qrModalRef = this.modalService.open(this.qrModal);
   }
@@ -152,6 +152,13 @@ export class FriendsComponent implements OnInit {
         this.isSearching.set(false);
         this.scanError.set(error instanceof Error ? error.message : 'Search failed');
       });
+  }
+
+  confirmAddFriend(user: FriendProfile): void {
+    const confirmed = confirm(`Add ${user.name} as your friend?`);
+    if (confirmed) {
+      this.addFriendByNickname(user.name);
+    }
   }
 
   addFriendByNickname(nickname: string): void {

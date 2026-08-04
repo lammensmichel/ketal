@@ -257,25 +257,26 @@
     }
   },
   "Label_GameInProgress": "Partie en cours",
-  "friends": {
-    "title": "Mes amis",
-    "add": "Ajouter",
-    "myQr": "Mon QR",
-    "searchPlaceholder": "Rechercher par pseudo...",
-    "empty": "Aucun ami pour le moment",
-    "emptySubtext": "Ajoutez des amis pour les voir ici",
-    "addFirst": "Ajouter votre premier ami",
-    "addFriend": "Ajouter un ami",
-    "searchNickname": "Entrez le pseudo à rechercher",
-    "searching": "Recherche en cours",
-    "noResults": "Aucun utilisateur trouvé",
-    "loading": "Chargement",
-    "statusOnline": "En ligne",
-    "remove": "Retirer",
-    "myQrDesc": "Scannez ce code pour être ajouté comme ami",
-    "copyQr": "Copier le QR",
-    "copiedQr": "QR copié !",
-    "loginRequired": "Connexion requise",
-    "loginRequiredDesc": "Veuillez vous connecter pour gérer vos amis"
-  }
+   "friends": {
+     "title": "Mes amis",
+     "add": "Ajouter",
+     "myQr": "Mon QR",
+     "searchPlaceholder": "Rechercher par pseudo...",
+     "empty": "Aucun ami pour le moment",
+     "emptySubtext": "Ajoutez des amis pour les voir ici",
+     "addFirst": "Ajouter votre premier ami",
+     "addFriend": "Ajouter un ami",
+     "searchNickname": "Entrez le pseudo à rechercher",
+     "search": "Rechercher",
+     "searching": "Recherche en cours",
+     "noResults": "Aucun utilisateur trouvé",
+     "loading": "Chargement",
+     "statusOnline": "En ligne",
+     "remove": "Retirer",
+     "myQrDesc": "Scannez ce code pour être ajouté comme ami",
+     "copyQr": "Copier le QR",
+     "copiedQr": "QR copié !",
+     "loginRequired": "Connexion requise",
+     "loginRequiredDesc": "Veuillez vous connecter pour gérer vos amis"
+   }
 }

@@ -152,26 +152,27 @@
       }
     }
   },
-  "friends": {
-    "title": "Meine Freunde",
-    "add": "Hinzufügen",
-    "myQr": "Mein QR",
-    "searchPlaceholder": "Nach Spitzname suchen...",
-    "empty": "Noch keine Freunde",
-    "emptySubtext": "Fügen Sie Freunde hinzu, um sie hier zu sehen",
-    "addFirst": "Fügen Sie Ihren ersten Freund hinzu",
-    "addFriend": "Freund hinzufügen",
-    "searchNickname": "Geben Sie den Spitzname ein, um zu suchen",
-    "searching": "Suche...",
-    "noResults": "Keine Benutzer gefunden",
-    "loading": "Laden",
-    "statusOnline": "Online",
-    "statusOffline": "Offline",
-    "remove": "Entfernen",
-    "myQrDesc": "Scannen Sie diesen Code, um Sie als Freund hinzuzufügen",
-    "copyQr": "QR kopieren",
-    "copiedQr": "QR kopiert!",
-    "loginRequired": "Anmeldung erforderlich",
-    "loginRequiredDesc": "Bitte melden Sie sich an, um Ihre Freunde zu verwalten"
-  }
+   "friends": {
+     "title": "Meine Freunde",
+     "add": "Hinzufügen",
+     "myQr": "Mein QR",
+     "searchPlaceholder": "Nach Spitzname suchen...",
+     "empty": "Noch keine Freunde",
+     "emptySubtext": "Fügen Sie Freunde hinzu, um sie hier zu sehen",
+     "addFirst": "Fügen Sie Ihren ersten Freund hinzu",
+     "addFriend": "Freund hinzufügen",
+     "searchNickname": "Geben Sie den Spitzname ein, um zu suchen",
+     "search": "Suchen",
+     "searching": "Suche...",
+     "noResults": "Keine Benutzer gefunden",
+     "loading": "Laden",
+     "statusOnline": "Online",
+     "statusOffline": "Offline",
+     "remove": "Entfernen",
+     "myQrDesc": "Scannen Sie diesen Code, um Sie als Freund hinzuzufügen",
+     "copyQr": "QR kopieren",
+     "copiedQr": "QR kopiert!",
+     "loginRequired": "Anmeldung erforderlich",
+     "loginRequiredDesc": "Bitte melden Sie sich an, um Ihre Freunde zu verwalten"
+   }
 }

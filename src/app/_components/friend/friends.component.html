@@ -104,9 +104,9 @@
   }
 </div>
 
-<!-- Placeholder for Add Friend Modal -->
-<div class="friend-modal-placeholder" style="display: none">
-  <!-- Add friend modal -->
+<!-- Friend Modals Container -->
+<div class="modals-container">
+  <!-- Add Friend Modal -->
   <ng-template #addModal>
     <div class="modal-header">
       <h4 class="modal-title">
@@ -141,7 +141,7 @@
               @for (result of searchResults(); track result.userId) {
                 <div class="search-result-item">
                   <span class="search-result-name">{{ result.name }}</span>
-                  <button (click)="addFriendByNickname(result.name)" class="btn btn-sm btn-outline-primary">
+                  <button (click)="confirmAddFriend(result)" class="btn btn-sm btn-outline-primary">
                     <fa-icon [icon]="['fas', 'user-plus']"></fa-icon>
                     {{ 'friends.add' | translate }}
                   </button>
@@ -168,11 +168,16 @@
     <div class="modal-body">
       @if (friendQrUrl()) {
         <div class="qr-code-display">
-          <div class="qr-placeholder">
-            <fa-icon [icon]="['fas', 'qrcode']" size="4x"></fa-icon>
-            <p class="qr-code-desc">{{ 'friends.myQrDesc' | translate }}</p>
-          </div>
-          <button (click)="copyQrCode()" class="btn btn-outline-primary">
+          <qrcode
+            [qrdata]="friendQrUrl()!"
+            [width]="qrWidth"
+            [scale]="qrScale"
+            [errorCorrectionLevel]="qrErrorCorrectionLevel"
+            [colorDark]="'#000000'"
+            [colorLight]="'#ffffff'"
+          ></qrcode>
+          <p class="qr-code-desc">{{ 'friends.myQrDesc' | translate }}</p>
+          <button (click)="copyQrCode()" class="btn btn-outline-primary mt-2">
             <fa-icon [icon]="['fas', 'copy']"></fa-icon>
             {{ 'friends.copyQr' | translate }}
           </button>
@@ -180,7 +185,7 @@
       } @else {
         <div class="qr-loading">
           <fa-icon [icon]="['fas', 'spinner']" class="fa-spin" size="2x"></fa-icon>
-          <p>{{ 'friends.loading' | translate }}...</p>
+          <p class="mt-2">{{ 'friends.loading' | translate }}...</p>
         </div>
       }
     </div>

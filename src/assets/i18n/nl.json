@@ -152,26 +152,27 @@
       }
     }
   },
-  "friends": {
-    "title": "Mijn vrienden",
-    "add": "Toevoegen",
-    "myQr": "Mijn QR",
-    "searchPlaceholder": "Zoek op naam...",
-    "empty": "Nog geen vrienden",
-    "emptySubtext": "Voeg vrienden toe om ze hier te zien",
-    "addFirst": "Voeg je eerste vriend toe",
-    "addFriend": "Vriend toevoegen",
-    "searchNickname": "Voer de naam in om te zoeken",
-    "searching": "Zoeken...",
-    "noResults": "Geen gebruikers gevonden",
-    "loading": "Laden",
-    "statusOnline": "Online",
-    "statusOffline": "Offline",
-    "remove": "Verwijderen",
-    "myQrDesc": "Scan deze code om je toe te voegen als vriend",
-    "copyQr": "QR kopiëren",
-    "copiedQr": "QR gekopieerd!",
-    "loginRequired": "Inloggen vereist",
-    "loginRequiredDesc": "Log in om je vrienden te beheren"
-  }
+   "friends": {
+     "title": "Mijn vrienden",
+     "add": "Toevoegen",
+     "myQr": "Mijn QR",
+     "searchPlaceholder": "Zoek op naam...",
+     "empty": "Nog geen vrienden",
+     "emptySubtext": "Voeg vrienden toe om ze hier te zien",
+     "addFirst": "Voeg je eerste vriend toe",
+     "addFriend": "Vriend toevoegen",
+     "searchNickname": "Voer de naam in om te zoeken",
+     "search": "Zoeken",
+     "searching": "Zoeken...",
+     "noResults": "Geen gebruikers gevonden",
+     "loading": "Laden",
+     "statusOnline": "Online",
+     "statusOffline": "Offline",
+     "remove": "Verwijderen",
+     "myQrDesc": "Scan deze code om je toe te voegen als vriend",
+     "copyQr": "QR kopiëren",
+     "copiedQr": "QR gekopieerd!",
+     "loginRequired": "Inloggen vereist",
+     "loginRequiredDesc": "Log in om je vrienden te beheren"
+   }
 }
