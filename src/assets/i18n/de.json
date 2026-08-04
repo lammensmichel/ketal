@@ -145,7 +145,13 @@
     "connect": "Anmelden",
     "myRooms": "Meine Spiele",
     "friends": "Meine Freunde",
-    "quitGame": "Spiel beenden"
+    "quitGame": "Spiel beenden",
+    "displayMode": {
+      "label": "Anzeige",
+      "table": "Tisch (alle)",
+      "personnel": "Persönlich (meine Karten)",
+      "viewer": "Zuschauer (TV)"
+    }
   },
   "userMenu": {
     "login": "Anmelden",
@@ -182,6 +188,11 @@
     "exit": "Beenden"
   },
   "game": {
+    "readOnly": {
+      "notYourTurn": "{{name}} ist am Zug — nur Ansicht",
+      "viewer": "Zuschaueransicht — nur Ansicht",
+      "you": "du"
+    },
     "phase1": "Phase 1: Vorhersagen",
     "phase2": "Phase 2: Verteilung",
     "turn": "Runde",

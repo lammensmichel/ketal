@@ -7,7 +7,9 @@ import { SideMenuComponent } from './side-menu.component';
 import { GameService } from '../../../services/game/game.service';
 import { AuthService } from '../../../services/auth/auth.service';
 import { AppwriteService } from '../../../services/appwrite/appwrite.service';
-import { createMockGameService, createMockAuthService } from '../../../testing/test-helpers';
+import { DisplayModeService } from '../../../services/display-mode/display-mode.service';
+import { MemberService } from '../../../services/member/member.service';
+import { createMockGameService, createMockAuthService, createMockMemberService } from '../../../testing/test-helpers';
 
 describe('SideMenuComponent', () => {
   let component: SideMenuComponent;
@@ -16,6 +18,8 @@ describe('SideMenuComponent', () => {
   let mockAuthService: ReturnType<typeof createMockAuthService>;
   let mockRouter: jasmine.SpyObj<Router>;
   let mockAppwriteService: { account: { deleteSession: jasmine.Spy } };
+  let mockMemberService: ReturnType<typeof createMockMemberService>;
+  let displayModeService: DisplayModeService;
   let routerEventsSubject: Subject<Event>;
 
   beforeEach(async () => {
@@ -31,6 +35,8 @@ describe('SideMenuComponent', () => {
         deleteSession: jasmine.createSpy('deleteSession').and.resolveTo({}),
       },
     };
+    mockMemberService = createMockMemberService();
+    localStorage.removeItem('ketal_display_mode');
 
     await TestBed.configureTestingModule({
       imports: [TranslateModule.forRoot(), SideMenuComponent],
@@ -38,6 +44,7 @@ describe('SideMenuComponent', () => {
         { provide: GameService, useValue: mockGameService },
         { provide: AuthService, useValue: mockAuthService },
         { provide: AppwriteService, useValue: mockAppwriteService },
+        { provide: MemberService, useValue: mockMemberService },
         { provide: Router, useValue: mockRouter },
       ],
       schemas: [NO_ERRORS_SCHEMA],
@@ -45,6 +52,11 @@ describe('SideMenuComponent', () => {
 
     fixture = TestBed.createComponent(SideMenuComponent);
     component = fixture.componentInstance;
+    displayModeService = TestBed.inject(DisplayModeService);
+  });
+
+  afterEach(() => {
+    localStorage.removeItem('ketal_display_mode');
   });
 
   it('should create', () => {
@@ -172,6 +184,63 @@ describe('SideMenuComponent', () => {
   describe('language change', () => {
     it('should have languages available', () => {
       expect(component.languages.length).toBeGreaterThan(0);
+    });
+  });
+  // ── Selecteur de mode d'affichage ─────────────────────────────────────────
+  describe('display mode selector', () => {
+    function modeButtonLabels(): string[] {
+      return Array.from(fixture.nativeElement.querySelectorAll('.side-menu-item[aria-pressed]')).map((btn) =>
+        ((btn as HTMLElement).getAttribute('aria-pressed') ?? '').toString()
+      );
+    }
+
+    it('should offer the three modes in room mode', () => {
+      mockGameService.isRoomMode.set(true);
+      component.openMenu();
+      fixture.detectChanges();
+
+      expect(modeButtonLabels().length).toBe(3);
+    });
+
+    it('should not offer any mode outside room mode', () => {
+      mockGameService.isRoomMode.set(false);
+      component.openMenu();
+      fixture.detectChanges();
+
+      expect(modeButtonLabels().length).toBe(0);
+      expect(displayModeService.mode()).toBe('table');
+    });
+
+    it('should default to table', () => {
+      mockGameService.isRoomMode.set(true);
+      expect(displayModeService.mode()).toBe('table');
+    });
+
+    it('should persist the selected mode on this device', () => {
+      mockGameService.isRoomMode.set(true);
+      component.selectDisplayMode('personnel');
+      TestBed.flushEffects();
+
+      expect(displayModeService.mode()).toBe('personnel');
+      expect(localStorage.getItem('ketal_display_mode')).toBe('personnel');
+    });
+
+    it('should keep the menu open so modes can be compared', () => {
+      mockGameService.isRoomMode.set(true);
+      component.openMenu();
+      component.selectDisplayMode('viewer');
+
+      expect(component.isOpen()).toBeTrue();
+      expect(displayModeService.mode()).toBe('viewer');
+    });
+
+    it('should mark the active mode as pressed', () => {
+      mockGameService.isRoomMode.set(true);
+      component.selectDisplayMode('viewer');
+      component.openMenu();
+      fixture.detectChanges();
+
+      expect(modeButtonLabels()).toEqual(['false', 'false', 'true']);
     });
   });
 });

@@ -6,11 +6,14 @@ import { PlayerCardComponent } from './player-card.component';
 import { GameService } from '../../../services/game/game.service';
 import { PlayerHelperService } from '../../../_shared/_helpers/player.helper';
 import { AuthService } from '../../../services/auth/auth.service';
+import { DisplayModeService } from '../../../services/display-mode/display-mode.service';
+import { GameMember, MemberService } from '../../../services/member/member.service';
 import { PlayerModel } from '../../../_shared/_models/player.model';
 import { Game } from '../../../_shared/_models/game.model';
 import {
   createMockAuthService,
   createMockGameService,
+  createMockMemberService,
   createMockPlayerHelperService,
 } from '../../../testing/test-helpers';
 
@@ -20,6 +23,8 @@ describe('PlayerCardComponent', () => {
   let mockGameService: ReturnType<typeof createMockGameService>;
   let mockPlayerHelperService: jasmine.SpyObj<PlayerHelperService>;
   let mockAuthService: ReturnType<typeof createMockAuthService>;
+  let mockMemberService: ReturnType<typeof createMockMemberService>;
+  let displayModeService: DisplayModeService;
   let sipGiveModalSubject: Subject<PlayerModel>;
 
   const mockPlayer: PlayerModel = {
@@ -59,6 +64,8 @@ describe('PlayerCardComponent', () => {
     mockGameService = createMockGameService();
     mockPlayerHelperService = createMockPlayerHelperService();
     mockAuthService = createMockAuthService();
+    mockMemberService = createMockMemberService();
+    localStorage.removeItem('ketal_display_mode');
     // Default to logged-in non-anonymous so existing tests that exercise the
     // give-modal / summary code paths aren't blocked by the anonymous guards.
     mockAuthService.isLoggedIn.set(true);
@@ -77,6 +84,7 @@ describe('PlayerCardComponent', () => {
         { provide: GameService, useValue: mockGameService },
         { provide: PlayerHelperService, useValue: mockPlayerHelperService },
         { provide: AuthService, useValue: mockAuthService },
+        { provide: MemberService, useValue: mockMemberService },
       ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
@@ -84,12 +92,14 @@ describe('PlayerCardComponent', () => {
     fixture = TestBed.createComponent(PlayerCardComponent);
     component = fixture.componentInstance;
     component.player = mockPlayer;
+    displayModeService = TestBed.inject(DisplayModeService);
   });
 
   afterEach(() => {
     if (fixture) {
       fixture.destroy();
     }
+    localStorage.removeItem('ketal_display_mode');
   });
 
   it('should create', () => {
@@ -360,6 +370,137 @@ describe('PlayerCardComponent', () => {
     it('should properly clean up on destroy', () => {
       fixture.detectChanges();
       expect(() => fixture.destroy()).not.toThrow();
+    });
+  });
+  // ── Modes d'affichage : lecture seule portee par la VUE ────────────────────
+  describe('display modes', () => {
+    const memberMe: GameMember = {
+      $id: '1',
+      roomId: 'room-1',
+      userId: 'user-1',
+      deviceId: null,
+      displayName: 'Test Player 1',
+      role: 'player',
+      isOnline: true,
+      totalSipsGiven: 0,
+      totalSipsTaken: 0,
+      totalGamesPlayed: 0,
+      gameStats: {},
+    };
+    const memberFictional: GameMember = {
+      ...memberMe,
+      $id: '3',
+      userId: null,
+      displayName: 'Fictif',
+      isFictional: true,
+    };
+    const fictionalPlayer: PlayerModel = { ...mockPlayer, id: '3', name: 'Fictif' };
+
+    beforeEach(() => {
+      mockPlayerHelperService.getPlayerNumber.and.returnValue(2);
+      mockGameService.isSummaryActivated.and.returnValue(true);
+      mockPlayerHelperService.getTotalGivenSips.and.returnValue(5);
+      mockGameService.isRoomMode.set(true);
+      mockMemberService.currentMember.set(memberMe);
+      mockMemberService.members.set([memberMe, memberFictional]);
+    });
+
+    describe('table mode (non-regression)', () => {
+      it('should open the give modal for ANY player', () => {
+        component.player = mockPlayer2;
+        component.openPlayerGivenSipsModal(mockPlayer2);
+
+        expect(mockPlayerHelperService.getTotalGivenSips).toHaveBeenCalledWith(mockPlayer2);
+      });
+
+      it('should never tag a card as mine', () => {
+        expect(component.isMyCard()).toBeFalse();
+      });
+
+      it('should consider every player controllable', () => {
+        component.player = mockPlayer2;
+        expect(component.canControlThisPlayer()).toBeTrue();
+      });
+    });
+
+    describe('personnel mode', () => {
+      beforeEach(() => {
+        displayModeService.setMode('personnel');
+      });
+
+      it('should open the give modal for my own card', () => {
+        component.player = mockPlayer;
+        component.openPlayerGivenSipsModal(mockPlayer);
+
+        expect(mockPlayerHelperService.getTotalGivenSips).toHaveBeenCalledWith(mockPlayer);
+      });
+
+      it('should NOT open the give modal for another player', () => {
+        component.player = mockPlayer2;
+        component.openPlayerGivenSipsModal(mockPlayer2);
+
+        expect(mockPlayerHelperService.getTotalGivenSips).not.toHaveBeenCalled();
+        expect(mockGameService.isSummaryActivated).not.toHaveBeenCalled();
+      });
+
+      it('should tag my card, and only mine', () => {
+        component.player = mockPlayer;
+        expect(component.isMyCard()).toBeTrue();
+
+        component.player = mockPlayer2;
+        expect(component.isMyCard()).toBeFalse();
+      });
+
+      it('should let the host keep the fictional players give modal', () => {
+        mockMemberService.currentMember.set({ ...memberMe, role: 'host' });
+        component.player = fictionalPlayer;
+
+        expect(component.canControlThisPlayer()).toBeTrue();
+        component.openPlayerGivenSipsModal(fictionalPlayer);
+        expect(mockPlayerHelperService.getTotalGivenSips).toHaveBeenCalledWith(fictionalPlayer);
+      });
+
+      it('should NOT give a simple player control over a fictional player', () => {
+        component.player = fictionalPlayer;
+        expect(component.canControlThisPlayer()).toBeFalse();
+      });
+    });
+
+    describe('viewer mode', () => {
+      beforeEach(() => {
+        displayModeService.setMode('viewer');
+      });
+
+      it('should never open the give modal, not even for "my" player', () => {
+        component.player = mockPlayer;
+        component.openPlayerGivenSipsModal(mockPlayer);
+
+        expect(mockPlayerHelperService.getTotalGivenSips).not.toHaveBeenCalled();
+      });
+
+      it('should ignore the realtime open request', fakeAsync(() => {
+        component.player = mockPlayer;
+        fixture.detectChanges();
+        tick(); // vide le timer d'auto-ouverture pose par ngOnInit
+        mockPlayerHelperService.getTotalGivenSips.calls.reset();
+
+        sipGiveModalSubject.next(mockPlayer);
+        tick();
+
+        expect(mockPlayerHelperService.getTotalGivenSips).not.toHaveBeenCalled();
+      }));
+    });
+
+    describe('local mode', () => {
+      it('should force table and keep the modal reachable for anyone', () => {
+        displayModeService.setMode('viewer');
+        mockGameService.isRoomMode.set(false);
+        component.player = mockPlayer2;
+
+        expect(component.canControlThisPlayer()).toBeTrue();
+        component.openPlayerGivenSipsModal(mockPlayer2);
+        expect(mockPlayerHelperService.getTotalGivenSips).toHaveBeenCalledWith(mockPlayer2);
+      });
     });
   });
 });

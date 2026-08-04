@@ -145,7 +145,13 @@
     "connect": "Inloggen",
     "myRooms": "Mijn spellen",
     "friends": "Mijn vrienden",
-    "quitGame": "Spel verlaten"
+    "quitGame": "Spel verlaten",
+    "displayMode": {
+      "label": "Weergave",
+      "table": "Tafel (iedereen)",
+      "personnel": "Persoonlijk (mijn kaarten)",
+      "viewer": "Kijker (tv)"
+    }
   },
   "userMenu": {
     "login": "Inloggen",
@@ -182,6 +188,11 @@
     "exit": "Stoppen"
   },
   "game": {
+    "readOnly": {
+      "notYourTurn": "{{name}} is aan zet — alleen lezen",
+      "viewer": "Kijkweergave — alleen lezen",
+      "you": "jij"
+    },
     "phase1": "Fase 1: Voorspellingen",
     "phase2": "Fase 2: Verdeling",
     "turn": "Beurt",

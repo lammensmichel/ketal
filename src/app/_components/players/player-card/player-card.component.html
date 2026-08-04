@@ -67,7 +67,16 @@
           <span class="player-card__avatar-fallback">{{ initials() }}</span>
         }
       </div>
-      <span class="player-card__name">{{ player.name }}</span>
+      <!-- Repere « c'est ma fiche », uniquement en mode personnel. Le texte est
+           insere dans le meme span que le nom : aucune classe, donc aucun style
+           supplementaire (player-card.component.scss est deja au-dessus du seuil
+           d'avertissement du budget anyComponentStyle). -->
+      <span class="player-card__name"
+        >{{ player.name }}
+        @if (isMyCard()) {
+          &nbsp;({{ 'game.readOnly.you' | translate }})
+        }
+      </span>
       <div class="player-card__sips" (click)="openPlayerGivenSipsModal(player)">
         <span
           class="player-card__sip-badge player-card__sip-badge--drink"

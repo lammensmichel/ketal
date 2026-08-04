@@ -4,6 +4,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { NgClass } from '@angular/common';
 import { FontAwesomeIconsModule } from '../../../font-awesome.module';
 import { AuthService } from '../../../services/auth/auth.service';
+import { DisplayModeService } from '../../../services/display-mode/display-mode.service';
 import { GameService } from '../../../services/game/game.service';
 import { SoloRoomService } from '../../../services/solo-room/solo-room.service';
 import { PlayerHelperService } from '../../_helpers/player.helper';
@@ -46,6 +47,27 @@ export class FooterComponent implements OnDestroy {
   readonly gameSrv = inject(GameService);
   private readonly soloRoomService = inject(SoloRoomService);
   readonly playerHelper = inject(PlayerHelperService);
+  readonly displayMode = inject(DisplayModeService);
+
+  // ── Verrouillage porte par la VUE ────────────────────────────────────────
+  // Ces trois computeds ne font que relayer DisplayModeService. Le service de
+  // jeu reste volontairement permissif (n'importe quel appareil peut agir pour
+  // n'importe quel joueur) : c'est indispensable au mode `table` et aux joueurs
+  // fictifs. Ne deplacez pas ces gardes dans GameService.
+
+  /** Les boutons de prediction n'agissent que sur le joueur actif. */
+  readonly canPredict = computed(() => this.displayMode.canControlActivePlayer());
+
+  /** La pioche de la phase 2 n'appartient a personne : seul `viewer` en est prive. */
+  readonly canDraw = computed(() => this.displayMode.canDrawSharedCard());
+
+  /** Actions de table (commencer, resume, rejouer) : idem. */
+  readonly canRunTableAction = computed(() => this.displayMode.canRunTableAction());
+
+  /** Cle de traduction expliquant pourquoi les controles sont inactifs. */
+  readonly readOnlyHintKey = computed(() =>
+    this.displayMode.isViewerView() ? 'game.readOnly.viewer' : 'game.readOnly.notYourTurn'
+  );
 
   @Input() public withSummaryMode: boolean = false;
   @ViewChild('notAllSipsGiven') toastComponent: ToastComponent | undefined;
@@ -232,6 +254,11 @@ export class FooterComponent implements OnDestroy {
     if (this.isAnimationLocked()) {
       return;
     }
+    // Pendant du [disabled] du template : le mode d'affichage de CET appareil
+    // n'autorise pas a jouer ce tour-ci.
+    if (!this.canPredict()) {
+      return;
+    }
 
     const currentTurn = this.gameSrv.turn();
     const activePlayerId = this.gameSrv.activePlayer()?.id;
@@ -304,6 +331,9 @@ export class FooterComponent implements OnDestroy {
   }
 
   async restartGame(): Promise<void> {
+    if (!this.canRunTableAction()) {
+      return;
+    }
     if (await this.ensureAllSipsGiven()) {
       this.gameSrv.resetGame();
       this.router.navigate(['/players']);
@@ -311,6 +341,9 @@ export class FooterComponent implements OnDestroy {
   }
 
   async displaySummary(): Promise<void> {
+    if (!this.canRunTableAction()) {
+      return;
+    }
     if (await this.ensureAllSipsGiven()) {
       if (this.canAccessSummary()) {
         this.gameSrv.setStatus(3);
@@ -385,7 +418,7 @@ export class FooterComponent implements OnDestroy {
 
   /** Draw the next card from the Phase 2 pile */
   onDrawPhase2Card(): void {
-    if (this.revealingPhase2() || this.phase2Complete()) {
+    if (this.revealingPhase2() || this.phase2Complete() || !this.canDraw()) {
       return;
     }
 
@@ -417,7 +450,7 @@ export class FooterComponent implements OnDestroy {
   }
 
   async beginGame(): Promise<void> {
-    if (this._beginGameInProgress) {
+    if (this._beginGameInProgress || !this.canRunTableAction()) {
       return;
     }
     this._beginGameInProgress = true;

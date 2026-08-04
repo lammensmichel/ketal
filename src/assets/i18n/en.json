@@ -227,7 +227,13 @@
     "connect": "Log in",
     "myRooms": "My games",
     "friends": "My Friends",
-    "quitGame": "Quit game"
+    "quitGame": "Quit game",
+    "displayMode": {
+      "label": "Display",
+      "table": "Table (everyone)",
+      "personnel": "Personal (my cards)",
+      "viewer": "Viewer (TV)"
+    }
   },
   "userMenu": {
     "login": "Log in",
@@ -264,6 +270,11 @@
     "exit": "Exit"
   },
   "game": {
+    "readOnly": {
+      "notYourTurn": "{{name}}'s turn — read only",
+      "viewer": "Viewer display — read only",
+      "you": "you"
+    },
     "phase1": "Phase 1: Predictions",
     "phase2": "Phase 2: Distribution",
     "turn": "Turn",

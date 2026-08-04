@@ -444,6 +444,7 @@ export function createMockMemberService(): any & {
       'deleteMember',
       'setCurrentMember',
       'setMembers',
+      'clearMembers',
     ],
     {
       members: mockMembers,

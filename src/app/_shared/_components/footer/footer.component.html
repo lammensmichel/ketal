@@ -36,7 +36,7 @@
                   'prediction-btn--selected': selectedChoice() === 'red',
                   'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'red',
                 }"
-                [disabled]="isAnimationLocked()"
+                [disabled]="isAnimationLocked() || !canPredict()"
                 (click)="chooseColor('red')"
               >
                 <span class="prediction-btn__icon">&hearts;</span>
@@ -49,7 +49,7 @@
                   'prediction-btn--selected': selectedChoice() === 'black',
                   'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'black',
                 }"
-                [disabled]="isAnimationLocked()"
+                [disabled]="isAnimationLocked() || !canPredict()"
                 (click)="chooseColor('black')"
               >
                 <span class="prediction-btn__icon">&spades;</span>
@@ -66,7 +66,7 @@
                   'prediction-btn--selected': selectedChoice() === 'plus',
                   'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'plus',
                 }"
-                [disabled]="isAnimationLocked()"
+                [disabled]="isAnimationLocked() || !canPredict()"
                 (click)="plusOrMinus('plus')"
               >
                 <span class="prediction-btn__icon prediction-btn__icon--up">&uarr;</span>
@@ -79,7 +79,7 @@
                   'prediction-btn--selected': selectedChoice() === 'minus',
                   'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'minus',
                 }"
-                [disabled]="isAnimationLocked()"
+                [disabled]="isAnimationLocked() || !canPredict()"
                 (click)="plusOrMinus('minus')"
               >
                 <span class="prediction-btn__icon prediction-btn__icon--down">&darr;</span>
@@ -103,7 +103,7 @@
                   'prediction-btn--selected': selectedChoice() === 'in',
                   'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'in',
                 }"
-                [disabled]="isAnimationLocked()"
+                [disabled]="isAnimationLocked() || !canPredict()"
                 (click)="inOut('in')"
               >
                 @for (card of inOutRefCards; track $index; let i = $index) {
@@ -125,7 +125,7 @@
                   'prediction-btn--selected': selectedChoice() === 'out',
                   'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'out',
                 }"
-                [disabled]="isAnimationLocked()"
+                [disabled]="isAnimationLocked() || !canPredict()"
                 (click)="inOut('out')"
               >
                 @for (card of inOutRefCards; track $index; let i = $index) {
@@ -151,7 +151,7 @@
                   'prediction-btn--selected': selectedChoice() === 'hearts',
                   'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'hearts',
                 }"
-                [disabled]="isAnimationLocked()"
+                [disabled]="isAnimationLocked() || !canPredict()"
                 (click)="chooseSuit('hearts')"
               >
                 <span class="prediction-btn__suit-icon prediction-btn__suit-icon--red">&hearts;</span>
@@ -163,7 +163,7 @@
                   'prediction-btn--selected': selectedChoice() === 'diams',
                   'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'diams',
                 }"
-                [disabled]="isAnimationLocked()"
+                [disabled]="isAnimationLocked() || !canPredict()"
                 (click)="chooseSuit('diams')"
               >
                 <span class="prediction-btn__suit-icon prediction-btn__suit-icon--red">&diams;</span>
@@ -175,7 +175,7 @@
                   'prediction-btn--selected': selectedChoice() === 'spades',
                   'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'spades',
                 }"
-                [disabled]="isAnimationLocked()"
+                [disabled]="isAnimationLocked() || !canPredict()"
                 (click)="chooseSuit('spades')"
               >
                 <span class="prediction-btn__suit-icon">&spades;</span>
@@ -187,7 +187,7 @@
                   'prediction-btn--selected': selectedChoice() === 'clubs',
                   'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'clubs',
                 }"
-                [disabled]="isAnimationLocked()"
+                [disabled]="isAnimationLocked() || !canPredict()"
                 (click)="chooseSuit('clubs')"
               >
                 <span class="prediction-btn__suit-icon">&clubs;</span>
@@ -229,6 +229,15 @@
             }
           }
         </div>
+
+        <!-- Lecture seule : on explique pourquoi les boutons sont eteints plutot
+             que de laisser un panneau mort. Reutilise la classe d'indice deja
+             presente sous le bouton "Commencer" — aucun style ajoute. -->
+        @if (!canPredict()) {
+          <small class="minimum-players-hint">
+            {{ readOnlyHintKey() | translate: { name: displayPlayer()?.name ?? '' } }}
+          </small>
+        }
       </div>
     }
 
@@ -272,7 +281,7 @@
               <div class="draw-pile">
                 <button
                   class="draw-pile__btn"
-                  [disabled]="revealingPhase2()"
+                  [disabled]="revealingPhase2() || !canDraw()"
                   (click)="onDrawPhase2Card()"
                   [ngClass]="{
                     'draw-pile__btn--drink': nextIsDrink(),
@@ -354,6 +363,7 @@
                 <button
                   type="button"
                   class="prediction-btn prediction-btn--start"
+                  [disabled]="!canRunTableAction()"
                   (click)="displaySummary()"
                   [translate]="'Button_End_Game'"
                 ></button>
@@ -363,6 +373,7 @@
                 <button
                   type="button"
                   class="prediction-btn prediction-btn--start"
+                  [disabled]="!canRunTableAction()"
                   (click)="restartGame()"
                   [translate]="'Button_Restart'"
                 ></button>
@@ -379,7 +390,7 @@
         <button
           type="button"
           class="prediction-btn prediction-btn--start"
-          [disabled]="!hasPlayers()"
+          [disabled]="!hasPlayers() || !canRunTableAction()"
           (click)="beginGame()"
           [translate]="'Button_BeginGame'"
         ></button>

@@ -1,0 +1,76 @@
+// === Animations partagees, extraites des styles de composants ===
+//
+// POURQUOI ce fichier global : `footer.component.scss` frole le budget
+// `anyComponentStyle` (erreur a 15 kB, cf. angular.json) et toute ligne ajoutee
+// la-bas casse le build de production. Les @keyframes sont le meilleur candidat
+// a l'extraction : sous ViewEncapsulation.Emulated, Angular ne prefixe PAS les
+// noms de keyframes, ils sont donc deja globaux de fait — les deplacer ici ne
+// change strictement rien au rendu.
+//
+// Meme raison pour le bloc `prefers-reduced-motion` : il ciblait des classes
+// (`.stepper__*`) qui appartiennent a app-game-progress et qu'un style scope sur
+// app-footer ne pouvait de toute facon jamais atteindre. En global, la regle
+// s'applique enfin aux deux composants.
+
+@keyframes sip-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-30%);
+    opacity: 0;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(30%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prediction-btn,
+  .card-reveal__flip,
+  .stepper__icon,
+  .stepper__label,
+  .stepper__line,
+  .draw-pile__sip-badge {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

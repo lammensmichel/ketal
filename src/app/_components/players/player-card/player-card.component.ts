@@ -21,6 +21,7 @@ import { GameService } from '../../../services/game/game.service';
 import { PlayerGivenSipsSelectionComponent } from '../player-given-sips-selection/player-given-sips-selection.component';
 import { PlayingCardComponent } from '../../../_shared/_components/playing-card/playing-card.component';
 import { AuthService } from '../../../services/auth/auth.service';
+import { DisplayModeService } from '../../../services/display-mode/display-mode.service';
 
 @Component({
   selector: 'app-player-card',
@@ -35,6 +36,7 @@ export class PlayerCardComponent implements OnInit {
   private readonly playerSrv = inject(PlayerHelperService);
   readonly gameSrv = inject(GameService);
   private readonly authService = inject(AuthService);
+  private readonly displayMode = inject(DisplayModeService);
 
   @ViewChild(PlayerGivenSipsSelectionComponent)
   private playerGivenSipsModal: PlayerGivenSipsSelectionComponent | undefined;
@@ -277,7 +279,31 @@ export class PlayerCardComponent implements OnInit {
     }, 0);
   }
 
+  /**
+   * Est-ce ma fiche ? Vrai uniquement en mode `personnel` : en `table` et en
+   * `viewer` il n'y a pas de « moi » a distinguer, et le rendu doit rester
+   * exactement celui d'aujourd'hui.
+   */
+  isMyCard(): boolean {
+    return this.displayMode.isMyPlayer(this.player?.id);
+  }
+
+  /**
+   * Verrouillage porte par la VUE, jamais par le jeu : c'est le mode d'affichage
+   * de CET appareil qui decide si la distribution de gorgees de ce joueur est
+   * actionnable ici. En `table` (defaut) la reponse est toujours oui, donc rien
+   * ne change. Ne remontez pas ce test dans GameService : le mode `table` et les
+   * joueurs fictifs ont besoin que le jeu reste permissif.
+   */
+  canControlThisPlayer(): boolean {
+    return this.displayMode.canControlPlayer(this.player?.id);
+  }
+
   openPlayerGivenSipsModal(player: PlayerModel): void {
+    if (!this.displayMode.canControlPlayer(player?.id)) {
+      return;
+    }
+
     if (this.playerSrv.getPlayerNumber() === 1 || !this.gameSrv.isSummaryActivated()) {
       return;
     }

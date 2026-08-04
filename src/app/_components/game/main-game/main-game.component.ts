@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, HostListener, inject, signal } from '@angular/core';
+import { DisplayModeService } from '../../../services/display-mode/display-mode.service';
 import { GameService } from '../../../services/game/game.service';
 import { GameProgressComponent } from '../../../_shared/_components/game-progress/game-progress.component';
 import { PlayerCardComponent } from '../../players/player-card/player-card.component';
@@ -15,13 +16,32 @@ import { PlayerModel } from '../../../_shared/_models/player.model';
 })
 export class MainGameComponent {
   readonly gameSrv = inject(GameService);
+  readonly displayMode = inject(DisplayModeService);
+
+  /**
+   * Ordre d'affichage des fiches.
+   *
+   * En mode `personnel`, ma fiche passe simplement en tete : c'est la seule
+   * chose que fait la « mise en avant » cote structure. On ne change AUCUN
+   * layout — meme grille, meme strip, memes composants. L'autre moitie de la
+   * mise en avant est la non-compaction (voir getCompactDelay / phase2CompactState).
+   * En `table` et `viewer`, l'ordre reste exactement celui du jeu.
+   */
+  readonly displayPlayers = computed(() => {
+    const players = this.gameSrv.players();
+    const myId = this.displayMode.isPersonalView() ? this.displayMode.myPlayerId() : null;
+    if (!myId || !players.some((p) => p.id === myId)) {
+      return players;
+    }
+    return [...players.filter((p) => p.id === myId), ...players.filter((p) => p.id !== myId)];
+  });
 
   readonly inactivePlayers = computed(() => {
     const active = this.gameSrv.activePlayer();
     if (!active) {
       return [];
     }
-    return this.gameSrv.players().filter((p) => p.id !== active.id);
+    return this.displayPlayers().filter((p) => p.id !== active.id);
   });
 
   // ── Viewport tracking for dynamic compact decision ──
@@ -80,6 +100,13 @@ export class MainGameComponent {
       const hasMatch = player.cards?.some((c) => c && c.value === lastValue) ?? false;
       result[player.id] = !hasMatch; // true = compact, false = has matching card
     }
+
+    // Mode personnel : ma fiche reste dépliée quoi qu'il arrive — mon téléphone
+    // est censé montrer ma main de cartes, pas une vignette.
+    const myId = this.displayMode.isPersonalView() ? this.displayMode.myPlayerId() : null;
+    if (myId && myId in result) {
+      result[myId] = false;
+    }
     return result;
   });
 
@@ -130,6 +157,11 @@ export class MainGameComponent {
 
   /** Get compact delay value for a player in Phase 1. */
   getCompactDelay(playerId: string): number {
+    // Mode personnel : ma fiche n'est jamais compactee (0 = compact). Meme
+    // raison qu'en phase 2 : cet ecran est ma main de cartes.
+    if (this.displayMode.isMyPlayer(playerId)) {
+      return 3000;
+    }
     if (this.gameSrv.phase() !== 1) {
       return 0;
     }

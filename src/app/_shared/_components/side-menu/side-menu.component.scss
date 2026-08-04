@@ -81,6 +81,13 @@
       background: color-mix(in srgb, var(--color-error) 12%, transparent);
     }
   }
+
+  // Option retenue dans un groupe de choix (selecteur de mode d'affichage).
+  &--selected {
+    color: var(--color-accent-primary);
+    background: color-mix(in srgb, var(--color-accent-primary) 12%, transparent);
+    font-weight: var(--font-weight-semibold);
+  }
 }
 
 .side-menu-icon {

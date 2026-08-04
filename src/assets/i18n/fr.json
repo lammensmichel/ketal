@@ -228,7 +228,13 @@
     "connect": "Se connecter",
     "myRooms": "Mes parties",
     "friends": "Mes amis",
-    "quitGame": "Quitter la partie"
+    "quitGame": "Quitter la partie",
+    "displayMode": {
+      "label": "Affichage",
+      "table": "Table (tout le monde)",
+      "personnel": "Personnel (mes cartes)",
+      "viewer": "Spectateur (TV)"
+    }
   },
   "userMenu": {
     "login": "Se connecter",
@@ -265,6 +271,11 @@
     "exit": "Quitter"
   },
   "game": {
+    "readOnly": {
+      "notYourTurn": "Au tour de {{name}} — lecture seule",
+      "viewer": "Affichage spectateur — lecture seule",
+      "you": "toi"
+    },
     "phase1": "Phase 1: Prédictions",
     "phase2": "Phase 2: Distribution",
     "turn": "Tour",

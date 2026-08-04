@@ -4,11 +4,14 @@ import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { FooterComponent } from './footer.component';
 import { AuthService } from '../../../services/auth/auth.service';
+import { DisplayModeService } from '../../../services/display-mode/display-mode.service';
 import { GameService } from '../../../services/game/game.service';
+import { GameMember, MemberService } from '../../../services/member/member.service';
 import { PlayerHelperService } from '../../_helpers/player.helper';
 import {
   createMockAuthService,
   createMockGameService,
+  createMockMemberService,
   createMockPlayerHelperService,
   createMockSoloRoomService,
 } from '../../../testing/test-helpers';
@@ -25,7 +28,9 @@ describe('FooterComponent', () => {
   let mockAuthService: ReturnType<typeof createMockAuthService>;
   let mockSoloRoomService: ReturnType<typeof createMockSoloRoomService>;
   let mockPlayerHelperService: jasmine.SpyObj<PlayerHelperService>;
+  let mockMemberService: ReturnType<typeof createMockMemberService>;
   let mockRouter: jasmine.SpyObj<Router>;
+  let displayModeService: DisplayModeService;
 
   const mockPlayer: PlayerModel = {
     id: '1',
@@ -54,7 +59,12 @@ describe('FooterComponent', () => {
     mockAuthService = createMockAuthService();
     mockSoloRoomService = createMockSoloRoomService();
     mockPlayerHelperService = createMockPlayerHelperService();
+    mockMemberService = createMockMemberService();
     mockRouter = jasmine.createSpyObj('Router', ['navigate'], { url: '/game' });
+
+    // Le mode d'affichage est une preference locale : on repart d'une ardoise
+    // vierge a chaque test pour ne pas heriter du mode choisi par le precedent.
+    localStorage.removeItem('ketal_display_mode');
 
     // Set initial game state via signal
     mockGameService.game.set(mockGame);
@@ -73,6 +83,7 @@ describe('FooterComponent', () => {
         { provide: GameService, useValue: mockGameService },
         { provide: SoloRoomService, useValue: mockSoloRoomService },
         { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+        { provide: MemberService, useValue: mockMemberService },
         { provide: Router, useValue: mockRouter },
       ],
       schemas: [NO_ERRORS_SCHEMA],
@@ -80,10 +91,12 @@ describe('FooterComponent', () => {
 
     fixture = TestBed.createComponent(FooterComponent);
     component = fixture.componentInstance;
+    displayModeService = TestBed.inject(DisplayModeService);
   });
 
   afterEach(() => {
     localStorage.removeItem('pendingSummary');
+    localStorage.removeItem('ketal_display_mode');
   });
 
   it('should create', () => {
@@ -487,6 +500,202 @@ describe('FooterComponent', () => {
       setActivePlayer(undefined);
 
       expect(component.getReferenceCard()).toBeNull();
+    });
+  });
+  // ── Modes d'affichage : le verrouillage est porte par la VUE ───────────────
+  // Ces tests utilisent le VRAI DisplayModeService : c'est le predicat reel qu'on
+  // verrouille, pas un mock. GameService reste permissif, comme voulu.
+  describe('display modes', () => {
+    const memberMe: GameMember = {
+      $id: 'member-me',
+      roomId: 'room-1',
+      userId: 'user-1',
+      deviceId: null,
+      displayName: 'Moi',
+      role: 'player',
+      isOnline: true,
+      totalSipsGiven: 0,
+      totalSipsTaken: 0,
+      totalGamesPlayed: 0,
+      gameStats: {},
+    };
+    const memberFictional: GameMember = {
+      ...memberMe,
+      $id: 'member-fake',
+      userId: null,
+      displayName: 'Fictif',
+      isFictional: true,
+    };
+
+    const me: PlayerModel = { ...mockPlayer, id: 'member-me', name: 'Moi' };
+    const other: PlayerModel = { ...mockPlayer, id: 'member-other', name: 'Autre' };
+    const fictional: PlayerModel = { ...mockPlayer, id: 'member-fake', name: 'Fictif' };
+
+    function renderPhase1(active: PlayerModel): void {
+      mockGameService.isGameStarted.and.returnValue(true);
+      mockGameService.players.set([me, other, fictional]);
+      mockGameService.activePlayer.set(active);
+      mockGameService.turn.set(1);
+      fixture.detectChanges();
+    }
+
+    function predictionButtons(): HTMLButtonElement[] {
+      return Array.from(fixture.nativeElement.querySelectorAll('.prediction-btn')) as HTMLButtonElement[];
+    }
+
+    beforeEach(() => {
+      mockGameService.isRoomMode.set(true);
+      mockMemberService.currentMember.set(memberMe);
+      mockMemberService.members.set([memberMe, memberFictional]);
+    });
+
+    describe('table mode (defaut, non-regression)', () => {
+      it('should default to table', () => {
+        expect(displayModeService.mode()).toBe('table');
+      });
+
+      it('should keep every prediction button actionable, even on someone else turn', () => {
+        renderPhase1(other);
+
+        expect(component.canPredict()).toBeTrue();
+        const buttons = predictionButtons();
+        expect(buttons.length).toBeGreaterThan(0);
+        buttons.forEach((btn) => expect(btn.disabled).toBeFalse());
+      });
+
+      it('should keep a fictional player turn actionable', () => {
+        renderPhase1(fictional);
+        expect(component.canPredict()).toBeTrue();
+      });
+
+      it('should still run the choice pipeline', fakeAsync(() => {
+        renderPhase1(other);
+        component.chooseColor('red');
+        tick(250);
+        expect(mockGameService.setChoiceAndPickCard).toHaveBeenCalled();
+        tick(2000);
+      }));
+
+      it('should show no read-only hint', () => {
+        renderPhase1(other);
+        expect(fixture.nativeElement.querySelector('.minimum-players-hint')).toBeNull();
+      });
+
+      it('should keep the shared draw pile and table actions actionable', () => {
+        expect(component.canDraw()).toBeTrue();
+        expect(component.canRunTableAction()).toBeTrue();
+      });
+    });
+
+    describe('personnel mode', () => {
+      beforeEach(() => {
+        displayModeService.setMode('personnel');
+      });
+
+      it('should disable the prediction buttons when it is not my turn', () => {
+        renderPhase1(other);
+
+        expect(component.canPredict()).toBeFalse();
+        const buttons = predictionButtons();
+        expect(buttons.length).toBeGreaterThan(0);
+        buttons.forEach((btn) => expect(btn.disabled).toBeTrue());
+      });
+
+      it('should explain why the panel is read only', () => {
+        renderPhase1(other);
+        expect(fixture.nativeElement.querySelector('.minimum-players-hint')).not.toBeNull();
+      });
+
+      it('should enable the prediction buttons on my turn', () => {
+        renderPhase1(me);
+
+        expect(component.canPredict()).toBeTrue();
+        predictionButtons().forEach((btn) => expect(btn.disabled).toBeFalse());
+      });
+
+      it('should refuse the choice pipeline off my turn', fakeAsync(() => {
+        renderPhase1(other);
+        component.chooseColor('red');
+        tick(2500);
+        expect(mockGameService.setChoiceAndPickCard).not.toHaveBeenCalled();
+      }));
+
+      it('should accept the choice pipeline on my turn', fakeAsync(() => {
+        renderPhase1(me);
+        component.chooseColor('red');
+        tick(250);
+        expect(mockGameService.setChoiceAndPickCard).toHaveBeenCalled();
+        tick(2000);
+      }));
+
+      it('should let the host keep the controls of fictional players', () => {
+        mockMemberService.currentMember.set({ ...memberMe, role: 'host' });
+        renderPhase1(fictional);
+
+        expect(component.canPredict()).toBeTrue();
+      });
+
+      it('should NOT let a simple player take over a fictional player', () => {
+        renderPhase1(fictional);
+        expect(component.canPredict()).toBeFalse();
+      });
+
+      it('should keep the shared phase 2 draw pile actionable', () => {
+        expect(component.canDraw()).toBeTrue();
+        expect(component.canRunTableAction()).toBeTrue();
+      });
+    });
+
+    describe('viewer mode', () => {
+      beforeEach(() => {
+        displayModeService.setMode('viewer');
+      });
+
+      it('should make nothing actionable', () => {
+        renderPhase1(me);
+
+        expect(component.canPredict()).toBeFalse();
+        expect(component.canDraw()).toBeFalse();
+        expect(component.canRunTableAction()).toBeFalse();
+        predictionButtons().forEach((btn) => expect(btn.disabled).toBeTrue());
+      });
+
+      it('should refuse the choice pipeline even on the "my" player turn', fakeAsync(() => {
+        renderPhase1(me);
+        component.chooseColor('red');
+        tick(2500);
+        expect(mockGameService.setChoiceAndPickCard).not.toHaveBeenCalled();
+      }));
+
+      it('should refuse to draw a phase 2 card', () => {
+        component.onDrawPhase2Card();
+        expect(mockGameService.displayNewCard).not.toHaveBeenCalled();
+      });
+
+      it('should refuse to begin a game', async () => {
+        await component.beginGame();
+        expect(mockGameService.beginGame).not.toHaveBeenCalled();
+      });
+
+      it('should refuse to restart or open the summary', async () => {
+        await component.restartGame();
+        await component.displaySummary();
+        expect(mockGameService.resetGame).not.toHaveBeenCalled();
+        expect(mockGameService.setStatus).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('local mode', () => {
+      it('should force table and keep everything actionable', () => {
+        displayModeService.setMode('viewer');
+        mockGameService.isRoomMode.set(false);
+        renderPhase1(other);
+
+        expect(displayModeService.mode()).toBe('table');
+        expect(component.canPredict()).toBeTrue();
+        expect(component.canDraw()).toBeTrue();
+        predictionButtons().forEach((btn) => expect(btn.disabled).toBeFalse());
+      });
     });
   });
 });

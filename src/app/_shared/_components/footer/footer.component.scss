@@ -1,3 +1,10 @@
+// ATTENTION : ce fichier est le plus lourd de l'application et le budget
+// `anyComponentStyle` d'angular.json passe en ERREUR a 15 kB. Avant d'ajouter du
+// style ici, cherchez d'abord a reutiliser une classe existante
+// (`.minimum-players-hint`, `.prediction-btn`), ou extrayez vers
+// src/_animations.scss — c'est la que vivent desormais les @keyframes et le bloc
+// prefers-reduced-motion de ce composant.
+
 .footer-wrapper {
   max-width: 900px;
   margin: 0 auto;
@@ -349,16 +356,10 @@
   color: var(--color-text-secondary);
   white-space: nowrap;
 }
-.prediction-panel__phase2-label {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-secondary);
-}
-.space-below {
-  margin-bottom: 10px;
-}
-
-// === Minimum players hint — collapses completely when ≥2 players ===
+// === Note d'information sous le panneau (minimum de joueurs, lecture seule) ===
+// Reutilisee telle quelle par les indices des modes personnel/spectateur : pas
+// de nouveau langage visuel, et pas un octet de plus dans un fichier qui frole
+// le budget anyComponentStyle.
 .minimum-players-hint {
   display: block;
   text-align: center;
@@ -566,17 +567,7 @@
   }
 }
 
-@keyframes sip-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.15);
-  }
-}
-
-// === Phase 2 Header (Distribution Stats) ===
+// === Phase 2 Header (guidance) ===
 .phase2-header {
   display: flex;
   flex-direction: column;
@@ -584,19 +575,6 @@
   gap: var(--space-1);
   padding: var(--space-2) 0;
   width: 100%;
-
-  &__stats {
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: center;
-    gap: var(--space-3);
-  }
-
-  &__stat-value {
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text-primary);
-  }
 
   &__guidance {
     font-size: var(--font-size-sm);
@@ -749,26 +727,10 @@
   }
 }
 
-@keyframes shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  20% {
-    transform: translateX(-6px);
-  }
-  40% {
-    transform: translateX(6px);
-  }
-  60% {
-    transform: translateX(-4px);
-  }
-  80% {
-    transform: translateX(4px);
-  }
-}
-
 // === Turn transition animations ===
+// Les @keyframes (shake, slideIn/slideOut, sip-pulse) et le bloc
+// prefers-reduced-motion vivent dans src/_animations.scss. Voir l'en-tete de ce
+// fichier pour le pourquoi.
 .prediction-panel__choices {
   position: relative;
 
@@ -787,28 +749,6 @@
   animation: slideIn var(--animation-normal) var(--ease-in-out) forwards;
 }
 
-@keyframes slideOut {
-  from {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateX(-30%);
-    opacity: 0;
-  }
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(30%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
 // Red/black selected variants
 .prediction-btn--red.prediction-btn--selected {
   box-shadow: 0 0 24px rgba(220, 38, 38, 0.5);
@@ -818,39 +758,4 @@
 .prediction-btn--black.prediction-btn--selected {
   box-shadow: 0 0 24px color-mix(in srgb, var(--color-accent-primary) 50%, transparent);
   border-color: var(--color-accent-primary);
-}
-
-.quit-confirm-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1050;
-}
-.quit-confirm-dialog {
-  background: white;
-  border-radius: 8px;
-  padding: 24px;
-  max-width: 400px;
-  width: 90%;
-  text-align: center;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-}
-
-// === Reduced motion support ===
-@media (prefers-reduced-motion: reduce) {
-  .prediction-btn,
-  .card-reveal__flip,
-  .stepper__icon,
-  .stepper__label,
-  .stepper__line,
-  .draw-pile__sip-badge {
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-  }
 }

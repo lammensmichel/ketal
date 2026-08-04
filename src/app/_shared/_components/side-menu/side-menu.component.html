@@ -58,6 +58,31 @@
       </button>
     }
 
+    <!-- Display mode selector — preference LOCALE a cet appareil, comme la
+         langue juste en dessous. Offert uniquement en mode room : hors room il
+         n'y a pas de membre, donc pas de « moi », et le mode est force a `table`. -->
+    @if (displayMode.isModeSelectable()) {
+      <div class="side-menu-divider"></div>
+      <div class="side-menu-language">
+        <div class="side-menu-language-label">
+          <fa-icon [icon]="['fas', 'eye']" class="side-menu-icon"></fa-icon>
+          <span [translate]="'menu.displayMode.label'"></span>
+        </div>
+      </div>
+      @for (option of displayModeOptions; track option.value) {
+        <button
+          type="button"
+          class="side-menu-item"
+          [class.side-menu-item--selected]="displayMode.mode() === option.value"
+          [attr.aria-pressed]="displayMode.mode() === option.value"
+          (click)="selectDisplayMode(option.value)"
+        >
+          <fa-icon [icon]="['fas', option.icon]" class="side-menu-icon"></fa-icon>
+          <span [translate]="option.labelKey"></span>
+        </button>
+      }
+    }
+
     <div class="side-menu-divider"></div>
 
     <!-- Language selector -->

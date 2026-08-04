@@ -7,6 +7,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FontAwesomeIconsModule } from '../../../font-awesome.module';
 import { AppwriteService } from '../../../services/appwrite/appwrite.service';
 import { AuthService } from '../../../services/auth/auth.service';
+import { DisplayMode, DisplayModeService } from '../../../services/display-mode/display-mode.service';
 import { GameService } from '../../../services/game/game.service';
 import { RoomService } from '../../../services/room/room.service';
 import { MemberService } from '../../../services/member/member.service';
@@ -40,6 +41,23 @@ export class SideMenuComponent {
   private readonly sessionSrv = inject(KetalSessionService);
   private readonly realtimeSrv = inject(RealtimeService);
   private readonly localSrv = inject(LocalService);
+  readonly displayMode = inject(DisplayModeService);
+
+  /**
+   * Selecteur du mode d'affichage. Il vit dans le menu lateral parce que c'est
+   * deja la ou se trouvent les preferences locales de l'appareil (la langue), et
+   * comme la langue il n'est pas partage avec les autres joueurs.
+   */
+  readonly displayModeOptions: readonly { value: DisplayMode; icon: string; labelKey: string }[] = [
+    { value: 'table', icon: 'users', labelKey: 'menu.displayMode.table' },
+    { value: 'personnel', icon: 'user-circle', labelKey: 'menu.displayMode.personnel' },
+    { value: 'viewer', icon: 'tv', labelKey: 'menu.displayMode.viewer' },
+  ];
+
+  /** Le menu reste ouvert : on veut pouvoir comparer les modes sans le rouvrir. */
+  selectDisplayMode(mode: DisplayMode): void {
+    this.displayMode.setMode(mode);
+  }
 
   /** Business-layer cleanup: called before every auth logout to clear all domain state */
   private cleanupState(): void {
