@@ -15,7 +15,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { QRCodeComponent } from 'angularx-qrcode';
 import { RoomService } from '../../../services/room/room.service';
-import { MemberService, GameMember, MemberRole } from '../../../services/member/member.service';
+import { MemberService, GameMember, MemberRole, CreateMemberData } from '../../../services/member/member.service';
+import { FriendService, FriendProfile } from '../../../services/friend/friend.service';
 import { RealtimeService, GameMember as RealtimeGameMember } from '../../../services/realtime/realtime.service';
 import { AuthService } from '../../../services/auth/auth.service';
 import { GuestService } from '../../../services/guest/guest.service';
@@ -68,6 +69,7 @@ export class LobbyComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly guestService = inject(GuestService);
   private readonly ketalSessionService = inject(KetalSessionService);
+  private readonly friendService = inject(FriendService);
   private readonly destroyRef = inject(DestroyRef);
 
   /** Subscription ID for member realtime updates */
@@ -153,11 +155,54 @@ export class LobbyComponent implements OnInit {
 
   private readonly renameInputRef = viewChild<ElementRef<HTMLInputElement>>('renameInput');
 
+  /** Whether the "add a player without the app" form is open (host only) */
+  readonly isAddingPlayer = signal(false);
+
+  /** Draft display name for the fictional player being added */
+  readonly newPlayerDraft = signal('');
+
+  /** Whether a member creation/removal request is in flight */
+  readonly isAddingMember = signal(false);
+
+  /** Whether the friend picker is expanded (host only) */
+  readonly showFriendPicker = signal(false);
+
+  /** Whether the friend list is being (re)loaded */
+  readonly isFriendsLoading = signal(false);
+
+  /** userId of the friend currently being invited, for the per-row spinner */
+  readonly invitingFriendId = signal<string | null>(null);
+
+  private readonly newPlayerInputRef = viewChild<ElementRef<HTMLInputElement>>('newPlayerInput');
+
+  /** Whether the room already holds its maximum number of players */
+  readonly isRoomFull = computed(() => this.playerCount() >= this.maxPlayers());
+
+  /** Friends of the current user, each flagged with whether they already sit at this table */
+  readonly invitableFriends = computed(() => {
+    const memberUserIds = new Set(
+      this.members()
+        .map((m) => m.userId)
+        .filter((id): id is string => !!id)
+    );
+    return this.friendService.friendProfiles().map((profile) => ({
+      profile,
+      alreadyMember: memberUserIds.has(profile.userId),
+    }));
+  });
+
   constructor() {
     // Le champ n'est rendu qu'une fois isRenaming vrai : on attend son insertion dans le DOM pour le focus.
     effect(() => {
       if (this.isRenaming()) {
         this.renameInputRef()?.nativeElement.focus();
+      }
+    });
+
+    // Même raison pour le champ d'ajout de joueur : il n'existe qu'une fois le formulaire ouvert.
+    effect(() => {
+      if (this.isAddingPlayer()) {
+        this.newPlayerInputRef()?.nativeElement.focus();
       }
     });
   }
@@ -750,6 +795,187 @@ export class LobbyComponent implements OnInit {
       this.showFeedback('lobby.renameError');
     } finally {
       this.isRenameSaving.set(false);
+    }
+  }
+
+  /**
+   * Open the "add a player without the app" form (host only)
+   */
+  startAddPlayer(): void {
+    if (!this.isHost()) {
+      return;
+    }
+    if (this.isRoomFull()) {
+      this.showFeedback('lobby.roomFull');
+      return;
+    }
+    this.newPlayerDraft.set('');
+    this.isAddingPlayer.set(true);
+  }
+
+  /**
+   * Close the add-player form without saving
+   */
+  cancelAddPlayer(): void {
+    this.isAddingPlayer.set(false);
+    this.newPlayerDraft.set('');
+  }
+
+  /**
+   * Create a fictional player: no account, no device, the host plays for them (host only)
+   */
+  async submitAddPlayer(): Promise<void> {
+    if (!this.isHost() || this.isAddingMember()) {
+      return;
+    }
+
+    const room = this.currentRoom();
+    if (!room) {
+      return;
+    }
+
+    const displayName = this.newPlayerDraft().trim();
+
+    // `displayName` est requis côté Appwrite : on refuse avant l'appel réseau.
+    if (!displayName) {
+      this.showFeedback('lobby.playerNameEmpty');
+      return;
+    }
+
+    if (this.isRoomFull()) {
+      this.showFeedback('lobby.roomFull');
+      return;
+    }
+
+    const memberData: CreateMemberData = {
+      roomId: room.$id,
+      userId: null,
+      deviceId: null,
+      displayName,
+      role: 'player',
+      isOnline: false,
+      isFictional: true,
+      totalSipsGiven: 0,
+      totalSipsTaken: 0,
+      totalGamesPlayed: 0,
+      gameStats: {},
+    };
+
+    try {
+      this.isAddingMember.set(true);
+      this.error.set(null);
+      await this.memberService.createMember(memberData);
+      this.isAddingPlayer.set(false);
+      this.newPlayerDraft.set('');
+      this.showFeedback('lobby.playerAdded');
+    } catch (err) {
+      console.warn('Failed to add fictional player:', err);
+      // On garde le formulaire ouvert pour laisser l'hôte retenter sans resaisir le nom.
+      this.showFeedback('lobby.addPlayerError');
+    } finally {
+      this.isAddingMember.set(false);
+    }
+  }
+
+  /**
+   * Toggle the friend picker; loads the friend list on first open (host only)
+   */
+  async toggleFriendPicker(): Promise<void> {
+    if (!this.isHost()) {
+      return;
+    }
+
+    const willShow = !this.showFriendPicker();
+    this.showFriendPicker.set(willShow);
+
+    if (!willShow) {
+      return;
+    }
+
+    try {
+      this.isFriendsLoading.set(true);
+      await this.friendService.getFriends();
+    } catch (err) {
+      console.warn('Failed to load friends:', err);
+      this.showFeedback('lobby.friendsError');
+    } finally {
+      this.isFriendsLoading.set(false);
+    }
+  }
+
+  /**
+   * Seat a friend at the table right away (host only).
+   *
+   * On crée son membre d'avance avec son userId : les trois chemins de jointure cherchent un membre
+   * existant avant d'en créer un, donc l'ami reprendra cette place au lieu d'en créer une seconde.
+   */
+  async inviteFriend(friend: FriendProfile): Promise<void> {
+    if (!this.isHost() || this.isAddingMember()) {
+      return;
+    }
+
+    const room = this.currentRoom();
+    if (!room) {
+      return;
+    }
+
+    if (this.members().some((m) => m.userId === friend.userId)) {
+      this.showFeedback('lobby.friendAlreadyMember');
+      return;
+    }
+
+    if (this.isRoomFull()) {
+      this.showFeedback('lobby.roomFull');
+      return;
+    }
+
+    const memberData: CreateMemberData = {
+      roomId: room.$id,
+      userId: friend.userId,
+      deviceId: null,
+      displayName: friend.name,
+      role: 'player',
+      isOnline: false,
+      isFictional: false,
+      totalSipsGiven: 0,
+      totalSipsTaken: 0,
+      totalGamesPlayed: 0,
+      gameStats: {},
+    };
+
+    try {
+      this.isAddingMember.set(true);
+      this.invitingFriendId.set(friend.userId);
+      this.error.set(null);
+      await this.memberService.createMember(memberData);
+      this.showFeedback('lobby.friendInvited');
+    } catch (err) {
+      console.warn('Failed to invite friend:', err);
+      this.showFeedback('lobby.inviteFriendError');
+    } finally {
+      this.invitingFriendId.set(null);
+      this.isAddingMember.set(false);
+    }
+  }
+
+  /**
+   * Remove a fictional player the host added (host only)
+   */
+  async removeFictionalMember(member: GameMember): Promise<void> {
+    if (!this.isHost() || !member.isFictional || this.isAddingMember()) {
+      return;
+    }
+
+    try {
+      this.isAddingMember.set(true);
+      this.error.set(null);
+      await this.memberService.deleteMember(member.$id);
+      this.showFeedback('lobby.playerRemoved');
+    } catch (err) {
+      console.warn('Failed to remove fictional player:', err);
+      this.showFeedback('lobby.removePlayerError');
+    } finally {
+      this.isAddingMember.set(false);
     }
   }
 

@@ -146,6 +146,61 @@
   }
 }
 
+// Sélection des amis à asseoir à la table dès la création
+.friends-section {
+  margin-bottom: 1.5rem;
+  text-align: left;
+
+  .code-label {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .friend-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.5rem;
+    background-color: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    text-align: left;
+    cursor: pointer;
+
+    &.is-selected {
+      border-color: var(--color-accent-primary);
+      color: var(--color-accent-primary);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-accent-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  .friend-row-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .friends-empty,
+  .friends-hint {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+  }
+}
+
 .btn-enter {
   width: 100%;
   padding: 0.75rem;

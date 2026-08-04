@@ -44,6 +44,11 @@ export interface GameMember {
   role: MemberRole;
   /** Whether the member is currently online */
   isOnline: boolean;
+  /**
+   * Joueur ajouté par l'hôte qui n'a ni compte ni appareil : il n'ouvrira jamais l'app,
+   * donc son statut « en ligne » n'a aucun sens et l'hôte joue pour lui.
+   */
+  isFictional?: boolean;
   /** Total sips given across all games */
   totalSipsGiven: number;
   /** Total sips taken across all games */
@@ -449,6 +454,7 @@ export class MemberService {
       displayName: doc['displayName'] as string,
       role: (doc['role'] as MemberRole) || 'player',
       isOnline: (doc['isOnline'] as boolean) ?? false,
+      isFictional: (doc['isFictional'] as boolean) ?? false,
       totalSipsGiven: (doc['totalSipsGiven'] as number) || 0,
       totalSipsTaken: (doc['totalSipsTaken'] as number) || 0,
       totalGamesPlayed: (doc['totalGamesPlayed'] as number) || 0,

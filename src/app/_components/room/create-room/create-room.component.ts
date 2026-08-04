@@ -7,6 +7,7 @@ import { QRCodeComponent } from 'angularx-qrcode';
 import { RoomService, GameRoom } from '../../../services/room/room.service';
 import { MemberService, CreateMemberData } from '../../../services/member/member.service';
 import { AuthService } from '../../../services/auth/auth.service';
+import { FriendService } from '../../../services/friend/friend.service';
 
 /**
  * CreateRoomComponent - Room creation page for Ketal multiplayer
@@ -31,6 +32,7 @@ export class CreateRoomComponent {
   private readonly roomService = inject(RoomService);
   private readonly memberService = inject(MemberService);
   private readonly authService = inject(AuthService);
+  private readonly friendService = inject(FriendService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -66,6 +68,63 @@ export class CreateRoomComponent {
   /** Check if user is authenticated */
   readonly isAuthenticated = this.authService.isLoggedIn;
 
+  /** Friend profiles of the current user (signal from FriendService) */
+  readonly friendProfiles = this.friendService.friendProfiles;
+
+  /** Whether the friend list is being loaded */
+  readonly isFriendsLoading = signal(false);
+
+  /** userIds of the friends the host wants to seat at the table right away */
+  readonly selectedFriendIds = signal<string[]>([]);
+
+  /**
+   * Une invitation qui a échoué ne doit pas retenir l'hôte hors de sa partie : au second clic sur
+   * « Entrer », on saute l'étape des amis (il pourra les inviter depuis le lobby).
+   */
+  private readonly friendInviteFailed = signal(false);
+
+  /** Remaining seats for friends: the host already takes one */
+  readonly remainingSeats = computed(() => {
+    const room = this.createdRoom();
+    const maxPlayers = room?.maxPlayers ?? 10;
+    return Math.max(0, maxPlayers - 1 - this.selectedFriendIds().length);
+  });
+
+  /** Whether a friend is currently selected */
+  isFriendSelected(userId: string): boolean {
+    return this.selectedFriendIds().includes(userId);
+  }
+
+  /** Toggle a friend in the selection, honouring the remaining seats */
+  toggleFriendSelection(userId: string): void {
+    const selected = this.selectedFriendIds();
+    if (selected.includes(userId)) {
+      this.selectedFriendIds.set(selected.filter((id) => id !== userId));
+      return;
+    }
+    if (this.remainingSeats() === 0) {
+      this.error.set('room.errors.roomFull');
+      return;
+    }
+    this.selectedFriendIds.set([...selected, userId]);
+  }
+
+  /** Load the friend list so the host can compose the table (authenticated users only) */
+  async loadFriends(): Promise<void> {
+    if (!this.isAuthenticated()) {
+      return;
+    }
+    try {
+      this.isFriendsLoading.set(true);
+      await this.friendService.getFriends();
+    } catch (err) {
+      console.warn('Failed to load friends:', err);
+      this.error.set('room.errors.friendsLoadFailed');
+    } finally {
+      this.isFriendsLoading.set(false);
+    }
+  }
+
   constructor() {
     // Cleanup timeout on destroy
     this.destroyRef.onDestroy(() => {
@@ -91,6 +150,8 @@ export class CreateRoomComponent {
       const { roomName } = this.createRoomForm.value;
       const room = await this.roomService.createRoom(roomName!);
       this.createdRoom.set(room);
+      // La liste d'amis n'est utile qu'à partir d'ici : c'est l'écran où l'hôte compose sa table.
+      await this.loadFriends();
     } catch (err) {
       this.error.set(this.getErrorMessage(err));
     } finally {
@@ -173,6 +234,16 @@ export class CreateRoomComponent {
         await this.roomService.updateRoom(room.$id, { hostMemberId: member.$id });
       }
 
+      // Seat the selected friends before entering, unless a previous attempt already failed.
+      if (this.selectedFriendIds().length > 0 && !this.friendInviteFailed()) {
+        const failed = await this.inviteSelectedFriends(room.$id, room.maxPlayers ?? 10);
+        if (failed) {
+          this.friendInviteFailed.set(true);
+          this.error.set('room.errors.inviteFriendsFailed');
+          return;
+        }
+      }
+
       // Navigate to lobby
       await this.router.navigate(['/room', room.$id]);
     } catch (err) {
@@ -180,6 +251,64 @@ export class CreateRoomComponent {
     } finally {
       this.isLoading.set(false);
     }
+  }
+
+  /**
+   * Create a member for each selected friend so they land on their seat when they open the room.
+   *
+   * Le membre porte le userId de l'ami : les chemins de jointure cherchent un membre existant avant
+   * d'en créer un, donc l'ami reprendra cette place sans doublon.
+   *
+   * @returns true if at least one invitation failed
+   */
+  private async inviteSelectedFriends(roomId: string, maxPlayers: number): Promise<boolean> {
+    const profiles = this.friendProfiles();
+    let seatedCount = 1; // l'hôte occupe déjà une place
+    let failed = false;
+
+    for (const userId of this.selectedFriendIds()) {
+      if (seatedCount >= maxPlayers) {
+        failed = true;
+        break;
+      }
+
+      const profile = profiles.find((p) => p.userId === userId);
+      const displayName = profile?.name?.trim();
+      if (!displayName) {
+        failed = true;
+        continue;
+      }
+
+      try {
+        const existing = await this.memberService.getMemberByUserOrDevice(roomId, userId);
+        if (existing) {
+          seatedCount += 1;
+          continue;
+        }
+
+        const memberData: CreateMemberData = {
+          roomId,
+          userId,
+          deviceId: null,
+          displayName,
+          role: 'player',
+          isOnline: false,
+          isFictional: false,
+          totalSipsGiven: 0,
+          totalSipsTaken: 0,
+          totalGamesPlayed: 0,
+          gameStats: {},
+        };
+
+        await this.memberService.createMember(memberData);
+        seatedCount += 1;
+      } catch (err) {
+        console.warn('Failed to invite friend:', err);
+        failed = true;
+      }
+    }
+
+    return failed;
   }
 
   /**

@@ -188,7 +188,141 @@
         <div class="members-section">
           <div class="members-header">
             <h3 class="members-title">{{ 'lobby.players' | translate }} ({{ playerCount() }}/{{ maxPlayers() }})</h3>
+
+            <!-- Add actions (host only) -->
+            @if (isHost()) {
+              <div class="members-actions">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-primary btn-add-player"
+                  (click)="startAddPlayer()"
+                  [disabled]="isAddingMember() || isRoomFull()"
+                  [title]="'lobby.addPlayer' | translate"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    fill="currentColor"
+                    viewBox="0 0 16 16"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H1s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C9.516 10.68 8.289 10 6 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"
+                    />
+                    <path
+                      fill-rule="evenodd"
+                      d="M13.5 5a.5.5 0 0 1 .5.5V7h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V8h-1.5a.5.5 0 0 1 0-1H13V5.5a.5.5 0 0 1 .5-.5z"
+                    />
+                  </svg>
+                  {{ 'lobby.addPlayer' | translate }}
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-primary btn-invite-friend"
+                  (click)="toggleFriendPicker()"
+                  [disabled]="isAddingMember() || isRoomFull()"
+                  [attr.aria-pressed]="showFriendPicker()"
+                  [title]="'lobby.inviteFriend' | translate"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    fill="currentColor"
+                    viewBox="0 0 16 16"
+                    aria-hidden="true"
+                  >
+                    <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+                    <path
+                      fill-rule="evenodd"
+                      d="M5.216 14A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216z"
+                    />
+                    <path d="M4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z" />
+                  </svg>
+                  {{ 'lobby.inviteFriend' | translate }}
+                </button>
+              </div>
+
+              @if (isRoomFull()) {
+                <p class="members-hint">{{ 'lobby.roomFull' | translate }}</p>
+              }
+            }
           </div>
+
+          <!-- Add a player without the app (host only) -->
+          @if (isHost() && isAddingPlayer()) {
+            <div class="add-player-form">
+              <input
+                #newPlayerInput
+                type="text"
+                class="rename-input"
+                maxlength="60"
+                [value]="newPlayerDraft()"
+                [disabled]="isAddingMember()"
+                (input)="newPlayerDraft.set(newPlayerInput.value)"
+                (keydown.enter)="submitAddPlayer()"
+                (keydown.escape)="cancelAddPlayer()"
+                [attr.placeholder]="'lobby.addPlayerPlaceholder' | translate"
+                [attr.aria-label]="'lobby.addPlayerPlaceholder' | translate"
+              />
+              <button
+                type="button"
+                class="btn btn-sm btn-primary"
+                (click)="submitAddPlayer()"
+                [disabled]="isAddingMember()"
+              >
+                @if (isAddingMember()) {
+                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                }
+                {{ 'lobby.addPlayerSave' | translate }}
+              </button>
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-secondary"
+                (click)="cancelAddPlayer()"
+                [disabled]="isAddingMember()"
+              >
+                {{ 'lobby.addPlayerCancel' | translate }}
+              </button>
+            </div>
+          }
+
+          <!-- Friend picker (host only) -->
+          @if (isHost() && showFriendPicker()) {
+            <div class="friend-picker">
+              @if (isFriendsLoading()) {
+                <p class="friend-picker-empty">
+                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  {{ 'lobby.friendsLoading' | translate }}
+                </p>
+              } @else {
+                @for (entry of invitableFriends(); track entry.profile.userId) {
+                  <div class="friend-row">
+                    <span class="friend-row-name">{{ entry.profile.name }}</span>
+                    @if (entry.alreadyMember) {
+                      <span class="friend-row-hint">{{ 'lobby.friendAlreadyMember' | translate }}</span>
+                    } @else {
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-primary friend-row-invite"
+                        (click)="inviteFriend(entry.profile)"
+                        [disabled]="isAddingMember() || isRoomFull()"
+                        [attr.aria-label]="'lobby.inviteFriendLabel' | translate: { name: entry.profile.name }"
+                      >
+                        @if (invitingFriendId() === entry.profile.userId) {
+                          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        }
+                        {{ 'lobby.invite' | translate }}
+                      </button>
+                    }
+                  </div>
+                } @empty {
+                  <p class="friend-picker-empty">{{ 'lobby.noFriends' | translate }}</p>
+                }
+              }
+            </div>
+          }
 
           <div class="members-list">
             @for (member of sortedMembers(); track member.$id) {
@@ -196,6 +330,7 @@
                 class="member-card"
                 [class.is-current]="member.$id === currentMember()?.$id"
                 [class.is-new]="isNewlyJoined(member.$id)"
+                [class.is-fictional]="member.isFictional"
               >
                 <!-- Role Icon -->
                 <div class="member-role-icon" [class]="'role-' + member.role">
@@ -258,10 +393,16 @@
                   <span class="member-role-label">{{ getRoleLabel(member.role) | translate }}</span>
                 </div>
 
-                <!-- Online Status -->
-                <div class="member-status" [class.online]="member.isOnline" [class.offline]="!member.isOnline">
-                  <span class="status-indicator"></span>
-                </div>
+                <!-- Online Status — un joueur fictif n'a pas d'appareil, l'indicateur ne veut rien dire pour lui. -->
+                @if (member.isFictional) {
+                  <span class="member-fictional-badge" [title]="'lobby.fictionalHint' | translate">
+                    {{ 'lobby.fictional' | translate }}
+                  </span>
+                } @else {
+                  <div class="member-status" [class.online]="member.isOnline" [class.offline]="!member.isOnline">
+                    <span class="status-indicator"></span>
+                  </div>
+                }
 
                 <!-- Role Toggle Button (host only, not for host member) -->
                 @if (isHost() && member.role !== 'host') {
@@ -284,6 +425,32 @@
                       <path
                         d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"
                       />
+                    </svg>
+                  </button>
+                }
+
+                <!-- Remove Button (host only, fictional players only) -->
+                @if (isHost() && member.isFictional) {
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-danger member-remove"
+                    (click)="removeFictionalMember(member)"
+                    [disabled]="isAddingMember()"
+                    [attr.aria-label]="'lobby.removePlayerLabel' | translate: { name: member.displayName }"
+                    [title]="'lobby.removePlayer' | translate"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="14"
+                      height="14"
+                      fill="currentColor"
+                      viewBox="0 0 16 16"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H1s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C9.516 10.68 8.289 10 6 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"
+                      />
+                      <path fill-rule="evenodd" d="M11 7.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5z" />
                     </svg>
                   </button>
                 }

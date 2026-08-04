@@ -225,27 +225,6 @@
     }
   }
 
-  .rename-input {
-    flex: 1 1 12rem;
-    min-width: 0;
-    padding: var(--space-2) var(--space-3);
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--color-text-primary);
-    background-color: var(--color-bg-elevated);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
-
-    &:focus-visible {
-      outline: 2px solid var(--color-accent-primary);
-      outline-offset: 1px;
-    }
-
-    &:disabled {
-      opacity: 0.6;
-    }
-  }
-
   .room-code-container {
     display: flex;
     flex-wrap: wrap;
@@ -300,6 +279,29 @@
   }
 }
 
+// Champ des formulaires en ligne (renommage de la partie et ajout de joueur) : sorti de
+// `.room-header` pour être partagé par les deux au lieu d'être dupliqué.
+.rename-input {
+  flex: 1 1 12rem;
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+
+  &:focus-visible {
+    outline: 2px solid var(--color-accent-primary);
+    outline-offset: 1px;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
 .copy-feedback {
   margin: 0.5rem 0 0;
   font-size: 0.85rem;
@@ -341,6 +343,11 @@
 }
 
 .members-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
   margin-bottom: 1rem;
 
   .members-title {
@@ -348,6 +355,88 @@
     font-weight: 600;
     color: var(--color-text-secondary);
     margin: 0;
+  }
+
+  .members-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .btn-add-player,
+  .btn-invite-friend {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+
+    &:focus-visible {
+      outline: 2px solid var(--color-accent-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  .members-hint {
+    flex: 1 1 100%;
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+  }
+}
+
+.add-player-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: 1rem;
+}
+
+.friend-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  animation: lobby-fade-in var(--animation-fast) var(--ease-default) both;
+
+  .friend-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .friend-row-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.95rem;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .friend-row-hint {
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+  }
+
+  .friend-row-invite {
+    flex-shrink: 0;
+    padding: 0.2rem 0.6rem;
+    border-radius: var(--radius-sm);
+  }
+
+  .friend-picker-empty {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    text-align: center;
   }
 }
 
@@ -466,7 +555,27 @@
   }
 }
 
-.role-toggle {
+// Joueur fictif : bordure discontinue pour signaler une place qui n'est tenue par aucun appareil.
+.member-card.is-fictional {
+  border-style: dashed;
+  border-color: var(--color-text-muted);
+}
+
+.member-fictional-badge {
+  flex-shrink: 0;
+  margin-left: 0.75rem;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-secondary);
+  background-color: rgba(var(--color-text-muted-rgb), 0.18);
+  border-radius: var(--radius-full);
+}
+
+.role-toggle,
+.member-remove {
   margin-left: 0.5rem;
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;

@@ -11,6 +11,7 @@ import { CreateRoomComponent } from './create-room.component';
 import { RoomService } from '../../../services/room/room.service';
 import { MemberService } from '../../../services/member/member.service';
 import { AuthService } from '../../../services/auth/auth.service';
+import { FriendService, FriendProfile } from '../../../services/friend/friend.service';
 import { createMockRoomService, createMockMemberService, createMockAuthService } from '../../../testing/test-helpers';
 
 describe('CreateRoomComponent', () => {
@@ -20,6 +21,10 @@ describe('CreateRoomComponent', () => {
   let mockRoomService: jasmine.SpyObj<RoomService>;
   let mockMemberService: jasmine.SpyObj<MemberService>;
   let mockAuthService: jasmine.SpyObj<AuthService>;
+  let mockFriendService: {
+    friendProfiles: WritableSignal<FriendProfile[]>;
+    getFriends: jasmine.Spy;
+  };
 
   const mockRoom: GameRoom = {
     $id: 'room123',
@@ -49,6 +54,18 @@ describe('CreateRoomComponent', () => {
     totalSipsTaken: 0,
     totalGamesPlayed: 0,
     gameStats: {},
+  };
+
+  const mockFriendProfile: FriendProfile = {
+    userId: 'user-friend',
+    name: 'Amie Camille',
+    isFriend: true,
+  };
+
+  const mockOtherFriendProfile: FriendProfile = {
+    userId: 'user-friend-2',
+    name: 'Ami Bob',
+    isFriend: true,
   };
 
   const mockAuthenticatedUser: Models.User<Models.Preferences> = {
@@ -85,6 +102,12 @@ describe('CreateRoomComponent', () => {
     const mockCurrentUser = signal<Models.User<Models.Preferences> | null>(mockAuthenticatedUser);
     mockAuthService = createMockAuthService() as jasmine.SpyObj<AuthService>;
     (mockAuthService as any).currentUser = mockCurrentUser;
+    (mockAuthService.isLoggedIn as unknown as WritableSignal<boolean>).set(true);
+
+    mockFriendService = {
+      friendProfiles: signal<FriendProfile[]>([mockFriendProfile, mockOtherFriendProfile]),
+      getFriends: jasmine.createSpy('getFriends').and.resolveTo([]),
+    };
 
     await TestBed.configureTestingModule({
       imports: [RouterTestingModule, CreateRoomComponent, TranslateModule.forRoot()],
@@ -94,6 +117,7 @@ describe('CreateRoomComponent', () => {
         { provide: RoomService, useValue: mockRoomService },
         { provide: MemberService, useValue: mockMemberService },
         { provide: AuthService, useValue: mockAuthService },
+        { provide: FriendService, useValue: mockFriendService },
       ],
     }).compileComponents();
   });
@@ -270,6 +294,92 @@ describe('CreateRoomComponent', () => {
       await component.enterRoom();
 
       expect(component.error()).not.toBeNull();
+    });
+  });
+
+  describe('composing the table with friends', () => {
+    beforeEach(() => {
+      fixture = TestBed.createComponent(CreateRoomComponent);
+      component = fixture.componentInstance;
+      component.createdRoom.set(mockRoom);
+      fixture.detectChanges();
+    });
+
+    it('loads the friend list once the room exists', async () => {
+      component.createdRoom.set(null);
+      component.createRoomForm.controls.roomName.setValue('My Room');
+
+      await component.onSubmit();
+
+      expect(mockFriendService.getFriends).toHaveBeenCalled();
+    });
+
+    it('toggles a friend in and out of the selection', () => {
+      component.toggleFriendSelection('user-friend');
+      expect(component.isFriendSelected('user-friend')).toBeTrue();
+
+      component.toggleFriendSelection('user-friend');
+      expect(component.isFriendSelected('user-friend')).toBeFalse();
+    });
+
+    it('refuses a selection beyond maxPlayers minus the host seat', () => {
+      component.createdRoom.set({ ...mockRoom, maxPlayers: 2 });
+
+      component.toggleFriendSelection('user-friend');
+      component.toggleFriendSelection('user-friend-2');
+
+      expect(component.isFriendSelected('user-friend-2')).toBeFalse();
+      expect(component.error()).toBe('room.errors.roomFull');
+    });
+
+    it('creates a member carrying the friend userId when entering', async () => {
+      mockMemberService.getMemberByUserOrDevice.and.resolveTo(null);
+      component.toggleFriendSelection('user-friend');
+
+      await component.enterRoom();
+
+      expect(mockMemberService.createMember).toHaveBeenCalledWith(
+        jasmine.objectContaining({
+          roomId: 'room123',
+          userId: 'user-friend',
+          deviceId: null,
+          displayName: 'Amie Camille',
+          role: 'player',
+          isFictional: false,
+        })
+      );
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/room', 'room123']);
+    });
+
+    it('does not duplicate a friend who is already a member', async () => {
+      mockMemberService.getMemberByUserOrDevice.and.callFake((_roomId: string, userId?: string) =>
+        Promise.resolve(userId === 'user-friend' ? { ...mockHostMember, $id: 'member-friend' } : null)
+      );
+      component.toggleFriendSelection('user-friend');
+
+      await component.enterRoom();
+
+      const invitedFriend = mockMemberService.createMember.calls
+        .allArgs()
+        .some(([data]: [{ userId: string | null }]) => data.userId === 'user-friend');
+      expect(invitedFriend).toBeFalse();
+    });
+
+    it('reports a failed invitation without blocking the host on a second attempt', async () => {
+      mockMemberService.getMemberByUserOrDevice.and.resolveTo(null);
+      mockMemberService.createMember.and.callFake((data: { role: string }) =>
+        data.role === 'host' ? Promise.resolve(mockHostMember) : Promise.reject(new Error('network down'))
+      );
+      component.toggleFriendSelection('user-friend');
+
+      await component.enterRoom();
+
+      expect(component.error()).toBe('room.errors.inviteFriendsFailed');
+      expect(mockRouter.navigate).not.toHaveBeenCalled();
+
+      await component.enterRoom();
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/room', 'room123']);
     });
   });
 

@@ -144,6 +144,53 @@ describe('MemberService', () => {
       });
     });
 
+    it('should forward isFictional with null userId and deviceId for a player without the app', async () => {
+      const fictionalData: CreateMemberData = {
+        ...mockCreateMemberData,
+        userId: null,
+        deviceId: null,
+        displayName: 'Tata Jeanne',
+        isOnline: false,
+        isFictional: true,
+      };
+      mockDatabases.createDocument.and.resolveTo({
+        ...mockMemberDocument,
+        $id: 'fictional123',
+        userId: null,
+        deviceId: null,
+        displayName: 'Tata Jeanne',
+        isOnline: false,
+        isFictional: true,
+        gameStats: '{}',
+      });
+
+      const result = await service.createMember(fictionalData);
+
+      expect(mockDatabases.createDocument).toHaveBeenCalledWith({
+        databaseId: 'fug',
+        collectionId: 'fug_game_members',
+        documentId: jasmine.any(String),
+        data: jasmine.objectContaining({
+          userId: null,
+          deviceId: null,
+          displayName: 'Tata Jeanne',
+          role: 'player',
+          isFictional: true,
+        }),
+      });
+      expect(result.isFictional).toBeTrue();
+      expect(result.userId).toBeNull();
+      expect(result.deviceId).toBeNull();
+    });
+
+    it('should default isFictional to false when the document does not carry it', async () => {
+      mockDatabases.createDocument.and.resolveTo({ ...mockMemberDocument, gameStats: '{}' });
+
+      const result = await service.createMember(mockCreateMemberData);
+
+      expect(result.isFictional).toBeFalse();
+    });
+
     it('should throw error when creation fails', async () => {
       const error = new Error('Database error');
       mockDatabases.createDocument.and.rejectWith(error);

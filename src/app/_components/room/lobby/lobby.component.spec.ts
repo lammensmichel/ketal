@@ -9,6 +9,7 @@ import { RealtimeService } from '../../../services/realtime/realtime.service';
 import { AuthService } from '../../../services/auth/auth.service';
 import { GuestService } from '../../../services/guest/guest.service';
 import { KetalSessionService } from '../../../services/ketal-session/ketal-session.service';
+import { FriendService, FriendProfile } from '../../../services/friend/friend.service';
 
 describe('LobbyComponent', () => {
   let component: LobbyComponent;
@@ -29,6 +30,11 @@ describe('LobbyComponent', () => {
     setCurrentMember: jasmine.Spy;
     updateMember: jasmine.Spy;
     deleteMember: jasmine.Spy;
+    createMember: jasmine.Spy;
+  };
+  let mockFriendService: {
+    friendProfiles: ReturnType<typeof signal<FriendProfile[]>>;
+    getFriends: jasmine.Spy;
   };
   let mockRealtimeService: {
     isConnected: ReturnType<typeof signal<boolean>>;
@@ -91,6 +97,28 @@ describe('LobbyComponent', () => {
     gameStats: {},
   };
 
+  const mockFictionalMember: GameMember = {
+    $id: 'member-fictional',
+    roomId: 'room123',
+    userId: null,
+    deviceId: null,
+    displayName: 'Tata Jeanne',
+    role: 'player',
+    isOnline: false,
+    isFictional: true,
+    lastSeenAt: undefined,
+    totalSipsGiven: 0,
+    totalSipsTaken: 0,
+    totalGamesPlayed: 0,
+    gameStats: {},
+  };
+
+  const mockFriendProfile: FriendProfile = {
+    userId: 'user-friend',
+    name: 'Amie Camille',
+    isFriend: true,
+  };
+
   function createComponent(routeParamId: string | null = 'room123', roomAlreadySet = false) {
     if (roomAlreadySet) {
       mockRoomService.currentRoom.set(mockRoom);
@@ -130,6 +158,12 @@ describe('LobbyComponent', () => {
       setCurrentMember: jasmine.createSpy('setCurrentMember'),
       updateMember: jasmine.createSpy('updateMember').and.resolveTo(mockHostMember),
       deleteMember: jasmine.createSpy('deleteMember').and.resolveTo(),
+      createMember: jasmine.createSpy('createMember').and.resolveTo(mockFictionalMember),
+    };
+
+    mockFriendService = {
+      friendProfiles: signal<FriendProfile[]>([mockFriendProfile]),
+      getFriends: jasmine.createSpy('getFriends').and.resolveTo([]),
     };
 
     mockRealtimeService = {
@@ -168,6 +202,7 @@ describe('LobbyComponent', () => {
         { provide: AuthService, useValue: mockAuthService },
         { provide: GuestService, useValue: mockGuestService },
         { provide: KetalSessionService, useValue: mockKetalSessionService },
+        { provide: FriendService, useValue: mockFriendService },
       ],
     }).compileComponents();
   });
@@ -584,6 +619,223 @@ describe('LobbyComponent', () => {
 
       expect(mockRoomService.renameRoom).not.toHaveBeenCalled();
       expect(component.isRenaming()).toBe(false);
+    }));
+  });
+
+  describe('adding a player without the app', () => {
+    beforeEach(() => {
+      createComponent('room123', true);
+      mockMemberService.members.set([mockHostMember, mockPlayerMember]);
+      mockMemberService.currentMember.set(mockHostMember);
+    });
+
+    it('shows both add actions to the host only', () => {
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('.btn-add-player')).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('.btn-invite-friend')).toBeTruthy();
+
+      mockMemberService.currentMember.set(mockPlayerMember);
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('.btn-add-player')).toBeNull();
+      expect(fixture.nativeElement.querySelector('.btn-invite-friend')).toBeNull();
+    });
+
+    it('creates a fictional member with no account and no device', fakeAsync(() => {
+      component.startAddPlayer();
+      component.newPlayerDraft.set('  Tata Jeanne  ');
+      component.submitAddPlayer();
+      tick();
+
+      expect(mockMemberService.createMember).toHaveBeenCalledWith(
+        jasmine.objectContaining({
+          roomId: 'room123',
+          userId: null,
+          deviceId: null,
+          displayName: 'Tata Jeanne',
+          role: 'player',
+          isOnline: false,
+          isFictional: true,
+        })
+      );
+      expect(component.isAddingPlayer()).toBe(false);
+      expect(component.feedback()).toBe('lobby.playerAdded');
+      tick(2000);
+    }));
+
+    it('rejects an empty name without any network call', fakeAsync(() => {
+      component.startAddPlayer();
+      component.newPlayerDraft.set('   ');
+      component.submitAddPlayer();
+      tick();
+
+      expect(mockMemberService.createMember).not.toHaveBeenCalled();
+      expect(component.feedback()).toBe('lobby.playerNameEmpty');
+      expect(component.isAddingPlayer()).toBe(true);
+      tick(2000);
+    }));
+
+    it('ignores a submit from a non-host member', fakeAsync(() => {
+      mockMemberService.currentMember.set(mockPlayerMember);
+
+      component.newPlayerDraft.set('Intrus');
+      component.submitAddPlayer();
+      tick();
+
+      expect(mockMemberService.createMember).not.toHaveBeenCalled();
+    }));
+
+    it('refuses to go past maxPlayers', fakeAsync(() => {
+      mockRoomService.currentRoom.set({ ...mockRoom, maxPlayers: 2 });
+
+      component.startAddPlayer();
+
+      expect(component.isAddingPlayer()).toBe(false);
+      expect(component.feedback()).toBe('lobby.roomFull');
+
+      component.newPlayerDraft.set('Trop tard');
+      component.submitAddPlayer();
+      tick();
+
+      expect(mockMemberService.createMember).not.toHaveBeenCalled();
+      tick(2000);
+    }));
+
+    it('keeps the form open and reports an error when creation fails', fakeAsync(() => {
+      mockMemberService.createMember.and.rejectWith(new Error('network down'));
+
+      component.startAddPlayer();
+      component.newPlayerDraft.set('Tata Jeanne');
+      component.submitAddPlayer();
+      tick();
+
+      expect(component.feedback()).toBe('lobby.addPlayerError');
+      expect(component.isAddingPlayer()).toBe(true);
+      expect(component.isAddingMember()).toBe(false);
+      tick(2000);
+    }));
+
+    it('renders a badge instead of the online indicator for a fictional player', () => {
+      mockMemberService.members.set([mockHostMember, mockFictionalMember]);
+      fixture.detectChanges();
+
+      const cards = fixture.nativeElement.querySelectorAll('.member-card');
+      const fictionalCard = Array.from(cards).find((card) =>
+        (card as HTMLElement).textContent?.includes('Tata Jeanne')
+      ) as HTMLElement;
+
+      expect(fictionalCard.classList).toContain('is-fictional');
+      expect(fictionalCard.querySelector('.member-fictional-badge')).toBeTruthy();
+      expect(fictionalCard.querySelector('.member-status')).toBeNull();
+      expect(fictionalCard.querySelector('.member-remove')).toBeTruthy();
+    });
+
+    it('removes a fictional player through the existing member deletion', fakeAsync(() => {
+      mockMemberService.members.set([mockHostMember, mockFictionalMember]);
+
+      component.removeFictionalMember(mockFictionalMember);
+      tick();
+
+      expect(mockMemberService.deleteMember).toHaveBeenCalledWith('member-fictional');
+      expect(component.feedback()).toBe('lobby.playerRemoved');
+      tick(2000);
+    }));
+
+    it('never removes a real member', fakeAsync(() => {
+      component.removeFictionalMember(mockPlayerMember);
+      tick();
+
+      expect(mockMemberService.deleteMember).not.toHaveBeenCalled();
+    }));
+  });
+
+  describe('inviting a friend', () => {
+    beforeEach(() => {
+      createComponent('room123', true);
+      mockMemberService.members.set([mockHostMember, mockPlayerMember]);
+      mockMemberService.currentMember.set(mockHostMember);
+    });
+
+    it('loads the friend list when the picker opens', fakeAsync(() => {
+      component.toggleFriendPicker();
+      tick();
+
+      expect(component.showFriendPicker()).toBe(true);
+      expect(mockFriendService.getFriends).toHaveBeenCalled();
+    }));
+
+    it('creates the member with the friend userId so their seat is reused on join', fakeAsync(() => {
+      component.inviteFriend(mockFriendProfile);
+      tick();
+
+      expect(mockMemberService.createMember).toHaveBeenCalledWith(
+        jasmine.objectContaining({
+          roomId: 'room123',
+          userId: 'user-friend',
+          deviceId: null,
+          displayName: 'Amie Camille',
+          role: 'player',
+          isFictional: false,
+        })
+      );
+      expect(component.feedback()).toBe('lobby.friendInvited');
+      tick(2000);
+    }));
+
+    it('refuses a friend who is already a member', fakeAsync(() => {
+      mockMemberService.members.set([
+        mockHostMember,
+        { ...mockPlayerMember, userId: 'user-friend', displayName: 'Amie Camille' },
+      ]);
+
+      component.inviteFriend(mockFriendProfile);
+      tick();
+
+      expect(mockMemberService.createMember).not.toHaveBeenCalled();
+      expect(component.feedback()).toBe('lobby.friendAlreadyMember');
+      tick(2000);
+    }));
+
+    it('flags an existing member in the picker list', () => {
+      mockMemberService.members.set([
+        mockHostMember,
+        { ...mockPlayerMember, userId: 'user-friend', displayName: 'Amie Camille' },
+      ]);
+
+      expect(component.invitableFriends()).toEqual([{ profile: mockFriendProfile, alreadyMember: true }]);
+    });
+
+    it('refuses to go past maxPlayers', fakeAsync(() => {
+      mockRoomService.currentRoom.set({ ...mockRoom, maxPlayers: 2 });
+
+      component.inviteFriend(mockFriendProfile);
+      tick();
+
+      expect(mockMemberService.createMember).not.toHaveBeenCalled();
+      expect(component.feedback()).toBe('lobby.roomFull');
+      tick(2000);
+    }));
+
+    it('ignores an invite from a non-host member', fakeAsync(() => {
+      mockMemberService.currentMember.set(mockPlayerMember);
+
+      component.inviteFriend(mockFriendProfile);
+      tick();
+
+      expect(mockMemberService.createMember).not.toHaveBeenCalled();
+    }));
+
+    it('reports an error and stays usable when the invite fails', fakeAsync(() => {
+      mockMemberService.createMember.and.rejectWith(new Error('network down'));
+
+      component.inviteFriend(mockFriendProfile);
+      tick();
+
+      expect(component.feedback()).toBe('lobby.inviteFriendError');
+      expect(component.isAddingMember()).toBe(false);
+      expect(component.invitingFriendId()).toBeNull();
+      tick(2000);
     }));
   });
 });
