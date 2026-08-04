@@ -1,0 +1,35 @@
+.git
+.gitignore
+
+# Dépendances et caches de build (réinstallés dans l'image)
+node_modules
+.angular
+dist
+coverage
+
+# Outils et docs de dev, inutiles au build
+.bmad-core
+_bmad
+_bmad-output
+.claude
+.opencode
+.specs-fire
+.specsmd
+.vscode
+.husky
+docs
+implementation
+screenshots
+tools
+fug-backend
+
+# Fichiers de travail volumineux (racine uniquement : src/assets garde ses images)
+/session-*.md
+/*.png
+/*.log
+.DS_Store
+
+# Secrets
+.env
+.env.*
+!.env.example

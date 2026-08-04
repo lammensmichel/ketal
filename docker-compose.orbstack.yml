@@ -1,0 +1,65 @@
+# Stack de test local (OrbStack sur le Mac) — indépendant du déploiement serveur.
+#
+# Rejoint le réseau "gateway" créé par la stack Appwrite de fug-backend,
+# ce qui permet d'atteindre appwrite-traefik par son nom.
+#
+# --- Jouer sur le même wifi (aucune installation sur le téléphone) ---
+#   docker compose -f docker-compose.orbstack.yml up -d --build ketal-web
+#   -> http://<IP-DU-MAC>:4211
+#
+# --- Jouer depuis n'importe où, en HTTPS (Tailscale requis sur l'appareil) ---
+#   docker compose -f docker-compose.orbstack.yml --profile tailscale up -d --build
+#   -> https://ketal-dev.<tailnet>.ts.net
+
+name: ketal-local
+
+services:
+  ketal-web:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    image: ketal-web:local
+    container_name: ketal-web
+    restart: unless-stopped
+    ports:
+      # Exposé sur toutes les interfaces pour être joignable depuis le LAN
+      - '4211:80'
+    environment:
+      # Vide = same-origin : nginx proxifie /v1 vers Appwrite, donc la même
+      # image marche en LAN et via Tailscale sans rien changer.
+      # À ne renseigner que pour viser un backend Appwrite externe.
+      APPWRITE_ENDPOINT: ${APPWRITE_ENDPOINT:-}
+      APPWRITE_PROJECT_ID: fug
+    networks:
+      - gateway
+
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: ketal-tailscale
+    hostname: ketal-dev
+    restart: unless-stopped
+    profiles:
+      - tailscale
+    env_file:
+      # Contient TS_AUTHKEY=tskey-auth-... (gitignoré)
+      - path: .env.tailscale
+        required: false
+    environment:
+      TS_HOSTNAME: ketal-dev
+      TS_STATE_DIR: /var/lib/tailscale
+      # Pas besoin de /dev/net/tun ni de privilèges en userspace
+      TS_USERSPACE: 'true'
+      # Ne pas écraser le DNS du container
+      TS_EXTRA_ARGS: --accept-dns=false
+    volumes:
+      - tailscale-state:/var/lib/tailscale
+    networks:
+      - gateway
+
+networks:
+  gateway:
+    external: true
+    name: gateway
+
+volumes:
+  tailscale-state:
