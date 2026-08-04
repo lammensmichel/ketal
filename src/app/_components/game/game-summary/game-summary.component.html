@@ -1,70 +1,163 @@
-<div class="game-summary container py-3">
-  <h2 class="text-center mb-3">
-    <fa-icon icon="trophy" class="text-warning me-2"></fa-icon>
-    {{ 'summary.title' | translate }}
-  </h2>
+<div class="summary">
+  <section class="summary-card">
+    <h2 class="summary-card__title">
+      <fa-icon icon="trophy" class="summary-card__title-icon"></fa-icon>
+      {{ 'summary.title' | translate }}
+    </h2>
 
-  @if (winner(); as winner) {
-    <div class="highlight-card winner-card mb-2 p-3 text-center">
-      <fa-icon icon="medal" class="icon-lg text-success"></fa-icon>
-      <div class="mt-1">
-        <span class="fw-bold">{{ winner.name }}</span>
-        <span class="d-block small text-muted">{{ 'summary.winner' | translate }} - {{ winner.totalSips }} {{ 'Label_Sips' | translate }}</span>
+    @if (winner() || loser()) {
+      <div class="podium">
+        @if (winner(); as winner) {
+          <div class="podium-card winner-card">
+            <fa-icon icon="medal" class="podium-card__icon"></fa-icon>
+            <span class="podium-card__label">{{ 'summary.winner' | translate }}</span>
+            <span class="podium-card__name">{{ winner.name }}</span>
+            <span class="podium-card__total">{{ 'summary.total' | translate }} {{ winner.totalSips }}</span>
+          </div>
+        }
+        @if (loser(); as loser) {
+          <div class="podium-card loser-card">
+            <fa-icon icon="wine-glass" class="podium-card__icon"></fa-icon>
+            <span class="podium-card__label">{{ 'summary.loser' | translate }}</span>
+            <span class="podium-card__name">{{ loser.name }}</span>
+            <span class="podium-card__total">{{ 'summary.total' | translate }} {{ loser.totalSips }}</span>
+          </div>
+        }
       </div>
-    </div>
-  }
+    }
 
-  @if (loser(); as loser) {
-    <div class="highlight-card loser-card mb-3 p-3 text-center">
-      <fa-icon icon="wine-glass" class="icon-lg text-danger"></fa-icon>
-      <div class="mt-1">
-        <span class="fw-bold">{{ loser.name }}</span>
-        <span class="d-block small text-muted">{{ 'summary.loser' | translate }} - {{ loser.totalSips }} {{ 'Label_Sips' | translate }}</span>
-      </div>
-    </div>
-  }
+    @if (playersSorted().length > 0) {
+      <!-- Legende : « donnees » et « recues » se confondent vite, on donne la
+           cle de lecture (icone + couleur) avant le classement lui-meme. -->
+      <p class="legend" [attr.aria-label]="'summary.legend' | translate">
+        <span class="legend__item legend__item--drunk">
+          <fa-icon icon="wine-glass"></fa-icon>
+          {{ 'summary.sipsDrunk' | translate }}
+        </span>
+        <span class="legend__item legend__item--given">
+          <fa-icon icon="sign-out-alt"></fa-icon>
+          {{ 'summary.sipsGiven' | translate }}
+        </span>
+        @if (hasAnyExchange()) {
+          <span class="legend__item legend__item--received">
+            <fa-icon icon="sign-in-alt"></fa-icon>
+            {{ 'summary.sipsReceived' | translate }}
+          </span>
+        }
+      </p>
 
-  <div class="table-responsive">
-    <table class="table table-sm table-hover align-middle mb-3">
-      <thead>
-        <tr>
-          <th class="text-start">#</th>
-          <th class="text-start">{{ 'summary.player' | translate }}</th>
-          <th class="text-end">{{ 'summary.sipsDrunk' | translate }}</th>
-          <th class="text-end">{{ 'summary.sipsGiven' | translate }}</th>
-          <th class="text-end fw-bold">{{ 'summary.total' | translate }}</th>
-        </tr>
-      </thead>
-      <tbody>
+      <ol class="ranking">
         @for (player of playersSorted(); track $index; let i = $index) {
-          <tr [class.table-success]="player.isWinner" [class.table-danger]="player.isLoser">
-            <td class="text-start">{{ i + 1 }}</td>
-            <td class="text-start">
+          <li class="ranking__row" [class.is-winner]="player.isWinner" [class.is-loser]="player.isLoser">
+            <div class="ranking__head">
+              <span class="ranking__rank">{{ i + 1 }}</span>
               @if (player.isWinner) {
-                <fa-icon icon="medal" class="text-success me-1"></fa-icon>
+                <fa-icon icon="medal" class="ranking__flag ranking__flag--winner"></fa-icon>
               }
               @if (player.isLoser) {
-                <fa-icon icon="wine-glass" class="text-danger me-1"></fa-icon>
+                <fa-icon icon="wine-glass" class="ranking__flag ranking__flag--loser"></fa-icon>
               }
-              {{ player.name }}
-            </td>
-            <td class="text-end">{{ player.sipsDrunk }}</td>
-            <td class="text-end">{{ player.sipsGiven }}</td>
-            <td class="text-end fw-bold">{{ player.totalSips }}</td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  </div>
+              <span class="ranking__name">{{ player.name }}</span>
+            </div>
 
-  <div class="d-flex justify-content-center gap-3 mt-3">
-    <button class="btn btn-outline-primary" (click)="replay()">
-      <fa-icon icon="redo" class="me-1"></fa-icon>
-      {{ 'summary.replay' | translate }}
-    </button>
-    <button class="btn btn-outline-secondary" (click)="exit()">
-      <fa-icon icon="door-open" class="me-1"></fa-icon>
-      {{ 'summary.exit' | translate }}
-    </button>
-  </div>
+            <div class="metrics">
+              <span class="metric metric--drunk">
+                <span class="metric__value">
+                  <fa-icon icon="wine-glass" class="metric__icon"></fa-icon>
+                  {{ player.sipsDrunk }}
+                </span>
+                <span class="metric__label">{{ 'summary.sipsDrunk' | translate }}</span>
+              </span>
+              <span class="metric metric--given">
+                <span class="metric__value">
+                  <fa-icon icon="sign-out-alt" class="metric__icon"></fa-icon>
+                  {{ player.sipsGiven }}
+                </span>
+                <span class="metric__label">{{ 'summary.sipsGiven' | translate }}</span>
+              </span>
+              @if (hasAnyExchange()) {
+                <span class="metric metric--received">
+                  <span class="metric__value">
+                    <fa-icon icon="sign-in-alt" class="metric__icon"></fa-icon>
+                    {{ player.sipsReceived }}
+                  </span>
+                  <span class="metric__label">{{ 'summary.sipsReceived' | translate }}</span>
+                </span>
+              }
+            </div>
+
+            @if (player.hasExchanges) {
+              <button
+                type="button"
+                class="exchange-toggle"
+                [class.is-open]="isExpanded(i)"
+                [attr.aria-expanded]="isExpanded(i)"
+                [attr.aria-controls]="'summary-exchanges-' + i"
+                [attr.aria-label]="
+                  (isExpanded(i) ? 'summary.hideExchangesFor' : 'summary.showExchangesFor')
+                    | translate: { name: player.name }
+                "
+                (click)="toggleExchanges(i)"
+              >
+                <fa-icon icon="caret-right" class="exchange-toggle__chevron"></fa-icon>
+                <span>{{ (isExpanded(i) ? 'summary.hideExchanges' : 'summary.showExchanges') | translate }}</span>
+              </button>
+
+              @if (isExpanded(i)) {
+                <div class="exchange-panel" [id]="'summary-exchanges-' + i">
+                  @if (player.givenTo.length > 0) {
+                    <div class="exchange-group exchange-group--given">
+                      <h3 class="exchange-group__title">
+                        <fa-icon icon="sign-out-alt"></fa-icon>
+                        {{ 'summary.givenTo' | translate }}
+                      </h3>
+                      @for (line of player.givenTo; track $index) {
+                        <div class="exchange-line">
+                          <span class="exchange-line__who">{{ line.playerName }}</span>
+                          <span class="exchange-line__track">
+                            <span class="exchange-line__bar" [style.width.%]="line.share"></span>
+                          </span>
+                          <span class="exchange-line__sips">{{ line.sips }}</span>
+                        </div>
+                      }
+                    </div>
+                  }
+                  @if (player.receivedFrom.length > 0) {
+                    <div class="exchange-group exchange-group--received">
+                      <h3 class="exchange-group__title">
+                        <fa-icon icon="sign-in-alt"></fa-icon>
+                        {{ 'summary.receivedFrom' | translate }}
+                      </h3>
+                      @for (line of player.receivedFrom; track $index) {
+                        <div class="exchange-line">
+                          <span class="exchange-line__who">{{ line.playerName }}</span>
+                          <span class="exchange-line__track">
+                            <span class="exchange-line__bar" [style.width.%]="line.share"></span>
+                          </span>
+                          <span class="exchange-line__sips">{{ line.sips }}</span>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            }
+          </li>
+        }
+      </ol>
+    } @else {
+      <p class="summary-empty">{{ 'summary.noData' | translate }}</p>
+    }
+
+    <div class="summary-actions">
+      <button type="button" class="btn btn-outline-primary summary-actions__btn" (click)="replay()">
+        <fa-icon icon="redo" class="me-1"></fa-icon>
+        {{ 'summary.replay' | translate }}
+      </button>
+      <button type="button" class="btn btn-outline-secondary summary-actions__btn" (click)="exit()">
+        <fa-icon icon="door-open" class="me-1"></fa-icon>
+        {{ 'summary.exit' | translate }}
+      </button>
+    </div>
+  </section>
 </div>

@@ -6,6 +6,7 @@ import { GameSummaryComponent } from './game-summary.component';
 import { GameService } from '../../../services/game/game.service';
 import { createMockGameService } from '../../../testing/test-helpers';
 import { PlayerModel } from '../../../_shared/_models/player.model';
+import { SipExchange } from '../../../_shared/_models/sip-exchange.model';
 import { FontAwesomeIconsModule } from '../../../font-awesome.module';
 
 function createPlayer(name: string, drunk: number, given: number): PlayerModel {
@@ -16,6 +17,10 @@ function createPlayer(name: string, drunk: number, given: number): PlayerModel {
   player.cards = [];
   player.choice = { color: '', plus_or_minus: '', in_out: '', suit: '' };
   return player;
+}
+
+function exchange(from: string, to: string, sips: number): SipExchange {
+  return { fromPlayerId: from, toPlayerId: to, sips, at: '2026-01-01T00:00:00.000Z' };
 }
 
 describe('GameSummaryComponent', () => {
@@ -41,6 +46,11 @@ describe('GameSummaryComponent', () => {
     fixture = TestBed.createComponent(GameSummaryComponent);
     component = fixture.componentInstance;
   });
+
+  /** Le composant lit les echanges via game(), les totaux via players(). */
+  function setExchanges(exchanges: SipExchange[] | undefined): void {
+    mockGameService.game.set({ ...mockGameService.game(), sipExchanges: exchanges });
+  }
 
   describe('Component Creation', () => {
     it('should create the component', () => {
@@ -208,21 +218,21 @@ describe('GameSummaryComponent', () => {
       expect(title).toBeTruthy();
     });
 
-    it('should render the results table', () => {
+    it('should render one ranking row per player', () => {
       const players = [createPlayer('Alice', 5, 3), createPlayer('Bob', 2, 1)];
       mockGameService.players.set(players);
       fixture.detectChanges();
 
-      const table = fixture.nativeElement.querySelector('table');
-      expect(table).toBeTruthy();
+      const ranking = fixture.nativeElement.querySelector('.ranking');
+      expect(ranking).toBeTruthy();
 
-      const rows = fixture.nativeElement.querySelectorAll('tbody tr');
+      const rows = fixture.nativeElement.querySelectorAll('.ranking__row');
       expect(rows.length).toBe(2);
     });
 
     it('should render replay and exit buttons', () => {
       fixture.detectChanges();
-      const buttons = fixture.nativeElement.querySelectorAll('button');
+      const buttons = fixture.nativeElement.querySelectorAll('.summary-actions button');
       expect(buttons.length).toBe(2);
     });
 
@@ -254,22 +264,198 @@ describe('GameSummaryComponent', () => {
       expect(loserCard).toBeFalsy();
     });
 
-    it('should apply table-success class to winner row', () => {
+    it('should apply the winner class to the winner row', () => {
       const players = [createPlayer('Alice', 10, 0), createPlayer('Bob', 1, 0)];
       mockGameService.players.set(players);
       fixture.detectChanges();
 
-      const successRow = fixture.nativeElement.querySelector('tr.table-success');
-      expect(successRow).toBeTruthy();
+      const winnerRow = fixture.nativeElement.querySelector('.ranking__row.is-winner');
+      expect(winnerRow).toBeTruthy();
     });
 
-    it('should apply table-danger class to loser row', () => {
+    it('should apply the loser class to the loser row', () => {
       const players = [createPlayer('Alice', 10, 0), createPlayer('Bob', 1, 0)];
       mockGameService.players.set(players);
       fixture.detectChanges();
 
-      const dangerRow = fixture.nativeElement.querySelector('tr.table-danger');
-      expect(dangerRow).toBeTruthy();
+      const loserRow = fixture.nativeElement.querySelector('.ranking__row.is-loser');
+      expect(loserRow).toBeTruthy();
+    });
+
+    it('should render the three metric tiles per player when exchanges exist', () => {
+      mockGameService.players.set([createPlayer('Alice', 5, 3), createPlayer('Bob', 2, 1)]);
+      setExchanges([exchange('alice', 'bob', 3)]);
+      fixture.detectChanges();
+
+      const firstRow = fixture.nativeElement.querySelector('.ranking__row');
+      expect(firstRow.querySelectorAll('.metric').length).toBe(3);
+      expect(firstRow.querySelector('.metric--drunk')).toBeTruthy();
+      expect(firstRow.querySelector('.metric--given')).toBeTruthy();
+      expect(firstRow.querySelector('.metric--received')).toBeTruthy();
+    });
+  });
+
+  describe('sipsReceived total', () => {
+    it('should sum the exchanges addressed to each player', () => {
+      mockGameService.players.set([
+        createPlayer('Alice', 5, 6),
+        createPlayer('Bob', 2, 0),
+        createPlayer('Carol', 1, 0),
+      ]);
+      setExchanges([
+        exchange('alice', 'bob', 2),
+        exchange('alice', 'bob', 1),
+        exchange('alice', 'carol', 3),
+        exchange('bob', 'alice', 4),
+      ]);
+      fixture.detectChanges();
+
+      const byName = new Map(component.playersSorted().map((p) => [p.name, p]));
+      expect(byName.get('Bob')!.sipsReceived).toBe(3);
+      expect(byName.get('Carol')!.sipsReceived).toBe(3);
+      expect(byName.get('Alice')!.sipsReceived).toBe(4);
+    });
+
+    it('should not count a player own gifts as received', () => {
+      mockGameService.players.set([createPlayer('Alice', 0, 5), createPlayer('Bob', 0, 0)]);
+      setExchanges([exchange('alice', 'bob', 5)]);
+      fixture.detectChanges();
+
+      const alice = component.playersSorted().find((p) => p.name === 'Alice')!;
+      expect(alice.sipsReceived).toBe(0);
+      expect(alice.sipsGiven).toBe(5);
+    });
+
+    it('should ignore non-positive or malformed exchanges', () => {
+      mockGameService.players.set([createPlayer('Alice', 0, 1), createPlayer('Bob', 0, 0)]);
+      setExchanges([exchange('alice', 'bob', 0), exchange('alice', 'bob', -3), exchange('alice', 'bob', 1)]);
+      fixture.detectChanges();
+
+      const bob = component.playersSorted().find((p) => p.name === 'Bob')!;
+      expect(bob.sipsReceived).toBe(1);
+    });
+
+    it('should keep totalSips as drunk + given, unaffected by received sips', () => {
+      mockGameService.players.set([createPlayer('Alice', 4, 2), createPlayer('Bob', 1, 0)]);
+      setExchanges([exchange('bob', 'alice', 9)]);
+      fixture.detectChanges();
+
+      const alice = component.playersSorted().find((p) => p.name === 'Alice')!;
+      expect(alice.totalSips).toBe(6);
+    });
+  });
+
+  describe('missing sipExchanges (old games, or no gift at all)', () => {
+    it('should not crash and report zero received when sipExchanges is undefined', () => {
+      mockGameService.players.set([createPlayer('Alice', 5, 3), createPlayer('Bob', 2, 1)]);
+      setExchanges(undefined);
+
+      expect(() => fixture.detectChanges()).not.toThrow();
+      expect(component.hasAnyExchange()).toBeFalse();
+      expect(component.playersSorted().every((p) => p.sipsReceived === 0)).toBeTrue();
+      expect(component.playersSorted().every((p) => !p.hasExchanges)).toBeTrue();
+    });
+
+    it('should hide the received metric and the exchange toggles when sipExchanges is undefined', () => {
+      mockGameService.players.set([createPlayer('Alice', 5, 3), createPlayer('Bob', 2, 1)]);
+      setExchanges(undefined);
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('.metric--received')).toBeFalsy();
+      expect(fixture.nativeElement.querySelector('.exchange-toggle')).toBeFalsy();
+      expect(fixture.nativeElement.querySelector('.exchange-panel')).toBeFalsy();
+      // Les deux autres compteurs restent affiches.
+      expect(fixture.nativeElement.querySelectorAll('.ranking__row')[0].querySelectorAll('.metric').length).toBe(2);
+    });
+
+    it('should behave the same with an empty sipExchanges array', () => {
+      mockGameService.players.set([createPlayer('Alice', 5, 3), createPlayer('Bob', 2, 1)]);
+      setExchanges([]);
+      fixture.detectChanges();
+
+      expect(component.hasAnyExchange()).toBeFalse();
+      expect(fixture.nativeElement.querySelector('.exchange-toggle')).toBeFalsy();
+    });
+
+    it('should not offer a toggle for a player with no exchange while others have some', () => {
+      mockGameService.players.set([
+        createPlayer('Alice', 0, 2),
+        createPlayer('Bob', 0, 0),
+        createPlayer('Carol', 0, 0),
+      ]);
+      setExchanges([exchange('alice', 'bob', 2)]);
+      fixture.detectChanges();
+
+      const carol = component.playersSorted().find((p) => p.name === 'Carol')!;
+      expect(carol.hasExchanges).toBeFalse();
+      expect(fixture.nativeElement.querySelectorAll('.exchange-toggle').length).toBe(2);
+    });
+  });
+
+  describe('exchange detail disclosure', () => {
+    beforeEach(() => {
+      mockGameService.players.set([createPlayer('Alice', 5, 6), createPlayer('Bob', 2, 1)]);
+      setExchanges([exchange('alice', 'bob', 4), exchange('alice', 'bob', 2), exchange('bob', 'alice', 1)]);
+      fixture.detectChanges();
+    });
+
+    it('should be collapsed by default', () => {
+      expect(component.isExpanded(0)).toBeFalse();
+      expect(component.isExpanded(1)).toBeFalse();
+      expect(fixture.nativeElement.querySelector('.exchange-panel')).toBeFalsy();
+    });
+
+    it('should expose aria-expanded false on every toggle by default', () => {
+      const toggles: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.exchange-toggle'));
+      expect(toggles.length).toBe(2);
+      toggles.forEach((toggle) => expect(toggle.getAttribute('aria-expanded')).toBe('false'));
+    });
+
+    it('should open the panel on toggle and close it on second toggle', () => {
+      component.toggleExchanges(0);
+      fixture.detectChanges();
+      expect(component.isExpanded(0)).toBeTrue();
+      expect(fixture.nativeElement.querySelectorAll('.exchange-panel').length).toBe(1);
+      expect(fixture.nativeElement.querySelector('.exchange-toggle').getAttribute('aria-expanded')).toBe('true');
+
+      component.toggleExchanges(0);
+      fixture.detectChanges();
+      expect(component.isExpanded(0)).toBeFalse();
+      expect(fixture.nativeElement.querySelector('.exchange-panel')).toBeFalsy();
+    });
+
+    it('should keep only one panel open at a time', () => {
+      component.toggleExchanges(0);
+      component.toggleExchanges(1);
+      fixture.detectChanges();
+
+      expect(component.isExpanded(0)).toBeFalse();
+      expect(component.isExpanded(1)).toBeTrue();
+      expect(fixture.nativeElement.querySelectorAll('.exchange-panel').length).toBe(1);
+    });
+
+    it('should aggregate the detail lines per counterpart, sorted by sips descending', () => {
+      const alice = component.playersSorted().find((p) => p.name === 'Alice')!;
+      // Deux transferts vers Bob (4 puis 2) fusionnes en une seule ligne de 6.
+      expect(alice.givenTo.length).toBe(1);
+      expect(alice.givenTo[0].playerName).toBe('Bob');
+      expect(alice.givenTo[0].sips).toBe(6);
+      expect(alice.receivedFrom.length).toBe(1);
+      expect(alice.receivedFrom[0].playerName).toBe('Bob');
+      expect(alice.receivedFrom[0].sips).toBe(1);
+      // Barres a la meme echelle : le plus gros echange du joueur vaut 100%.
+      expect(alice.givenTo[0].share).toBe(100);
+      expect(alice.receivedFrom[0].share).toBeLessThan(100);
+    });
+
+    it('should render both given and received groups in the open panel', () => {
+      component.toggleExchanges(0);
+      fixture.detectChanges();
+
+      const panel = fixture.nativeElement.querySelector('.exchange-panel');
+      expect(panel.querySelector('.exchange-group--given')).toBeTruthy();
+      expect(panel.querySelector('.exchange-group--received')).toBeTruthy();
+      expect(panel.querySelectorAll('.exchange-line').length).toBe(2);
     });
   });
 

@@ -1,81 +1,532 @@
-.game-summary {
-  max-width: 600px;
-  margin: 0 auto;
+@use '../../../../breakpoints' as *;
+
+// ============================================================
+// Ecran de resume de fin de partie
+// Meme langage visuel que le lobby : une carte translucide
+// centree, tokens du design system uniquement.
+// ============================================================
+
+.summary {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: var(--space-3);
+
+  @include tablet {
+    padding: var(--space-6);
+  }
 }
 
-.highlight-card {
-  border-radius: 0.75rem;
-  border: 2px solid;
+.summary-card {
+  width: 100%;
+  max-width: 560px;
+  padding: var(--space-4);
+  background: rgba(var(--color-bg-surface-rgb), 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  animation: summary-fade-in var(--animation-normal) var(--ease-spring) both;
+
+  @include tablet {
+    padding: var(--space-6);
+    max-width: 680px;
+  }
+
+  @supports not ((backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px))) {
+    background: var(--color-bg-surface);
+  }
+}
+
+.summary-card__title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-4);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  text-align: center;
+
+  @include tablet {
+    font-size: var(--font-size-2xl);
+  }
+}
+
+.summary-card__title-icon {
+  color: var(--color-accent-gold);
+}
+
+// ===== Podium (le plus sobre / le plus arrose) =====
+
+.podium {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+
+  @include tablet {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+}
+
+.podium-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.podium-card__icon {
+  grid-row: 1 / span 2;
+  font-size: var(--font-size-xl);
+}
+
+.podium-card__label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+}
+
+.podium-card__name {
+  grid-column: 2;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.podium-card__total {
+  grid-column: 2;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
 }
 
 .winner-card {
-  border-color: #28a745;
-  background-color: rgba(40, 167, 69, 0.08);
+  border-color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 10%, var(--color-bg-elevated));
+
+  .podium-card__icon {
+    color: var(--color-success);
+  }
 }
 
 .loser-card {
-  border-color: #dc3545;
-  background-color: rgba(220, 53, 69, 0.08);
-}
+  border-color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 10%, var(--color-bg-elevated));
 
-.icon-lg {
-  font-size: 1.5rem;
-}
-
-.table {
-  font-size: 0.95rem;
-}
-
-// Mobile-first responsive adjustments
-@media (max-width: 575.98px) {
-  .game-summary {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
-
-  .table {
-    font-size: 0.85rem;
-  }
-
-  .highlight-card {
-    padding: 0.75rem !important;
-  }
-
-  .d-flex.gap-3 {
-    flex-direction: column;
-    gap: 0.5rem !important;
-  }
-
-  .d-flex.gap-3 .btn {
-    width: 100%;
+  .podium-card__icon {
+    color: var(--color-error);
   }
 }
 
-// Tablet
-@media (min-width: 576px) and (max-width: 991.98px) {
-  .game-summary {
-    max-width: 500px;
+// ===== Legende des trois compteurs =====
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+}
+
+.legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+
+  &--drunk {
+    background: var(--color-drink-bg);
+    color: var(--color-drink);
+  }
+
+  &--given {
+    background: var(--color-give-bg);
+    color: var(--color-give);
+  }
+
+  &--received {
+    background: var(--color-give-event-bg);
+    color: var(--color-give-event);
   }
 }
 
-// Laptop/Desktop
-@media (min-width: 992px) {
-  .game-summary {
-    max-width: 600px;
+// ===== Classement =====
+
+.ranking {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ranking__row {
+  padding: var(--space-3);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-border);
+  border-radius: var(--radius-md);
+  animation: summary-row-in var(--animation-normal) var(--ease-spring) both;
+
+  &.is-winner {
+    border-left-color: var(--color-success);
+  }
+
+  &.is-loser {
+    border-left-color: var(--color-error);
   }
 }
 
-// TV
-@media (min-width: 1400px) {
-  .game-summary {
-    max-width: 700px;
+// Apparition en cascade, plafonnee : au-dela le retard devient une attente.
+@for $i from 1 through 8 {
+  .ranking__row:nth-child(#{$i}) {
+    animation-delay: #{$i * 40}ms;
+  }
+}
+
+.ranking__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.ranking__rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+}
+
+.ranking__flag {
+  flex-shrink: 0;
+
+  &--winner {
+    color: var(--color-success);
   }
 
-  .table {
-    font-size: 1.1rem;
+  &--loser {
+    color: var(--color-error);
+  }
+}
+
+.ranking__name {
+  min-width: 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// ===== Les trois compteurs : bues / donnees / recues =====
+// grid-auto-flow en colonne : la grille se repartit d'elle-meme sur 2 ou 3
+// tuiles selon que le total « recues » est disponible ou non.
+
+.metrics {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-2) var(--space-1);
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  text-align: center;
+
+  &--drunk {
+    background: var(--color-drink-bg);
+    border-color: color-mix(in srgb, var(--color-drink) 30%, transparent);
+    color: var(--color-drink);
   }
 
-  .icon-lg {
-    font-size: 2rem;
+  &--given {
+    background: var(--color-give-bg);
+    border-color: color-mix(in srgb, var(--color-give) 30%, transparent);
+    color: var(--color-give);
+  }
+
+  &--received {
+    background: var(--color-give-event-bg);
+    border-color: color-mix(in srgb, var(--color-give-event) 30%, transparent);
+    color: var(--color-give-event);
+  }
+}
+
+.metric__value {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--line-height-tight);
+}
+
+.metric__icon {
+  font-size: var(--font-size-sm);
+}
+
+.metric__label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-secondary);
+}
+
+// ===== Detail depliable des echanges =====
+
+.exchange-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition:
+    background-color var(--animation-fast) var(--ease-default),
+    color var(--animation-fast) var(--ease-default);
+
+  &:hover {
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-accent-primary);
+    outline-offset: 2px;
+  }
+
+  &.is-open {
+    color: var(--color-accent-primary);
+    border-color: var(--color-accent-primary);
+  }
+}
+
+// Pas de chevron « bas » dans la librairie d'icones du projet : on fait
+// pivoter le caret droit, ce qui donne aussi l'animation d'ouverture.
+.exchange-toggle__chevron {
+  transition: transform var(--animation-fast) var(--ease-default);
+
+  .exchange-toggle.is-open & {
+    transform: rotate(90deg);
+  }
+}
+
+.exchange-panel {
+  margin-top: var(--space-2);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-sm);
+  animation: summary-panel-in var(--animation-fast) var(--ease-default) both;
+
+  @include tablet {
+    flex-direction: row;
+
+    .exchange-group {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+  }
+}
+
+.exchange-group__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+
+  .exchange-group--given & {
+    color: var(--color-give);
+  }
+
+  .exchange-group--received & {
+    color: var(--color-give-event);
+  }
+}
+
+.exchange-line {
+  display: grid;
+  grid-template-columns: minmax(0, 5.5rem) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 2px 0;
+}
+
+.exchange-line__who {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exchange-line__track {
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-divider);
+  overflow: hidden;
+}
+
+.exchange-line__bar {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width var(--animation-normal) var(--ease-spring);
+
+  .exchange-group--given & {
+    background: var(--color-give);
+  }
+
+  .exchange-group--received & {
+    background: var(--color-give-event);
+  }
+}
+
+.exchange-line__sips {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+}
+
+// ===== Etat vide + actions =====
+
+.summary-empty {
+  margin: 0;
+  padding: var(--space-6) var(--space-3);
+  text-align: center;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.summary-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+
+  @include tablet {
+    flex-direction: row;
+    justify-content: center;
+    gap: var(--space-3);
+  }
+}
+
+.summary-actions__btn {
+  width: 100%;
+  font-weight: var(--font-weight-medium);
+
+  @include tablet {
+    width: auto;
+    min-width: 10rem;
+  }
+}
+
+// ===== Animations =====
+
+@keyframes summary-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes summary-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes summary-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .summary-card,
+  .ranking__row,
+  .exchange-panel {
+    animation: none;
+  }
+
+  .exchange-toggle__chevron,
+  .exchange-line__bar {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .summary-card,
+  .ranking__row,
+  .metric {
+    border: 1px solid CanvasText;
   }
 }
