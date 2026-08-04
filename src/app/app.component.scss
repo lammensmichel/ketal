@@ -1,7 +1,12 @@
 .main-container {
   display: flex;
   flex-direction: column;
+  // Sur Chrome/Safari mobile, 100vh vaut la hauteur barre d'URL MASQUEE. Quand
+  // elle est visible, le bas du conteneur (le footer) passe sous l'écran et il
+  // faut scroller. 100dvh suit la hauteur réellement visible.
+  // La ligne vh reste en repli pour les navigateurs sans dvh.
   height: 100vh;
+  height: 100dvh;
 }
 
 app-header {

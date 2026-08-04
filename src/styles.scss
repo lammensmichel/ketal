@@ -15,7 +15,9 @@ body {
 app-root {
   display: flex;
   flex-direction: column;
+  // Voir app.component.scss : dvh suit la hauteur visible sur mobile, vh non.
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .border-dashed {
