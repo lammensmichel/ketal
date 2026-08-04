@@ -194,6 +194,7 @@ export function createMockGameService(): any & {
       'setCardChoice',
       'pauseGame',
       'resumeGame',
+      'recordSipExchanges',
     ],
     {
       withSummaryMode: mockWithSummaryMode,
@@ -230,6 +231,15 @@ export function createMockGameService(): any & {
     drinkingCards: WritableSignal<CardType[]>;
     givingCards: WritableSignal<CardType[]>;
   };
+}
+
+/**
+ * Creates a mock SipEventService for testing
+ */
+export function createMockSipEventService(): any {
+  const mock = createMockObj('SipEventService', ['recordExchanges']);
+  mock.recordExchanges.and.resolveTo(undefined);
+  return mock;
 }
 
 /**

@@ -362,6 +362,44 @@ describe('PlayerGivenSipsSelectionComponent', () => {
       });
     });
 
+    it('should record the sip exchanges with the giver id and the distribution', () => {
+      component.sipsToGive = 0;
+      component.tempSips['player-2'] = 3;
+      component.givenPlayer = testPlayers[0];
+
+      component.save();
+
+      expect(mockGameService.recordSipExchanges).toHaveBeenCalledTimes(1);
+      const [fromPlayerId, distribution] = mockGameService.recordSipExchanges.calls.mostRecent().args;
+      expect(fromPlayerId).toBe('player-1');
+      // La distribution transmise doit etre un instantane : `closeModal()` remet
+      // `tempSips` a zero juste apres, la reference vive serait donc vidée.
+      expect(distribution['player-2']).toBe(3);
+      expect(distribution).not.toBe(component.tempSips);
+    });
+
+    it('should not record any exchange when the distribution is incomplete', () => {
+      component.sipsToGive = 2;
+      component.givenPlayer = testPlayers[0];
+      component.toastComponent = jasmine.createSpyObj('ToastComponent', ['show']);
+
+      component.save();
+
+      expect(mockGameService.recordSipExchanges).not.toHaveBeenCalled();
+    });
+
+    it('should still close the modal when recording throws', () => {
+      // Une statistique en echec ne doit pas bloquer la validation du joueur
+      mockGameService.recordSipExchanges.and.throwError('persistence exploded');
+      component.sipsToGive = 0;
+      component.tempSips['player-2'] = 1;
+      component.givenPlayer = testPlayers[0];
+      component.modalOpen = true;
+
+      expect(() => component.save()).not.toThrow();
+      expect(component.modalOpen).toBe(false);
+    });
+
     it('should show toast if sipsToGive is not 0', () => {
       const toastComponent = jasmine.createSpyObj('ToastComponent', ['show']);
       component.toastComponent = toastComponent;

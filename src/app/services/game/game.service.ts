@@ -16,6 +16,8 @@ import { LocalService } from '../local/local.service';
 import { MemberService } from '../member/member.service';
 import { RoomService } from '../room/room.service';
 import { SoloRoomService } from '../solo-room/solo-room.service';
+import { SipEventService } from '../sip-event/sip-event.service';
+import { SipExchange } from '../../_shared/_models/sip-exchange.model';
 import { mapGameToSessionUpdate, mapPlayerModelToKetalPlayer, mapSessionToGame } from './game-mappers';
 import {
   isAppwriteException,
@@ -36,6 +38,7 @@ export class GameService {
   private readonly ketalSessionService = inject(KetalSessionService);
   private readonly memberService = inject(MemberService);
   private readonly soloRoomService = inject(SoloRoomService);
+  private readonly sipEventService = inject(SipEventService);
   private readonly destroyRef = inject(DestroyRef);
 
   /** Signal for pause state (Story 14.0) */
@@ -674,15 +677,27 @@ export class GameService {
 
     try {
       // Update each member's cumulative stats
+      //
+      // Chaque joueur est isole : `updateMemberStats` leve sur un 404, et en
+      // solo les joueurs sont des PlayerModel locaux (id uuid) sans document
+      // membre. Une seule levee interrompait toute la fonction, donc `endGame()`
+      // n'etait jamais atteint et la session restait « playing » sans
+      // `finishedAt` — ce qui rendait le filtrage par date inexploitable pour
+      // les parties solo.
       for (const player of game.players) {
-        await this.memberService.updateMemberStats(player.id, 'ketal', {
-          sipsGiven: player.sips['given'],
-          sipsTaken: player.sips['drunk'],
-          gamesPlayed: 1,
-        });
+        try {
+          await this.memberService.updateMemberStats(player.id, 'ketal', {
+            sipsGiven: player.sips['given'],
+            sipsTaken: player.sips['drunk'],
+            gamesPlayed: 1,
+          });
+        } catch (error: unknown) {
+          console.warn(
+            `[GameService] Failed to update stats for player ${player.id}:`,
+            error instanceof Error ? error.message : JSON.stringify(error)
+          );
+        }
       }
-
-      console.debug('[GameService] Member stats updated for all players');
 
       // End the session in Appwrite
       if (session) {
@@ -799,6 +814,48 @@ export class GameService {
       if (drink && game.phase === 2 && (currPlayer.cards?.length ?? 0) >= 4) {
         this._lastTurnSips.set({ ...this._lastTurnSips(), [currPlayer.id]: sipNbr });
       }
+    });
+  }
+
+  /**
+   * Enregistre les transferts de gorgees decides dans la modale de distribution.
+   *
+   * Seule source de l'information « qui a donne combien a qui » : `player.sips`
+   * n'agrege que les totaux `drunk` / `given`, d'ou l'historique dedie.
+   *
+   * @param fromPlayerId - Joueur qui distribue ses gorgees
+   * @param distribution - Gorgees par joueur receveur (cle = id du receveur)
+   */
+  recordSipExchanges(fromPlayerId: string, distribution: Record<string, number>): void {
+    if (!fromPlayerId || !distribution) {
+      return;
+    }
+
+    const at = new Date().toISOString();
+    const exchanges: SipExchange[] = Object.entries(distribution)
+      // On ignore les 0 (aucun transfert) et les auto-dons : un joueur qui se
+      // donne des gorgees a lui-meme n'est pas un transfert, et le backend
+      // refuse de toute facon sips < 1.
+      .filter(([toPlayerId, sips]) => sips > 0 && toPlayerId !== fromPlayerId)
+      .map(([toPlayerId, sips]) => ({ fromPlayerId, toPlayerId, sips, at }));
+
+    if (exchanges.length === 0) {
+      return;
+    }
+
+    this.updateGame((game) => {
+      // Optionnel dans le modele : les parties deja en cours dans localStorage
+      // n'ont pas ce champ.
+      game.sipExchanges = [...(game.sipExchanges ?? []), ...exchanges];
+    });
+
+    // Persistance best-effort : une statistique qui ne s'ecrit pas ne doit
+    // jamais bloquer le joueur, donc pas d'await et pas de rejet propage.
+    this.sipEventService.recordExchanges(exchanges).catch((error: unknown) => {
+      console.warn(
+        '[GameService] Failed to persist sip exchanges:',
+        error instanceof Error ? error.message : JSON.stringify(error)
+      );
     });
   }
 

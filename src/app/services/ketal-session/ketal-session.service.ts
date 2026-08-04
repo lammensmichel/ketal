@@ -106,6 +106,17 @@ export interface KetalSession {
    * Optionnel : absent des sessions creees avant la migration 046.
    */
   summaryDisplayed?: boolean;
+  /**
+   * Horodatage ISO 8601 de creation de la session.
+   *
+   * Renseigne par le client et distinct du `$createdAt` d'Appwrite : les
+   * attributs systeme ne sont pas librement indexables, or c'est sur ce champ
+   * que reposera le filtrage des stats d'une room par date. Optionnel : absent
+   * des sessions creees avant que le client ne l'ecrive.
+   */
+  startedAt?: string;
+  /** Horodatage ISO 8601 de fin de partie (fin normale ou annulation). */
+  finishedAt?: string;
 }
 
 /**
@@ -155,6 +166,8 @@ interface SessionData {
   terminatedBy?: string | null;
   withSummary: boolean;
   summaryDisplayed?: boolean;
+  startedAt?: string;
+  finishedAt?: string;
 }
 
 /**
@@ -250,6 +263,9 @@ export class KetalSessionService {
           // Le resume ne s'affiche qu'au declenchement explicite en fin de
           // partie, jamais des la creation.
           summaryDisplayed: false,
+          // Borne basse de la partie, indispensable pour filtrer les stats
+          // d'une room par date.
+          startedAt: new Date().toISOString(),
         },
       });
 
@@ -335,6 +351,8 @@ export class KetalSessionService {
         'activePlayerId',
         'terminatedBy',
         'withSummary',
+        'startedAt',
+        'finishedAt',
       ];
 
       for (const field of sessionFields) {
@@ -386,6 +404,9 @@ export class KetalSessionService {
       const cancellationFields: Record<string, unknown> = {
         status: 'cancelled',
         terminatedBy: this._sessionData()?.activePlayerId ?? null,
+        // Une session annulee est terminee : sans borne haute elle apparaitrait
+        // comme eternellement en cours dans un filtrage par date.
+        finishedAt: new Date().toISOString(),
       };
 
       await this.appwrite.databases.updateDocument({
@@ -434,6 +455,8 @@ export class KetalSessionService {
         data: {
           status: 'finished',
           phase: 'finished',
+          // Borne haute de la partie, pendant de `startedAt`.
+          finishedAt: new Date().toISOString(),
         },
       });
 
@@ -593,6 +616,8 @@ export class KetalSessionService {
       terminatedBy: session.terminatedBy ?? null,
       withSummary: session.withSummary,
       summaryDisplayed: session.summaryDisplayed ?? false,
+      startedAt: session.startedAt,
+      finishedAt: session.finishedAt,
     });
 
     this._playerDocs.set(
@@ -733,6 +758,8 @@ export class KetalSessionService {
       // Absent des sessions anterieures a la migration 046 : on considere alors
       // que le resume n'a pas ete declenche.
       summaryDisplayed: (doc['summaryDisplayed'] as boolean) ?? false,
+      startedAt: (doc['startedAt'] as string) ?? undefined,
+      finishedAt: (doc['finishedAt'] as string) ?? undefined,
     };
   }
 

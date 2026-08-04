@@ -66,6 +66,21 @@ export class PlayerGivenSipsSelectionComponent {
       }
     });
 
+    // Seul endroit ou l'app connait la paire (donneur, receveur) : `addPlayerSip`
+    // ci-dessus n'incremente qu'un total et perd l'origine du transfert.
+    // Isole du reste : l'historique est une statistique, son echec ne doit jamais
+    // empecher la distribution de se conclure ni la modale de se fermer.
+    // Copie defensive : `closeModal()` remet `tempSips` a zero juste apres, on
+    // ne transmet donc pas la reference vive au service.
+    try {
+      this.gameSrv.recordSipExchanges(this.givenPlayer.id, { ...this.tempSips });
+    } catch (error: unknown) {
+      console.warn(
+        '[PlayerGivenSipsSelection] Failed to record sip exchanges:',
+        error instanceof Error ? error.message : 'Unknown error'
+      );
+    }
+
     const cardsToDecreaseGivenSips: CardType[] = this.givenPlayer.cards.filter(
       (card: CardType) => card.givenSips && card.givenSips !== 0
     );

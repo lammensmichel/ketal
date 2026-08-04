@@ -190,6 +190,20 @@ describe('KetalSessionService', () => {
       );
     });
 
+    it('should stamp startedAt with an ISO 8601 date on the session document', async () => {
+      await service.startGame(roomId, players, false, 0);
+
+      const sessionCall = appwriteMock.databases.createDocument.calls
+        .allArgs()
+        .find((args) => args[0].collectionId === 'fug_ketal_sessions');
+      const startedAt = sessionCall![0].data['startedAt'] as string;
+
+      expect(startedAt).toBeTruthy();
+      expect(Number.isNaN(Date.parse(startedAt))).toBe(false);
+      // Forme ISO 8601 stricte : c'est ce que l'attribut datetime attend
+      expect(startedAt).toBe(new Date(startedAt).toISOString());
+    });
+
     it('should create session, player, and cards documents', async () => {
       const result = await service.startGame(roomId, players, false, 0);
 
@@ -413,11 +427,24 @@ describe('KetalSessionService', () => {
         databaseId: 'fug',
         collectionId: 'fug_ketal_sessions',
         documentId: 'session-123',
-        data: {
+        data: jasmine.objectContaining({
           status: 'finished',
           phase: 'finished',
-        },
+        }),
       });
+    });
+
+    it('should stamp finishedAt with an ISO 8601 date', async () => {
+      await service.endGame('session-123', 'room-123');
+
+      const sessionCall = appwriteMock.databases.updateDocument.calls
+        .allArgs()
+        .find((args) => args[0].collectionId === 'fug_ketal_sessions');
+      const finishedAt = sessionCall![0].data['finishedAt'] as string;
+
+      expect(finishedAt).toBeTruthy();
+      expect(Number.isNaN(Date.parse(finishedAt))).toBe(false);
+      expect(finishedAt).toBe(new Date(finishedAt).toISOString());
     });
 
     it('should clear room currentSessionId and set status to idle', async () => {
@@ -479,7 +506,14 @@ describe('KetalSessionService', () => {
       );
 
       appwriteMock.databases.listDocuments.and.callFake((params: { collectionId: string; queries?: unknown[] }) => {
-        const { collectionId } = params;
+        const { collectionId, queries } = params;
+        // `listAllDocuments` boucle tant qu'une page revient non vide : sans
+        // honorer le curseur, ce mock renvoyait eternellement la meme page et
+        // gelait le navigateur (deconnexion Karma au bout du timeout).
+        const isNextPage = (queries ?? []).some((q) => typeof q === 'string' && q.includes('cursorAfter'));
+        if (isNextPage) {
+          return Promise.resolve({ documents: [] });
+        }
         if (collectionId === 'ketal_players') {
           return Promise.resolve({
             documents: [

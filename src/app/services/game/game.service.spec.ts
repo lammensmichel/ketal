@@ -23,7 +23,9 @@ import {
   createMockAppwriteService,
   createMockGameRoom,
   createMockKetalSession,
+  createMockSipEventService,
 } from '../../testing/test-helpers';
+import { SipEventService } from '../sip-event/sip-event.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import { SoloRoomService } from '../solo-room/solo-room.service';
 import { AppwriteService } from '../appwrite/appwrite.service';
@@ -108,6 +110,7 @@ describe('GameService', () => {
   let mockMemberService: ReturnType<typeof createMockMemberService>;
   let mockRealtimeService: ReturnType<typeof createMockRealtimeService>;
   let mockSoloRoomService: ReturnType<typeof createMockSoloRoomService>;
+  let mockSipEventService: ReturnType<typeof createMockSipEventService>;
 
   beforeEach(() => {
     localStorage.removeItem('ketal_summary_mode');
@@ -121,6 +124,7 @@ describe('GameService', () => {
     mockMemberService = createMockMemberService();
     mockRealtimeService = createMockRealtimeService();
     mockSoloRoomService = createMockSoloRoomService();
+    mockSipEventService = createMockSipEventService();
 
     // Break the circular dependency by using factory functions for RoomService and AuthService
     // Angular's DI cycle detection works by exploring the graph BEFORE considering useValue.
@@ -148,6 +152,7 @@ describe('GameService', () => {
         { provide: RealtimeService, useValue: mockRealtimeService },
         { provide: SoloRoomService, useValue: mockSoloRoomService },
         { provide: AppwriteService, useValue: createMockAppwriteService() },
+        { provide: SipEventService, useValue: mockSipEventService },
       ],
     });
     service = TestBed.inject(GameService);
@@ -1257,6 +1262,194 @@ describe('GameService', () => {
   // ==========================================================================
   // addPlayerSip Tests
   // ==========================================================================
+  describe('finalizeGameStats via setStatus(2)', () => {
+    function createServiceInRoomMode(mockGame: Game): GameService {
+      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
+      mockRoomService.currentRoom.set(createMockGameRoom({ $id: 'room-123' }));
+      mockKetalSessionService.currentSession.set(createMockKetalSession({ $id: 'session-123' }));
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          GameService,
+          { provide: LocalService, useValue: mockLocalService },
+          { provide: CardService, useValue: mockCardService },
+          { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+          { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          { provide: RoomService, useFactory: () => mockRoomService },
+          { provide: AuthService, useFactory: () => mockAuthService },
+          { provide: KetalSessionService, useValue: mockKetalSessionService },
+          { provide: MemberService, useValue: mockMemberService },
+          { provide: RealtimeService, useValue: mockRealtimeService },
+          { provide: SoloRoomService, useValue: mockSoloRoomService },
+          { provide: AppwriteService, useValue: createMockAppwriteService() },
+          { provide: SipEventService, useValue: mockSipEventService },
+        ],
+      });
+      return TestBed.inject(GameService);
+    }
+
+    /** Laisse la chaine de promesses de finalizeGameStats se derouler. */
+    async function flush(): Promise<void> {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+
+    it('should still end the session when a member stats update fails', async () => {
+      // En solo les joueurs sont locaux (id uuid) : updateMemberStats leve un 404
+      mockMemberService.updateMemberStats.and.rejectWith(new Error('member not found'));
+      const testService = createServiceInRoomMode(
+        createMockGame({ players: [createMockPlayer({ id: 'uuid-a' }), createMockPlayer({ id: 'uuid-b' })] })
+      );
+
+      testService.setStatus(2);
+      await flush();
+
+      // Chaque joueur est tente malgre l'echec du precedent
+      expect(mockMemberService.updateMemberStats).toHaveBeenCalledTimes(2);
+      // Et surtout la session est bien terminee (donc finishedAt est ecrit)
+      expect(mockKetalSessionService.endGame).toHaveBeenCalledWith('session-123', 'room-123');
+    });
+
+    it('should end the session normally when stats succeed', async () => {
+      mockMemberService.updateMemberStats.and.resolveTo(undefined);
+      const testService = createServiceInRoomMode(createMockGame({ players: [createMockPlayer({ id: 'member-a' })] }));
+
+      testService.setStatus(2);
+      await flush();
+
+      expect(mockMemberService.updateMemberStats).toHaveBeenCalledTimes(1);
+      expect(mockKetalSessionService.endGame).toHaveBeenCalledWith('session-123', 'room-123');
+    });
+  });
+
+  describe('recordSipExchanges', () => {
+    function createServiceWithGame(mockGame: Game): GameService {
+      mockLocalService.getData.and.returnValue(JSON.stringify(mockGame));
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          GameService,
+          { provide: LocalService, useValue: mockLocalService },
+          { provide: CardService, useValue: mockCardService },
+          { provide: PlayerHelperService, useValue: mockPlayerHelperService },
+          { provide: CardDeckHelperService, useValue: mockCardDeckHelperService },
+          { provide: RoomService, useValue: mockRoomService },
+          { provide: AuthService, useValue: mockAuthService },
+          { provide: KetalSessionService, useValue: mockKetalSessionService },
+          { provide: MemberService, useValue: mockMemberService },
+          { provide: RealtimeService, useValue: mockRealtimeService },
+          { provide: SoloRoomService, useValue: mockSoloRoomService },
+          { provide: SipEventService, useValue: mockSipEventService },
+        ],
+      });
+      return TestBed.inject(GameService);
+    }
+
+    function gameWithThreePlayers(): Game {
+      return createMockGame({
+        players: [
+          createMockPlayer({ id: 'giver' }),
+          createMockPlayer({ id: 'receiver-1' }),
+          createMockPlayer({ id: 'receiver-2' }),
+        ],
+        sipExchanges: [],
+      });
+    }
+
+    it('should record a pair with the right ids and sip count', () => {
+      const testService = createServiceWithGame(gameWithThreePlayers());
+
+      testService.recordSipExchanges('giver', { 'receiver-1': 3 });
+
+      const exchanges = testService.game().sipExchanges ?? [];
+      expect(exchanges.length).toBe(1);
+      expect(exchanges[0].fromPlayerId).toBe('giver');
+      expect(exchanges[0].toPlayerId).toBe('receiver-1');
+      expect(exchanges[0].sips).toBe(3);
+      // `at` doit etre un ISO 8601 exploitable cote backend
+      expect(Number.isNaN(Date.parse(exchanges[0].at))).toBe(false);
+    });
+
+    it('should record one entry per receiver', () => {
+      const testService = createServiceWithGame(gameWithThreePlayers());
+
+      testService.recordSipExchanges('giver', { 'receiver-1': 2, 'receiver-2': 4 });
+
+      const exchanges = testService.game().sipExchanges ?? [];
+      expect(exchanges.length).toBe(2);
+      expect(exchanges.map((e) => e.toPlayerId)).toEqual(['receiver-1', 'receiver-2']);
+      expect(exchanges.map((e) => e.sips)).toEqual([2, 4]);
+    });
+
+    it('should never record an entry for 0 sips', () => {
+      const testService = createServiceWithGame(gameWithThreePlayers());
+
+      testService.recordSipExchanges('giver', { 'receiver-1': 0, 'receiver-2': 5 });
+
+      const exchanges = testService.game().sipExchanges ?? [];
+      expect(exchanges.length).toBe(1);
+      expect(exchanges[0].toPlayerId).toBe('receiver-2');
+    });
+
+    it('should never record a self-gift', () => {
+      const testService = createServiceWithGame(gameWithThreePlayers());
+
+      testService.recordSipExchanges('giver', { giver: 4, 'receiver-1': 1 });
+
+      const exchanges = testService.game().sipExchanges ?? [];
+      expect(exchanges.length).toBe(1);
+      expect(exchanges[0].toPlayerId).toBe('receiver-1');
+    });
+
+    it('should not record anything and not persist when the distribution is empty', () => {
+      const testService = createServiceWithGame(gameWithThreePlayers());
+
+      testService.recordSipExchanges('giver', { 'receiver-1': 0, giver: 3 });
+
+      expect(testService.game().sipExchanges).toEqual([]);
+      expect(mockSipEventService.recordExchanges).not.toHaveBeenCalled();
+    });
+
+    it('should append to the existing history instead of replacing it', () => {
+      const testService = createServiceWithGame(gameWithThreePlayers());
+
+      testService.recordSipExchanges('giver', { 'receiver-1': 1 });
+      testService.recordSipExchanges('receiver-1', { 'receiver-2': 2 });
+
+      const exchanges = testService.game().sipExchanges ?? [];
+      expect(exchanges.length).toBe(2);
+      expect(exchanges[1].fromPlayerId).toBe('receiver-1');
+    });
+
+    it('should delegate persistence to SipEventService with the filtered exchanges', () => {
+      const testService = createServiceWithGame(gameWithThreePlayers());
+
+      testService.recordSipExchanges('giver', { 'receiver-1': 2, 'receiver-2': 0, giver: 9 });
+
+      expect(mockSipEventService.recordExchanges).toHaveBeenCalledTimes(1);
+      const persisted = mockSipEventService.recordExchanges.calls.mostRecent().args[0];
+      expect(persisted.length).toBe(1);
+      expect(persisted[0]).toEqual(
+        jasmine.objectContaining({ fromPlayerId: 'giver', toPlayerId: 'receiver-1', sips: 2 })
+      );
+    });
+
+    it('should keep the exchange in memory when persistence fails', async () => {
+      mockSipEventService.recordExchanges.and.rejectWith(new Error('network down'));
+      const testService = createServiceWithGame(gameWithThreePlayers());
+
+      // Ne doit pas lever : une statistique perdue ne bloque pas la distribution
+      expect(() => testService.recordSipExchanges('giver', { 'receiver-1': 3 })).not.toThrow();
+
+      // Laisse le rejet se resoudre pour verifier qu'il ne remonte pas
+      await Promise.resolve();
+      await Promise.resolve();
+
+      const exchanges = testService.game().sipExchanges ?? [];
+      expect(exchanges.length).toBe(1);
+      expect(exchanges[0].sips).toBe(3);
+    });
+  });
+
   describe('addPlayerSip', () => {
     // Helper function to create service with specific game state
     function createServiceWithGame(mockGame: Game): GameService {
