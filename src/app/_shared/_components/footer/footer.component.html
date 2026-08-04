@@ -140,28 +140,6 @@
                   </div>
                 }
               </button>
-              <button
-                [attr.aria-label]="'game.turn3.out' | translate"
-                class="prediction-btn prediction-btn--inout"
-                [ngClass]="{
-                  'prediction-btn--selected': selectedChoice() === 'out',
-                  'prediction-btn--not-selected': selectedChoice() !== null && selectedChoice() !== 'out',
-                }"
-                [disabled]="isAnimationLocked()"
-                (click)="inOut('out')"
-              >
-                @for (card of inOutRefCards; track $index; let i = $index) {
-                  <div class="inout-card-wrapper">
-                    @if (i === 0) {
-                      <span class="inout-caret"><fa-icon [icon]="['fas', 'caret-left']"></fa-icon></span>
-                    }
-                    <app-playing-card [card]="card"></app-playing-card>
-                    @if (i === 1) {
-                      <span class="inout-caret"><fa-icon [icon]="['fas', 'caret-right']"></fa-icon></span>
-                    }
-                  </div>
-                }
-              </button>
             </div>
           }
           @if (displayTurn === 4) {
