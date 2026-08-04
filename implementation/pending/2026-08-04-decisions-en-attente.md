@@ -1,184 +1,195 @@
 # Décisions en attente de ta validation
 
-Fichier de travail créé le 2026-08-04. Tu m'as demandé de faire des choix
-argumentés et d'avancer sans te bloquer : **tout ce qui suit est déjà
-implémenté ou en cours avec le choix marqué « retenu »**. Rien n'est figé, chaque
-point est réversible — mais si tu veux revenir dessus, c'est plus facile
-maintenant qu'après.
+Mis à jour le 2026-08-04 après le travail en autonomie. Tu m'as demandé de faire
+des choix argumentés sans te bloquer : **tout ce qui suit est implémenté et
+déployé** sur `https://192.168.1.81:4443`. Rien n'est figé, mais un retour arrière
+est plus facile maintenant qu'après.
 
-Les points sont classés par coût de retour arrière, du plus cher au moins cher.
-
----
-
-## 1. Qui pilote les joueurs fictifs ? — LE POINT LE PLUS STRUCTURANT
-
-**Le problème.** Tu veux deux choses qui se contredisent :
-
-- des **joueurs fictifs** (personnes autour de la table sans l'app) ;
-- un **mode d'affichage personnel** où chacun n'agit qu'à son tour.
-
-Si tous les joueurs réels passent en mode personnel, **plus personne ne peut
-jouer les joueurs fictifs** : ils n'ont aucun appareil.
-
-**Ce que j'ai retenu : l'hôte les pilote.** Sa vue personnelle inclut ses propres
-cartes *plus* les contrôles des joueurs fictifs.
-
-*Pourquoi :* c'est déterministe — un seul appareil les commande, donc jamais de
-double saisie sur le même tour. Le rôle `host` existe déjà, il n'y a rien à
-créer. Et ça colle à la réalité : celui qui a ajouté les joueurs fictifs est en
-général celui qui tient la table.
-
-**Les alternatives que j'ai écartées :**
-
-| Option | Pourquoi écartée |
-|---|---|
-| N'importe qui peut les jouer | Deux joueurs en mode personnel se marchent dessus sur le même tour |
-| Rattacher chaque fictif à un joueur à l'ajout | Plus souple et sans doute meilleur à terme, mais demande un attribut de plus (`controlledByMemberId`) et un choix supplémentaire à l'écran d'ajout |
-
-**Si tu veux changer :** la troisième option est la seule qui demande une
-migration. Dis-le avant que le mode d'affichage soit livré, sinon il faudra
-reprendre la logique d'interaction.
+Classé par coût de retour arrière, du plus cher au moins cher.
 
 ---
 
-## 2. Le mode d'affichage verrouille-t-il vraiment les actions ?
+## 1. Qui pilote les joueurs fictifs ? — LE PLUS STRUCTURANT
 
-**Ce que j'ai découvert.** Rien dans le code ne bride les actions au joueur
-actif : aucun `isMyTurn`, aucune comparaison entre `activePlayerId` et le membre
-courant. N'importe quel appareil peut agir pour n'importe quel joueur.
+**Le problème.** Deux de tes demandes se contredisent : des **joueurs fictifs**
+(personnes autour de la table sans l'app) et un **mode personnel** où chacun
+n'agit qu'à son tour. Si tous les joueurs réels passent en mode personnel,
+**plus personne ne peut jouer les joueurs fictifs** — ils n'ont aucun appareil.
 
-Je l'avais d'abord signalé comme une faille d'équité. **C'est en fait une
-capacité dont le mode actuel dépend** — c'est ce qui permet de passer un seul
-téléphone de main en main, et de jouer les joueurs fictifs.
+**Retenu : l'hôte les pilote.** En mode `personnel`, il garde les contrôles de ses
+propres cartes *plus* ceux des joueurs fictifs.
 
-**Ce que j'ai retenu : le verrouillage est une propriété de la VUE, pas du jeu.**
+*Pourquoi :* déterministe, un seul appareil les commande donc jamais de double
+saisie sur le même tour. Le rôle `host` existe déjà, rien à créer. Et celui qui
+les a ajoutés est en général celui qui tient la table.
 
-| Mode | Interaction |
-|---|---|
-| `table` (actuel, défaut) | tout est actionnable |
-| `personnel` | mes cartes + mes contrôles, actifs seulement à mon tour ; le reste en lecture seule |
-| `viewer` | rien d'actionnable |
+**Écarté :** laisser n'importe qui les jouer (deux joueurs en mode personnel se
+marcheraient dessus) ; rattacher chaque fictif à un joueur à l'ajout (plus souple
+et probablement meilleur à terme, mais demande un attribut `controlledByMemberId`
+et un choix de plus à l'écran — **c'est la seule option qui exige une migration**).
 
-*Pourquoi :* imposer le verrouillage globalement casserait le mode `table` et
-rendrait les joueurs fictifs injouables. À ne surtout pas « corriger » comme un
-bug — d'où ce paragraphe, pour que personne ne le fasse plus tard.
+---
 
-**Conséquence à assumer :** ce n'est pas une sécurité. Un joueur mal intentionné
-qui repasse en mode `table` peut agir pour les autres. Si l'équité doit être
-garantie, c'est un autre chantier.
+## 2. Le verrouillage au tour est porté par la VUE, jamais par le jeu
+
+**À lire avant de toucher au code de jeu.** Rien ne bride les actions au joueur
+actif : aucun `isMyTurn`, aucune comparaison `activePlayerId` / membre courant.
+
+Je l'ai d'abord pris pour une faille d'équité. **C'est une capacité dont le mode
+`table` dépend** — un seul téléphone qui circule — et sans laquelle les joueurs
+fictifs deviennent injouables.
+
+`GameService` et les helpers sont donc **inchangés, zéro ligne**. Les gardes
+vivent dans les composants, via `DisplayModeService`. **Ne « corrige » pas
+l'absence de garde global : tu casserais le mode table et les joueurs fictifs.**
+
+**À assumer :** ce n'est pas une sécurité. Un joueur qui repasse en mode `table`
+peut agir pour les autres. Si l'équité doit être garantie, c'est un autre
+chantier.
 
 ---
 
 ## 3. Le mode personnel ne cache rien
 
-Tu m'as confirmé que le but est ergonomique — « chacun dispose son téléphone
-comme s'il avait ses cartes devant lui » — et non la confidentialité. Je le note
-quand même noir sur blanc :
+Tu m'as confirmé que le but est ergonomique, pas la confidentialité. Je le note
+quand même : **la session partagée est téléchargée en entier par chaque
+appareil**. Le mode personnel choisit ce qu'il *affiche*. Les outils de
+développement montrent tout.
 
-**la session partagée est téléchargée en entier par chaque appareil.** Le mode
-personnel choisit ce qu'il *affiche*. Quiconque ouvre les outils de développement
-voit toutes les cartes.
-
-Si une mécanique de jeu devait un jour reposer sur des cartes réellement cachées
-(bluff, mains secrètes), il faudrait un filtrage côté serveur. Appwrite ne sait
-pas le faire champ par champ : ça imposerait des Functions, donc les workers que
-j'ai proposé de retirer du serveur OVH pour tenir dans la RAM. **Ça changerait
-l'architecture du déploiement.**
+Si une mécanique devait un jour reposer sur des cartes réellement cachées, il
+faudrait un filtrage côté serveur. Appwrite ne sait pas le faire champ par champ :
+ça imposerait des Functions, donc les workers que j'ai proposé de retirer du
+serveur OVH pour tenir dans la RAM. **Ça changerait l'architecture du
+déploiement.**
 
 ---
 
-## 4. Invitation d'un ami : place pré-réservée, sans notification
+## 4. Pioche de phase 2 : actionnable par tous, même en mode personnel
 
-**Ce que j'ai retenu.** L'hôte choisit un ami, on crée **immédiatement** son
-membre avec son `userId`. Il apparaît dans le lobby. Quand il ouvre la room, le
-lookup existant le reconnaît et **réutilise sa place**.
+En phase 2, `activePlayer` repasse à `undefined` — il n'y a plus de « ton tour »,
+la carte appartient à la table. La verrouiller au tour **bloquerait la partie**.
 
-*Pourquoi :* les trois chemins de jointure (création de room, jointure par code,
-`RoomService`) appellent déjà `getMemberByUserOrDevice` avant de créer un membre.
-Donc aucun doublon possible, et rien à construire — ni invitation en attente, ni
-notification.
+**Retenu :** actionnable par tous sauf en `viewer`. Si tu veux la réserver à
+l'hôte, c'est une ligne dans `canDrawSharedCard`.
+
+---
+
+## 5. Invitation d'un ami : place pré-réservée, sans notification
+
+**Retenu.** L'hôte choisit un ami, son membre est créé **immédiatement** avec son
+`userId`. Quand il ouvre la room, le lookup existant le reconnaît et réutilise sa
+place.
+
+*Pourquoi :* les trois chemins de jointure appellent déjà
+`getMemberByUserOrDevice` avant de créer un membre. Aucun doublon possible, et
+rien à construire — ni invitation en attente, ni notification.
 
 **Ce que ça ne fait pas :** l'ami n'est pas *prévenu*. Il découvre la partie en
-ouvrant l'app. Une vraie notification demanderait le worker `messaging`, que j'ai
-proposé de retirer du serveur pour la RAM. À trancher si tu y tiens.
+ouvrant l'app. Une vraie notification demanderait le worker `messaging`.
 
 ---
 
-## 5. Statistiques inter-rooms : réservées aux comptes
+## 6. Statistiques inter-rooms : réservées aux comptes
 
-**Le problème.** Tu veux pouvoir compter les échanges avec la même personne à
-travers plusieurs rooms. Or `fromPlayerId`/`toPlayerId` portaient le `memberId`,
-et un membre appartient à **une seule** room : la même personne y a autant
-d'identités que de rooms.
+`fromPlayerId`/`toPlayerId` portaient le `memberId`, et un membre appartient à
+**une seule** room : la même personne y avait autant d'identités que de rooms.
+Migration 048 : `fromUserId`/`toUserId` portent l'identifiant de compte, stable.
 
-**Ce que j'ai retenu.** Migration 048 : `fromUserId`/`toUserId` portent
-l'identifiant de compte Appwrite, stable d'une room à l'autre.
-
-**Ce qui en découle, et que tu dois valider :** ces champs sont **optionnels**,
-parce qu'un invité anonyme et un joueur fictif n'ont pas de compte. Leurs
-échanges ne sont donc comptabilisés **que par room**.
+**Ces champs sont optionnels** : un invité anonyme et un joueur fictif n'ont pas
+de compte, leurs échanges ne sont comptabilisés **que par room**.
 
 *Pourquoi je trouve ça bien :* les stats inter-rooms deviennent un bénéfice
-concret du compte — exactement l'argument que la carte de promo affiche aux
-invités. Si tu veux couvrir les invités, on peut retomber sur `deviceId`, mais
+concret du compte, exactement l'argument que la carte de promo affiche aux
+invités. Pour couvrir les invités, on pourrait retomber sur `deviceId`, mais
 l'identité n'est alors stable que sur le même appareil.
-
----
-
-## 6. Plafond des gorgées par échange
-
-`ketal_sip_events.sips` a un minimum de 1 mais **aucun maximum** : un client bugué
-pourrait écrire une valeur absurde et polluer les statistiques.
-
-**Ce que j'ai retenu :** laissé sans plafond, parce que ça n'était pas dans ta
-spec et que je ne voulais pas élargir le périmètre.
-
-**Ce que je recommande :** un plafond à 100. Une migration de dix lignes.
 
 ---
 
 ## 7. Résumé : pas de matrice « qui → qui »
 
-**Ce que j'ai retenu :** totaux par joueur (bu / donné / reçu) plus un détail
-dépliable par joueur, agrégé par binôme.
+**Retenu :** totaux par joueur (bu / donné / reçu) plus un détail dépliable,
+agrégé par binôme.
 
-*Pourquoi :* une matrice complète devient illisible dès 5 joueurs — 25 cases sur
-un écran de téléphone. Et lister les transferts coup par coup n'apprend rien :
-une partie en produit des dizaines.
+*Pourquoi :* une matrice devient illisible dès 5 joueurs — 25 cases sur un
+téléphone. Et lister les transferts coup par coup n'apprend rien.
 
-**Déjà livré.** Si tu voulais la matrice, c'est le point le plus simple à
-reprendre : les données sont là, seul l'affichage change.
+Le point le plus simple à reprendre si tu voulais la matrice : les données sont
+là, seul l'affichage change.
 
 ---
 
-## 8. Deux dettes que j'ai constatées sans les traiter
+## 8. Plafond des gorgées par échange
 
-Hors périmètre de ce que tu m'as demandé, mais tu dois les connaître :
+`ketal_sip_events.sips` a un minimum de 1 mais **aucun maximum**. Un client bugué
+pourrait polluer les statistiques. **Retenu :** laissé sans plafond, hors de ta
+spec. **Je recommande** un plafond à 100, migration de dix lignes.
 
-- **`friend.service.spec.ts` est instable.** Ses spies sont déclarés au niveau
-  module au lieu d'être recréés dans `beforeEach`, donc leur état fuit entre les
-  tests et les résultats dépendent de l'ordre d'exécution.
-- **`room-tile.component.spec.ts` échoue (2 tests).** Le composant fait
-  `window.location.href = '/rooms'` alors que le spec attend un
-  `Router.navigate`. Le rechargement réel de page fait aussi tomber Karma en
-  `DISCONNECTED`, ce qui empêche `rooms-list.component.spec.ts` de terminer dans
-  la même exécution.
-- **Le bundle initial pèse 1,10 Mo** contre une alerte à 500 Ko. J'ai relevé le
-  seuil d'erreur à 1,5 Mo pour débloquer le build ; c'est un contournement, pas
+---
+
+## 9. Deux fragilités connues, non corrigées
+
+- **Joueurs fictifs et chargement des membres.** La détection repose sur
+  `memberSrv.members()`. Sur un F5 direct sur `/game` avant restauration, l'hôte
+  en mode personnel ne contrôle temporairement que sa propre fiche. Un repli
+  heuristique aurait été plus risqué que le symptôme.
+- **`de.json` et `nl.json` n'ont aucune section `room`** (manque préexistant).
+  Tout l'écran de création affiche donc les **clés brutes** en allemand et en
+  néerlandais, faute de langue de repli configurée. Je n'ai pas créé de section
+  partielle. À traiter comme un chantier i18n à part.
+
+---
+
+## 10. Dettes techniques
+
+**Corrigées au passage.** La suite de tests était injouable — le navigateur
+mourait avant la moitié des tests — et elle masquait **deux vrais bugs de
+production** :
+
+- `listAllDocuments` ne posait aucun `Query.limit` alors que deux specs
+  l'assertent : Appwrite appliquait son défaut de 25, soit **quatre fois trop
+  d'allers-retours**. Et la boucle ne s'arrêtait que sur une page vide, donc ne
+  terminait jamais si le serveur renvoyait la même page.
+- `room-tile` faisait `window.location.href = '/rooms'` alors que `rooms-list`
+  expose `reloadRooms()`, documentée exactement pour ça : le câblage n'avait
+  jamais été terminé. Écran blanc, perte d'état, navigateur tué en test. **Et
+  l'archivage ne rafraîchissait pas la liste du tout.**
+- `rooms-list.component.spec.ts` : 15 échecs sur 15, invisibles jusque-là.
+- `friend.service.spec.ts` : état des spies qui fuyait entre tests.
+
+**Restantes :**
+
+- **`npm run lint` est cassé pour tout le projet** : ESLint 10 exige un
+  `eslint.config.js`, le repo n'a qu'un `.eslintrc.json`. Prettier fonctionne.
+- **Le bundle initial pèse 1,11 Mo** contre une alerte à 500 Ko. J'ai relevé le
+  seuil d'erreur à 1,5 Mo pour débloquer le build : c'est un contournement, pas
   une correction.
-- **`footer.component.scss` est à 14,27 kB** contre un budget d'erreur à 15 kB.
-  Il ne reste que 730 octets. Le chantier des modes d'affichage touche ce
-  fichier : il faudra probablement en extraire du style avant d'y ajouter des
-  variantes, sinon le build cassera.
+- **`lobby.component.scss` est à 10,94 kB**, au-dessus du seuil d'avertissement de
+  10 kB (erreur à 15 kB). Le footer est redescendu à 12,93 kB.
+- **Les 6 specs `*.integration.spec.ts` échouent ici** : elles exigent un backend
+  joignable depuis le navigateur Karma avec une origine whitelistée dans Appwrite.
+  Hors de ces 6 fichiers, **1239 tests passent, 0 échec**.
 
 ---
 
-## 9. Le bouton « Quitter » du résumé mène à l'écran de login
+## 11. Le bouton « Quitter » du résumé mène au login
 
-`exit()` fait `router.navigate(['/'])`, et dans `app-routing.module.ts` la route
-`''` redirige vers **`login`**, pas vers `home`. Pour un utilisateur déjà
-connecté, atterrir sur l'écran de connexion après avoir quitté une partie est
-probablement involontaire.
+`exit()` fait `router.navigate(['/'])`, et la route `''` redirige vers **`login`**,
+pas vers `home`. Pour un utilisateur connecté, atterrir sur l'écran de connexion
+après avoir quitté une partie est probablement involontaire. **Laissé tel quel**,
+tu ne l'avais pas signalé. Correction d'une ligne si tu confirmes.
 
-**Ce que j'ai retenu :** laissé tel quel, tu ne l'avais pas signalé. Correction
-d'une ligne si tu confirmes.
+---
+
+## 12. Ce qui reste à ta charge, hors code
+
+- **Ajouter la deploy key** sur `https://github.com/knabo6/fug-backend/settings/keys`
+  si tu veux déployer sur le serveur OVH : il ne peut pas cloner `fug-backend`
+  (repo privé, aucune clé). La clé publique est dans `~/.ssh/id_fug_backend.pub`
+  sur le serveur.
+- **Décider de l'upgrade OVH.** Mesures réelles : stack Appwrite complet
+  1 658 Mio, stack allégé 775 Mio. Le lite **tient dans les 2 Go actuels**
+  (~1,28 Go avec l'existant et l'OS). Tu n'as peut-être pas besoin d'upgrader.
+- **Google OAuth** : ajouter l'URI de redirection pour le domaine de test si tu
+  veux tester le login Google.
+- **Comptes de test** : `test@test.com` et `aa@aa.com`, mot de passe `Test1234!`
+  pour les deux.
