@@ -344,18 +344,27 @@
           } @else {
             <!-- End of round: clean full-width actions panel -->
             <div class="phase2-actions">
-              <button
-                type="button"
-                class="prediction-btn prediction-btn--start"
-                (click)="restartGame()"
-                [translate]="'Button_Restart'"
-              ></button>
               @if (gameSrv.isGameFinished() && gameSrv.isSummaryActivated() && !gameSrv.isSummaryMode()) {
+                <!-- Resume actif : une seule action, deliberee. On masque
+                     "Nouvelle partie" parce que restartGame() appelle
+                     resetGame(), qui quitte la room : un appui accidentel
+                     detruisait la partie partagee juste au moment ou le dernier
+                     joueur lit ses gorgees. On repart d'ici via le bouton
+                     Rejouer de l'ecran resume, ou le menu lateral. -->
                 <button
                   type="button"
                   class="prediction-btn prediction-btn--start"
                   (click)="displaySummary()"
-                  [translate]="'Button_Display_Summary'"
+                  [translate]="'Button_End_Game'"
+                ></button>
+              } @else {
+                <!-- Sans resume (invite, ou mode desactive) : rien a consulter
+                     en fin de partie, on propose directement de rejouer. -->
+                <button
+                  type="button"
+                  class="prediction-btn prediction-btn--start"
+                  (click)="restartGame()"
+                  [translate]="'Button_Restart'"
                 ></button>
               }
             </div>

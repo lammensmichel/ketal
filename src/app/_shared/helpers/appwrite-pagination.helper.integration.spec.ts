@@ -20,7 +20,7 @@ const TEST_USER_PASSWORD = 'K3tal-Test!2026';
 describe('AppwritePaginationHelper - Integration', () => {
   let databases: Databases;
   let appwriteService: AppwriteService;
-  const COLLECTION_ID = 'ketal_sessions';
+  const COLLECTION_ID = 'fug_ketal_sessions';
   let testDocumentIds: string[] = [];
 
   beforeAll(async () => {

@@ -11,8 +11,15 @@ import {
 
 /**
  * Collection IDs for Ketal in Appwrite
+ *
+ * Attention : les sessions portent le prefixe `fug_`, les joueurs et les cartes
+ * non. Ce n'est pas une coquille — c'est l'etat reel du schema backend, ou seule
+ * la collection des sessions a ete normalisee. Le client visait encore
+ * `ketal_sessions`, qui n'existe pas : toute operation de session repondait
+ * « Collection with the requested ID 'ketal_sessions' could not be found »,
+ * rendant les parties multijoueur impossibles a demarrer.
  */
-const COLLECTION_KETAL_SESSIONS = 'ketal_sessions';
+const COLLECTION_KETAL_SESSIONS = 'fug_ketal_sessions';
 const COLLECTION_KETAL_PLAYERS = 'ketal_players';
 const COLLECTION_KETAL_CARDS = 'ketal_cards';
 
@@ -90,6 +97,15 @@ export interface KetalSession {
   givingCards: string[];
   /** Whether summary mode is enabled at game end */
   withSummary: boolean;
+  /**
+   * Le resume a-t-il ete explicitement declenche ?
+   *
+   * Distinct de `withSummary`, qui dit seulement que le mode est actif. Sans ce
+   * drapeau, les statuts locaux 2 et 3 etaient indistinguables sur le reseau et
+   * les appareils distants sautaient au resume des la fin de partie.
+   * Optionnel : absent des sessions creees avant la migration 046.
+   */
+  summaryDisplayed?: boolean;
 }
 
 /**
@@ -138,6 +154,7 @@ interface SessionData {
   activePlayerId: string | null;
   terminatedBy?: string | null;
   withSummary: boolean;
+  summaryDisplayed?: boolean;
 }
 
 /**
@@ -230,6 +247,9 @@ export class KetalSessionService {
           activePlayerId: players.length > 0 ? players[0].memberId : null,
           terminatedBy: null,
           withSummary,
+          // Le resume ne s'affiche qu'au declenchement explicite en fin de
+          // partie, jamais des la creation.
+          summaryDisplayed: false,
         },
       });
 
@@ -572,6 +592,7 @@ export class KetalSessionService {
       activePlayerId: session.activePlayerId,
       terminatedBy: session.terminatedBy ?? null,
       withSummary: session.withSummary,
+      summaryDisplayed: session.summaryDisplayed ?? false,
     });
 
     this._playerDocs.set(
@@ -709,6 +730,9 @@ export class KetalSessionService {
       activePlayerId: (doc['activePlayerId'] as string) ?? null,
       terminatedBy: (doc['terminatedBy'] as string) ?? null,
       withSummary: (doc['withSummary'] as boolean) ?? false,
+      // Absent des sessions anterieures a la migration 046 : on considere alors
+      // que le resume n'a pas ete declenche.
+      summaryDisplayed: (doc['summaryDisplayed'] as boolean) ?? false,
     };
   }
 

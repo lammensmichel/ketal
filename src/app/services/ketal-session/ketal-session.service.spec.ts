@@ -140,7 +140,7 @@ describe('KetalSessionService', () => {
       appwriteMock.databases.createDocument.and.callFake(
         (params: { collectionId: string; data: Record<string, unknown> }) => {
           const { collectionId, data } = params;
-          if (collectionId === 'ketal_sessions') {
+          if (collectionId === 'fug_ketal_sessions') {
             return Promise.resolve(
               createDocResponse({
                 $id: 'session-new',
@@ -282,7 +282,7 @@ describe('KetalSessionService', () => {
 
       expect(appwriteMock.databases.updateDocument).toHaveBeenCalledWith({
         databaseId: 'fug',
-        collectionId: 'ketal_sessions',
+        collectionId: 'fug_ketal_sessions',
         documentId: 'session-123',
         data: jasmine.objectContaining({ status: 'playing', phase: 'dealing', turn: 1 }),
       });
@@ -380,7 +380,7 @@ describe('KetalSessionService', () => {
       // Should only update ketal_players, not ketal_sessions
       const sessionCalls = (appwriteMock.databases.updateDocument as jasmine.Spy).calls
         .allArgs()
-        .filter((args: unknown[]) => (args[0] as { collectionId: string }).collectionId === 'ketal_sessions');
+        .filter((args: unknown[]) => (args[0] as { collectionId: string }).collectionId === 'fug_ketal_sessions');
       expect(sessionCalls.length).toBe(0);
     });
 
@@ -411,7 +411,7 @@ describe('KetalSessionService', () => {
 
       expect(appwriteMock.databases.updateDocument).toHaveBeenCalledWith({
         databaseId: 'fug',
-        collectionId: 'ketal_sessions',
+        collectionId: 'fug_ketal_sessions',
         documentId: 'session-123',
         data: {
           status: 'finished',
@@ -593,7 +593,7 @@ describe('KetalSessionService', () => {
       await service.subscribeToSession('session-123');
 
       expect(mockRealtimeService.subscribeToDocument).toHaveBeenCalledWith(
-        'ketal_sessions',
+        'fug_ketal_sessions',
         'session-123',
         jasmine.any(Function)
       );
@@ -623,7 +623,7 @@ describe('KetalSessionService', () => {
 
       mockRealtimeService.subscribeToDocument.and.callFake(
         (collectionId: string, _docId: string, callback: (data: unknown) => void) => {
-          if (collectionId === 'ketal_sessions') {
+          if (collectionId === 'fug_ketal_sessions') {
             capturedSessionCallback = callback;
           }
           return Promise.resolve(`sub_${collectionId}`);
@@ -805,7 +805,7 @@ describe('KetalSessionService', () => {
 
       mockRealtimeService.subscribeToDocument.and.callFake(
         (collectionId: string, _docId: string, callback: (data: unknown) => void) => {
-          if (collectionId === 'ketal_sessions') {
+          if (collectionId === 'fug_ketal_sessions') {
             capturedSessionCallback = callback;
           }
           return Promise.resolve(`sub_${collectionId}`);
@@ -852,7 +852,7 @@ describe('KetalSessionService', () => {
 
       mockRealtimeService.subscribeToDocument.and.callFake(
         (collectionId: string, _docId: string, callback: (data: unknown) => void) => {
-          if (collectionId === 'ketal_sessions') {
+          if (collectionId === 'fug_ketal_sessions') {
             capturedSessionCallback = callback;
           }
           return Promise.resolve(`sub_${collectionId}`);
@@ -897,7 +897,7 @@ describe('KetalSessionService', () => {
 
       mockRealtimeService.subscribeToDocument.and.callFake(
         (collectionId: string, _docId: string, callback: (data: unknown) => void) => {
-          if (collectionId === 'ketal_sessions') {
+          if (collectionId === 'fug_ketal_sessions') {
             capturedSessionCallback = callback;
           }
           return Promise.resolve(`sub_${collectionId}`);

@@ -37,6 +37,8 @@ export function mapLocalStatusToSessionStatus(status: number): SessionStatus {
       return 'playing';
     case 2:
     case 3:
+      // 2 (terminee) et 3 (resume affiche) partagent volontairement le meme
+      // statut de session : la distinction est portee par summaryDisplayed.
       return 'finished';
     default:
       return 'waiting';
@@ -46,14 +48,22 @@ export function mapLocalStatusToSessionStatus(status: number): SessionStatus {
 /**
  * Maps Appwrite session status string to local numeric status
  */
-export function mapSessionStatusToLocalStatus(status: SessionStatus, summary: boolean): LocalStatus {
+/**
+ * @param summaryDisplayed - Le resume a-t-il ete explicitement declenche ?
+ *
+ * Ce parametre valait auparavant `withSummary`, ce qui faisait passer tout
+ * appareil distant au statut 3 des la fin de partie : le resume s'affichait
+ * sans qu'aucun bouton n'ait ete presse, et le dernier joueur n'avait pas le
+ * temps de lire ses gorgees. Seul un declenchement explicite doit y mener.
+ */
+export function mapSessionStatusToLocalStatus(status: SessionStatus, summaryDisplayed: boolean): LocalStatus {
   switch (status) {
     case 'waiting':
       return 0;
     case 'playing':
       return 1;
     case 'finished':
-      return summary ? 3 : 2;
+      return summaryDisplayed ? 3 : 2;
     default:
       return 0;
   }
@@ -243,6 +253,10 @@ export function mapGameToSessionUpdate(game: Game): Partial<KetalSession> {
     drinkingCards: serializeCards(game.drinkingCards),
     givingCards: serializeCards(game.givingCards),
     withSummary: game.summary,
+    // Le resume n'est "affiche" qu'au statut local 3, jamais a 2. C'est ce qui
+    // permet aux autres appareils de rester sur le plateau final jusqu'au
+    // declenchement explicite.
+    summaryDisplayed: game.status === 3,
   };
 }
 
@@ -284,7 +298,9 @@ export function mapSessionToGame(session: KetalSession): Game {
     drinkingCards,
     givingCards,
     activePlayer,
-    status: mapSessionStatusToLocalStatus(session.status, session.withSummary),
+    // `?? false` : les sessions creees avant la migration 046 n'ont pas
+    // l'attribut, il faut les traiter comme "resume non affiche".
+    status: mapSessionStatusToLocalStatus(session.status, session.summaryDisplayed ?? false),
     summary: session.withSummary,
   };
 }

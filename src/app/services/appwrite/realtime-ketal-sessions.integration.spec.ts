@@ -23,7 +23,7 @@ describe('Realtime ketal_sessions Integration', () => {
   let appwriteService: AppwriteService;
   let realtimeService: RealtimeService;
 
-  const SESSION_COLLECTION_ID = 'ketal_sessions';
+  const SESSION_COLLECTION_ID = 'fug_ketal_sessions';
   const GAME_ROOMS_COLLECTION_ID = 'fug_game_rooms';
   let testRoomId: string | null = null;
   const createdResourceIds: string[] = [];

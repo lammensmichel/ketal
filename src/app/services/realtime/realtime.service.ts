@@ -55,7 +55,11 @@ export interface GameMember {
 const COLLECTIONS = {
   GAME_ROOMS: 'fug_game_rooms',
   GAME_MEMBERS: 'fug_game_members',
-  KETAL_SESSIONS: 'ketal_sessions',
+  // Prefixe `fug_` comme cote KetalSessionService : c'est le seul identifiant
+  // qui existe dans le schema. Avec 'ketal_sessions' le canal realtime pointait
+  // sur une collection inexistante, donc aucune mise a jour de session
+  // n'arrivait jamais aux autres appareils.
+  KETAL_SESSIONS: 'fug_ketal_sessions',
   KETAL_PLAYERS: 'ketal_players',
   KETAL_CARDS: 'ketal_cards',
 } as const;
