@@ -1,6 +1,7 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { ID, Models, OAuthProvider } from 'appwrite';
 import { AppwriteService } from '../appwrite/appwrite.service';
+import { UserProfileService } from '../user-profile/user-profile.service';
 import {
   isAppwriteException,
   getAppwriteErrorCode,
@@ -34,6 +35,7 @@ import {
 })
 export class AuthService {
   private readonly appwrite = inject(AppwriteService);
+  private readonly userProfile = inject(UserProfileService);
 
   /** Signal holding the current user, null if not authenticated */
   private readonly _currentUser = signal<Models.User<Models.Preferences> | null>(null);
@@ -83,6 +85,10 @@ export class AuthService {
       );
       const user = await Promise.race([this.appwrite.account.get(), timeoutPromise]);
       this._currentUser.set(user);
+      // Rattrape les comptes crees avant l'introduction des profils : sans
+      // document dans `users`, ils restent introuvables dans la recherche
+      // d'amis. Volontairement non attendu, pour ne pas ralentir le demarrage.
+      void this.userProfile.ensureProfile(user);
     } catch (error: unknown) {
       // No valid session exists or Appwrite unavailable, user remains null
       this._currentUser.set(null);
@@ -126,6 +132,12 @@ export class AuthService {
       // Get user data and update state
       const user = await this.appwrite.account.get();
       this._currentUser.set(user);
+
+      // account.create() ne cree qu'un compte Auth : le profil public, qui
+      // porte le pseudo interroge par la recherche d'amis, doit etre cree a
+      // part. Attendu ici pour qu'un compte tout juste cree soit
+      // immediatement trouvable par ses amis.
+      await this.userProfile.ensureProfile(user);
     } catch (error: unknown) {
       this._currentUser.set(null);
       const appwriteError = getAppwriteMessage(error);
@@ -178,6 +190,8 @@ export class AuthService {
       await this.appwrite.account.createEmailPasswordSession({ email, password });
       const user = await this.appwrite.account.get();
       this._currentUser.set(user);
+      // Rattrapage des comptes anterieurs aux profils (cf. init()).
+      await this.userProfile.ensureProfile(user);
     } catch (error: unknown) {
       this._currentUser.set(null);
       const appwriteError = getAppwriteMessage(error);
