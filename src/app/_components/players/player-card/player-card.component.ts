@@ -92,21 +92,26 @@ export class PlayerCardComponent implements OnInit {
     return this.player ? this.playerSrv.getSipCnt(this.gameSrv.game(), this.player, true) : 0;
   });
 
-  /** Cumulative sips drunk in Phase 2 (mirrors Phase 1 red-badge semantics).
-   * Per-event amount is carried by the orange `lastTurnSips` badge instead. */
+  /** Total de gorgees bues sur TOUTE la partie (phase 1 + phase 2).
+   *
+   * POURQUOI on ne retranche plus `phase1Drunk` (snapshot pris au passage en
+   * phase 2) : ce badge est le total de la session et ne doit jamais redescendre
+   * entre les deux phases. Le montant du tirage courant est porte separement par
+   * le badge orange `lastTurnSips`, alimente par GameService — donc rendre ce
+   * total cumulatif n'affecte pas l'affichage « par tirage ».
+   * Voir aussi PlayerHelperService.getSipCnt pour le detail du raisonnement. */
   readonly sipsDrunk = computed(() => {
     const game = this.gameSrv.game();
     if (game.phase === 2 && this.player?.sips) {
-      const total = this.player.sips['drunk'] ?? 0;
-      const phase1 = this.player.sips['phase1Drunk'] ?? 0;
-      return total - phase1;
+      return this.player.sips['drunk'] ?? 0;
     }
     const count = this.sipCount();
     return count < 0 ? Math.abs(count) : 0;
   });
 
-  /** Cumulative sips to give in Phase 2 (historical). Pending still-to-dispatch is
-   * surfaced separately via `sipsGivenPending`. */
+  /** Total de gorgees a donner sur toute la partie (`given` n'est alimente qu'en
+   * phase 2, il est donc deja cumulatif). Le solde encore a distribuer est
+   * expose separement via `sipsGivenPending`. */
   readonly sipsGiven = computed(() => {
     const game = this.gameSrv.game();
     if (game.phase === 2 && this.player?.sips) {

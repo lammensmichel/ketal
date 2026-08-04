@@ -66,6 +66,31 @@ export class PlayerHelperService {
     return player.cards.map((card) => card.value).filter((value) => value !== null) as string[];
   }
 
+  /**
+   * Total de gorgees d'un joueur sur TOUTE la partie (phase 1 + phase 2).
+   *
+   * POURQUOI on cumule au lieu de n'afficher que la phase courante : la branche
+   * phase 2 retranchait auparavant `phase1Drunk` (snapshot pris au changement de
+   * phase), ce qui remettait visuellement le compteur du joueur a zero entre la
+   * phase 1 et la phase 2. C'etait un choix delibere que l'on inverse ici, pour
+   * trois raisons :
+   *  - le besoin produit est un compteur qui monte tout au long d'une session ;
+   *  - le recap de fin de partie (game-summary.component.ts) additionne deja
+   *    `drunk` + `given` sans rien retrancher : la soustraction rendait le
+   *    compteur en jeu incoherent avec le recap final ;
+   *  - `phase1Drunk` n'est pas persiste dans KetalSession (cf.
+   *    mapKetalPlayerToPlayerModel), donc en mode room les appareils resynchro-
+   *    nises affichaient deja le cumul : la soustraction donnait des totaux
+   *    differents d'un appareil a l'autre.
+   * Ne pas la reintroduire ici.
+   *
+   * Ce que ce tirage vient d'ajouter (le « delta ») n'est PAS calcule ici : il
+   * vit dans GameService.lastTurnSips / lastTurnGiven, qui alimentent les badges
+   * par tirage et sont remis a zero a chaque nouvelle carte.
+   *
+   * @param absolute true = volume total (bues + donnees, toujours positif) ;
+   *   false = solde signe (negatif = boit, positif = donne).
+   */
   getSipCnt(game: Game, player: PlayerModel, absolute: boolean = false) {
     const { phase } = game;
     const maybeAbs = absolute ? Math.abs : (v: number) => v;
@@ -79,10 +104,9 @@ export class PlayerHelperService {
       return maybeAbs(totalSips);
     }
 
-    // Phase 2: use accumulated sips stored in player.sips (Phase 2 only)
-    const totalDrunk = player.sips?.['drunk'] ?? 0;
-    const phase1Drunk = player.sips?.['phase1Drunk'] ?? 0;
-    const drunk = totalDrunk - phase1Drunk;
+    // Phase 2 : `drunk` est deja le cumul depuis le debut de la partie, on le
+    // prend tel quel (aucune soustraction de `phase1Drunk`).
+    const drunk = player.sips?.['drunk'] ?? 0;
     const given = player.sips?.['given'] ?? 0;
 
     if (absolute) {

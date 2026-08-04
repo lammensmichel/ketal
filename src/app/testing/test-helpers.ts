@@ -405,6 +405,9 @@ export function createMockKetalSession(overrides: Partial<KetalSession> = {}): K
     drinkingCards: [],
     givingCards: [],
     withSummary: false,
+    // Par defaut le resume n'a pas ete declenche : c'est ce drapeau, et non
+    // withSummary, qui fait passer au statut local 3.
+    summaryDisplayed: false,
     ...overrides,
   };
 }

@@ -652,7 +652,7 @@ describe('PlayerHelperService', () => {
         expect(result).toBe(8);
       });
 
-      it('should subtract phase1Drunk from total drunk in phase 2', () => {
+      it('should ignore phase1Drunk and keep the whole-game cumulative total in phase 2', () => {
         player1.sips = { drunk: 12, given: 0, phase1Drunk: 4 };
         const game = createMockGame({
           players: [player1, player2, player3],
@@ -663,11 +663,11 @@ describe('PlayerHelperService', () => {
 
         const result = service.getSipCnt(game, player1);
 
-        // Phase 2 drunk = 12 - 4 = 8, given = 0 → net = 0 - 8 = -8
-        expect(result).toBe(-8);
+        // Cumul phase 1 + phase 2 = 12, given = 0 → net = 0 - 12 = -12
+        expect(result).toBe(-12);
       });
 
-      it('should subtract phase1Drunk in absolute mode too', () => {
+      it('should ignore phase1Drunk in absolute mode too', () => {
         player1.sips = { drunk: 12, given: 3, phase1Drunk: 4 };
         const game = createMockGame({
           players: [player1, player2, player3],
@@ -678,8 +678,40 @@ describe('PlayerHelperService', () => {
 
         const result = service.getSipCnt(game, player1, true);
 
-        // Phase 2 drunk = 12 - 4 = 8, given = 3 → absolute = 8 + 3 = 11
-        expect(result).toBe(11);
+        // Cumul bues = 12, donnees = 3 → absolu = 15
+        expect(result).toBe(15);
+      });
+
+      it('should never decrease when crossing from phase 1 to phase 2', () => {
+        // Phase 1 : 3 cartes tirees, 6 gorgees au total
+        player1.cards = [createMockCard({ sips: 3 }), createMockCard({ sips: 2 }), createMockCard({ sips: 1 })];
+        player1.sips = { drunk: 6, given: 0 };
+        const phase1Game = createMockGame({
+          players: [player1, player2, player3],
+          activePlayer: player2,
+          phase: 1,
+        });
+
+        expect(service.getSipCnt(phase1Game, player1, true)).toBe(6);
+
+        // Passage en phase 2 : le snapshot phase1Drunk est pose, le total ne doit
+        // pas repartir de zero.
+        player1.sips = { drunk: 6, given: 0, phase1Drunk: 6 };
+        const phase2Game = createMockGame({
+          players: [player1, player2, player3],
+          phase: 2,
+          drinkingCards: [],
+          givingCards: [],
+        });
+
+        expect(service.getSipCnt(phase2Game, player1, true)).toBe(6);
+        expect(service.getSipCnt(phase2Game, player1)).toBe(-6);
+
+        // Puis 4 gorgees bues et 2 donnees en phase 2 → le cumul continue
+        player1.sips = { drunk: 10, given: 2, phase1Drunk: 6 };
+
+        expect(service.getSipCnt(phase2Game, player1, true)).toBe(12);
+        expect(service.getSipCnt(phase2Game, player1)).toBe(-8);
       });
 
       it('should handle undefined sips gracefully in phase 2', () => {

@@ -3054,17 +3054,37 @@ describe('GameService', () => {
         expect(testService.game().phase).toBe(2);
       });
 
-      it('should map session status "finished" with summary to local status 3', () => {
+      // C'est summaryDisplayed, et non withSummary, qui fait passer au statut 3.
+      // withSummary dit seulement que le mode resume est actif ; s'y fier faisait
+      // sauter les appareils distants au resume des la fin de partie, sans
+      // qu'aucun bouton n'ait ete presse, privant le dernier joueur du temps de
+      // lire ses gorgees.
+      it('should map "finished" to local status 3 only once the summary was triggered', () => {
         const testService = createServiceWithRoomMode(createMockGame(), createMockGameRoom());
 
         const session = createMockKetalSession({
           status: 'finished',
           withSummary: true,
+          summaryDisplayed: true,
         });
 
         testService.handleSessionUpdate(session);
 
         expect(testService.game().status).toBe(3);
+      });
+
+      it('should map "finished" to local status 2 while the summary is enabled but not triggered', () => {
+        const testService = createServiceWithRoomMode(createMockGame(), createMockGameRoom());
+
+        const session = createMockKetalSession({
+          status: 'finished',
+          withSummary: true,
+          summaryDisplayed: false,
+        });
+
+        testService.handleSessionUpdate(session);
+
+        expect(testService.game().status).toBe(2);
       });
 
       it('should map session status "finished" without summary to local status 2', () => {

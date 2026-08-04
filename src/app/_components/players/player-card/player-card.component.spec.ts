@@ -261,6 +261,31 @@ describe('PlayerCardComponent', () => {
       expect(component.sipsDrunk()).toBe(0);
       expect(component.sipsGiven()).toBe(5);
     });
+
+    it('should keep the whole-game cumulative total in phase 2 (phase1Drunk not subtracted)', () => {
+      // Le compteur affiche doit couvrir phase 1 + phase 2 : 4 gorgees bues en
+      // phase 1 (phase1Drunk) + 8 en phase 2 = 12.
+      component.player = { ...mockPlayer, sips: { drunk: 12, given: 3, phase1Drunk: 4 } };
+      mockGameService.game.set({ ...mockGame, phase: 2, activePlayer: undefined });
+      fixture.detectChanges();
+
+      expect(component.sipsDrunk()).toBe(12);
+      expect(component.sipsGiven()).toBe(3);
+    });
+
+    it('should not mix the per-draw badges with the cumulative total in phase 2', () => {
+      // Les badges par tirage viennent de GameService, pas du cumul du joueur :
+      // rendre le total cumulatif ne doit pas changer leur valeur.
+      component.player = { ...mockPlayer, sips: { drunk: 12, given: 3, phase1Drunk: 4 } };
+      mockGameService.game.set({ ...mockGame, phase: 2, activePlayer: undefined });
+      mockGameService.getLastTurnSipsForPlayer.and.returnValue(2);
+      mockGameService.getLastTurnGivenForPlayer.and.returnValue(1);
+      fixture.detectChanges();
+
+      expect(component.sipsDrunk()).toBe(12);
+      expect(component.lastTurnSips()).toBe(2);
+      expect(component.lastTurnGiven()).toBe(1);
+    });
   });
 
   describe('openPlayerGivenSipsModal', () => {

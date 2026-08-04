@@ -849,7 +849,13 @@ export class GameService {
         if (g.turn > 4) {
           g.phase = 2;
           g.activePlayer = undefined;
-          // Snapshot Phase 1 sips so Phase 2 display shows only Phase 2 sips
+          // Repere de frontiere phase 1 / phase 2 : `drunk` au moment du
+          // basculement. ATTENTION, ce snapshot n'est PLUS utilise pour
+          // l'affichage : les compteurs par joueur sont cumulatifs sur toute la
+          // partie (cf. PlayerHelperService.getSipCnt). Ne pas le retrancher a
+          // nouveau du total affiche, sinon le compteur repart de zero entre les
+          // deux phases. Le champ est conserve car il est ecrit/attendu dans
+          // l'etat de jeu et permet, si besoin, une ventilation par phase.
           g.players.forEach((p) => {
             p.sips['phase1Drunk'] = p.sips['drunk'] || 0;
           });
