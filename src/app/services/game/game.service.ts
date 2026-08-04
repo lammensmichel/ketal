@@ -485,6 +485,7 @@ export class GameService {
       activePlayer: undefined,
       status: 0,
       summary: false,
+      sipExchanges: [],
     };
   }
 
