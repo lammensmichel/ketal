@@ -118,6 +118,17 @@ export class HomeComponent implements OnInit {
   }
 
   /**
+   * Role de l'utilisateur dans cette room.
+   *
+   * Le template passait 'player' en dur, si bien qu'un hote n'etait jamais
+   * reconnu comme tel sur l'accueil. `myRole` est calcule par room dans
+   * RoomService.getMyRooms(), a partir de l'enregistrement membre de cette room.
+   */
+  getRoomRole(room: GameRoomWithMemberCount): 'host' | 'player' {
+    return room.myRole === 'host' ? 'host' : 'player';
+  }
+
+  /**
    * Navigate to join room page
    */
   async joinGame(): Promise<void> {

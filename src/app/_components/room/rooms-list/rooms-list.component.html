@@ -61,7 +61,7 @@
       @for (room of visibleRooms(); track room.$id) {
         <app-room-tile
           [room]="room"
-          [currentRole]="getRoomRole(room.$id)"
+          [currentRole]="getRoomRole(room)"
           [membersCount]="room.memberCount"
           (roomsChanged)="reloadRooms()"
         />

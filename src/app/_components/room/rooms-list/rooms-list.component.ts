@@ -91,15 +91,22 @@ export class RoomsListComponent implements OnInit {
   /**
    * Get the user's role in a room
    */
-  getRoomRole(roomId: string): 'host' | 'player' {
-    const member = this.currentMember();
-    if (!member) {
-      return 'player';
-    }
-    if (member.role === 'host') {
-      return 'host';
-    }
-    return 'player';
+  /**
+   * Role de l'utilisateur dans CETTE room.
+   *
+   * Lisait auparavant `currentMember()` en ignorant son parametre `roomId`, donc
+   * renvoyait le role de la derniere room rejointe pour toutes les tuiles. Dans
+   * une liste mixte — hote d'une partie, simple joueur d'une autre — le role
+   * affiche etait faux, et le bouton de suppression pouvait apparaitre sur une
+   * partie dont l'utilisateur n'est pas l'hote. `myRole` est desormais calcule
+   * par room dans RoomService.getMyRooms(), a partir de l'enregistrement membre
+   * de cette room.
+   *
+   * Les spectateurs sont ramenes a 'player' : la tuile ne distingue que l'hote
+   * du reste.
+   */
+  getRoomRole(room: GameRoomWithMemberCount): 'host' | 'player' {
+    return room.myRole === 'host' ? 'host' : 'player';
   }
 
   /**

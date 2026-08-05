@@ -2,7 +2,7 @@ import { inject, Injector, Injectable, signal } from '@angular/core';
 import { ID, Query, AppwriteException } from 'appwrite';
 import { AppwriteService } from '../appwrite/appwrite.service';
 import { RealtimeService, SubscriptionCallback } from '../realtime/realtime.service';
-import { MemberService, CreateMemberData } from '../member/member.service';
+import { MemberService, CreateMemberData, MemberRole } from '../member/member.service';
 import { AuthService } from '../auth/auth.service';
 import { KetalSessionService, KetalPlayer } from '../ketal-session/ketal-session.service';
 import {
@@ -64,6 +64,17 @@ export interface GameRoom {
  */
 export interface GameRoomWithMemberCount extends GameRoom {
   memberCount: number;
+  /**
+   * Role de l'utilisateur courant DANS CETTE room.
+   *
+   * Necessaire parce qu'un membre est rattache a une seule room : le role varie
+   * donc d'une partie a l'autre. RoomsListComponent.getRoomRole() se fiait au
+   * role de currentMember(), celui de la derniere room rejointe, en ignorant son
+   * parametre roomId — une liste mixte affichait donc partout le meme role. Avec
+   * un bouton de suppression conditionne au role, cela pouvait le montrer sur une
+   * partie dont l'utilisateur n'est pas l'hote.
+   */
+  myRole: MemberRole;
 }
 
 /**
@@ -433,11 +444,24 @@ export class RoomService {
         return bTime - aTime;
       });
 
+      // Le role de l'utilisateur, room par room : il vient de SON enregistrement
+      // membre dans cette room, pas du membre courant.
+      const myRoleByRoomId = new Map<string, MemberRole>();
+      for (const member of members) {
+        if (!myRoleByRoomId.has(member.roomId)) {
+          myRoleByRoomId.set(member.roomId, member.role);
+        }
+      }
+
       // Enrich with member counts
       const enriched: GameRoomWithMemberCount[] = [];
       for (const room of filtered) {
-        const members = await this.memberService.getMembersByRoom(room.$id);
-        enriched.push({ ...room, memberCount: members.length });
+        const roomMembers = await this.memberService.getMembersByRoom(room.$id);
+        enriched.push({
+          ...room,
+          memberCount: roomMembers.length,
+          myRole: myRoleByRoomId.get(room.$id) ?? 'player',
+        });
       }
 
       return enriched.slice(0, limit);

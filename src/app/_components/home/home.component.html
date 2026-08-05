@@ -21,7 +21,7 @@
       <div class="rooms-carousel">
         @for (room of recentRooms(); track room.$id) {
           <div class="room-tile">
-            <app-room-tile [room]="room" [currentRole]="'player'" [membersCount]="room.memberCount" />
+            <app-room-tile [room]="room" [currentRole]="getRoomRole(room)" [membersCount]="room.memberCount" />
           </div>
         }
       </div>

@@ -42,6 +42,7 @@ describe('RoomsListComponent', () => {
     gamesPlayed: 0,
     archived: false,
     memberCount: 2,
+    myRole: 'player',
     $updatedAt: '2024-01-03T12:00:00Z',
   };
 
@@ -59,6 +60,7 @@ describe('RoomsListComponent', () => {
     gamesPlayed: 1,
     archived: false,
     memberCount: 4,
+    myRole: 'player',
     $updatedAt: '2024-01-02T12:00:00Z',
   };
 
@@ -76,6 +78,7 @@ describe('RoomsListComponent', () => {
     gamesPlayed: 5,
     archived: true,
     memberCount: 3,
+    myRole: 'player',
     $updatedAt: '2024-01-01T12:00:00Z',
   };
 
@@ -300,20 +303,25 @@ describe('RoomsListComponent', () => {
       fixture.detectChanges();
     });
 
-    it('should return host role when member is host', () => {
-      const hostMember: GameMember = { ...mockMember, role: 'host' as any };
-      mockMemberService.currentMember.set(hostMember);
-
-      expect(component.getRoomRole('room1')).toBe('host');
+    // Le role vient desormais de la room elle-meme (myRole, calcule par room dans
+    // getMyRooms) et non de currentMember() : ce dernier renvoyait le role de la
+    // derniere room rejointe pour TOUTES les tuiles.
+    it('should return host role when the user is host of THAT room', () => {
+      expect(component.getRoomRole({ ...mockRoom1, myRole: 'host' })).toBe('host');
     });
 
-    it('should return player role when member is player', () => {
-      expect(component.getRoomRole('room1')).toBe('player');
+    it('should return player role when the user is player of that room', () => {
+      expect(component.getRoomRole({ ...mockRoom1, myRole: 'player' })).toBe('player');
     });
 
-    it('should return player role when no member found', () => {
-      mockMemberService.currentMember.set(null);
-      expect(component.getRoomRole('room1')).toBe('player');
+    it('should map spectator to player', () => {
+      expect(component.getRoomRole({ ...mockRoom1, myRole: 'spectator' })).toBe('player');
+    });
+
+    it('should not leak the role of another room', () => {
+      // currentMember() est hote, mais cette room-ci a myRole player.
+      mockMemberService.currentMember.set({ ...mockMember, role: 'host' } as GameMember);
+      expect(component.getRoomRole({ ...mockRoom1, myRole: 'player' })).toBe('player');
     });
   });
 
