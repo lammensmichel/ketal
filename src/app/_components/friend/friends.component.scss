@@ -264,216 +264,236 @@
   padding: 24px;
 }
 
-.modals-container {
-  .modal-header {
+// Styles des modales — VOLONTAIREMENT au premier niveau, pas imbriques sous
+// .modals-container.
+//
+// ng-bootstrap deplace le contenu des <ng-template> dans une fenetre attachee a
+// document.body : a l'execution la modale n'est donc PAS un descendant de
+// .modals-container, et toutes ces regles ne matchaient jamais — la modale
+// s'affichait sans style, tronquee en bas de l'ecran. L'encapsulation emulee
+// continue de fonctionner : Angular marque ces elements avec l'attribut de
+// portee du composant proprietaire du template, quelle que soit leur position
+// dans le DOM.
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+
+  .modal-title {
+    font-size: 1.25rem;
+    color: var(--color-text-primary);
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid var(--color-border);
-    background: var(--color-bg-elevated);
+    gap: 0.5rem;
 
-    .modal-title {
-      font-size: 1.25rem;
-      color: var(--color-text-primary);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-
-      .fa-user-plus,
-      .fa-qrcode {
-        color: var(--color-accent-primary);
-      }
-    }
-
-    .btn-close {
-      color: var(--color-text-primary);
-      opacity: 0.6;
-      padding: 0.5rem;
-      transition: opacity 0.2s;
-
-      &:hover {
-        opacity: 1;
-        color: var(--color-text-primary);
-      }
-    }
-  }
-
-  .modal-body {
-    padding: 1.5rem;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-    min-width: 350px;
-    width: 100%;
-    max-width: 100%;
-  }
-
-  .qr-code-display {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1.5rem;
-    padding: 1rem 0;
-
-    qrcode {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #ffffff;
-      padding: 1rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      width: 100%;
-      max-width: 300px;
-    }
-
-    .qr-code-desc {
-      color: var(--color-text-secondary);
-      text-align: center;
-      margin: 0;
-      font-size: 0.9rem;
-    }
-
-    .btn {
-      margin-top: 0.5rem;
-    }
-  }
-
-  .qr-loading {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-
-    .fa-spin {
+    .fa-user-plus,
+    .fa-qrcode {
       color: var(--color-accent-primary);
-      margin-bottom: 1rem;
-    }
-
-    p {
-      color: var(--color-text-secondary);
     }
   }
 
-  .friend-modal-results {
-    margin-top: 24px;
-    max-height: 300px;
-    overflow-y: auto;
-    width: 100%;
+  .btn-close {
+    color: var(--color-text-primary);
+    opacity: 0.6;
+    padding: 0.5rem;
+    transition: opacity 0.2s;
 
-    .search-results-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      width: 100%;
-
-      .search-result-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.75rem 1rem;
-        background: var(--color-bg-elevated);
-        border-radius: 12px;
-        transition: background 0.2s;
-        border: 1px solid var(--color-border);
-        width: 100%;
-
-        &:hover {
-          background: var(--color-bg-surface);
-          border-color: var(--color-border);
-        }
-
-        .search-result-name {
-          font-weight: 500;
-          color: var(--color-text-primary);
-        }
-
-        .btn-sm {
-          font-size: 0.75rem;
-          padding: 0.25rem 0.5rem;
-          white-space: nowrap;
-        }
-      }
+    &:hover {
+      opacity: 1;
+      color: var(--color-text-primary);
     }
   }
+}
 
-  .no-results {
-    text-align: center;
-    color: var(--color-text-secondary);
+.modal-body {
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 100%;
+  // Pas de min-width en pixels : 350px debordait sur un telephone de 360px de
+  // large, une fois retirees les marges de .modal-dialog — d'ou la troncature
+  // horizontale. On laisse la modale se dimensionner sur son contenu.
+  box-sizing: border-box;
+}
+
+.qr-code-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 1rem 0;
+
+  qrcode {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #ffffff;
     padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 300px;
+    box-sizing: border-box;
+
+    // Le canvas est genere a 256px par angularx-qrcode : sans cette contrainte
+    // il ignore le max-width du parent et depasse sur les petits ecrans.
+    canvas,
+    img {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-width: 100%;
+    }
   }
 
-  .friend-modal-search {
+  .qr-code-desc {
+    color: var(--color-text-secondary);
+    text-align: center;
+    margin: 0;
+    font-size: 0.9rem;
+  }
+
+  .btn {
+    margin-top: 0.5rem;
+  }
+}
+
+.qr-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+
+  .fa-spin {
+    color: var(--color-accent-primary);
+    margin-bottom: 1rem;
+  }
+
+  p {
+    color: var(--color-text-secondary);
+  }
+}
+
+.friend-modal-results {
+  margin-top: 24px;
+  max-height: 300px;
+  overflow-y: auto;
+  width: 100%;
+
+  .search-results-list {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    width: 100%;
 
-    .form-control {
-      border-radius: 12px;
-      border: 1px solid var(--color-border);
+    .search-result-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       padding: 0.75rem 1rem;
-      font-size: 1rem;
-      width: 100%;
-
-      &:focus {
-        border-color: var(--color-accent-primary);
-        box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--color-accent-primary) 25%, transparent);
-      }
-    }
-
-    .btn {
-      border-radius: 12px;
-      padding: 0.75rem 1.5rem;
-      font-weight: 500;
-      width: 100%;
-    }
-  }
-
-  .scan-qr-section {
-    margin-top: 2rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--color-border);
-
-    h5 {
-      color: var(--color-text-primary);
-      font-size: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .btn-scan-qr {
-      width: 100%;
       background: var(--color-bg-elevated);
-      border: 2px dashed var(--color-border);
       border-radius: 12px;
-      padding: 1.5rem;
-      color: var(--color-text-secondary);
-      transition: all 0.2s;
+      transition: background 0.2s;
+      border: 1px solid var(--color-border);
+      width: 100%;
 
       &:hover {
-        border-color: var(--color-accent-primary);
         background: var(--color-bg-surface);
+        border-color: var(--color-border);
+      }
+
+      .search-result-name {
+        font-weight: 500;
         color: var(--color-text-primary);
       }
 
-      .fa-camera {
-        margin-bottom: 0.5rem;
-        font-size: 2rem;
-      }
-
-      .btn-text {
-        font-size: 0.9rem;
+      .btn-sm {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        white-space: nowrap;
       }
     }
   }
+}
 
-  .scan-error {
-    margin-top: 1rem;
-    padding: 1rem;
-    background: var(--color-bg-surface);
+.no-results {
+  text-align: center;
+  color: var(--color-text-secondary);
+  padding: 1rem;
+}
+
+.friend-modal-search {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  .form-control {
     border-radius: 12px;
-    color: var(--color-error);
-    text-align: center;
+    border: 1px solid var(--color-border);
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    width: 100%;
+
+    &:focus {
+      border-color: var(--color-accent-primary);
+      box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--color-accent-primary) 25%, transparent);
+    }
   }
+
+  .btn {
+    border-radius: 12px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    width: 100%;
+  }
+}
+
+.scan-qr-section {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--color-border);
+
+  h5 {
+    color: var(--color-text-primary);
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .btn-scan-qr {
+    width: 100%;
+    background: var(--color-bg-elevated);
+    border: 2px dashed var(--color-border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    color: var(--color-text-secondary);
+    transition: all 0.2s;
+
+    &:hover {
+      border-color: var(--color-accent-primary);
+      background: var(--color-bg-surface);
+      color: var(--color-text-primary);
+    }
+
+    .fa-camera {
+      margin-bottom: 0.5rem;
+      font-size: 2rem;
+    }
+
+    .btn-text {
+      font-size: 0.9rem;
+    }
+  }
+}
+
+.scan-error {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--color-bg-surface);
+  border-radius: 12px;
+  color: var(--color-error);
+  text-align: center;
 }
