@@ -610,15 +610,7 @@ export class GameService {
   }
 
   resetGame(): void {
-    // Unsubscribe from realtime updates when resetting the game
-    this.unsubscribeFromSession();
-    // Clear session ID — game is truly ending
-    this.activeSessionId = null;
-    this._pendingSessionUpdate = null;
-    this._pendingGameSync = null;
-    // Clear per-turn sip indicators (both drink and give)
-    this._lastTurnSips.set({});
-    this._lastTurnGiven.set({});
+    this.prepareNewGame();
 
     // Clean up solo room state and leave room
     this.soloRoomService.reset();
@@ -626,6 +618,32 @@ export class GameService {
     if (room) {
       this.roomService.leaveRoom(room.$id);
     }
+  }
+
+  /**
+   * Remet l'etat de jeu a neuf SANS quitter la room ni detruire la place du
+   * joueur, contrairement a resetGame().
+   *
+   * Necessaire au demarrage d'une nouvelle partie : « Creer une partie » reutilise
+   * volontairement une room solo idle existante (cf. RoomService.createRoom) pour
+   * ne pas accumuler les rooms. Mais l'etat de jeu, lui, restait celui de la
+   * partie precedente : le statut n'etant plus 0, isNewGame() etait faux, la
+   * liste des joueurs venait de l'ancienne partie au lieu de la liste locale
+   * editable, et les controles d'ajout et de suppression disparaissaient. On
+   * tombait donc « sur une partie deja existante sans pouvoir changer les
+   * joueurs ».
+   *
+   * On desabonne aussi de l'ancienne session : sans cela une mise a jour realtime
+   * tardive ecraserait l'etat fraichement remis a zero.
+   */
+  prepareNewGame(): void {
+    this.unsubscribeFromSession();
+    this.activeSessionId = null;
+    this._pendingSessionUpdate = null;
+    this._pendingGameSync = null;
+    // Clear per-turn sip indicators (both drink and give)
+    this._lastTurnSips.set({});
+    this._lastTurnGiven.set({});
 
     this.updateGame((game) => {
       game.givingCards = [];
@@ -634,6 +652,7 @@ export class GameService {
       game.turn = 0;
       game.activePlayer = undefined;
       game.status = 0;
+      game.sipExchanges = [];
 
       game.players.forEach((player) => {
         player.sips = { drunk: 0, given: 0, phase1Drunk: 0 };
@@ -895,6 +914,14 @@ export class GameService {
     this._lastTurnSips.set({
       [game.activePlayer!.id]: currentCard.sips ?? 0,
     });
+
+    // Donner des gorgees est un concept de phase 2 uniquement : en phase 1 cet
+    // indicateur doit toujours etre vide. Sans cette remise a zero, une valeur
+    // laissee par la phase 2 d'une partie precedente survivait — elle est
+    // rechargee depuis localStorage au demarrage du service — et s'affichait a
+    // cote du badge de gorgees bues, d'ou deux verres sous les cartes et
+    // l'impression que le tour precedent restait affiche.
+    this._lastTurnGiven.set({});
 
     this.addCardToPlayer(currentCard, game.activePlayer.id);
 

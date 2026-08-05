@@ -3,6 +3,7 @@ import { Router, RouterModule } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { RoomService, GameRoomWithMemberCount } from '../../services/room/room.service';
 import { AuthService } from '../../services/auth/auth.service';
+import { GameService } from '../../services/game/game.service';
 import { RoomTileComponent } from '../room/room-tile/room-tile.component';
 
 /**
@@ -27,6 +28,7 @@ export class HomeComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly roomService = inject(RoomService);
   private readonly authService = inject(AuthService);
+  private readonly gameSrv = inject(GameService);
   private readonly destroyRef = inject(DestroyRef);
 
   /** Loading state for room data */
@@ -97,6 +99,14 @@ export class HomeComponent implements OnInit {
     }
     this.isCreatingRoom = true;
     try {
+      // Remise a neuf AVANT de creer la room. createSoloRoom() reutilise
+      // volontairement une room solo idle existante pour ne pas les accumuler,
+      // mais l'etat de jeu restait celui de la partie precedente : le statut
+      // n'etant plus 0, isNewGame() etait faux, la liste affichee venait de
+      // l'ancienne partie au lieu de la liste locale editable, et les controles
+      // d'ajout disparaissaient. On tombait donc sur une partie deja existante
+      // sans pouvoir changer les joueurs.
+      this.gameSrv.prepareNewGame();
       await this.roomService.createSoloRoom();
       await this.router.navigate(['/players']);
     } catch (err) {

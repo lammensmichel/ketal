@@ -173,6 +173,7 @@ export function createMockGameService(): any & {
       'isGameInProgress',
       'setStatus',
       'resetGame',
+      'prepareNewGame',
       'beginGame',
       'pickCard',
       'setChoiceAndPickCard',

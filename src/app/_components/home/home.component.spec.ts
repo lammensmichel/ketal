@@ -4,6 +4,8 @@ import { TranslateModule } from '@ngx-translate/core';
 import { HomeComponent } from './home.component';
 import { RoomService } from '../../services/room/room.service';
 import { AuthService } from '../../services/auth/auth.service';
+import { GameService } from '../../services/game/game.service';
+import { createMockGameService } from '../../testing/test-helpers';
 import { signal } from '@angular/core';
 
 describe('HomeComponent', () => {
@@ -12,6 +14,7 @@ describe('HomeComponent', () => {
   let router: jasmine.SpyObj<Router>;
   let roomService: jasmine.SpyObj<RoomService>;
   let authService: jasmine.SpyObj<AuthService>;
+  let gameService: ReturnType<typeof createMockGameService>;
 
   beforeEach(waitForAsync(() => {
     const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
@@ -30,18 +33,22 @@ describe('HomeComponent', () => {
       isLoading: signal(false),
     });
 
+    const gameServiceSpy = createMockGameService();
+
     TestBed.configureTestingModule({
       imports: [HomeComponent, TranslateModule.forRoot()],
       providers: [
         { provide: Router, useValue: routerSpy },
         { provide: RoomService, useValue: roomServiceSpy },
         { provide: AuthService, useValue: authServiceSpy },
+        { provide: GameService, useValue: gameServiceSpy },
       ],
     }).compileComponents();
 
     router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
     roomService = TestBed.inject(RoomService) as jasmine.SpyObj<RoomService>;
     authService = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
+    gameService = TestBed.inject(GameService) as unknown as ReturnType<typeof createMockGameService>;
 
     fixture = TestBed.createComponent(HomeComponent);
     component = fixture.componentInstance;
@@ -66,6 +73,17 @@ describe('HomeComponent', () => {
     expect(createBtn).toBeTruthy();
     expect(joinLink).toBeTruthy();
   });
+
+  it('should reset the game state BEFORE creating the room', fakeAsync(() => {
+    // createSoloRoom() reutilise une room solo idle existante : sans remise a
+    // zero, le statut restait celui de la partie precedente, isNewGame() etait
+    // faux et la liste des joueurs devenait non editable.
+    component.createGame();
+    tick();
+
+    expect(gameService.prepareNewGame).toHaveBeenCalled();
+    expect(gameService.prepareNewGame).toHaveBeenCalledBefore(roomService.createSoloRoom);
+  }));
 
   it('should call createGame and navigate to /players on success', fakeAsync(() => {
     component.createGame();
