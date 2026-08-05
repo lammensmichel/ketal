@@ -1,6 +1,7 @@
 import { Component, signal, computed, OnInit, inject, DestroyRef, TemplateRef, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { FontAwesomeIconsModule } from '../../font-awesome.module';
 import { NgbModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -20,6 +21,11 @@ export class FriendsComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly friendSrv = inject(FriendService);
   private readonly modalService = inject(NgbModal);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+
+  /** Retour utilisateur apres un scan de QR (cle de traduction, ou null) */
+  readonly inviteFeedback = signal<string | null>(null);
 
   /** Current user */
   readonly currentUser = this.authService.currentUser();
@@ -78,6 +84,51 @@ export class FriendsComponent implements OnInit {
     if (this.authService.isLoggedIn()) {
       this.friendSrv.getFriends();
     }
+
+    this.handleScannedInvite();
+  }
+
+  /**
+   * Traite l'arrivee via un QR code scanne : /friends?add=<userId>.
+   *
+   * Le parametre est retire de l'URL apres traitement, sinon un rafraichissement
+   * relancerait l'ajout — et afficherait « deja ami » a chaque fois.
+   */
+  private handleScannedInvite(): void {
+    const userId = this.route.snapshot.queryParamMap.get('add');
+    if (!userId) {
+      return;
+    }
+
+    // Nettoyage immediat, avant tout appel reseau : l'utilisateur peut
+    // rafraichir pendant la requete.
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { add: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+
+    if (!this.authService.isLoggedIn()) {
+      this.inviteFeedback.set('friends.inviteNeedsAccount');
+      return;
+    }
+
+    if (userId === this.authService.currentUser()?.$id) {
+      this.inviteFeedback.set('friends.inviteSelf');
+      return;
+    }
+
+    this.friendSrv
+      .addFriendByQr(userId)
+      .then(() => {
+        this.inviteFeedback.set('friends.inviteAdded');
+        return this.friendSrv.getFriends();
+      })
+      .catch((error: unknown) => {
+        console.error('[FriendsComponent] Ajout par QR impossible:', error);
+        this.inviteFeedback.set('friends.inviteFailed');
+      });
   }
 
   /** Get friend's avatar URL or fallback */
@@ -121,10 +172,17 @@ export class FriendsComponent implements OnInit {
   }
 
   openQrModal(): void {
-    // Generate QR URL for current user pointing to add friend endpoint
     const currentUser = this.authService.currentUser();
     if (currentUser?.$id) {
-      this.friendQrUrl.set(`https://ketal.app/friend/add?userId=${currentUser.$id}`);
+      // window.location.origin, et non un domaine en dur : l'URL doit fonctionner
+      // la ou l'app est reellement servie. Elle pointait sur
+      // https://ketal.app/friend/add, un domaine de production inexistant ET une
+      // route qui n'existe pas dans app-routing — le scan ne menait donc nulle
+      // part, meme en production.
+      //
+      // On reutilise la route /friends existante avec un parametre, plutot que
+      // d'en ajouter une : le traitement se fait dans ngOnInit ci-dessus.
+      this.friendQrUrl.set(`${window.location.origin}/friends?add=${encodeURIComponent(currentUser.$id)}`);
     }
     this.qrModalRef = this.modalService.open(this.qrModal);
   }

@@ -326,6 +326,10 @@
   },
   "Label_GameInProgress": "Partie en cours",
    "friends": {
+    "inviteAdded": "Ami ajouté !",
+    "inviteFailed": "Impossible d'ajouter cet ami",
+    "inviteSelf": "C'est votre propre code",
+    "inviteNeedsAccount": "Connectez-vous pour ajouter cet ami",
      "title": "Mes amis",
      "add": "Ajouter",
      "myQr": "Mon QR",

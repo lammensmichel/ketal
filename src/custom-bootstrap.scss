@@ -44,9 +44,15 @@
 @import 'bootstrap-scss/close';
 @import 'bootstrap-scss/toasts';
 
-// Note: Modal is used with custom styles, not full Bootstrap modal
-// Only importing if needed for basic modal structure
-// @import "bootstrap-scss/modal";
+// Modal : INDISPENSABLE, ne pas re-commenter.
+//
+// L'ancienne note affirmait que les modales etaient stylees a la main. C'est faux :
+// l'app utilise NgbModal (ng-bootstrap), qui genere du markup .modal /
+// .modal-dialog / .modal-content et depend de CE fichier pour le position: fixed,
+// le centrage et le defilement. Sans lui, ng-bootstrap insere la fenetre dans le
+// flux normal a la fin du <body> : elle s'affichait donc en bas de la page,
+// tronquee — symptome constate sur le QR code de la page amis.
+@import 'bootstrap-scss/modal';
 
 // ============================================================
 // 7. Helpers

@@ -216,6 +216,10 @@
     }
   },
    "friends": {
+    "inviteAdded": "Vriend toegevoegd!",
+    "inviteFailed": "Kan deze vriend niet toevoegen",
+    "inviteSelf": "Dit is je eigen code",
+    "inviteNeedsAccount": "Log in om deze vriend toe te voegen",
      "title": "Mijn vrienden",
      "add": "Toevoegen",
      "myQr": "Mijn QR",

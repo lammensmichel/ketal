@@ -216,6 +216,10 @@
     }
   },
    "friends": {
+    "inviteAdded": "Freund hinzugefügt!",
+    "inviteFailed": "Freund konnte nicht hinzugefügt werden",
+    "inviteSelf": "Das ist dein eigener Code",
+    "inviteNeedsAccount": "Melde dich an, um diesen Freund hinzuzufügen",
      "title": "Meine Freunde",
      "add": "Hinzufügen",
      "myQr": "Mein QR",

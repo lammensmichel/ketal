@@ -497,3 +497,15 @@
   color: var(--color-error);
   text-align: center;
 }
+
+// Retour affiche apres l'arrivee via un QR code scanne.
+.invite-feedback {
+  margin: 0 0 1rem;
+  padding: 0.625rem 0.875rem;
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-accent-primary);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+  text-align: center;
+}

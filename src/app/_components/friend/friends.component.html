@@ -1,5 +1,9 @@
 <!-- Friends list -->
 <div class="app-friends">
+  <!-- Retour apres l'arrivee par un QR code scanne (/friends?add=<userId>) -->
+  @if (inviteFeedback()) {
+    <p class="invite-feedback" role="status">{{ inviteFeedback()! | translate }}</p>
+  }
   @if (isLoggedIn()) {
     <!-- Header with search and action buttons -->
     <div class="friends-header">

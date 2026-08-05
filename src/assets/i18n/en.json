@@ -331,6 +331,10 @@
     "confirm": "Confirm"
   },
    "friends": {
+    "inviteAdded": "Friend added!",
+    "inviteFailed": "Could not add this friend",
+    "inviteSelf": "That's your own code",
+    "inviteNeedsAccount": "Log in to add this friend",
      "title": "My Friends",
      "add": "Add",
      "myQr": "My QR",
