@@ -35,5 +35,33 @@
         {{ actionLabel() }}
       </button>
     }
+
+    <!-- Suppression (hote uniquement) : la tuile entiere est cliquable, d'ou le stopPropagation -->
+    @if (canDelete()) {
+      <button
+        type="button"
+        class="btn btn-sm btn-delete-room"
+        (click)="$event.stopPropagation(); requestDelete()"
+        aria-label="Supprimer la partie"
+      >
+        Supprimer
+      </button>
+    }
   </div>
 </div>
+
+<!-- Confirmation de suppression — hors de .room-tile a dessein : `.room-tile:hover`
+     applique un `transform`, qui ferait du conteneur le referentiel du
+     `position: fixed` de l'overlay, lequel serait alors rogne par son
+     `overflow: hidden`. -->
+@if (showDeleteConfirm()) {
+  <div class="delete-overlay" (click)="cancelDelete()" role="dialog" aria-modal="true">
+    <div class="delete-dialog" (click)="$event.stopPropagation()">
+      <p class="delete-dialog-message">Supprimer définitivement « {{ room().name }} » ?</p>
+      <div class="d-flex justify-content-center gap-2">
+        <button type="button" class="btn btn-outline-secondary" (click)="cancelDelete()">Annuler</button>
+        <button type="button" class="btn btn-danger" (click)="confirmDelete()">Supprimer</button>
+      </div>
+    </div>
+  </div>
+}

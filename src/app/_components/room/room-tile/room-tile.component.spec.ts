@@ -358,6 +358,122 @@ describe('RoomTileComponent', () => {
     }));
   });
 
+  describe('delete action (host only)', () => {
+    it('should not render the delete action for a non-host', () => {
+      createComponent(mockRoomIdle, 'player');
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      expect(component.canDelete()).toBeFalse();
+      expect(compiled.querySelector('.btn-delete-room')).toBeNull();
+    });
+
+    it('should render an enabled delete action for the host on an idle room', () => {
+      createComponent(mockRoomIdle, 'host');
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      const deleteButton = compiled.querySelector('.btn-delete-room') as HTMLButtonElement;
+      expect(component.canDelete()).toBeTrue();
+      expect(deleteButton).not.toBeNull();
+      expect(deleteButton.disabled).toBeFalse();
+      expect(deleteButton.textContent?.trim()).toBe('Supprimer');
+    });
+
+    it('should render the delete action for the host on a playing room', () => {
+      createComponent(mockRoomPlaying, 'host');
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      expect(compiled.querySelector('.btn-delete-room')).not.toBeNull();
+    });
+
+    it('should open the confirmation dialog instead of deleting immediately', () => {
+      createComponent(mockRoomIdle, 'host');
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      expect(compiled.querySelector('.delete-overlay')).toBeNull();
+
+      (compiled.querySelector('.btn-delete-room') as HTMLElement).click();
+      fixture.detectChanges();
+
+      expect(component.showDeleteConfirm()).toBeTrue();
+      expect(compiled.querySelector('.delete-overlay')).not.toBeNull();
+      expect(mockRoomService.deleteRoom).not.toHaveBeenCalled();
+    });
+
+    it('should not call the service and not emit when the confirmation is declined', fakeAsync(() => {
+      createComponent(mockRoomIdle, 'host');
+      fixture.detectChanges();
+
+      let emitted = 0;
+      component.roomsChanged.subscribe(() => emitted++);
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      (compiled.querySelector('.btn-delete-room') as HTMLElement).click();
+      fixture.detectChanges();
+
+      component.cancelDelete();
+      tick();
+      fixture.detectChanges();
+
+      expect(component.showDeleteConfirm()).toBeFalse();
+      expect(compiled.querySelector('.delete-overlay')).toBeNull();
+      expect(mockRoomService.deleteRoom).not.toHaveBeenCalled();
+      expect(emitted).toBe(0);
+    }));
+
+    it('should call deleteRoom and emit roomsChanged when the confirmation is accepted', fakeAsync(() => {
+      createComponent(mockRoomIdle, 'host');
+      fixture.detectChanges();
+
+      let emitted = 0;
+      component.roomsChanged.subscribe(() => emitted++);
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      (compiled.querySelector('.btn-delete-room') as HTMLElement).click();
+      fixture.detectChanges();
+
+      const confirmButton = compiled.querySelector('.delete-dialog .btn-danger') as HTMLElement;
+      expect(confirmButton).not.toBeNull();
+      confirmButton.click();
+      tick();
+      fixture.detectChanges();
+
+      expect(mockRoomService.deleteRoom).toHaveBeenCalledWith('room123');
+      expect(emitted).toBe(1);
+      expect(compiled.querySelector('.delete-overlay')).toBeNull();
+    }));
+
+    it('should keep the dialog closed and skip the service when a non-host requests deletion', fakeAsync(() => {
+      createComponent(mockRoomIdle, 'player');
+      fixture.detectChanges();
+
+      component.requestDelete();
+      component.handleDelete();
+      tick();
+
+      expect(component.showDeleteConfirm()).toBeFalse();
+      expect(mockRoomService.deleteRoom).not.toHaveBeenCalled();
+    }));
+
+    it('should not emit roomsChanged when deleteRoom fails', fakeAsync(() => {
+      mockRoomService.deleteRoom.and.rejectWith(new Error('boom'));
+      createComponent(mockRoomIdle, 'host');
+      fixture.detectChanges();
+
+      let emitted = 0;
+      component.roomsChanged.subscribe(() => emitted++);
+
+      component.confirmDelete();
+      tick();
+
+      expect(mockRoomService.deleteRoom).toHaveBeenCalledWith('room123');
+      expect(emitted).toBe(0);
+    }));
+  });
+
   describe('action button - player in idle room', () => {
     it('should show "Quitter" button for idle room when player', () => {
       createComponent(mockRoomIdle, 'player');

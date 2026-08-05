@@ -243,9 +243,22 @@ export class RoomService {
   }
 
   /**
-   * Delete a room from the database
+   * Delete a room from the database, along with its member records.
+   *
+   * Les membres sont supprimes AVANT la room : `getMyRooms()` reconstruit la
+   * liste « Mes parties » a partir des enregistrements membres de l'utilisateur
+   * (`getMembersByUserId`), donc un membre orphelin ferait indefiniment
+   * reapparaitre une room deja supprimee dans le listing.
+   *
+   * Arbitrage volontaire, ce n'est PAS un oubli : on ne touche pas aux sessions
+   * (`fug_ketal_sessions`), joueurs (`ketal_players`), cartes (`ketal_cards`) ni
+   * aux echanges de gorgees (`ketal_sip_events`). Ces documents portent
+   * l'historique de statistiques que l'on veut conserver dans le temps ; les
+   * detruire avec la room irait contre ce besoin.
    */
   async deleteRoom(roomId: string): Promise<void> {
+    await this.deleteRoomMembers(roomId);
+
     try {
       await this.appwrite.databases.deleteDocument({
         databaseId: this.appwrite.databaseId,
@@ -259,6 +272,28 @@ export class RoomService {
     } catch (error: unknown) {
       const msg = getAppwriteMessage(error) ?? 'Unknown error';
       throw new Error(`Failed to delete room: ${msg}`);
+    }
+  }
+
+  /**
+   * Delete every member record attached to a room, tolerantly.
+   *
+   * Volontairement tolerant : un echec sur un membre ne doit pas empecher la
+   * suppression des autres ni celle de la room. Une suppression partiellement
+   * echouee (quelques membres orphelins) vaut mieux qu'une room indestructible.
+   */
+  private async deleteRoomMembers(roomId: string): Promise<void> {
+    try {
+      const members = await this.memberService.getMembersByRoom(roomId);
+      for (const member of members ?? []) {
+        try {
+          await this.memberService.deleteMember(member.$id);
+        } catch (err: unknown) {
+          console.warn(`[RoomService] Failed to delete member ${member.$id} of room ${roomId}:`, err);
+        }
+      }
+    } catch (err: unknown) {
+      console.warn(`[RoomService] Failed to list members of room ${roomId} before deletion:`, err);
     }
   }
 

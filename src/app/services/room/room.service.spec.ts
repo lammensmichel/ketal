@@ -247,6 +247,84 @@ describe('RoomService', () => {
 
       await expectAsync(service.deleteRoom('room123')).toBeRejectedWithError('Failed to delete room: Not found');
     });
+
+    describe('member cleanup', () => {
+      const memberA: GameMember = {
+        $id: 'member-a',
+        roomId: 'room123',
+        userId: 'user-a',
+        deviceId: null,
+        displayName: 'A',
+        role: 'host',
+        isOnline: true,
+        totalSipsGiven: 0,
+        totalSipsTaken: 0,
+        totalGamesPlayed: 0,
+        gameStats: {},
+      };
+      const memberB: GameMember = { ...memberA, $id: 'member-b', userId: 'user-b', displayName: 'B', role: 'player' };
+
+      it('should delete every member of the room before the room itself', async () => {
+        const callOrder: string[] = [];
+        mockMemberService.getMembersByRoom.and.resolveTo([memberA, memberB]);
+        mockMemberService.deleteMember.and.callFake((id: string) => {
+          callOrder.push(`member:${id}`);
+          return Promise.resolve();
+        });
+        mockDatabases.deleteDocument.and.callFake(() => {
+          callOrder.push('room');
+          return Promise.resolve({});
+        });
+
+        await service.deleteRoom('room123');
+
+        expect(callOrder).toEqual(['member:member-a', 'member:member-b', 'room']);
+        expect(mockMemberService.getMembersByRoom).toHaveBeenCalledWith('room123');
+      });
+
+      it('should still delete the room when one member deletion fails', async () => {
+        mockMemberService.getMembersByRoom.and.resolveTo([memberA, memberB]);
+        mockMemberService.deleteMember.and.callFake((id: string) =>
+          id === 'member-a' ? Promise.reject(new Error('permission denied')) : Promise.resolve()
+        );
+        mockDatabases.deleteDocument.and.resolveTo({});
+
+        await expectAsync(service.deleteRoom('room123')).toBeResolved();
+
+        expect(mockMemberService.deleteMember).toHaveBeenCalledWith('member-b');
+        expect(mockDatabases.deleteDocument).toHaveBeenCalledWith({
+          databaseId: 'fug',
+          collectionId: 'fug_game_rooms',
+          documentId: 'room123',
+        });
+      });
+
+      it('should still delete the room when the member listing fails', async () => {
+        mockMemberService.getMembersByRoom.and.rejectWith(new Error('offline'));
+        mockDatabases.deleteDocument.and.resolveTo({});
+
+        await expectAsync(service.deleteRoom('room123')).toBeResolved();
+
+        expect(mockDatabases.deleteDocument).toHaveBeenCalledWith({
+          databaseId: 'fug',
+          collectionId: 'fug_game_rooms',
+          documentId: 'room123',
+        });
+      });
+
+      it('should not delete sessions, players, cards or sip events documents', async () => {
+        mockMemberService.getMembersByRoom.and.resolveTo([memberA]);
+        mockMemberService.deleteMember.and.resolveTo();
+        mockDatabases.deleteDocument.and.resolveTo({});
+
+        await service.deleteRoom('room123');
+
+        const deletedCollections = mockDatabases.deleteDocument.calls
+          .allArgs()
+          .map((args) => (args[0] as { collectionId: string }).collectionId);
+        expect(deletedCollections).toEqual(['fug_game_rooms']);
+      });
+    });
   });
 
   describe('getRoomByCode', () => {

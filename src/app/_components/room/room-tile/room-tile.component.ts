@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, computed, inject, input, output } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, inject, input, output, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { RoomService, GameRoom, RoomStatus } from '../../../services/room/room.service';
 import { GameService } from '../../../services/game/game.service';
@@ -75,6 +75,22 @@ export class RoomTileComponent {
 
     return 'Quitter';
   });
+
+  /**
+   * L'hote peut supprimer sa partie depuis « Mes parties », quel que soit le statut.
+   *
+   * Le bouton d'action generique n'offrait « Supprimer » que sur une room
+   * archivee — etat inatteignable : archiver retire la room du listing (filtree
+   * dans RoomsListComponent) et le bouton y est de toute facon `[disabled]`.
+   * D'ou une action de suppression dediee, toujours active pour l'hote.
+   */
+  readonly canDelete = computed<boolean>(() => this.currentRole() === 'host');
+
+  /** Confirmation de suppression ouverte (suppression irreversible). */
+  private readonly _showDeleteConfirm = signal(false);
+
+  /** Public readonly: whether the delete confirmation dialog is visible */
+  readonly showDeleteConfirm = this._showDeleteConfirm.asReadonly();
 
   /** Computed: whether the card is clickable */
   readonly isClickable = computed<boolean>(() => {
@@ -159,9 +175,41 @@ export class RoomTileComponent {
   }
 
   /**
-   * Handle delete action (host only for archived rooms)
+   * Open the delete confirmation dialog (host only)
+   */
+  requestDelete(): void {
+    if (!this.canDelete()) {
+      return;
+    }
+    this._showDeleteConfirm.set(true);
+  }
+
+  /**
+   * Dismiss the delete confirmation dialog without deleting
+   */
+  cancelDelete(): void {
+    this._showDeleteConfirm.set(false);
+  }
+
+  /**
+   * Confirm the deletion from the dialog
+   */
+  async confirmDelete(): Promise<void> {
+    this._showDeleteConfirm.set(false);
+    await this.handleDelete();
+  }
+
+  /**
+   * Handle delete action (host only)
+   *
+   * Le role est re-verifie ici : l'affichage conditionnel ne protege pas d'un
+   * appel direct, et la suppression est irreversible.
    */
   async handleDelete(): Promise<void> {
+    if (!this.canDelete()) {
+      return;
+    }
+
     const room = this.room();
     try {
       await this.roomService.deleteRoom(room.$id);
