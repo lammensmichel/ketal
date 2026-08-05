@@ -413,8 +413,20 @@ export class GameService {
       // Convert session to local Game format
       const game = mapSessionToGame(session);
 
+      // La session Appwrite ne porte PAS les echanges de gorgees : ils vivent
+      // dans la collection ketal_sip_events. mapSessionToGame reconstruisant un
+      // Game neuf, ecraser le signal effacerait les echanges deja connus
+      // localement — et en mode room ces mises a jour arrivent en permanence,
+      // ce qui rendait le detail du resume inexploitable meme pour celui qui
+      // avait distribue. On les reporte donc explicitement.
+      game.sipExchanges = this._game()?.sipExchanges ?? [];
+
       // Update the game signal
       this._game.set(game);
+
+      // Hydrate depuis la collection pour que TOUS les joueurs voient qui a
+      // donne combien a qui, et pas seulement l'appareil distributeur.
+      void this.hydrateSipExchanges(session.$id);
 
       console.debug('[GameService] handleSessionUpdate - updated game state', {
         sessionId: session.$id,
@@ -671,6 +683,16 @@ export class GameService {
     if (status === 2) {
       this.finalizeGameStats();
     }
+
+    // Statut 3 = le resume s'affiche. C'est le moment ou le detail des echanges
+    // doit etre complet pour TOUS les joueurs, et pas seulement pour l'appareil
+    // qui a distribue : on relit la collection partagee.
+    if (status === 3) {
+      const sessionId = this.ketalSessionService.currentSession()?.$id;
+      if (sessionId) {
+        void this.hydrateSipExchanges(sessionId);
+      }
+    }
   }
 
   /**
@@ -875,6 +897,34 @@ export class GameService {
         '[GameService] Failed to persist sip exchanges:',
         error instanceof Error ? error.message : JSON.stringify(error)
       );
+    });
+  }
+
+  /**
+   * Recharge les echanges de gorgees de la session depuis ketal_sip_events.
+   *
+   * Sans cela, `Game.sipExchanges` ne contient que ce que CET appareil a
+   * distribue : les autres joueurs n'avaient ni leur total recu ni le detail, et
+   * ne pouvaient donc pas savoir qui leur avait donne combien. La collection est
+   * la source partagee, indexee sur sessionId (migration 047).
+   *
+   * Ne remplace l'etat que si la relecture apporte au moins autant d'echanges
+   * que ce qu'on connait deja : une reponse partielle ou vide — reseau coupe,
+   * ecriture encore en vol — ne doit pas effacer ce qui est affiche.
+   */
+  private async hydrateSipExchanges(sessionId: string): Promise<void> {
+    if (!sessionId) {
+      return;
+    }
+
+    const remote = await this.sipEventService.listBySession(sessionId);
+    const known = this._game()?.sipExchanges?.length ?? 0;
+    if (remote.length < known) {
+      return;
+    }
+
+    this.updateGame((game) => {
+      game.sipExchanges = remote;
     });
   }
 

@@ -1,10 +1,11 @@
 import { inject, Injectable } from '@angular/core';
-import { ID } from 'appwrite';
+import { ID, Query } from 'appwrite';
 import { AppwriteService } from '../appwrite/appwrite.service';
 import { KetalSessionService } from '../ketal-session/ketal-session.service';
 import { MemberService } from '../member/member.service';
 import { RoomService } from '../room/room.service';
 import { getAppwriteMessage } from '../../_shared/helpers/appwrite-exception.helper';
+import { listAllDocuments } from '../../_shared/helpers/appwrite-pagination.helper';
 import { SipExchange } from '../../_shared/_models/sip-exchange.model';
 
 /**
@@ -112,6 +113,49 @@ export class SipEventService {
     await Promise.all(
       persistable.map((exchange) => this.createSipEvent(exchange, roomId, session.$id, session.gameNumber))
     );
+  }
+
+  /**
+   * Relit les transferts d'une session, pour TOUS les joueurs.
+   *
+   * Indispensable au resume : `Game.sipExchanges` n'est renseigne que sur
+   * l'appareil qui a effectue la distribution, et n'est pas porte par la session
+   * Appwrite. Sans cette relecture, les autres joueurs ne voyaient ni leur total
+   * recu ni le detail des echanges — ils ne pouvaient donc pas savoir qui leur
+   * avait donne combien.
+   *
+   * Ne rejette jamais : en cas d'echec on renvoie un tableau vide, le resume
+   * degradant proprement (section masquee) plutot que de planter.
+   */
+  async listBySession(sessionId: string): Promise<SipExchange[]> {
+    if (!sessionId) {
+      return [];
+    }
+
+    try {
+      const response = await listAllDocuments(
+        this.appwrite.databases,
+        this.appwrite.databaseId,
+        COLLECTION_KETAL_SIP_EVENTS,
+        [Query.equal('sessionId', sessionId)]
+      );
+
+      return response.documents
+        .map((doc) => {
+          const raw = doc as unknown as Record<string, unknown>;
+          return {
+            fromPlayerId: (raw['fromPlayerId'] as string) ?? '',
+            toPlayerId: (raw['toPlayerId'] as string) ?? '',
+            sips: (raw['sips'] as number) ?? 0,
+            at: (raw['createdAt'] as string) ?? '',
+          };
+        })
+        .filter((e) => e.sips > 0 && e.fromPlayerId && e.toPlayerId)
+        .sort((a, b) => a.at.localeCompare(b.at));
+    } catch (error: unknown) {
+      console.error('[SipEventService] Relecture des echanges impossible:', error);
+      return [];
+    }
   }
 
   /**

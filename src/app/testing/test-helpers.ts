@@ -238,8 +238,9 @@ export function createMockGameService(): any & {
  * Creates a mock SipEventService for testing
  */
 export function createMockSipEventService(): any {
-  const mock = createMockObj('SipEventService', ['recordExchanges']);
+  const mock = createMockObj('SipEventService', ['recordExchanges', 'listBySession']);
   mock.recordExchanges.and.resolveTo(undefined);
+  mock.listBySession.and.resolveTo([]);
   return mock;
 }
 
