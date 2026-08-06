@@ -199,3 +199,52 @@ app-root {
 //  border-style: inset;
 //  border-width: 1px;
 //}
+
+// ============================================================
+// Modales ng-bootstrap
+// ============================================================
+//
+// Ces regles sont GLOBALES a dessein. La structure .modal / .modal-dialog /
+// .modal-content est generee par NgbModalWindow, hors de tout composant : elle ne
+// porte donc pas d'attribut de portee et reste inatteignable depuis un SCSS de
+// composant. Seul le contenu de .modal-body vient des templates.
+//
+// Sans cet habillage, Bootstrap applique son fond par defaut — blanc — qui
+// detonne avec le theme sombre de l'application.
+//
+// On passe par les variables CSS de Bootstrap plutot que par des selecteurs :
+// c'est son API de theming, et toutes les modales en heritent d'un coup.
+.modal {
+  --bs-modal-bg: var(--color-bg-surface);
+  --bs-modal-color: var(--color-text-primary);
+  --bs-modal-border-color: var(--color-border);
+  --bs-modal-border-radius: var(--radius-lg);
+  --bs-modal-header-border-color: var(--color-border);
+  --bs-modal-footer-border-color: var(--color-border);
+  --bs-modal-box-shadow: var(--shadow-lg);
+}
+
+// Le bouton de fermeture de Bootstrap n'est pas un glyphe mais un SVG noir en
+// background-image : sur fond sombre il devenait quasi invisible. Bootstrap
+// expose --bs-btn-close-filter exactement pour ca, on le pilote par theme au
+// lieu de coder l'inversion en dur — sinon le bouton disparaitrait en clair.
+[data-theme='dark'] .modal .btn-close {
+  --bs-btn-close-filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+.modal .btn-close {
+  // Bootstrap descend a 0.5 au repos, trop discret sur ces fonds.
+  opacity: 0.75;
+  transition: opacity var(--animation-fast) var(--ease-default);
+
+  &:hover,
+  &:focus-visible {
+    opacity: 1;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-accent-primary);
+    outline-offset: 2px;
+    box-shadow: none;
+  }
+}

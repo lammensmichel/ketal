@@ -123,7 +123,8 @@
       <div class="friend-modal-search">
         <input
           type="text"
-          [(ngModel)]="searchQuery"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
           [placeholder]="'friends.searchNickname' | translate"
           class="form-control"
           (keyup.enter)="searchUsers(searchQuery())"

@@ -198,25 +198,54 @@ export class FriendsComponent implements OnInit {
     }
     this.isSearching.set(true);
     this.searchResults.set([]);
+    this.scanError.set(null);
 
     this.friendSrv
       .searchUsersByNickname(query)
       .then((users) => {
         this.isSearching.set(false);
-        this.searchResults.set(users as unknown as FriendProfile[]);
+        // Le service renvoie les documents Appwrite bruts : on les projette sur
+        // FriendProfile pour que le template lise des champs qui existent
+        // vraiment, plutot qu'un cast qui masque les absences.
+        this.searchResults.set(
+          users.map((doc) => ({
+            userId: (doc['userId'] as string) ?? (doc['$id'] as string) ?? '',
+            name: (doc['nickname'] as string) || (doc['name'] as string) || '',
+            avatar: doc['avatar'] as string | undefined,
+            isFriend: false,
+          }))
+        );
+        // Sans ce passage a true, tout le bloc de resultats du template — place
+        // derriere @if (isLoaded()) — restait masque, meme avec des resultats.
+        this.isLoaded.set(true);
       })
-      .catch((error: any) => {
+      .catch((error: unknown) => {
         console.error('[FriendsComponent] Search failed:', error);
         this.isSearching.set(false);
+        this.isLoaded.set(true);
         this.scanError.set(error instanceof Error ? error.message : 'Search failed');
       });
   }
 
   confirmAddFriend(user: FriendProfile): void {
     const confirmed = confirm(`Add ${user.name} as your friend?`);
-    if (confirmed) {
-      this.addFriendByNickname(user.name);
+    if (!confirmed) {
+      return;
     }
+
+    // On ajoute par identifiant, pas par pseudo : addFriendByNickname relance une
+    // recherche par nom, ce qui echoue si le nom differe du pseudo et peut viser
+    // le mauvais compte en cas d'homonymes. L'identifiant du resultat est deja la.
+    this.friendSrv
+      .addFriendByQr(user.userId)
+      .then(() => {
+        this.modalRef?.close();
+        return this.friendSrv.getFriends();
+      })
+      .catch((error: unknown) => {
+        console.error('[FriendsComponent] Failed to add friend:', error);
+        this.scanError.set(error instanceof Error ? error.message : 'Failed to add friend');
+      });
   }
 
   addFriendByNickname(nickname: string): void {
