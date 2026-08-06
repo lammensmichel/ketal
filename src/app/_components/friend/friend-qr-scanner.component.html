@@ -1,0 +1,48 @@
+<div class="qr-scanner">
+  <!-- Le <video> reste dans le DOM meme a l'arret. Place derriere un @if, il
+       n'existait pas encore au moment ou start() doit y attacher le flux : le
+       rendu OnPush est asynchrone, la requete viewChild aurait renvoye undefined. -->
+  <video #video class="qr-scanner__video" [class.qr-scanner__video--active]="isScanning()" muted playsinline></video>
+
+  @if (isScanning()) {
+    <div class="qr-scanner__frame" aria-hidden="true">
+      <span class="qr-scanner__corner qr-scanner__corner--tl"></span>
+      <span class="qr-scanner__corner qr-scanner__corner--tr"></span>
+      <span class="qr-scanner__corner qr-scanner__corner--bl"></span>
+      <span class="qr-scanner__corner qr-scanner__corner--br"></span>
+      <span class="qr-scanner__line"></span>
+    </div>
+  } @else {
+    <div class="qr-scanner__idle">
+      <fa-icon [icon]="['fas', 'qrcode']" size="3x"></fa-icon>
+      <p class="qr-scanner__hint">{{ 'friends.scanIdle' | translate }}</p>
+    </div>
+  }
+</div>
+
+@if (isScanning()) {
+  <p class="qr-scanner__hint" role="status">{{ 'friends.scanHint' | translate }}</p>
+}
+
+@if (errorKey()) {
+  <p class="qr-scanner__error" role="alert">{{ errorKey()! | translate }}</p>
+}
+
+<div class="qr-scanner__actions">
+  @if (isScanning()) {
+    <button type="button" class="btn btn-outline-secondary" (click)="stop()">
+      <fa-icon [icon]="['fas', 'times']"></fa-icon>
+      {{ 'friends.stopScan' | translate }}
+    </button>
+  } @else {
+    <button type="button" class="btn btn-primary" [disabled]="isStarting()" (click)="onStartClick()">
+      @if (isStarting()) {
+        <fa-icon [icon]="['fas', 'spinner']" class="fa-spin"></fa-icon>
+        {{ 'friends.scanStarting' | translate }}
+      } @else {
+        <fa-icon [icon]="['fas', 'camera']"></fa-icon>
+        {{ 'friends.startScan' | translate }}
+      }
+    </button>
+  }
+</div>

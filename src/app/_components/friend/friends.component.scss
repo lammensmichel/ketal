@@ -431,6 +431,15 @@
   flex-direction: column;
   gap: 0.5rem;
 
+  // Libelle qui distingue cette recherche (tous les utilisateurs) du filtre de
+  // la page (mes amis deja ajoutes).
+  .friend-modal-label {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+  }
+
   .form-control {
     border-radius: 12px;
     border: 1px solid var(--color-border);

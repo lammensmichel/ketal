@@ -1,6 +1,5 @@
 import { Component, signal, computed, OnInit, inject, DestroyRef, TemplateRef, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { FontAwesomeIconsModule } from '../../font-awesome.module';
@@ -8,13 +7,14 @@ import { NgbModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { QRCodeComponent } from 'angularx-qrcode';
 import { AuthService } from '../../services/auth/auth.service';
 import { FriendService, FriendProfile } from '../../services/friend/friend.service';
+import { FriendQrScannerComponent } from './friend-qr-scanner.component';
 
 @Component({
   selector: 'app-friends',
   templateUrl: './friends.component.html',
   styleUrls: ['./friends.component.scss'],
   standalone: true,
-  imports: [TranslateModule, FontAwesomeIconsModule, NgbModule, FormsModule, QRCodeComponent],
+  imports: [TranslateModule, FontAwesomeIconsModule, NgbModule, FormsModule, QRCodeComponent, FriendQrScannerComponent],
 })
 export class FriendsComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
@@ -68,16 +68,27 @@ export class FriendsComponent implements OnInit {
   readonly searchResults = signal<FriendProfile[]>([]);
   readonly isLoaded = signal(false);
 
-  // QR scanner signals
-  readonly isScanning = signal(false);
+  /** Message d'erreur de la recherche par pseudo, ou null */
   readonly scanError = signal<string | null>(null);
-  readonly scanResult = signal<string | null>(null);
+
+  /** Cle de traduction de l'erreur d'ajout via QR scanne, ou null */
+  readonly qrAddError = signal<string | null>(null);
 
   // QR code modal
   readonly friendQrUrl = signal<string | null>(null);
   readonly qrScale = 4;
   readonly qrWidth = 256;
   readonly qrErrorCorrectionLevel = 'M';
+
+  constructor() {
+    // La fenetre de modale de ng-bootstrap vit attachee a document.body, pas dans
+    // la vue de ce composant : quitter /friends ne la fermerait pas et le
+    // scanner qu'elle contient continuerait de filmer. On la ferme donc a la main.
+    this.destroyRef.onDestroy(() => {
+      this.modalRef?.dismiss();
+      this.qrModalRef?.dismiss();
+    });
+  }
 
   ngOnInit(): void {
     // Load friends when component initializes
@@ -167,6 +178,8 @@ export class FriendsComponent implements OnInit {
     this.searchQuery.set('');
     this.searchResults.set([]);
     this.isLoaded.set(false);
+    this.scanError.set(null);
+    this.qrAddError.set(null);
 
     this.modalRef = this.modalService.open(this.addModal);
   }
@@ -273,28 +286,27 @@ export class FriendsComponent implements OnInit {
     }
   }
 
-  // QR scanner methods
-  startScan(): void {
-    this.isScanning.set(true);
-    this.scanError.set(null);
-    this.scanResult.set(null);
+  /**
+   * Ajoute l'ami dont le QR code vient d'etre scanne dans la modale.
+   *
+   * L'identifiant est deja extrait par le scanner : on retrouve ici exactement le
+   * meme chemin que l'arrivee par lien (handleScannedInvite), addFriendByQr
+   * gerant deja l'auto-ajout, le compte inexistant et le doublon.
+   */
+  onQrScanned(userId: string): void {
+    this.qrAddError.set(null);
 
-    // TODO: Implement QR scanning logic
-  }
-
-  handleScanResult(result: string): void {
-    this.isScanning.set(false);
-    this.scanResult.set(result);
-    this.scanError.set(null);
-
-    // Try to parse and add friend
-    try {
-      const data = JSON.parse(result);
-      if (data.type === 'friend_add' && data.userId) {
-        this.friendSrv.addFriendByQr(data.userId);
-      }
-    } catch (e) {
-      this.scanError.set('Invalid QR code format');
-    }
+    this.friendSrv
+      .addFriendByQr(userId)
+      .then(() => {
+        // La modale se ferme : le retour s'affiche sur la page, comme pour un lien.
+        this.inviteFeedback.set('friends.inviteAdded');
+        this.modalRef?.close();
+        return this.friendSrv.getFriends();
+      })
+      .catch((error: unknown) => {
+        console.error('[FriendsComponent] Ajout par QR scanne impossible:', error);
+        this.qrAddError.set('friends.inviteFailed');
+      });
   }
 }

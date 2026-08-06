@@ -24,10 +24,12 @@
       </div>
     </div>
 
-    <!-- Search input -->
+    <!-- Filtre de la liste affichee — ne cherche PAS de nouveaux utilisateurs.
+         L'ajout d'un ami passe par la modale, cf. #addModal. -->
     <div class="friends-search">
       <input
         type="text"
+        [attr.aria-label]="'friends.filterMyFriends' | translate"
         [placeholder]="'friends.searchPlaceholder' | translate"
         [value]="searchFilter()"
         (input)="onSearchInput($event)"
@@ -120,8 +122,15 @@
       <button type="button" class="btn-close" (click)="modalRef?.close()"></button>
     </div>
     <div class="modal-body">
+      <!-- Voie 1 : chercher parmi TOUS les utilisateurs. Le libelle est explicite
+           car le champ de la page, juste derriere la modale, se contente de
+           filtrer les amis deja ajoutes — les deux se ressemblaient trop. -->
       <div class="friend-modal-search">
+        <label class="friend-modal-label" for="friend-search-nickname">
+          {{ 'friends.searchAllUsers' | translate }}
+        </label>
         <input
+          id="friend-search-nickname"
           type="text"
           [ngModel]="searchQuery()"
           (ngModelChange)="searchQuery.set($event)"
@@ -158,6 +167,15 @@
           }
         </div>
       }
+
+      <!-- Voie 2 : scanner le QR code affiche par l'ami (« Mon QR » de son cote) -->
+      <div class="scan-qr-section">
+        <h5>{{ 'friends.scanQr' | translate }}</h5>
+        <app-friend-qr-scanner (codeScanned)="onQrScanned($event)"></app-friend-qr-scanner>
+        @if (qrAddError()) {
+          <p class="scan-error" role="alert">{{ qrAddError()! | translate }}</p>
+        }
+      </div>
     </div>
   </ng-template>
 
