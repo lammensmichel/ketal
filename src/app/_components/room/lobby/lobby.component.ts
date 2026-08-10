@@ -21,6 +21,7 @@ import { RealtimeService, GameMember as RealtimeGameMember } from '../../../serv
 import { AuthService } from '../../../services/auth/auth.service';
 import { GuestService } from '../../../services/guest/guest.service';
 import { KetalSessionService, KetalPlayer } from '../../../services/ketal-session/ketal-session.service';
+import { GameService } from '../../../services/game/game.service';
 import { RoomStatusBadgeComponent, RoomDisplayStatus } from './room-status-badge/room-status-badge.component';
 
 /** Maximum number of subscription retry attempts */
@@ -64,6 +65,7 @@ export class LobbyComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly roomService = inject(RoomService);
+  private readonly gameSrv = inject(GameService);
   private readonly memberService = inject(MemberService);
   private readonly realtimeService = inject(RealtimeService);
   private readonly authService = inject(AuthService);
@@ -691,8 +693,20 @@ export class LobbyComponent implements OnInit {
           })
         );
 
-      // Start the game session
-      await this.ketalSessionService.startGame(room.$id, gamePlayers, true, room.gamesPlayed);
+      // On passe par GameService et NON par KetalSessionService directement.
+      //
+      // startGame() du service de session s'arrete a la creation, qui laisse la
+      // session en status 'waiting' et ne touche pas a l'etat de GameService. Or
+      // GameComponent redirige vers /players si isGameInProgress() est faux :
+      // cliquer « Lancer la partie » renvoyait donc sur la liste des joueurs, et
+      // la room passant en 'playing', la tuile tentait ensuite une reconnexion
+      // qui rebondissait au meme endroit — plus aucun moyen de revenir dedans.
+      //
+      // beginGame() enchaine la creation, la transition en playing/dealing/turn 1,
+      // l'abonnement temps reel et l'adoption de l'etat local. Les joueurs sont
+      // passes explicitement : ils viennent des MEMBRES de la room, pas de la
+      // liste locale que lit le demarrage solo.
+      await this.gameSrv.beginGame(true, gamePlayers);
 
       // Navigate to game view
       await this.router.navigate(['/game']);

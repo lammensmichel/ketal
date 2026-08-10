@@ -12,7 +12,8 @@ import { RoomTileComponent } from '../room/room-tile/room-tile.component';
  * Displays:
  * - Welcome header with user's name
  * - Recent rooms carousel (max 3 rooms, sorted by updatedAt desc)
- * - CTA buttons: "Créer une partie", "Rejoindre une partie"
+ * - CTA buttons: "Créer une partie" (partie rapide locale), "Jouer entre amis"
+ *   (room multijoueur via /room/create), "Rejoindre une partie"
  *
  * Uses Angular 19 patterns: standalone, signals, inject(), OnPush, destroyRef.
  */
@@ -115,6 +116,18 @@ export class HomeComponent implements OnInit {
     } finally {
       this.isCreatingRoom = false;
     }
+  }
+
+  /**
+   * Partie entre amis : on delegue a /room/create.
+   *
+   * Volontairement SANS createSoloRoom() : l'hote doit d'abord nommer la partie,
+   * puis choisir les amis a asseoir a la table. Creer la room ici priverait
+   * l'ecran de creation de son formulaire et de son selecteur d'amis — le seul
+   * endroit de l'application ou une room multijoueur peut etre composee.
+   */
+  async createFriendsGame(): Promise<void> {
+    await this.router.navigate(['/room/create']);
   }
 
   /**

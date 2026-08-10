@@ -69,10 +69,46 @@ describe('HomeComponent', () => {
   it('should have CTA buttons', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     const createBtn = compiled.querySelector('.create-btn');
+    const createFriendsBtn = compiled.querySelector('.create-friends-btn');
     const joinLink = compiled.querySelector('.join-link');
     expect(createBtn).toBeTruthy();
+    expect(createFriendsBtn).toBeTruthy();
     expect(joinLink).toBeTruthy();
   });
+
+  it('should navigate to /room/create for a game with friends', fakeAsync(() => {
+    // L'ecran de creation multijoueur est le SEUL a porter le selecteur d'amis :
+    // il avait ete rendu inatteignable par une redirection vers 'home'.
+    component.createFriendsGame();
+    tick();
+
+    expect(router.navigate).toHaveBeenCalledWith(['/room/create']);
+  }));
+
+  it('should NOT create a room nor reset the game when going to /room/create', fakeAsync(() => {
+    // Creer la room ici priverait /room/create de son formulaire et de son
+    // selecteur d'amis (le composant n'affiche le bloc amis qu'apres createRoom).
+    component.createFriendsGame();
+    tick();
+
+    expect(roomService.createSoloRoom).not.toHaveBeenCalled();
+    expect(gameService.prepareNewGame).not.toHaveBeenCalled();
+  }));
+
+  it('should keep the quick-game path unchanged: createSoloRoom then /players', fakeAsync(() => {
+    // Verrou de non-regression : la partie rapide (jeu local autour de la table)
+    // ne doit JAMAIS passer par le formulaire de /room/create.
+    const friendsBtn = (fixture.nativeElement as HTMLElement).querySelector('.create-friends-btn');
+    const createBtn = (fixture.nativeElement as HTMLElement).querySelector('.create-btn') as HTMLButtonElement;
+    expect(friendsBtn).toBeTruthy();
+
+    createBtn.click();
+    tick();
+
+    expect(roomService.createSoloRoom).toHaveBeenCalled();
+    expect(router.navigate).toHaveBeenCalledWith(['/players']);
+    expect(router.navigate).not.toHaveBeenCalledWith(['/room/create']);
+  }));
 
   it('should reset the game state BEFORE creating the room', fakeAsync(() => {
     // createSoloRoom() reutilise une room solo idle existante : sans remise a

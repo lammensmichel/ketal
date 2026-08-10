@@ -112,6 +112,38 @@
     }
   }
 
+  // Seconde intention : meme gabarit que .create-btn, en teinte secondaire pour
+  // que la partie rapide reste l'action mise en avant.
+  .create-friends-btn {
+    width: 100%;
+    margin-top: 12px;
+    padding: 16px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    background: var(--color-bg-elevated);
+    color: var(--color-accent-primary);
+    border: 1px solid var(--color-accent-primary);
+    border-radius: 8px;
+    cursor: pointer;
+    transition:
+      background 0.2s,
+      transform 0.1s;
+
+    &:hover:not(:disabled) {
+      background: var(--color-bg-surface);
+      transform: translateY(-1px);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
   .join-link {
     margin-top: 12px;
     text-align: center;

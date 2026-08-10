@@ -39,8 +39,13 @@
 
   <!-- CTA Section -->
   <div class="cta-section">
-    <!-- Large primary button: Create Game -->
+    <!-- Large primary button: Create Game (partie rapide, autour de la table) -->
     <button type="button" class="create-btn" (click)="createGame()">Créer une partie</button>
+
+    <!-- Seconde intention : partie multijoueur avec selection d'amis. Posee sous
+         le bouton principal pour ne pas deplacer la partie rapide, qui reste le
+         chemin par defaut du jeu local. -->
+    <button type="button" class="create-friends-btn" (click)="createFriendsGame()">Jouer entre amis</button>
 
     <!-- Text link: Join Game -->
     <div class="join-link">

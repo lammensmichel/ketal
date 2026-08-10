@@ -1222,12 +1222,12 @@ export class GameService {
    *
    * @param withSummaryMode - Whether to enable summary mode at game end
    */
-  async beginGame(withSummaryMode = false): Promise<void> {
+  async beginGame(withSummaryMode = false, explicitPlayers?: KetalPlayer[]): Promise<void> {
     this.cardDeckHelperService.constructDeck();
 
     if (this.gameMode() === 'room') {
       try {
-        await this.startGameInRoom(withSummaryMode);
+        await this.startGameInRoom(withSummaryMode, explicitPlayers);
       } catch (error: unknown) {
         console.warn('[GameService] Appwrite session may be orphaned - will need cleanup on reconnection');
         console.warn(
@@ -1247,7 +1247,7 @@ export class GameService {
    *
    * @param withSummary - Whether to enable summary mode at game end
    */
-  private async startGameInRoom(withSummary: boolean): Promise<void> {
+  private async startGameInRoom(withSummary: boolean, explicitPlayers?: KetalPlayer[]): Promise<void> {
     const room = this.roomService.currentRoom();
     if (!room) {
       console.error('[GameService] Cannot start game: no active room');
@@ -1255,8 +1255,14 @@ export class GameService {
     }
 
     try {
-      // Map local players to Ketal players format
-      const ketalPlayers = this.mapPlayersToKetalPlayers();
+      // Les joueurs peuvent venir de DEUX sources selon le point d'entree :
+      // - le lobby les construit depuis les MEMBRES de la room (multijoueur) ;
+      // - le demarrage local les lit depuis la liste de joueurs saisie.
+      // Sans ce parametre, le lobby devait appeler KetalSessionService
+      // directement pour imposer ses membres — court-circuitant du meme coup la
+      // transition en `playing` et la mise a jour de l'etat local, d'ou une
+      // partie qui ne demarrait jamais.
+      const ketalPlayers = explicitPlayers ?? this.mapPlayersToKetalPlayers();
 
       // Create session in Appwrite (initially status=waiting, phase=setup)
       const session = await this.ketalSessionService.startGame(room.$id, ketalPlayers, withSummary, room.gamesPlayed);

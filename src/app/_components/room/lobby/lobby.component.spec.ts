@@ -3,6 +3,8 @@ import { NO_ERRORS_SCHEMA, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { LobbyComponent } from './lobby.component';
+import { GameService } from '../../../services/game/game.service';
+import { createMockGameService } from '../../../testing/test-helpers';
 import { RoomService, GameRoom } from '../../../services/room/room.service';
 import { MemberService, GameMember } from '../../../services/member/member.service';
 import { RealtimeService } from '../../../services/realtime/realtime.service';
@@ -203,6 +205,10 @@ describe('LobbyComponent', () => {
         { provide: GuestService, useValue: mockGuestService },
         { provide: KetalSessionService, useValue: mockKetalSessionService },
         { provide: FriendService, useValue: mockFriendService },
+        // Le lobby passe desormais par GameService pour lancer la partie : sans ce
+        // mock, le vrai service serait construit et appellerait unsubscribe() sur
+        // le mock local de KetalSessionService, qui ne l'expose pas.
+        { provide: GameService, useValue: createMockGameService() },
       ],
     }).compileComponents();
   });

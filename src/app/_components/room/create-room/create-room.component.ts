@@ -109,7 +109,15 @@ export class CreateRoomComponent {
     this.selectedFriendIds.set([...selected, userId]);
   }
 
-  /** Load the friend list so the host can compose the table (authenticated users only) */
+  /**
+   * Load the friend list so the host can compose the table (authenticated users only).
+   *
+   * On passe volontairement par FriendService.getFriends() et non par une lecture
+   * directe de `friendships` : c'est la seule voie qui lit la relation DANS LES
+   * DEUX SENS et filtre sur status = 'accepted'. Une demande encore `pending` ne
+   * doit pas apparaitre ici — on asseoirait a la table quelqu'un qui n'a jamais
+   * accepte l'amitie.
+   */
   async loadFriends(): Promise<void> {
     if (!this.isAuthenticated()) {
       return;

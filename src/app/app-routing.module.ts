@@ -15,9 +15,15 @@ export const routes: Routes = [
     loadComponent: () => import('./_components/auth/register/register.component').then((m) => m.RegisterComponent),
   },
   {
+    // NE PAS re-rediriger vers 'home'. Cette route avait ete neutralisee quand
+    // CreateRoomComponent n'etait plus reference par personne : elle menait a un
+    // ecran juge mort. C'etait l'inverse — c'est la redirection qui le rendait
+    // inatteignable, et avec lui le SEUL moyen de creer une partie multijoueur
+    // et d'y asseoir des amis (createRoom() + selecteur d'amis). L'accueil y
+    // envoie desormais explicitement via « Jouer entre amis ».
     path: 'room/create',
-    redirectTo: 'home',
-    pathMatch: 'full',
+    loadComponent: () =>
+      import('./_components/room/create-room/create-room.component').then((m) => m.CreateRoomComponent),
   },
   {
     path: 'room/join',
