@@ -543,11 +543,14 @@ export class LobbyComponent implements OnInit {
 
     this.navigatingToGame = true;
 
-    // L'hote a deja adopte l'etat en lancant la partie : le rejouer ecraserait
-    // une session fraiche par une relecture inutile. Les autres, eux, n'ont rien
-    // et doivent recuperer la session avant d'afficher /game — sinon
-    // GameComponent les renverrait sur /players faute de partie en cours.
-    if (!this.gameSrv.isGameInProgress()) {
+    // On ne saute la reprise que si ce client est DEJA abonne a CETTE session —
+    // c'est le cas de l'hote, qui vient de la creer.
+    //
+    // Se fier a isGameInProgress() etait faux : il est aussi vrai quand une
+    // partie PRECEDENTE traine dans localStorage. Un joueur dans ce cas sautait
+    // la reprise et restait sur son ancienne partie, affichant ses anciennes
+    // cartes au lieu de rejoindre la nouvelle.
+    if (!this.gameSrv.isSubscribedToSession(updated.currentSessionId)) {
       try {
         await this.gameSrv.handleReconnection(updated.currentSessionId);
       } catch (err) {

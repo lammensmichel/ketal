@@ -451,6 +451,19 @@ export class GameService {
    *
    * @param sessionId - The session ID to reconnect to (optional, uses stored ID if not provided)
    */
+  /**
+   * Sommes-nous deja abonnes A CETTE session ?
+   *
+   * Discriminant necessaire pour decider s'il faut reprendre une session : se
+   * fier a isGameInProgress() ne dit que « une partie tourne localement », ce qui
+   * est aussi vrai d'une partie precedente restee dans localStorage. Un joueur
+   * dans ce cas sautait la reprise et continuait d'afficher son ANCIENNE partie,
+   * cartes comprises, au lieu de rejoindre la nouvelle.
+   */
+  isSubscribedToSession(sessionId: string): boolean {
+    return !!sessionId && this.activeSessionId === sessionId;
+  }
+
   async handleReconnection(sessionId?: string): Promise<void> {
     const targetSessionId = sessionId ?? this.activeSessionId;
     if (!targetSessionId) {

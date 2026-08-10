@@ -114,7 +114,7 @@ export class RoomTileComponent {
     const role = this.currentRole();
 
     if (status === 'playing') {
-      this.handleReconnect();
+      void this.handleReconnect();
     } else if (status === 'idle') {
       // For idle rooms, navigate for ALL users (host + player)
       this.router.navigate(['/room', room.$id]);
@@ -144,7 +144,7 @@ export class RoomTileComponent {
     }
 
     if (status === 'playing') {
-      this.handleReconnect();
+      void this.handleReconnect();
     } else {
       this.handleLeave();
     }
@@ -153,12 +153,22 @@ export class RoomTileComponent {
   /**
    * Handle reconnection to a playing session
    */
-  handleReconnect(): void {
+  async handleReconnect(): Promise<void> {
     const room = this.room();
-    if (room.currentSessionId) {
-      this.gameService.handleReconnection(room.currentSessionId);
-      this.router.navigate(['/game']);
+    if (!room.currentSessionId) {
+      return;
     }
+
+    // Restaurer la room AVANT de reprendre la session, et non seulement pour
+    // l'affichage : GameService.saveAndNotify() ne pousse vers Appwrite que si
+    // gameMode() vaut 'room', et ce mode se deduit de roomService.currentRoom().
+    // Sans cette ligne, un joueur qui reprenait la partie depuis cette tuile se
+    // retrouvait en mode LOCAL : ses tirages partaient dans localStorage et
+    // n'atteignaient jamais les autres appareils.
+    this.roomService.setCurrentRoom(room);
+
+    await this.gameService.handleReconnection(room.currentSessionId);
+    await this.router.navigate(['/game']);
   }
 
   /**

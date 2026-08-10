@@ -16,6 +16,7 @@ describe('RoomTileComponent', () => {
     archiveRoom: jasmine.Spy;
     deleteRoom: jasmine.Spy;
     leaveRoom: jasmine.Spy;
+    setCurrentRoom: jasmine.Spy;
   };
   let mockGameService: {
     handleReconnection: jasmine.Spy;
@@ -104,6 +105,9 @@ describe('RoomTileComponent', () => {
     mockRouter.navigate.and.resolveTo(true);
 
     mockRoomService = {
+      // La reprise d'une partie restaure la room courante : sans elle, gameMode()
+      // resterait 'local' et les tirages ne partiraient jamais vers Appwrite.
+      setCurrentRoom: jasmine.createSpy('setCurrentRoom'),
       archiveRoom: jasmine.createSpy('archiveRoom').and.resolveTo(),
       deleteRoom: jasmine.createSpy('deleteRoom').and.resolveTo(),
       leaveRoom: jasmine.createSpy('leaveRoom').and.resolveTo(),
