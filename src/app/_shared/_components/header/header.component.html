@@ -7,6 +7,9 @@
       <span [translate]="'Label_App_Title'"></span>
     </button>
   </h1>
+  <!-- La cloche se glisse a gauche du hamburger : le titre garde sa place a
+       gauche grace a sa marge automatique, le header n'est pas reorganise. -->
+  <app-notification-bell></app-notification-bell>
   <button type="button" class="btn-hamburger" (click)="openSideMenu()" aria-label="Open menu">
     <fa-icon [icon]="['fas', 'bars']"></fa-icon>
   </button>

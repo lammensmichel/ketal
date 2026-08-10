@@ -369,6 +369,24 @@
      "scanNoCamera": "Camera unavailable: open the app over HTTPS to scan a QR code",
      "scanDenied": "Camera access denied",
      "scanFailed": "Could not start the camera",
-     "scanInvalid": "This QR code is not a Ketal friend code"
-   }
+     "scanInvalid": "This QR code is not a Ketal friend code",
+     "requestSent": "Friend request sent!",
+     "requestsTitle": "Received requests",
+     "requestPending": "Wants to be your friend",
+     "accept": "Accept",
+     "decline": "Decline",
+     "confirmDecline": "Decline this request?",
+     "acceptFailed": "Could not accept this request",
+     "declineFailed": "Could not decline this request",
+     "removeFailed": "Could not remove this friend",
+     "errorAlreadyFriends": "You are already friends",
+     "errorAlreadyRequested": "Request already sent, waiting for an answer",
+     "errorRequestIncoming": "This person already sent you a request: answer it under Received requests"
+   },
+  "notifications": {
+    "open": "Open notifications",
+    "unread": "{{count}} unread notification(s)",
+    "friendRequestTitle": "New friend request",
+    "friendRequestBody": "{{name}} wants to be your friend"
+  }
 }

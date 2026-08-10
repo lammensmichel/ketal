@@ -363,6 +363,24 @@
      "scanNoCamera": "Caméra indisponible : ouvrez l'application en HTTPS pour scanner un QR code",
      "scanDenied": "Accès à la caméra refusé",
      "scanFailed": "Impossible de démarrer la caméra",
-     "scanInvalid": "Ce QR code n'est pas un code d'ami Ketal"
-   }
+     "scanInvalid": "Ce QR code n'est pas un code d'ami Ketal",
+     "requestSent": "Demande d'ami envoyée !",
+     "requestsTitle": "Demandes reçues",
+     "requestPending": "Souhaite être votre ami",
+     "accept": "Accepter",
+     "decline": "Refuser",
+     "confirmDecline": "Refuser cette demande ?",
+     "acceptFailed": "Impossible d'accepter cette demande",
+     "declineFailed": "Impossible de refuser cette demande",
+     "removeFailed": "Impossible de retirer cet ami",
+     "errorAlreadyFriends": "Vous êtes déjà amis",
+     "errorAlreadyRequested": "Demande déjà envoyée, en attente de réponse",
+     "errorRequestIncoming": "Cette personne vous a déjà envoyé une demande : répondez-y dans « Demandes reçues »"
+   },
+  "notifications": {
+    "open": "Ouvrir les notifications",
+    "unread": "{{count}} notification(s) non lue(s)",
+    "friendRequestTitle": "Nouvelle demande d'ami",
+    "friendRequestBody": "{{name}} souhaite devenir votre ami"
+  }
 }

@@ -6,7 +6,7 @@ import { FontAwesomeIconsModule } from '../../font-awesome.module';
 import { NgbModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { QRCodeComponent } from 'angularx-qrcode';
 import { AuthService } from '../../services/auth/auth.service';
-import { FriendService, FriendProfile } from '../../services/friend/friend.service';
+import { FriendService, FriendProfile, FriendRequest } from '../../services/friend/friend.service';
 import { FriendQrScannerComponent } from './friend-qr-scanner.component';
 
 @Component({
@@ -38,6 +38,15 @@ export class FriendsComponent implements OnInit {
 
   /** Current user's friend profiles (signal from service) */
   readonly friendProfiles = this.friendSrv.friendProfiles;
+
+  /** Demandes recues en attente de reponse (signal du service) */
+  readonly pendingRequests = this.friendSrv.pendingRequests;
+
+  /** Demande dont le refus attend confirmation, ou null */
+  readonly pendingDeclineId = signal<string | null>(null);
+
+  /** Cle de traduction de l'erreur d'une action de la page (accepter, refuser, retirer) */
+  readonly actionError = signal<string | null>(null);
 
   /** Avatar error state */
   avatarError = false;
@@ -87,9 +96,50 @@ export class FriendsComponent implements OnInit {
     // Load friends when component initializes
     if (this.authService.isLoggedIn()) {
       this.friendSrv.getFriends();
+      this.friendSrv.getPendingRequests().catch((error: unknown) => {
+        console.error('[FriendsComponent] Demandes recues indisponibles:', error);
+      });
     }
 
     this.handleScannedInvite();
+  }
+
+  /** Accepte une demande recue : la ligne passe a `accepted`. */
+  acceptRequest(request: FriendRequest): void {
+    this.actionError.set(null);
+    this.pendingDeclineId.set(null);
+
+    this.friendSrv.acceptFriendRequest(request.friendshipId).catch((error: unknown) => {
+      console.error('[FriendsComponent] Acceptation impossible:', error);
+      this.actionError.set('friends.acceptFailed');
+    });
+  }
+
+  /** Demande la confirmation du refus, en ligne sur la carte concernee. */
+  askDeclineRequest(friendshipId: string): void {
+    this.actionError.set(null);
+    this.pendingDeclineId.set(friendshipId);
+  }
+
+  cancelDeclineRequest(): void {
+    this.pendingDeclineId.set(null);
+  }
+
+  declineRequest(friendshipId: string): void {
+    this.pendingDeclineId.set(null);
+
+    this.friendSrv.declineFriendRequest(friendshipId).catch((error: unknown) => {
+      console.error('[FriendsComponent] Refus impossible:', error);
+      this.actionError.set('friends.declineFailed');
+    });
+  }
+
+  /** Avatar d'un demandeur, meme repli que pour un ami. */
+  getRequestAvatarUrl(request: FriendRequest): string {
+    if (request.requesterAvatar) {
+      return request.requesterAvatar;
+    }
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(request.requesterName)}&background=0D8ABC&color=fff`;
   }
 
   /**
@@ -126,13 +176,27 @@ export class FriendsComponent implements OnInit {
     this.friendSrv
       .addFriendByQr(userId)
       .then(() => {
-        this.inviteFeedback.set('friends.inviteAdded');
-        return this.friendSrv.getFriends();
+        // « Demande envoyee » et non « ami ajoute » : l'ajout n'est plus
+        // immediat, il attend le consentement de l'autre.
+        this.inviteFeedback.set('friends.requestSent');
       })
       .catch((error: unknown) => {
         console.error('[FriendsComponent] Ajout par QR impossible:', error);
-        this.inviteFeedback.set('friends.inviteFailed');
+        this.inviteFeedback.set(this.errorFeedbackKey(error, 'friends.inviteFailed'));
       });
+  }
+
+  /**
+   * Cle de traduction a afficher pour une erreur remontee par le service.
+   *
+   * Le service leve des cles de traduction pour les cas metier (doublon,
+   * demande deja recue) : les remonter telles quelles evite d'ecraser un
+   * message precis par un « echec » generique. Tout autre message, technique et
+   * en anglais, est remplace par le repli.
+   */
+  private errorFeedbackKey(error: unknown, fallbackKey: string): string {
+    const message = error instanceof Error ? error.message : '';
+    return message.startsWith('friends.') ? message : fallbackKey;
   }
 
   /** Get friend's avatar URL or fallback */
@@ -170,9 +234,13 @@ export class FriendsComponent implements OnInit {
     // theme. La confirmation se fait dans la fiche, cf. pendingRemoveUserId.
     this.pendingRemoveUserId.set(null);
 
+    this.actionError.set(null);
+
     this.friendSrv.removeFriend(friendUserId).catch((error: unknown) => {
       console.error('[FriendsComponent] Failed to remove friend:', error);
-      this.scanError.set(error instanceof Error ? error.message : 'Failed to remove friend');
+      // Erreur affichee sur la PAGE : le retrait se declenche depuis une fiche,
+      // pas depuis la modale ou vit scanError.
+      this.actionError.set(this.errorFeedbackKey(error, 'friends.removeFailed'));
     });
   }
 
@@ -249,11 +317,13 @@ export class FriendsComponent implements OnInit {
       .addFriendByQr(user.userId)
       .then(() => {
         this.modalRef?.close();
-        return this.friendSrv.getFriends();
+        this.inviteFeedback.set('friends.requestSent');
       })
       .catch((error: unknown) => {
         console.error('[FriendsComponent] Failed to add friend:', error);
-        this.scanError.set(error instanceof Error ? error.message : 'Failed to add friend');
+        // La modale reste ouverte : l'erreur (doublon, demande deja recue) doit
+        // etre lue la ou l'action a ete declenchee.
+        this.scanError.set(this.errorFeedbackKey(error, 'friends.inviteFailed'));
       });
   }
 
@@ -300,13 +370,12 @@ export class FriendsComponent implements OnInit {
       .addFriendByQr(userId)
       .then(() => {
         // La modale se ferme : le retour s'affiche sur la page, comme pour un lien.
-        this.inviteFeedback.set('friends.inviteAdded');
+        this.inviteFeedback.set('friends.requestSent');
         this.modalRef?.close();
-        return this.friendSrv.getFriends();
       })
       .catch((error: unknown) => {
         console.error('[FriendsComponent] Ajout par QR scanne impossible:', error);
-        this.qrAddError.set('friends.inviteFailed');
+        this.qrAddError.set(this.errorFeedbackKey(error, 'friends.inviteFailed'));
       });
   }
 }

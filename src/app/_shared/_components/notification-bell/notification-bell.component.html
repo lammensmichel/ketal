@@ -1,0 +1,11 @@
+@if (isLoggedIn()) {
+  <button type="button" class="btn-bell" (click)="open()" [attr.aria-label]="'notifications.open' | translate">
+    <fa-icon [icon]="['fas', 'bell']"></fa-icon>
+    @if (unreadCount() > 0) {
+      <span class="bell-badge" aria-hidden="true">{{ badgeLabel() }}</span>
+      <!-- Le nombre est deja dans la pastille : ce doublon existe pour les
+           lecteurs d'ecran, qui ne liraient pas une pastille decorative. -->
+      <span class="visually-hidden">{{ 'notifications.unread' | translate: { count: unreadCount() } }}</span>
+    }
+  </button>
+}

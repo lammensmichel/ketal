@@ -34,6 +34,8 @@ import {
   faCopy,
   faEye,
   faTv,
+  faBell,
+  faCheck,
 } from '@fortawesome/free-solid-svg-icons';
 
 @NgModule({
@@ -74,7 +76,9 @@ export class FontAwesomeIconsModule {
       faUserMinus,
       faCopy,
       faEye,
-      faTv
+      faTv,
+      faBell,
+      faCheck
     );
   }
 }

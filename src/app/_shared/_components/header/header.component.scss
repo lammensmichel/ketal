@@ -11,6 +11,10 @@
 
 .compact-header-title {
   margin: 0;
+  // La marge automatique absorbe l'espace libre : le titre reste a gauche et les
+  // deux boutons (cloche, hamburger) restent groupes a droite. C'est ce qui
+  // permet d'ajouter un troisieme enfant sans que space-between les disperse.
+  margin-right: auto;
   font-size: 1.5rem;
   font-family: monospace;
   font-variant: small-caps;

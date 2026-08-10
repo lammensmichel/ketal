@@ -514,6 +514,55 @@
   }
 }
 
+// Demandes recues. Section delimitee mais sans nouveau langage visuel : les
+// cartes reutilisent telles quelles les classes .friend-card de la liste d'amis,
+// seule l'entete et la rangee d'actions sont posees ici.
+.friend-requests {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.friend-requests__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+
+  .fa-user-plus {
+    color: var(--color-accent-primary);
+  }
+
+  .friend-count {
+    font-size: 1rem;
+    color: var(--color-text-secondary);
+    font-weight: 400;
+  }
+}
+
+// Deux actions cote a cote, la ou la fiche d'ami n'en a qu'une alignee a droite.
+.friend-card__actions--request {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
+// Erreur d'une action de la page (accepter, refuser, retirer).
+.action-error {
+  margin: 0 0 1rem;
+  padding: 0.625rem 0.875rem;
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-md);
+  color: var(--color-error);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
 // Retour de copie du lien du QR, a la place d'un alert() natif.
 .qr-copy-feedback {
   margin: 0.5rem 0 0;

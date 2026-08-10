@@ -3,13 +3,14 @@ import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { FontAwesomeIconsModule } from '../../../font-awesome.module';
 import { SideMenuComponent } from '../side-menu/side-menu.component';
+import { NotificationBellComponent } from '../notification-bell/notification-bell.component';
 
 @Component({
   selector: 'app-header',
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss'],
   standalone: true,
-  imports: [TranslateModule, FontAwesomeIconsModule, SideMenuComponent],
+  imports: [TranslateModule, FontAwesomeIconsModule, SideMenuComponent, NotificationBellComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeaderComponent {

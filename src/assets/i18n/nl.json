@@ -254,6 +254,24 @@
      "scanNoCamera": "Camera niet beschikbaar: open de app via HTTPS om een QR-code te scannen",
      "scanDenied": "Toegang tot camera geweigerd",
      "scanFailed": "Kan de camera niet starten",
-     "scanInvalid": "Deze QR-code is geen Ketal-vriendencode"
-   }
+     "scanInvalid": "Deze QR-code is geen Ketal-vriendencode",
+     "requestSent": "Vriendschapsverzoek verzonden!",
+     "requestsTitle": "Ontvangen verzoeken",
+     "requestPending": "Wil je vriend worden",
+     "accept": "Accepteren",
+     "decline": "Weigeren",
+     "confirmDecline": "Dit verzoek weigeren?",
+     "acceptFailed": "Kan dit verzoek niet accepteren",
+     "declineFailed": "Kan dit verzoek niet weigeren",
+     "removeFailed": "Kan deze vriend niet verwijderen",
+     "errorAlreadyFriends": "Jullie zijn al vrienden",
+     "errorAlreadyRequested": "Verzoek al verzonden, wachten op antwoord",
+     "errorRequestIncoming": "Deze persoon heeft je al een verzoek gestuurd: antwoord bij Ontvangen verzoeken"
+   },
+  "notifications": {
+    "open": "Meldingen openen",
+    "unread": "{{count}} ongelezen melding(en)",
+    "friendRequestTitle": "Nieuw vriendschapsverzoek",
+    "friendRequestBody": "{{name}} wil je vriend worden"
+  }
 }

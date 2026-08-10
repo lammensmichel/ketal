@@ -23,7 +23,11 @@ describe('FriendsComponent', () => {
   let mockFriendService: {
     friends: ReturnType<typeof signal>;
     friendProfiles: ReturnType<typeof signal>;
+    pendingRequests: ReturnType<typeof signal>;
     getFriends: jasmine.Spy;
+    getPendingRequests: jasmine.Spy;
+    acceptFriendRequest: jasmine.Spy;
+    declineFriendRequest: jasmine.Spy;
     addFriendByQr: jasmine.Spy;
     addFriendByNickname: jasmine.Spy;
     removeFriend: jasmine.Spy;
@@ -37,7 +41,11 @@ describe('FriendsComponent', () => {
     mockFriendService = {
       friends: signal([]),
       friendProfiles: signal([]),
+      pendingRequests: signal([]),
       getFriends: jasmine.createSpy('getFriends').and.resolveTo([]),
+      getPendingRequests: jasmine.createSpy('getPendingRequests').and.resolveTo([]),
+      acceptFriendRequest: jasmine.createSpy('acceptFriendRequest').and.resolveTo({}),
+      declineFriendRequest: jasmine.createSpy('declineFriendRequest').and.resolveTo(undefined),
       addFriendByQr: jasmine.createSpy('addFriendByQr').and.resolveTo({ $id: 'friendship-1' }),
       addFriendByNickname: jasmine.createSpy('addFriendByNickname').and.resolveTo({}),
       removeFriend: jasmine.createSpy('removeFriend').and.resolveTo(undefined),
@@ -90,14 +98,13 @@ describe('FriendsComponent', () => {
     await flushPromises();
 
     expect(mockFriendService.addFriendByQr).toHaveBeenCalledWith('user-42');
-    expect(component.inviteFeedback()).toBe('friends.inviteAdded');
+    expect(component.inviteFeedback()).toBe('friends.requestSent');
     expect(modalRef.close).toHaveBeenCalled();
-    expect(mockFriendService.getFriends).toHaveBeenCalled();
     expect(component.qrAddError()).toBeNull();
   });
 
   it('affiche une erreur traduite quand l_ajout par QR echoue', async () => {
-    mockFriendService.addFriendByQr.and.rejectWith(new Error('Already friends with this user'));
+    mockFriendService.addFriendByQr.and.rejectWith(new Error('Network unreachable'));
 
     component.openAddModal();
     component.onQrScanned('user-42');
@@ -114,5 +121,65 @@ describe('FriendsComponent', () => {
     fixture.destroy();
 
     expect(modalRef.dismiss).toHaveBeenCalled();
+  });
+  it('remonte la cle metier d_un doublon, plutot qu_un echec generique', async () => {
+    mockFriendService.addFriendByQr.and.rejectWith(new Error('friends.errorRequestIncoming'));
+
+    component.openAddModal();
+    component.onQrScanned('user-42');
+    await flushPromises();
+
+    // Renvoyer l'utilisateur vers ses demandes recues vaut mieux que « echec ».
+    expect(component.qrAddError()).toBe('friends.errorRequestIncoming');
+  });
+
+  it('charge les demandes recues a l_initialisation', () => {
+    expect(mockFriendService.getPendingRequests).toHaveBeenCalled();
+  });
+
+  it('accepte une demande recue', async () => {
+    component.acceptRequest({
+      friendshipId: 'f-1',
+      requesterUserId: 'user-1',
+      requesterName: 'Demandeur',
+      createdAt: '2024-01-01T00:00:00Z',
+    });
+    await flushPromises();
+
+    expect(mockFriendService.acceptFriendRequest).toHaveBeenCalledWith('f-1');
+    expect(component.actionError()).toBeNull();
+  });
+
+  it('demande confirmation AVANT de refuser, sans confirm() natif', () => {
+    component.askDeclineRequest('f-1');
+    expect(component.pendingDeclineId()).toBe('f-1');
+    expect(mockFriendService.declineFriendRequest).not.toHaveBeenCalled();
+
+    component.declineRequest('f-1');
+
+    expect(mockFriendService.declineFriendRequest).toHaveBeenCalledWith('f-1');
+    expect(component.pendingDeclineId()).toBeNull();
+  });
+
+  it('abandonne le refus quand la confirmation est annulee', () => {
+    component.askDeclineRequest('f-1');
+    component.cancelDeclineRequest();
+
+    expect(component.pendingDeclineId()).toBeNull();
+    expect(mockFriendService.declineFriendRequest).not.toHaveBeenCalled();
+  });
+
+  it('affiche une erreur de page quand l_acceptation echoue', async () => {
+    mockFriendService.acceptFriendRequest.and.rejectWith(new Error('boom'));
+
+    component.acceptRequest({
+      friendshipId: 'f-1',
+      requesterUserId: 'user-1',
+      requesterName: 'Demandeur',
+      createdAt: '2024-01-01T00:00:00Z',
+    });
+    await flushPromises();
+
+    expect(component.actionError()).toBe('friends.acceptFailed');
   });
 });

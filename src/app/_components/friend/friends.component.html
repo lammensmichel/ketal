@@ -4,6 +4,10 @@
   @if (inviteFeedback()) {
     <p class="invite-feedback" role="status">{{ inviteFeedback()! | translate }}</p>
   }
+  <!-- Erreur d'une action de la page (accepter, refuser, retirer) -->
+  @if (actionError()) {
+    <p class="action-error" role="alert">{{ actionError()! | translate }}</p>
+  }
   @if (isLoggedIn()) {
     <!-- Header with search and action buttons -->
     <div class="friends-header">
@@ -23,6 +27,59 @@
         </button>
       </div>
     </div>
+
+    <!-- Demandes RECUES en attente. Masquee quand il n'y en a aucune : la page
+         garde exactement sa mise en page actuelle dans le cas courant. -->
+    @if (pendingRequests().length > 0) {
+      <section class="friend-requests">
+        <h3 class="friend-requests__title">
+          <fa-icon [icon]="['fas', 'user-plus']"></fa-icon>
+          {{ 'friends.requestsTitle' | translate }}
+          <span class="friend-count"> ({{ pendingRequests().length }}) </span>
+        </h3>
+
+        <!-- Meme grille et meme facture de carte que la liste d'amis -->
+        <div class="friend-list-grid">
+          @for (request of pendingRequests(); track request.friendshipId) {
+            <div class="friend-card">
+              <div class="friend-card__header">
+                <div class="friend-card__avatar-wrapper">
+                  <img [src]="getRequestAvatarUrl(request)" [alt]="request.requesterName" class="friend-card__avatar" />
+                </div>
+                <div class="friend-card__info">
+                  <span class="friend-card__name">{{ request.requesterName }}</span>
+                  <span class="friend-card__status">{{ 'friends.requestPending' | translate }}</span>
+                </div>
+              </div>
+
+              <!-- Refus avec confirmation EN LIGNE, comme le retrait d'un ami :
+                   aucun confirm() natif. -->
+              <div class="friend-card__actions friend-card__actions--request">
+                @if (pendingDeclineId() === request.friendshipId) {
+                  <div class="friend-card__confirm">
+                    <span class="friend-card__confirm-text">{{ 'friends.confirmDecline' | translate }}</span>
+                    <button (click)="declineRequest(request.friendshipId)" class="btn btn-sm btn-danger">
+                      {{ 'friends.decline' | translate }}
+                    </button>
+                    <button (click)="cancelDeclineRequest()" class="btn btn-sm btn-outline-secondary">
+                      {{ 'Button_Cancel' | translate }}
+                    </button>
+                  </div>
+                } @else {
+                  <button (click)="acceptRequest(request)" class="btn btn-sm btn-primary">
+                    <fa-icon [icon]="['fas', 'check']"></fa-icon>
+                    {{ 'friends.accept' | translate }}
+                  </button>
+                  <button (click)="askDeclineRequest(request.friendshipId)" class="btn btn-sm btn-outline-secondary">
+                    {{ 'friends.decline' | translate }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    }
 
     <!-- Friend list -->
     <div class="friend-list">
@@ -147,6 +204,12 @@
           }
         </button>
       </div>
+
+      <!-- Erreur d'ajout (doublon, demande deja recue) : elle etait posee dans
+           scanError mais n'etait affichee nulle part, donc invisible. -->
+      @if (scanError()) {
+        <p class="scan-error" role="alert">{{ scanError()! | translate }}</p>
+      }
 
       @if (isLoaded()) {
         <div class="friend-modal-results">
