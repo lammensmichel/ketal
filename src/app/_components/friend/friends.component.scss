@@ -38,28 +38,6 @@
   }
 }
 
-.friends-search {
-  position: relative;
-  margin-bottom: 24px;
-
-  .form-control {
-    width: 100%;
-    padding-right: 3rem;
-    padding-left: 1rem;
-    font-size: 1rem;
-  }
-
-  .search-icon {
-    position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--color-text-secondary);
-    pointer-events: none;
-    font-size: 1rem;
-  }
-}
-
 .friend-list {
   min-height: 200px;
 }
@@ -516,5 +494,30 @@
   border-radius: var(--radius-md);
   color: var(--color-text-primary);
   font-size: 0.9rem;
+  text-align: center;
+}
+
+// Confirmation de retrait, en ligne sur la fiche : remplace un confirm() natif
+// qui affichait l'origine de la page et ignorait le theme.
+.friend-card__confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+
+  .friend-card__confirm-text {
+    flex: 1 1 100%;
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+  }
+}
+
+// Retour de copie du lien du QR, a la place d'un alert() natif.
+.qr-copy-feedback {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  color: var(--color-success);
   text-align: center;
 }

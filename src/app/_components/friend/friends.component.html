@@ -68,15 +68,29 @@
                 </div>
               </div>
 
-              <!-- Remove friend button -->
+              <!-- Retrait, avec confirmation EN LIGNE : un confirm() natif
+                   affichait l'origine de la page et ignorait le theme. -->
               <div class="friend-card__actions">
-                <button
-                  (click)="removeFriend(friend.userId)"
-                  class="btn btn-link btn-sm friend-card__remove-btn"
-                  title="{{ 'friends.remove' | translate }}"
-                >
-                  <fa-icon [icon]="['fas', 'user-minus']"></fa-icon>
-                </button>
+                @if (pendingRemoveUserId() === friend.userId) {
+                  <div class="friend-card__confirm">
+                    <span class="friend-card__confirm-text">{{ 'friends.confirmRemove' | translate }}</span>
+                    <button (click)="removeFriend(friend.userId)" class="btn btn-sm btn-danger">
+                      {{ 'friends.remove' | translate }}
+                    </button>
+                    <button (click)="cancelRemoveFriend()" class="btn btn-sm btn-outline-secondary">
+                      {{ 'Button_Cancel' | translate }}
+                    </button>
+                  </div>
+                } @else {
+                  <button
+                    (click)="askRemoveFriend(friend.userId)"
+                    class="btn btn-link btn-sm friend-card__remove-btn"
+                    [attr.aria-label]="'friends.remove' | translate"
+                    title="{{ 'friends.remove' | translate }}"
+                  >
+                    <fa-icon [icon]="['fas', 'user-minus']"></fa-icon>
+                  </button>
+                }
               </div>
             </div>
           }
@@ -190,6 +204,9 @@
             <fa-icon [icon]="['fas', 'copy']"></fa-icon>
             {{ 'friends.copyQr' | translate }}
           </button>
+          @if (copyFeedback()) {
+            <p class="qr-copy-feedback" role="status">{{ copyFeedback()! | translate }}</p>
+          }
         </div>
       } @else {
         <div class="qr-loading">

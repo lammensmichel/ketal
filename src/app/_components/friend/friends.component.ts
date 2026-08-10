@@ -61,6 +61,12 @@ export class FriendsComponent implements OnInit {
   /** Cle de traduction de l'erreur d'ajout via QR scanne, ou null */
   readonly qrAddError = signal<string | null>(null);
 
+  /** Ami dont le retrait attend confirmation, ou null */
+  readonly pendingRemoveUserId = signal<string | null>(null);
+
+  /** Cle de traduction du retour de copie du QR, ou null */
+  readonly copyFeedback = signal<string | null>(null);
+
   // QR code modal
   readonly friendQrUrl = signal<string | null>(null);
   readonly qrScale = 4;
@@ -150,13 +156,23 @@ export class FriendsComponent implements OnInit {
   }
 
   /** Remove friend from list */
-  removeFriend(friendUserId: string): void {
-    if (!confirm('Remove this friend?')) {
-      return;
-    }
+  /** Demande la confirmation du retrait, en ligne sur la fiche concernee. */
+  askRemoveFriend(friendUserId: string): void {
+    this.pendingRemoveUserId.set(friendUserId);
+  }
 
-    this.friendSrv.removeFriend(friendUserId).catch((error: any) => {
+  cancelRemoveFriend(): void {
+    this.pendingRemoveUserId.set(null);
+  }
+
+  removeFriend(friendUserId: string): void {
+    // Plus de confirm() natif : il affiche l'origine de la page et ignore le
+    // theme. La confirmation se fait dans la fiche, cf. pendingRemoveUserId.
+    this.pendingRemoveUserId.set(null);
+
+    this.friendSrv.removeFriend(friendUserId).catch((error: unknown) => {
       console.error('[FriendsComponent] Failed to remove friend:', error);
+      this.scanError.set(error instanceof Error ? error.message : 'Failed to remove friend');
     });
   }
 
@@ -223,11 +239,9 @@ export class FriendsComponent implements OnInit {
   }
 
   confirmAddFriend(user: FriendProfile): void {
-    const confirmed = confirm(`Add ${user.name} as your friend?`);
-    if (!confirmed) {
-      return;
-    }
-
+    // Aucune confirmation : l'action est explicite (bouton en face du nom cherche)
+    // et reversible. Un confirm() natif y affichait l'origine de la page et
+    // cassait le theme pour aucun gain.
     // On ajoute par identifiant, pas par pseudo : addFriendByNickname relance une
     // recherche par nom, ce qui echoue si le nom differe du pseudo et peut viser
     // le mauvais compte en cas d'homonymes. L'identifiant du resultat est deja la.
@@ -260,10 +274,14 @@ export class FriendsComponent implements OnInit {
       navigator.clipboard
         .writeText(this.friendQrUrl()!)
         .then(() => {
-          alert('QR code URL copied to clipboard!');
+          // alert() natif remplace : il affiche l'origine de la page (donc l'IP en
+          // test) et ignore le theme de l'application.
+          this.copyFeedback.set('friends.copiedQr');
+          setTimeout(() => this.copyFeedback.set(null), 2500);
         })
-        .catch((error: any) => {
+        .catch((error: unknown) => {
           console.error('Failed to copy:', error);
+          this.copyFeedback.set('friends.copyFailed');
         });
     }
   }

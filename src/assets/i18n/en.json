@@ -331,6 +331,8 @@
     "confirm": "Confirm"
   },
    "friends": {
+    "confirmRemove": "Remove this friend?",
+    "copyFailed": "Could not copy",
     "inviteAdded": "Friend added!",
     "inviteFailed": "Could not add this friend",
     "inviteSelf": "That's your own code",

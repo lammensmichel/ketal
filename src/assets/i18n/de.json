@@ -216,6 +216,8 @@
     }
   },
    "friends": {
+    "confirmRemove": "Diesen Freund entfernen?",
+    "copyFailed": "Kopieren fehlgeschlagen",
     "inviteAdded": "Freund hinzugefügt!",
     "inviteFailed": "Freund konnte nicht hinzugefügt werden",
     "inviteSelf": "Das ist dein eigener Code",

@@ -216,6 +216,8 @@
     }
   },
    "friends": {
+    "confirmRemove": "Deze vriend verwijderen?",
+    "copyFailed": "Kopiëren mislukt",
     "inviteAdded": "Vriend toegevoegd!",
     "inviteFailed": "Kan deze vriend niet toevoegen",
     "inviteSelf": "Dit is je eigen code",
