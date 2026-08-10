@@ -76,6 +76,11 @@ export class LobbyComponent implements OnInit {
 
   /** Subscription ID for member realtime updates */
   private memberSubscriptionId: string | null = null;
+  /** Abonnement au document de la room, pour detecter le lancement de la partie. */
+  private roomSubscriptionId: string | null = null;
+
+  /** Evite une double navigation si plusieurs evenements arrivent. */
+  private navigatingToGame = false;
 
   /** Guard flag to prevent concurrent member loads */
   private isMembersLoading = false;
@@ -340,6 +345,7 @@ export class LobbyComponent implements OnInit {
 
       // Subscribe to realtime member updates BEFORE loading to avoid missing events
       this.subscribeToMemberUpdates();
+      void this.subscribeToRoomUpdates();
 
       // Load room members
       await this.loadRoomMembers();
@@ -503,6 +509,57 @@ export class LobbyComponent implements OnInit {
    * Subscribe to realtime member updates for the current room.
    * Includes retry logic for transient subscription failures.
    */
+  /**
+   * Surveille le document de la room pour suivre le lancement de la partie.
+   *
+   * Le lobby n'ecoutait que les MEMBRES : quand l'hote lancait la partie, les
+   * autres joueurs restaient bloques dans le lobby, sans rien voir. La room passe
+   * en status 'playing' avec un currentSessionId — c'est ce signal qu'on suit
+   * pour emmener tout le monde sur la partie.
+   */
+  private async subscribeToRoomUpdates(): Promise<void> {
+    const room = this.currentRoom();
+    if (!room || this.roomSubscriptionId) {
+      return;
+    }
+
+    try {
+      this.roomSubscriptionId = await this.roomService.subscribeToRoom(room.$id, (updated) => {
+        void this.handleRoomStarted(updated);
+      });
+    } catch (err) {
+      console.warn('Realtime subscribeToRoom failed:', err);
+    }
+  }
+
+  /** Emmene ce client sur la partie des que la room passe en jeu. */
+  private async handleRoomStarted(updated: { status?: string; currentSessionId?: string | null }): Promise<void> {
+    if (this.navigatingToGame) {
+      return;
+    }
+    if (updated.status !== 'playing' || !updated.currentSessionId) {
+      return;
+    }
+
+    this.navigatingToGame = true;
+
+    // L'hote a deja adopte l'etat en lancant la partie : le rejouer ecraserait
+    // une session fraiche par une relecture inutile. Les autres, eux, n'ont rien
+    // et doivent recuperer la session avant d'afficher /game — sinon
+    // GameComponent les renverrait sur /players faute de partie en cours.
+    if (!this.gameSrv.isGameInProgress()) {
+      try {
+        await this.gameSrv.handleReconnection(updated.currentSessionId);
+      } catch (err) {
+        console.error('[LobbyComponent] Reprise de la session impossible:', err);
+        this.navigatingToGame = false;
+        return;
+      }
+    }
+
+    await this.router.navigate(['/game']);
+  }
+
   private async subscribeToMemberUpdates(): Promise<void> {
     const room = this.currentRoom();
     if (!room) {
@@ -571,6 +628,7 @@ export class LobbyComponent implements OnInit {
       // Clear failed subscription state before retrying
       this.memberSubscriptionId = null;
       this.subscribeToMemberUpdates();
+      void this.subscribeToRoomUpdates();
     }, delay);
   }
 
@@ -605,6 +663,10 @@ export class LobbyComponent implements OnInit {
       if (this.memberSubscriptionId) {
         this.realtimeService.unsubscribe(this.memberSubscriptionId);
         this.memberSubscriptionId = null;
+      }
+      if (this.roomSubscriptionId) {
+        this.realtimeService.unsubscribe(this.roomSubscriptionId);
+        this.roomSubscriptionId = null;
       }
     });
   }

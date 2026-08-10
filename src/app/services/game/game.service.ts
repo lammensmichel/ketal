@@ -470,10 +470,17 @@ export class GameService {
 
       // Update local game state from the fetched session
       const game = mapSessionToGame(session);
+      // La session ne porte pas les echanges de gorgees : sans ce report, un
+      // joueur qui reprend la partie perdrait le detail deja connu localement.
+      game.sipExchanges = this._game()?.sipExchanges ?? [];
       this._game.set(game);
 
       // Re-subscribe to realtime updates
       this.subscribeToSessionUpdates(targetSessionId);
+
+      // Recharge les echanges depuis la collection partagee, pour que le detail
+      // du resume soit complet meme apres une reprise.
+      void this.hydrateSipExchanges(targetSessionId);
 
       console.debug('[GameService] handleReconnection - successfully reconnected', {
         sessionId: targetSessionId,
