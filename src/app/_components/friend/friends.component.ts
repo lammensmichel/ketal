@@ -1,4 +1,4 @@
-import { Component, signal, computed, OnInit, inject, DestroyRef, TemplateRef, ViewChild } from '@angular/core';
+import { Component, signal, OnInit, inject, DestroyRef, TemplateRef, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
@@ -38,19 +38,6 @@ export class FriendsComponent implements OnInit {
 
   /** Current user's friend profiles (signal from service) */
   readonly friendProfiles = this.friendSrv.friendProfiles;
-
-  /** Filter for searching friends by nickname */
-  readonly searchFilter = signal('');
-
-  /** Computed list of friends matching search filter */
-  readonly filteredFriendList = computed(() => {
-    const profiles = this.friendProfiles();
-    const filter = this.searchFilter().toLowerCase().trim();
-    if (!filter) {
-      return profiles;
-    }
-    return profiles.filter((p: FriendProfile) => p.name.toLowerCase().includes(filter));
-  });
 
   /** Avatar error state */
   avatarError = false;
@@ -198,11 +185,6 @@ export class FriendsComponent implements OnInit {
       this.friendQrUrl.set(`${window.location.origin}/friends?add=${encodeURIComponent(currentUser.$id)}`);
     }
     this.qrModalRef = this.modalService.open(this.qrModal);
-  }
-
-  onSearchInput(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
-    this.searchFilter.set(value);
   }
 
   searchUsers(query: string): void {

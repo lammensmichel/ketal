@@ -10,7 +10,7 @@
       <h2>
         <fa-icon [icon]="['fas', 'users']"></fa-icon>
         {{ 'friends.title' | translate }}
-        <span class="friend-count"> ({{ filteredFriendList().length }} / {{ friends().length }}) </span>
+        <span class="friend-count"> ({{ friendProfiles().length }}) </span>
       </h2>
       <div class="friends-actions">
         <button (click)="openAddModal()" class="btn btn-primary">
@@ -24,23 +24,9 @@
       </div>
     </div>
 
-    <!-- Filtre de la liste affichee — ne cherche PAS de nouveaux utilisateurs.
-         L'ajout d'un ami passe par la modale, cf. #addModal. -->
-    <div class="friends-search">
-      <input
-        type="text"
-        [attr.aria-label]="'friends.filterMyFriends' | translate"
-        [placeholder]="'friends.searchPlaceholder' | translate"
-        [value]="searchFilter()"
-        (input)="onSearchInput($event)"
-        class="form-control"
-      />
-      <fa-icon [icon]="['fas', 'search']" class="search-icon"></fa-icon>
-    </div>
-
     <!-- Friend list -->
     <div class="friend-list">
-      @if (filteredFriendList().length === 0) {
+      @if (friendProfiles().length === 0) {
         <!-- Empty state -->
         <div class="friend-list-empty">
           <fa-icon [icon]="['fas', 'users']" size="3x"></fa-icon>
@@ -56,7 +42,7 @@
       } @else {
         <!-- Friend cards -->
         <div class="friend-list-grid">
-          @for (friend of filteredFriendList(); track friend.userId) {
+          @for (friend of friendProfiles(); track friend.userId) {
             <div class="friend-card">
               <!-- Friend card header -->
               <div class="friend-card__header">
